@@ -15,7 +15,6 @@
         .mode-switch-container { display: flex; align-items: center; justify-content: flex-end; }
         .pending-list-container { max-height: 250px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 5px; background: white; }
         .delete-btn { color: #dc3545; cursor: pointer; font-weight: bold; }
-        /* 메시지 박스 */
         #msg-area { display: none; margin-top: 10px; font-size: 0.95rem; white-space: pre-line; }
     </style>
 </head>
@@ -112,7 +111,7 @@
             const savedUser = localStorage.getItem('dbphone_user');
             if (savedUser) showDashboard(JSON.parse(savedUser).name);
         };
-        // 1. 로그인
+        
         function handleCredentialResponse(response) {
             fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "login", token: response.credential }) })
             .then(res => res.json())
@@ -120,9 +119,7 @@
                 if (data.status === 'success') {
                     localStorage.setItem('dbphone_user', JSON.stringify({ name: data.name, email: data.user }));
                     showDashboard(data.name);
-                } else {
-                    document.getElementById('login-msg').innerText = data.message; // 로그인 화면 에러
-                }
+                } else document.getElementById('login-msg').innerText = data.message;
             });
         }
         function showDashboard(name) {
@@ -137,7 +134,6 @@
             toggleMode();
         }
 
-        // 2. 모드 전환
         function toggleMode() {
             const isBatch = document.getElementById('mode_toggle').checked;
             const label = document.getElementById('mode-label');
@@ -145,7 +141,7 @@
             const listArea = document.getElementById('batch-list-area');
             const footer = document.getElementById('modal-footer');
             const scanInput = document.getElementById('scan_input');
-            document.getElementById('msg-area').style.display = 'none'; // 메시지 초기화
+            document.getElementById('msg-area').style.display = 'none';
 
             if (isBatch) {
                 label.innerText = "연속 입고 (대기열)"; label.classList.add("text-success"); label.classList.remove("text-secondary");
@@ -159,7 +155,6 @@
             scanInput.focus();
         }
 
-        // 3. 스캔 처리
         function handleScan(event) {
             if (event.key === 'Enter') {
                 event.preventDefault();
@@ -170,7 +165,6 @@
 
                 if (!barcode) return;
                 
-                // 클라이언트단 중복 체크
                 if (isBatch && pendingItems.some(item => item.barcode === barcode)) {
                     showMessage("error", "⚠️ 이미 목록에 있는 기기입니다.");
                     event.target.value = ""; return;
@@ -186,7 +180,7 @@
                     method: "POST",
                     body: JSON.stringify({ action: actionType, barcode: barcode, supplier: supplier, branch: branch })
                 })
-                .then(res => res.text()) // 일단 텍스트로
+                .then(res => res.text())
                 .then(text => {
                     let data;
                     try { data = JSON.parse(text); } 
@@ -194,24 +188,20 @@
 
                     if (data.status === 'success') {
                         if (isBatch) {
-                            // [연속 모드] 리스트 추가
                             const newItem = { ...data.data, supplier: supplier }; 
                             addItemToList(newItem);
                             showMessage("success", "리스트 추가됨: " + data.data.model);
                         } else {
-                            // [일반 모드] 저장 성공
                             showMessage("success", "✅ 저장 완료! (" + data.data.model + ")");
                             setTimeout(() => {
                                 bootstrap.Modal.getInstance(document.getElementById('invenModal')).hide();
-                            }, 1000); // 1초 뒤 자동 닫기
+                            }, 1000);
                         }
                     } else {
                         showMessage("error", "⛔ " + data.message);
                     }
                 })
-                .catch(err => {
-                    showMessage("error", err.message);
-                })
+                .catch(err => { showMessage("error", err.message); })
                 .finally(() => {
                     const input = document.getElementById('scan_input');
                     input.disabled = false; input.value = ""; input.focus();
@@ -220,7 +210,6 @@
             }
         }
 
-        // 4. 메시지 표시 (팝업 X)
         function showMessage(type, text) {
             const el = document.getElementById('msg-area');
             el.style.display = 'block';
@@ -228,9 +217,9 @@
             el.innerText = text;
         }
 
-        // 5. 리스트 관리
         function addItemToList(item) { pendingItems.push(item); renderList(); }
         function removeItem(index) { pendingItems.splice(index, 1); renderList(); document.getElementById('scan_input').focus(); }
+        
         function renderList() {
             const tbody = document.getElementById('pending-tbody');
             tbody.innerHTML = "";
@@ -240,47 +229,66 @@
                 tbody.prepend(tr);
             });
             const count = pendingItems.length;
-            document.getElementById('list-count').innerText = count;
-            document.getElementById('submit-count').innerText = count;
-            document.getElementById('btn-submit').disabled = count === 0;
+            
+            // ★ 수정된 부분: 안전하게 요소가 있는지 확인
+            const listCountEl = document.getElementById('list-count');
+            const submitCountEl = document.getElementById('submit-count');
+            const submitBtn = document.getElementById('btn-submit');
+            
+            if (listCountEl) listCountEl.innerText = count;
+            // submit-count는 버튼 안에 있어서, 버튼 텍스트가 바뀌면 없어질 수 있음. 
+            // 그래서 아래 submitBatch에서 복구 로직을 추가함.
+            if (submitCountEl) submitCountEl.innerText = count;
+            if (submitBtn) submitBtn.disabled = count === 0;
         }
+
         function clearList() { if(pendingItems.length > 0) pendingItems = []; renderList(); }
 
-        // 6. 일괄 저장 (연속 입고)
         function submitBatch() {
             const branch = document.getElementById('in_branch').value;
             if (pendingItems.length === 0) return;
-            if (!confirm(`총 ${pendingItems.length}대를 저장하시겠습니까?`)) return; // 컨펌은 팝업 허용 (실수 방지)
+            if (!confirm(`총 ${pendingItems.length}대를 저장하시겠습니까?`)) return;
 
             const btn = document.getElementById('btn-submit');
-            const originalText = btn.innerText;
-            btn.innerText = "저장 중..."; btn.disabled = true;
+            // ★ 핵심: 버튼의 HTML 구조를 통째로 저장 (span 태그 보존)
+            const originalHTML = btn.innerHTML; 
+            
+            btn.disabled = true;
+            btn.innerText = "저장 중..."; // 이때 span이 사라짐
 
             fetch(GAS_URL, {
                 method: "POST",
                 body: JSON.stringify({ action: "batch_register", items: pendingItems, branch: branch })
             })
-            .then(res => res.text()) // 여기도 Text로 먼저 받음 (에러 방지)
+            .then(res => res.text())
             .then(text => {
                 let data;
-                try { data = JSON.parse(text); } 
-                catch (e) { throw new Error("서버 응답 오류 (HTML): " + text.substring(0, 50)); }
+                try { data = JSON.parse(text); } catch (e) { throw new Error("서버 응답 오류"); }
 
                 if (data.status === 'success') {
                     showMessage("success", `✅ ${data.count}대 저장 완료!`);
+                    
+                    // ★ 복구 순서 중요: 
+                    // 1. 버튼 HTML을 먼저 복구해야 <span>이 생김
+                    btn.innerHTML = originalHTML; 
+                    btn.disabled = false;
+
+                    // 2. 그 다음 리스트 초기화 (renderList가 span을 찾아 0으로 만듦)
                     clearList();
+                    
                     setTimeout(() => {
                         bootstrap.Modal.getInstance(document.getElementById('invenModal')).hide();
-                        btn.innerText = originalText; btn.disabled = false;
                     }, 1000);
                 } else {
                     showMessage("error", "오류: " + data.message);
-                    btn.innerText = originalText; btn.disabled = false;
+                    btn.innerHTML = originalHTML; // 에러 시에도 복구
+                    btn.disabled = false;
                 }
             })
             .catch((err) => {
-                showMessage("error", "서버 통신 오류: " + err.message);
-                btn.innerText = originalText; btn.disabled = false;
+                showMessage("error", "통신 오류: " + err.message);
+                btn.innerHTML = originalHTML; // 에러 시에도 복구
+                btn.disabled = false;
             });
         }
         document.getElementById('invenModal').addEventListener('shown.bs.modal', () => { document.getElementById('scan_input').focus(); });
