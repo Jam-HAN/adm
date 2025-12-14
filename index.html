@@ -9,8 +9,28 @@
         body { background-color: #f8f9fa; }
         #dashboard-view { display: none; } /* 처음엔 대시보드 숨김 */
         
-        /* 모바일에서 입력창 글씨가 너무 작지 않게 */
+        /* 모바일 가독성 최적화 */
         input, select { font-size: 16px !important; }
+        
+        /* 스캔창 강조 */
+        .scan-area {
+            background-color: #212529;
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .scan-input {
+            background-color: #495057;
+            color: #fff;
+            border: none;
+            font-weight: bold;
+            text-align: center;
+        }
+        .scan-input:focus {
+            background-color: #fff;
+            color: #000;
+        }
     </style>
 </head>
 <body>
@@ -70,39 +90,70 @@
     <div class="modal fade" id="invenModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
           <div class="modal-content">
-            <div class="modal-header">
-              <h5 class="modal-title">기기 입고 등록</h5>
-              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-header bg-light">
+              <h5 class="modal-title">📦 기기 입고 등록</h5>
+              <div class="form-check form-switch ms-auto">
+                  <input class="form-check-input" type="checkbox" id="continuous_mode">
+                  <label class="form-check-label small fw-bold" for="continuous_mode">연속 입고</label>
+              </div>
+              <button type="button" class="btn-close ms-2" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
               <form id="invenForm">
-                  <div class="mb-3">
-                      <label class="form-label">입고 지점</label>
-                      <select class="form-select" id="in_branch" required>
-                          <option value="장지 본점">장지 본점</option>
-                          <option value="명일 직영점">명일 직영점</option>
-                      </select>
+                  <div class="scan-area">
+                      <label class="form-label small text-white-50">바코드 스캔 (Click here)</label>
+                      <input type="text" class="form-control form-control-lg scan-input" 
+                             id="scan_input" placeholder="바코드를 찍으세요" 
+                             onkeydown="handleBarcode(event)" autocomplete="off">
                   </div>
-                  <div class="row g-2 mb-3">
-                      <div class="col">
-                          <input type="text" class="form-control" id="in_model" placeholder="모델명 (예: S25)" required>
+
+                  <div class="row g-2 mb-2">
+                      <div class="col-6">
+                          <label class="form-label small">거래처</label>
+                          <input type="text" class="form-control" id="in_supplier" placeholder="입력 or 선택" list="supplierOptions">
+                          <datalist id="supplierOptions">
+                              <option value="SK네트웍스">
+                              <option value="삼성전자">
+                              <option value="애플코리아">
+                              <option value="대리점">
+                              <option value="중고매입">
+                          </datalist>
                       </div>
-                      <div class="col">
-                          <input type="text" class="form-control" id="in_storage" placeholder="용량 (예: 256G)">
+                      <div class="col-6">
+                          <label class="form-label small">입고 지점</label>
+                          <select class="form-select" id="in_branch">
+                              <option value="장지 본점">장지 본점</option>
+                              <option value="명일 직영점">명일 직영점</option>
+                          </select>
                       </div>
                   </div>
-                  <div class="mb-3">
-                      <input type="text" class="form-control" id="in_color" placeholder="색상 (예: 블랙)">
+
+                  <hr>
+
+                  <div class="row g-2 mb-2">
+                      <div class="col-6">
+                          <label class="form-label small">모델명</label>
+                          <input type="text" class="form-control bg-light" id="in_model" readonly tabindex="-1">
+                      </div>
+                      <div class="col-3">
+                          <label class="form-label small">용량</label>
+                          <input type="text" class="form-control bg-light" id="in_storage" readonly tabindex="-1">
+                      </div>
+                      <div class="col-3">
+                          <label class="form-label small">색상</label>
+                          <input type="text" class="form-control bg-light" id="in_color" readonly tabindex="-1">
+                      </div>
                   </div>
+                  
                   <div class="mb-3">
-                      <label class="form-label">IMEI / 일련번호</label>
-                      <input type="text" class="form-control" id="in_imei" placeholder="바코드 스캔 또는 입력" required>
+                      <label class="form-label small fw-bold">일련번호 (S/N)</label>
+                      <input type="text" class="form-control bg-light fw-bold" id="in_serial" readonly tabindex="-1">
                   </div>
               </form>
             </div>
             <div class="modal-footer">
               <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
-              <button type="button" class="btn btn-primary" onclick="submitInventory(event)">등록하기</button>
+              <button type="button" class="btn btn-primary" id="btn-register" onclick="submitInventory()">등록하기</button>
             </div>
           </div>
         </div>
@@ -112,19 +163,14 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
     <script>
-        // 사장님의 GAS URL
+        // 사장님의 GAS URL (수정됨: 이 URL이 맞는지 확인해주세요)
         const GAS_URL = "https://script.google.com/macros/s/AKfycbyB_mC39GwfguxtYMm4P4jbszB8d10UhvL9AWZYRGXQxhApSkYP4x-yLiCzmoxhSNDY/exec";
 
-        // 1. 로그인 처리 함수
+        // 1. 로그인 처리
         function handleCredentialResponse(response) {
-            console.log("Token: " + response.credential);
-            
             fetch(GAS_URL, {
                 method: "POST",
-                body: JSON.stringify({
-                    action: "login",
-                    token: response.credential
-                })
+                body: JSON.stringify({ action: "login", token: response.credential })
             })
             .then(res => res.json())
             .then(data => {
@@ -136,63 +182,132 @@
                     document.getElementById('login-msg').innerText = data.message;
                 }
             })
-            .catch(error => {
-                console.error('Error:', error);
-                document.getElementById('login-msg').innerText = "서버 연결 오류 발생";
-            });
+            .catch(error => { console.error(error); document.getElementById('login-msg').innerText = "서버 연결 오류"; });
         }
 
-        function logout() {
-            location.reload();
+        function logout() { location.reload(); }
+
+        // 2. 바코드 처리 로직
+        function handleBarcode(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault(); // 엔터 키 폼 전송 막기
+                const rawCode = event.target.value.trim();
+                
+                if (!rawCode) return;
+
+                // 바코드 해석 함수 호출
+                const parsedData = parseBarcodeString(rawCode);
+
+                if (parsedData) {
+                    // 성공 시 자동 입력
+                    document.getElementById('in_model').value = parsedData.model;
+                    document.getElementById('in_storage').value = parsedData.storage;
+                    document.getElementById('in_color').value = parsedData.color;
+                    document.getElementById('in_serial').value = parsedData.serial; // 일련번호
+
+                    // 소리 재생 (옵션)
+                    // new Audio('beep.mp3').play(); 
+
+                    // 연속 모드라면 바로 등록하시겠습니까? 아니면 확인 후 등록?
+                    // 현재는 '등록하기' 버튼에 포커스만 이동
+                    document.getElementById('btn-register').focus();
+                } else {
+                    alert("바코드 형식을 인식할 수 없습니다.");
+                    document.getElementById('scan_input').value = ""; // 입력창 비우기
+                }
+            }
         }
 
-        // 2. 입고 등록 처리 함수
-        function submitInventory(event) {
+        // [중요] 바코드 파싱 로직 (가상 구현)
+        // 사장님, 실제 바코드 샘플을 주시면 이 부분을 완벽하게 짜드릴 수 있습니다.
+        function parseBarcodeString(code) {
+            console.log("스캔된 코드:", code);
+
+            // 예시 로직: 바코드가 길면 자동으로 분리한다고 가정 (테스트용)
+            // 실제로는 제조사마다 다릅니다. (삼성, 애플 등)
+            // 지금은 단순히 입력된 값을 일련번호에 넣고 나머지는 가짜 데이터 채움
+            
+            return {
+                model: "테스트모델",   // 실제 로직 필요
+                storage: "256G",      // 실제 로직 필요
+                color: "블랙",        // 실제 로직 필요
+                serial: code          // 바코드 전체를 일단 일련번호로 인식
+            };
+        }
+
+        // 3. 입고 등록 실행
+        function submitInventory() {
+            const supplier = document.getElementById('in_supplier').value;
             const branch = document.getElementById('in_branch').value;
             const model = document.getElementById('in_model').value;
             const storage = document.getElementById('in_storage').value;
             const color = document.getElementById('in_color').value;
-            const imei = document.getElementById('in_imei').value;
+            const serial = document.getElementById('in_serial').value; // 일련번호
+            const isContinuous = document.getElementById('continuous_mode').checked; // 연속모드 여부
 
-            if(!model || !imei) {
-                alert("모델명과 IMEI는 필수입니다.");
+            if(!model || !serial) {
+                alert("기기 정보(모델, 일련번호)가 없습니다.\n바코드를 스캔해주세요.");
+                document.getElementById('scan_input').focus();
                 return;
             }
 
-            const btn = event.target;
+            const btn = document.getElementById('btn-register');
             const originalText = btn.innerText;
-            btn.innerText = "처리중...";
+            btn.innerText = "저장중...";
             btn.disabled = true;
 
+            // 서버로 전송
             fetch(GAS_URL, {
                 method: "POST",
                 body: JSON.stringify({
                     action: "add_inventory",
+                    supplier: supplier,
                     branch: branch,
                     model: model,
                     storage: storage,
                     color: color,
-                    imei: imei
+                    imei: serial // [중요] 백엔드 수정을 최소화하기 위해 'imei' 칸에 'serial'을 담아 보냅니다.
                 })
             })
             .then(res => res.json())
             .then(data => {
                 if (data.status === 'success') {
-                    alert("✅ 입고 완료!");
-                    document.getElementById('invenForm').reset(); 
-                    document.getElementById('in_model').focus();
+                    if (isContinuous) {
+                        // [연속 모드] - 창을 닫지 않고 초기화
+                        document.getElementById('in_model').value = "";
+                        document.getElementById('in_storage').value = "";
+                        document.getElementById('in_color').value = "";
+                        document.getElementById('in_serial').value = "";
+                        document.getElementById('scan_input').value = "";
+                        document.getElementById('scan_input').focus(); // 다시 스캔 대기
+                        
+                        // 성공했다는 시각적 피드백 (배경색 깜빡임 등) 주면 좋음
+                        console.log("연속 입고 성공");
+                    } else {
+                        // [일반 모드] - 성공 메시지 후 창 닫기
+                        alert("✅ 입고 완료!");
+                        document.getElementById('invenForm').reset();
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('invenModal'));
+                        modal.hide();
+                    }
                 } else {
                     alert("오류: " + data.message);
                 }
             })
             .catch(error => {
-                alert("통신 오류 발생: " + error);
+                alert("통신 오류 발생");
             })
             .finally(() => {
                 btn.innerText = originalText;
                 btn.disabled = false;
             });
         }
+
+        // 팝업 열리면 자동으로 스캔창에 포커스
+        const invenModal = document.getElementById('invenModal')
+        invenModal.addEventListener('shown.bs.modal', event => {
+            document.getElementById('scan_input').focus();
+        })
     </script>
 </body>
 </html>
