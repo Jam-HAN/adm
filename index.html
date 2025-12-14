@@ -15,8 +15,8 @@
         .mode-switch-container { display: flex; align-items: center; justify-content: flex-end; }
         .pending-list-container { max-height: 250px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 5px; background: white; }
         .delete-btn { color: #dc3545; cursor: pointer; font-weight: bold; }
-        /* 메시지 박스 스타일 */
-        #msg-area { display: none; margin-top: 10px; font-size: 0.95rem; white-space: pre-line;}
+        /* 메시지 박스 */
+        #msg-area { display: none; margin-top: 10px; font-size: 0.95rem; white-space: pre-line; }
     </style>
 </head>
 <body>
@@ -112,6 +112,7 @@
             const savedUser = localStorage.getItem('dbphone_user');
             if (savedUser) showDashboard(JSON.parse(savedUser).name);
         };
+        // 1. 로그인
         function handleCredentialResponse(response) {
             fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "login", token: response.credential }) })
             .then(res => res.json())
@@ -119,7 +120,9 @@
                 if (data.status === 'success') {
                     localStorage.setItem('dbphone_user', JSON.stringify({ name: data.name, email: data.user }));
                     showDashboard(data.name);
-                } else showMessage("error", data.message);
+                } else {
+                    document.getElementById('login-msg').innerText = data.message; // 로그인 화면 에러
+                }
             });
         }
         function showDashboard(name) {
@@ -134,6 +137,7 @@
             toggleMode();
         }
 
+        // 2. 모드 전환
         function toggleMode() {
             const isBatch = document.getElementById('mode_toggle').checked;
             const label = document.getElementById('mode-label');
@@ -141,7 +145,7 @@
             const listArea = document.getElementById('batch-list-area');
             const footer = document.getElementById('modal-footer');
             const scanInput = document.getElementById('scan_input');
-            document.getElementById('msg-area').style.display = 'none';
+            document.getElementById('msg-area').style.display = 'none'; // 메시지 초기화
 
             if (isBatch) {
                 label.innerText = "연속 입고 (대기열)"; label.classList.add("text-success"); label.classList.remove("text-secondary");
@@ -155,6 +159,7 @@
             scanInput.focus();
         }
 
+        // 3. 스캔 처리
         function handleScan(event) {
             if (event.key === 'Enter') {
                 event.preventDefault();
@@ -165,6 +170,7 @@
 
                 if (!barcode) return;
                 
+                // 클라이언트단 중복 체크
                 if (isBatch && pendingItems.some(item => item.barcode === barcode)) {
                     showMessage("error", "⚠️ 이미 목록에 있는 기기입니다.");
                     event.target.value = ""; return;
@@ -180,26 +186,24 @@
                     method: "POST",
                     body: JSON.stringify({ action: actionType, barcode: barcode, supplier: supplier, branch: branch })
                 })
-                .then(res => res.text()) 
+                .then(res => res.text()) // 일단 텍스트로
                 .then(text => {
                     let data;
                     try { data = JSON.parse(text); } 
-                    catch (e) { 
-                        // JSON 파싱 실패 시 HTML 에러 내용을 콘솔에 보여줌
-                        console.error("Server HTML Error:", text);
-                        throw new Error("서버 응답 오류 (관리자에게 문의하세요)"); 
-                    }
+                    catch (e) { throw new Error("서버 응답 오류 (HTML): " + text.substring(0, 50)); }
 
                     if (data.status === 'success') {
                         if (isBatch) {
+                            // [연속 모드] 리스트 추가
                             const newItem = { ...data.data, supplier: supplier }; 
                             addItemToList(newItem);
                             showMessage("success", "리스트 추가됨: " + data.data.model);
                         } else {
+                            // [일반 모드] 저장 성공
                             showMessage("success", "✅ 저장 완료! (" + data.data.model + ")");
                             setTimeout(() => {
                                 bootstrap.Modal.getInstance(document.getElementById('invenModal')).hide();
-                            }, 1000);
+                            }, 1000); // 1초 뒤 자동 닫기
                         }
                     } else {
                         showMessage("error", "⛔ " + data.message);
@@ -216,6 +220,7 @@
             }
         }
 
+        // 4. 메시지 표시 (팝업 X)
         function showMessage(type, text) {
             const el = document.getElementById('msg-area');
             el.style.display = 'block';
@@ -223,6 +228,7 @@
             el.innerText = text;
         }
 
+        // 5. 리스트 관리
         function addItemToList(item) { pendingItems.push(item); renderList(); }
         function removeItem(index) { pendingItems.splice(index, 1); renderList(); document.getElementById('scan_input').focus(); }
         function renderList() {
@@ -240,10 +246,11 @@
         }
         function clearList() { if(pendingItems.length > 0) pendingItems = []; renderList(); }
 
+        // 6. 일괄 저장 (연속 입고)
         function submitBatch() {
             const branch = document.getElementById('in_branch').value;
             if (pendingItems.length === 0) return;
-            if (!confirm(`총 ${pendingItems.length}대를 저장하시겠습니까?`)) return;
+            if (!confirm(`총 ${pendingItems.length}대를 저장하시겠습니까?`)) return; // 컨펌은 팝업 허용 (실수 방지)
 
             const btn = document.getElementById('btn-submit');
             const originalText = btn.innerText;
@@ -253,8 +260,12 @@
                 method: "POST",
                 body: JSON.stringify({ action: "batch_register", items: pendingItems, branch: branch })
             })
-            .then(res => res.json())
-            .then(data => {
+            .then(res => res.text()) // 여기도 Text로 먼저 받음 (에러 방지)
+            .then(text => {
+                let data;
+                try { data = JSON.parse(text); } 
+                catch (e) { throw new Error("서버 응답 오류 (HTML): " + text.substring(0, 50)); }
+
                 if (data.status === 'success') {
                     showMessage("success", `✅ ${data.count}대 저장 완료!`);
                     clearList();
@@ -267,8 +278,8 @@
                     btn.innerText = originalText; btn.disabled = false;
                 }
             })
-            .catch(() => {
-                showMessage("error", "서버 통신 오류");
+            .catch((err) => {
+                showMessage("error", "서버 통신 오류: " + err.message);
                 btn.innerText = originalText; btn.disabled = false;
             });
         }
