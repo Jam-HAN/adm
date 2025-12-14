@@ -2,151 +2,268 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>대박통신 통합관리</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>DBPhone Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    
     <style>
-        body { background-color: #f8f9fa; font-family: 'Noto Sans KR', sans-serif; }
-        .nav-link { cursor: pointer; font-weight: bold; color: #495057; }
-        .nav-link.active { color: #0d6efd !important; border-bottom: 3px solid #0d6efd; }
-        .scan-area { background-color: #212529; color: white; padding: 20px; border-radius: 10px; text-align: center; margin-bottom: 15px;}
-        .scan-input { background-color: #495057; color: #00ff00; border: 2px solid #6c757d; font-weight: bold; text-align: center; font-size: 1.2rem; }
-        .scan-input:focus { background-color: #000; color: #00ff00; border-color: #00ff00; box-shadow: none;}
-        .section-view { display: none; padding: 20px 0; }
-        .active-section { display: block; animation: fadeIn 0.3s; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        #login-view { height: 100vh; display: flex; align-items: center; justify-content: center; }
+        :root {
+            --primary-bg: #eef2f6;
+            --card-bg: #ffffff;
+            --accent-color: #4e73df;
+            --accent-gradient: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+            --text-dark: #2e384d;
+            --shadow-soft: 0 4px 20px rgba(0,0,0,0.05);
+        }
+
+        body {
+            background-color: var(--primary-bg);
+            font-family: 'Noto Sans KR', sans-serif;
+            color: var(--text-dark);
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* 공통 카드 스타일 */
+        .glass-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            box-shadow: var(--shadow-soft);
+            border: none;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        /* 로그인 화면 */
+        #login-view {
+            height: 100vh;
+            background: var(--accent-gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* 네비게이션 */
+        .custom-navbar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+        
+        /* 탭 스타일 */
+        .nav-pills .nav-link {
+            color: #8795a1;
+            font-weight: 500;
+            border-radius: 12px;
+            padding: 10px 16px;
+            transition: all 0.2s;
+        }
+        .nav-pills .nav-link.active {
+            background-color: var(--accent-color);
+            color: white;
+            box-shadow: 0 4px 10px rgba(78, 115, 223, 0.3);
+        }
+
+        /* 스캔 영역 */
+        .scan-wrapper {
+            background: #2d3436;
+            border-radius: 16px;
+            padding: 24px;
+            text-align: center;
+            color: white;
+            box-shadow: 0 10px 30px rgba(45, 52, 54, 0.3);
+        }
+        .scan-input {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            color: #00ff9d;
+            text-align: center;
+            font-size: 1.3rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+        .scan-input:focus {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: #00ff9d;
+            box-shadow: 0 0 15px rgba(0, 255, 157, 0.2);
+            color: #00ff9d;
+        }
+
+        /* 폼 요소 */
+        .form-control, .form-select {
+            border-radius: 10px;
+            border: 1px solid #e0e6ed;
+            padding: 12px;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(78, 115, 223, 0.1);
+        }
+
+        /* 애니메이션 */
+        .fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .section-view { display: none; }
+        .active-section { display: block; }
     </style>
 </head>
 <body>
 
-    <div id="login-view" class="bg-white">
-        <div class="text-center">
-            <h1 class="mb-4 fw-bold text-primary"><i class="bi bi-phone"></i> 대박통신 ERP</h1>
-            <div class="card p-5 shadow-sm border-0" style="max-width: 400px; width: 100%;">
-                <p class="mb-3 text-muted">직원 계정으로 로그인해주세요</p>
-                <div id="g_id_onload" data-client_id="98614909172-tj2a973qqgi1l7iukvfnnek0e09bpupl.apps.googleusercontent.com" data-callback="handleCredentialResponse"></div>
-                <div class="g_id_signin" data-type="standard"></div>
-                <div id="login-msg" class="text-danger mt-3 small"></div>
+    <div id="login-view">
+        <div class="glass-card p-5 text-center" style="width: 90%; max-width: 400px;">
+            <div class="mb-4">
+                <i class="bi bi-phone-vibrate text-primary" style="font-size: 3rem;"></i>
             </div>
+            <h3 class="fw-bold mb-1">DBPhone ERP</h3>
+            <p class="text-muted small mb-4">대박통신 관리자 시스템</p>
+            
+            <div id="g_id_onload" data-client_id="98614909172-tj2a973qqgi1l7iukvfnnek0e09bpupl.apps.googleusercontent.com" data-callback="handleCredentialResponse"></div>
+            <div class="g_id_signin" data-type="standard" data-shape="pill" data-theme="filled_blue" data-text="signin_with" data-size="large" data-logo_alignment="left"></div>
+            <div id="login-msg" class="text-danger mt-3 small fw-bold"></div>
         </div>
     </div>
 
     <div id="main-view" style="display:none;">
-        <nav class="navbar navbar-light bg-white shadow-sm sticky-top">
-            <div class="container-fluid">
-                <a class="navbar-brand fw-bold" href="#"><i class="bi bi-grid-3x3-gap-fill text-primary"></i> 대박통신</a>
-                <span class="navbar-text small">
-                    <i class="bi bi-person-circle"></i> <span id="user-name">직원</span>님
-                    <a href="#" onclick="logout()" class="text-decoration-none ms-2 text-danger">로그아웃</a>
-                </span>
+        
+        <nav class="navbar custom-navbar sticky-top px-3 py-3">
+            <div class="d-flex align-items-center w-100 justify-content-between">
+                <div class="d-flex align-items-center">
+                    <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 35px; height: 35px;">
+                        <i class="bi bi-grid-fill"></i>
+                    </div>
+                    <span class="fw-bold fs-5">대박통신</span>
+                </div>
+                <div>
+                    <span class="small text-muted me-2"><strong id="user-name">관리자</strong>님</span>
+                    <button onclick="logout()" class="btn btn-sm btn-light rounded-pill border"><i class="bi bi-box-arrow-right"></i></button>
+                </div>
             </div>
-            <div class="container-fluid mt-2">
-                <ul class="nav nav-tabs border-0 w-100" id="mainTab">
-                    <li class="nav-item"><a class="nav-link active" onclick="showSection('section-in')">📦 입고</a></li>
-                    <li class="nav-item"><a class="nav-link" onclick="showSection('section-move')">🚚 이동</a></li>
-                    <li class="nav-item"><a class="nav-link" onclick="showSection('section-out')">↩️ 반품</a></li>
-                    <li class="nav-item"><a class="nav-link" onclick="showSection('section-history')">📜 조회</a></li>
-                    <li class="nav-item ms-auto"><a class="nav-link text-secondary" onclick="showSection('section-vendor')">🏢 거래처</a></li>
+            <div class="w-100 mt-3 overflow-auto">
+                <ul class="nav nav-pills flex-nowrap pb-1">
+                    <li class="nav-item"><a class="nav-link active" onclick="showSection('section-in')"><i class="bi bi-box-seam me-1"></i>입고</a></li>
+                    <li class="nav-item"><a class="nav-link" onclick="showSection('section-move')"><i class="bi bi-truck me-1"></i>이동</a></li>
+                    <li class="nav-item"><a class="nav-link" onclick="showSection('section-out')"><i class="bi bi-arrow-return-left me-1"></i>반품</a></li>
+                    <li class="nav-item"><a class="nav-link" onclick="showSection('section-history')"><i class="bi bi-search me-1"></i>조회</a></li>
+                    <li class="nav-item"><a class="nav-link" onclick="showSection('section-vendor')"><i class="bi bi-buildings me-1"></i>거래처</a></li>
                 </ul>
             </div>
         </nav>
 
-        <div class="container pb-5">
+        <div class="container py-4">
             
-            <div id="section-in" class="section-view active-section">
-                <div class="row g-2 mb-3">
-                    <div class="col-md-6">
-                        <label class="small text-muted">거래처</label>
-                        <select class="form-select" id="in_supplier"></select> </div>
-                    <div class="col-md-6">
-                        <label class="small text-muted">입고지점</label>
-                        <select class="form-select" id="in_branch">
-                            <option value="장지 본점">장지 본점</option>
-                            <option value="명일 직영점">명일 직영점</option>
+            <div id="section-in" class="section-view active-section fade-in">
+                <div class="glass-card p-4">
+                    <div class="row g-3 mb-4">
+                        <div class="col-6">
+                            <label class="small text-muted mb-1 fw-bold">입고 거래처</label>
+                            <select class="form-select fw-bold" id="in_supplier"></select>
+                        </div>
+                        <div class="col-6">
+                            <label class="small text-muted mb-1 fw-bold">입고 지점</label>
+                            <select class="form-select fw-bold" id="in_branch">
+                                <option value="장지 본점">장지 본점</option>
+                                <option value="명일 직영점">명일 직영점</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="fw-bold small text-secondary"><i class="bi bi-upc-scan"></i> 바코드 스캐너</span>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="in_mode_toggle" onchange="toggleInMode()">
+                            <label class="form-check-label small fw-bold text-muted" for="in_mode_toggle" id="in_mode_label">일반</label>
+                        </div>
+                    </div>
+
+                    <div class="scan-wrapper mb-3">
+                        <input type="text" class="form-control scan-input" id="in_scan" placeholder="Ready to Scan" onkeydown="handleInScan(event)" autocomplete="off">
+                        <div class="small text-white-50 mt-2"><i class="bi bi-lightning-fill text-warning"></i> 바코드를 스캔하세요</div>
+                    </div>
+
+                    <div id="in-msg" class="alert py-2 text-center small fw-bold rounded-3" style="display:none"></div>
+
+                    <div id="in_batch_area" style="display:none;">
+                        <div class="bg-light rounded-3 p-3 border">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6 class="mb-0 fw-bold">대기 목록 <span class="badge bg-primary rounded-pill" id="in_count">0</span></h6>
+                                <button class="btn btn-xs btn-link text-danger text-decoration-none fw-bold" onclick="clearInList()">비우기</button>
+                            </div>
+                            <div style="max-height: 200px; overflow-y: auto;">
+                                <table class="table table-sm table-borderless small align-middle">
+                                    <tbody id="in_tbody"></tbody>
+                                </table>
+                            </div>
+                            <button class="btn btn-primary w-100 rounded-3 mt-2 fw-bold shadow-sm" id="btn_in_submit" onclick="submitInBatch()" disabled>
+                                입고 확정하기
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="section-move" class="section-view fade-in">
+                <div class="glass-card p-4">
+                    <h5 class="fw-bold mb-4"><i class="bi bi-arrow-left-right text-primary"></i> 재고 이동</h5>
+                    <div class="mb-3">
+                        <label class="small text-muted mb-1 fw-bold">어디로 보낼까요?</label>
+                        <select class="form-select bg-light fw-bold py-3" id="move_to_branch">
+                            <option value="명일 직영점">👉 명일 직영점으로</option>
+                            <option value="장지 본점">👉 장지 본점으로</option>
                         </select>
                     </div>
-                </div>
-                
-                <div class="form-check form-switch mb-2 text-end">
-                    <input class="form-check-input" type="checkbox" id="in_mode_toggle" onchange="toggleInMode()">
-                    <label class="form-check-label small fw-bold" for="in_mode_toggle" id="in_mode_label">일반 입고</label>
-                </div>
-
-                <div class="scan-area">
-                    <input type="text" class="form-control scan-input" id="in_scan" placeholder="입고 바코드 스캔" onkeydown="handleInScan(event)" autocomplete="off">
-                </div>
-                <div id="in-msg" class="alert py-2 text-center small fw-bold" style="display:none"></div>
-
-                <div id="in_batch_area" style="display:none;">
-                    <div class="card">
-                        <div class="card-header bg-light d-flex justify-content-between align-items-center">
-                            <span class="fw-bold small">대기 목록 (<span id="in_count">0</span>)</span>
-                            <button class="btn btn-sm btn-outline-danger" onclick="clearInList()">비우기</button>
-                        </div>
-                        <div class="card-body p-0" style="max-height: 200px; overflow-y:auto;">
-                            <table class="table table-sm table-striped mb-0 small text-center">
-                                <thead><tr><th>모델</th><th>일련번호</th><th>삭제</th></tr></thead>
-                                <tbody id="in_tbody"></tbody>
-                            </table>
-                        </div>
-                        <div class="card-footer">
-                            <button class="btn btn-success w-100 fw-bold" id="btn_in_submit" onclick="submitInBatch()" disabled>일괄 입고 확정</button>
-                        </div>
+                    <div class="scan-wrapper my-4">
+                        <input type="text" class="form-control scan-input" id="move_scan" placeholder="Scan Device" onkeydown="handleMoveScan(event)" autocomplete="off">
                     </div>
+                    <div id="move-msg" class="alert py-2 text-center small fw-bold rounded-3" style="display:none"></div>
                 </div>
             </div>
 
-            <div id="section-move" class="section-view">
-                <div class="card mb-3">
-                    <div class="card-body">
-                        <h5 class="card-title fw-bold">재고 이동</h5>
-                        <p class="card-text small text-muted">스캔한 기기를 아래 선택한 지점으로 즉시 이동시킵니다.</p>
-                        <select class="form-select mb-3 bg-light fw-bold" id="move_to_branch">
-                            <option value="명일 직영점">👉 명일 직영점으로 보냄</option>
-                            <option value="장지 본점">👉 장지 본점으로 보냄</option>
-                        </select>
-                        <div class="scan-area py-3">
-                            <input type="text" class="form-control scan-input" id="move_scan" placeholder="이동할 기기 스캔" onkeydown="handleMoveScan(event)" autocomplete="off">
-                        </div>
-                        <div id="move-msg" class="alert py-2 text-center small fw-bold" style="display:none"></div>
+            <div id="section-out" class="section-view fade-in">
+                <div class="glass-card p-4 border-top border-4 border-danger">
+                    <h5 class="fw-bold mb-4 text-danger"><i class="bi bi-x-circle"></i> 반품 처리</h5>
+                    <div class="form-floating mb-3">
+                        <input type="text" class="form-control" id="out_note" placeholder="사유">
+                        <label for="out_note">반품 사유 / 메모</label>
                     </div>
+                    <div class="scan-wrapper bg-danger bg-opacity-75 my-4" style="background-color: #d63031;">
+                        <input type="text" class="form-control scan-input border-danger" id="out_scan" placeholder="Scan Return Item" onkeydown="handleOutScan(event)" autocomplete="off">
+                    </div>
+                    <div id="out-msg" class="alert py-2 text-center small fw-bold rounded-3" style="display:none"></div>
                 </div>
             </div>
 
-            <div id="section-out" class="section-view">
-                <div class="card border-danger mb-3">
-                    <div class="card-body">
-                        <h5 class="card-title fw-bold text-danger">반품 처리</h5>
-                        <div class="mb-3">
-                            <label class="small text-muted">반품 사유 / 메모</label>
-                            <input type="text" class="form-control" id="out_note" placeholder="예: 영업사원 요청, 불량 반품 등">
-                        </div>
-                        <div class="scan-area py-3 bg-danger bg-opacity-10">
-                            <input type="text" class="form-control scan-input border-danger text-danger" id="out_scan" placeholder="반품할 기기 스캔" onkeydown="handleOutScan(event)" autocomplete="off">
-                        </div>
-                        <div id="out-msg" class="alert py-2 text-center small fw-bold" style="display:none"></div>
+            <div id="section-history" class="section-view fade-in">
+                <div class="glass-card p-3 mb-3 sticky-top" style="top: 80px; z-index: 10;">
+                    <div class="input-group">
+                        <input type="text" class="form-control border-end-0" id="hist_keyword" placeholder="일련번호/모델명 검색" onkeydown="if(event.key==='Enter') searchHistory()">
+                        <button class="btn btn-outline-secondary border-start-0 bg-white" onclick="searchHistory()"><i class="bi bi-search"></i></button>
                     </div>
                 </div>
+                <div id="hist_result"></div>
             </div>
 
-            <div id="section-history" class="section-view">
-                <div class="input-group mb-3">
-                    <input type="text" class="form-control" id="hist_keyword" placeholder="일련번호 또는 모델명 검색" onkeydown="if(event.key==='Enter') searchHistory()">
-                    <button class="btn btn-primary" onclick="searchHistory()"><i class="bi bi-search"></i> 조회</button>
-                </div>
-                <div id="hist_result">
+            <div id="section-vendor" class="section-view fade-in">
+                <div class="glass-card p-4">
+                    <h5 class="fw-bold mb-3">신규 거래처 등록</h5>
+                    <div class="row g-2 mb-3">
+                        <div class="col-12"><input type="text" class="form-control" id="v_name" placeholder="거래처명 (필수)"></div>
+                        <div class="col-6"><input type="text" class="form-control" id="v_sales" placeholder="영업사원"></div>
+                        <div class="col-6"><input type="text" class="form-control" id="v_phone" placeholder="연락처"></div>
+                        <div class="col-12"><input type="text" class="form-control" id="v_office" placeholder="개통실 전화번호"></div>
                     </div>
-            </div>
-
-            <div id="section-vendor" class="section-view">
-                <div class="input-group mb-3">
-                    <input type="text" class="form-control" id="new_vendor_name" placeholder="새 거래처 이름">
-                    <button class="btn btn-secondary" onclick="addVendor()"><i class="bi bi-plus-lg"></i> 추가</button>
+                    <button class="btn btn-primary w-100 fw-bold rounded-3" onclick="addVendor()">등록하기</button>
                 </div>
-                <ul class="list-group" id="vendor_list_ui">
-                    </ul>
+
+                <div class="glass-card p-0">
+                    <div class="p-3 border-bottom bg-light">
+                        <h6 class="mb-0 fw-bold">거래처 목록</h6>
+                    </div>
+                    <div id="vendor_list_ui" class="list-group list-group-flush">
+                        </div>
+                </div>
             </div>
 
         </div>
@@ -159,7 +276,6 @@
         let currentUser = "";
         let inPendingList = [];
 
-        // --- 초기화 ---
         window.onload = function() {
             const saved = localStorage.getItem('dbphone_user');
             if(saved) {
@@ -169,23 +285,25 @@
             }
         };
 
-        // --- 탭 전환 ---
         function showSection(id) {
-            document.querySelectorAll('.section-view').forEach(el => el.classList.remove('active-section'));
+            document.querySelectorAll('.section-view').forEach(el => el.classList.remove('active-section', 'fade-in'));
             document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
-            document.getElementById(id).classList.add('active-section');
-            event.target.classList.add('active');
             
-            // 탭별 초기화 동작
-            if(id === 'section-in') loadVendors(); // 입고 탭 가면 거래처 새로고침
-            if(id === 'section-vendor') loadVendorsToList(); // 거래처 관리 탭
+            const target = document.getElementById(id);
+            target.classList.add('active-section', 'fade-in');
             
-            // 인풋 포커스
+            // 네비 버튼 활성화 찾기
+            const navBtn = document.querySelector(`a[onclick="showSection('${id}')"]`);
+            if(navBtn) navBtn.classList.add('active');
+            
+            if(id === 'section-in') loadVendors();
+            if(id === 'section-vendor') loadVendorsToList();
+            
             const input = document.querySelector(`#${id} input`);
             if(input) input.focus();
         }
 
-        // --- 기능 1: 거래처 관리 ---
+        // --- 거래처 관리 ---
         function loadVendors() {
             fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "get_vendors" }) })
             .then(r => r.json()).then(d => {
@@ -193,7 +311,7 @@
                 sel.innerHTML = "";
                 d.list.forEach(v => {
                     const opt = document.createElement('option');
-                    opt.value = v; opt.innerText = v;
+                    opt.value = v.name; opt.innerText = v.name;
                     sel.appendChild(opt);
                 });
             });
@@ -201,31 +319,55 @@
         function loadVendorsToList() {
             fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "get_vendors" }) })
             .then(r => r.json()).then(d => {
-                const ul = document.getElementById('vendor_list_ui');
-                ul.innerHTML = "";
+                const div = document.getElementById('vendor_list_ui');
+                div.innerHTML = "";
                 d.list.forEach(v => {
-                    ul.innerHTML += `<li class="list-group-item">${v}</li>`;
+                    div.innerHTML += `
+                        <div class="list-group-item p-3">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <h6 class="fw-bold mb-0 text-primary">${v.name}</h6>
+                                <span class="badge bg-light text-dark border">${v.salesName || '-'}</span>
+                            </div>
+                            <div class="small text-muted">
+                                <i class="bi bi-telephone me-1"></i>${v.salesPhone || '-'} 
+                                <span class="mx-2">|</span> 
+                                <i class="bi bi-headset me-1"></i>${v.officePhone || '-'}
+                            </div>
+                        </div>`;
                 });
             });
         }
         function addVendor() {
-            const name = document.getElementById('new_vendor_name').value;
-            if(!name) return;
-            fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "add_vendor", name: name }) })
+            const data = {
+                action: "add_vendor",
+                name: document.getElementById('v_name').value,
+                salesName: document.getElementById('v_sales').value,
+                salesPhone: document.getElementById('v_phone').value,
+                officePhone: document.getElementById('v_office').value
+            };
+            if(!data.name) return alert("거래처명은 필수입니다.");
+            
+            fetch(GAS_URL, { method: "POST", body: JSON.stringify(data) })
             .then(r => r.json()).then(d => {
                 alert(d.message);
-                document.getElementById('new_vendor_name').value = "";
+                document.getElementById('v_name').value = "";
+                document.getElementById('v_sales').value = "";
+                document.getElementById('v_phone').value = "";
+                document.getElementById('v_office').value = "";
                 loadVendorsToList();
             });
         }
 
-        // --- 기능 2: 입고 (단건/일괄) ---
+        // --- 입고 ---
         function toggleInMode() {
             const isBatch = document.getElementById('in_mode_toggle').checked;
-            document.getElementById('in_mode_label').innerText = isBatch ? "연속 입고 (대기열)" : "일반 입고 (즉시)";
+            const label = document.getElementById('in_mode_label');
+            label.innerText = isBatch ? "연속 (대기열)" : "일반 (즉시)";
+            label.classList.toggle("text-primary", isBatch);
             document.getElementById('in_batch_area').style.display = isBatch ? 'block' : 'none';
             document.getElementById('in_scan').focus();
         }
+
         function handleInScan(e) {
             if(e.key !== 'Enter') return;
             const barcode = e.target.value.trim();
@@ -245,25 +387,27 @@
             .then(r => r.json()).then(d => {
                 if(d.status === 'success') {
                     if(isBatch) {
-                        inPendingList.push({ ...d.data, supplier: supplier }); // 리스트 추가
+                        inPendingList.push({ ...d.data, supplier: supplier });
                         renderInList();
-                        showMsg('in-msg', 'success', `리스트 추가: ${d.data.model}`);
+                        showMsg('in-msg', 'success', `추가됨: ${d.data.model}`);
                     } else {
-                        showMsg('in-msg', 'success', `✅ 입고 완료: ${d.data.model}`);
+                        showMsg('in-msg', 'success', `✅ 입고완료: ${d.data.model}`);
                     }
-                } else {
-                    showMsg('in-msg', 'error', d.message);
-                }
+                } else showMsg('in-msg', 'error', d.message);
             })
-            .finally(() => {
-                e.target.disabled = false; e.target.value = ""; e.target.focus();
-            });
+            .finally(() => { e.target.disabled = false; e.target.value = ""; e.target.focus(); });
         }
+
         function renderInList() {
             const tbody = document.getElementById('in_tbody');
             tbody.innerHTML = "";
             inPendingList.forEach((item, idx) => {
-                tbody.innerHTML += `<tr><td>${item.model}</td><td>${item.serial}</td><td><span class="text-danger" style="cursor:pointer" onclick="removeInItem(${idx})">X</span></td></tr>`;
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="fw-bold">${item.model}</td>
+                        <td class="font-monospace text-muted">${item.serial}</td>
+                        <td><button class="btn btn-sm text-danger p-0" onclick="removeInItem(${idx})"><i class="bi bi-x-circle-fill"></i></button></td>
+                    </tr>`;
             });
             document.getElementById('in_count').innerText = inPendingList.length;
             document.getElementById('btn_in_submit').disabled = inPendingList.length === 0;
@@ -273,113 +417,89 @@
         function submitInBatch() {
             if(!confirm(`${inPendingList.length}대를 입고하시겠습니까?`)) return;
             const branch = document.getElementById('in_branch').value;
+            const btn = document.getElementById('btn_in_submit');
+            btn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> 저장 중...`;
             
             fetch(GAS_URL, { method: "POST", body: JSON.stringify({ 
                 action: "batch_register", items: inPendingList, branch: branch, user: currentUser 
             })})
             .then(r => r.json()).then(d => {
                 if(d.status === 'success') {
-                    alert(`${d.count}대 입고 완료`);
+                    showMsg('in-msg', 'success', `${d.count}대 입고 완료`);
                     clearInList();
-                } else alert(d.message);
-            });
+                } else showMsg('in-msg', 'error', d.message);
+            })
+            .finally(() => { btn.innerText = "입고 확정하기"; });
         }
 
-        // --- 기능 3: 재고 이동 ---
+        // --- 이동/반품/조회 ---
         function handleMoveScan(e) {
             if(e.key !== 'Enter') return;
             const barcode = e.target.value.trim();
             const toBranch = document.getElementById('move_to_branch').value;
-            
             e.target.disabled = true;
-            fetch(GAS_URL, { method: "POST", body: JSON.stringify({ 
-                action: "transfer_stock", barcode: barcode, toBranch: toBranch, user: currentUser 
-            })})
-            .then(r => r.json()).then(d => {
-                showMsg('move-msg', d.status === 'success' ? 'success' : 'error', d.message);
-            })
+            fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "transfer_stock", barcode: barcode, toBranch: toBranch, user: currentUser })})
+            .then(r => r.json()).then(d => showMsg('move-msg', d.status==='success'?'success':'error', d.message))
             .finally(() => { e.target.disabled = false; e.target.value = ""; e.target.focus(); });
         }
-
-        // --- 기능 4: 반품 처리 ---
         function handleOutScan(e) {
             if(e.key !== 'Enter') return;
             const barcode = e.target.value.trim();
             const note = document.getElementById('out_note').value;
-            
-            if(!note) { alert("반품 사유를 먼저 입력해주세요."); return; }
-            
+            if(!note) { alert("사유 입력 필수"); return; }
             e.target.disabled = true;
-            fetch(GAS_URL, { method: "POST", body: JSON.stringify({ 
-                action: "return_stock", barcode: barcode, note: note, user: currentUser 
-            })})
-            .then(r => r.json()).then(d => {
-                showMsg('out-msg', d.status === 'success' ? 'success' : 'error', d.message);
-            })
+            fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "return_stock", barcode: barcode, note: note, user: currentUser })})
+            .then(r => r.json()).then(d => showMsg('out-msg', d.status==='success'?'success':'error', d.message))
             .finally(() => { e.target.disabled = false; e.target.value = ""; e.target.focus(); });
         }
-
-        // --- 기능 5: 이력 조회 ---
         function searchHistory() {
             const key = document.getElementById('hist_keyword').value;
             if(!key) return;
-            const resDiv = document.getElementById('hist_result');
-            resDiv.innerHTML = "<div class='text-center py-3'>검색중...</div>";
-            
+            const div = document.getElementById('hist_result');
+            div.innerHTML = `<div class="text-center py-4"><span class="spinner-border text-primary"></span></div>`;
             fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "search_history", keyword: key }) })
             .then(r => r.json()).then(d => {
-                if(d.list.length === 0) {
-                    resDiv.innerHTML = "<div class='text-center py-3 text-muted'>검색 결과가 없습니다.</div>";
-                    return;
-                }
-                let html = `<div class="list-group">`;
+                if(!d.list.length) { div.innerHTML = `<div class="text-center text-muted py-3">결과 없음</div>`; return; }
+                let html = "";
                 d.list.forEach(h => {
-                    let badge = 'bg-secondary';
-                    if(h.type === '입고') badge = 'bg-primary';
-                    if(h.type === '재고이동') badge = 'bg-info';
-                    if(h.type === '반품처리') badge = 'bg-danger';
-                    
+                    let badge = h.type === '입고' ? 'bg-primary' : (h.type==='반품처리' ? 'bg-danger' : 'bg-info');
                     html += `
-                        <div class="list-group-item">
-                            <div class="d-flex w-100 justify-content-between">
-                                <h6 class="mb-1"><span class="badge ${badge}">${h.type}</span> ${h.model}</h6>
+                        <div class="glass-card p-3 mb-2">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span class="badge ${badge}">${h.type}</span>
                                 <small class="text-muted">${h.time}</small>
                             </div>
-                            <p class="mb-1 small">${h.desc}</p>
-                            <small class="text-muted">S/N: ${h.serial} | 작업자: ${h.user}</small>
-                        </div>
-                    `;
+                            <h6 class="fw-bold mb-1">${h.model}</h6>
+                            <p class="mb-1 small text-secondary">${h.desc}</p>
+                            <div class="small text-muted bg-light rounded p-1 d-inline-block">
+                                <i class="bi bi-upc"></i> ${h.serial} | <i class="bi bi-person"></i> ${h.user}
+                            </div>
+                        </div>`;
                 });
-                html += `</div>`;
-                resDiv.innerHTML = html;
+                div.innerHTML = html;
             });
         }
 
-        // --- 유틸 ---
         function showMsg(id, type, text) {
             const el = document.getElementById(id);
             el.style.display = 'block';
-            el.className = `alert py-2 text-center small fw-bold alert-${type === 'success' ? 'success' : 'danger'}`;
-            el.innerText = text;
-            setTimeout(() => { el.style.display = 'none'; }, 2000);
+            el.className = `alert py-2 text-center small fw-bold rounded-3 alert-${type==='success'?'success':'danger'}`;
+            el.innerHTML = type==='success' ? `<i class="bi bi-check-circle-fill me-1"></i> ${text}` : `<i class="bi bi-exclamation-triangle-fill me-1"></i> ${text}`;
+            setTimeout(() => el.style.display='none', 2000);
         }
 
-        // --- 로그인 ---
+        // 로그인
         function handleCredentialResponse(response) {
             fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "login", token: response.credential }) })
             .then(r => r.json()).then(d => {
                 if (d.status === 'success') {
                     localStorage.setItem('dbphone_user', JSON.stringify({ name: d.name, email: d.user }));
                     currentUser = d.name;
-                    showMain();
+                    document.getElementById('login-view').style.display = 'none';
+                    document.getElementById('main-view').style.display = 'block';
+                    loadVendors();
                 } else document.getElementById('login-msg').innerText = d.message;
             });
-        }
-        function showMain() {
-            document.getElementById('login-view').style.display = 'none';
-            document.getElementById('main-view').style.display = 'block';
-            document.getElementById('user-name').innerText = currentUser;
-            loadVendors(); // 초기 로딩
         }
         function logout() { localStorage.removeItem('dbphone_user'); location.reload(); }
     </script>
