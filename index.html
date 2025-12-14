@@ -8,6 +8,9 @@
     <style>
         body { background-color: #f8f9fa; }
         #dashboard-view { display: none; } /* 처음엔 대시보드 숨김 */
+        
+        /* 모바일에서 입력창 글씨가 너무 작지 않게 */
+        input, select { font-size: 16px !important; }
     </style>
 </head>
 <body>
@@ -56,23 +59,66 @@
                     </div>
                 </div>
                 <div class="col-md-4">
-                     <button class="btn btn-lg btn-light w-100 h-100 border">입고 잡기</button>
+                     <button class="btn btn-lg btn-light w-100 h-100 border shadow-sm" data-bs-toggle="modal" data-bs-target="#invenModal">
+                        📦 입고 잡기
+                     </button>
                 </div>
             </div>
         </div>
     </div>
 
+    <div class="modal fade" id="invenModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">기기 입고 등록</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <form id="invenForm">
+                  <div class="mb-3">
+                      <label class="form-label">입고 지점</label>
+                      <select class="form-select" id="in_branch" required>
+                          <option value="장지 본점">장지 본점</option>
+                          <option value="명일 직영점">명일 직영점</option>
+                      </select>
+                  </div>
+                  <div class="row g-2 mb-3">
+                      <div class="col">
+                          <input type="text" class="form-control" id="in_model" placeholder="모델명 (예: S25)" required>
+                      </div>
+                      <div class="col">
+                          <input type="text" class="form-control" id="in_storage" placeholder="용량 (예: 256G)">
+                      </div>
+                  </div>
+                  <div class="mb-3">
+                      <input type="text" class="form-control" id="in_color" placeholder="색상 (예: 블랙)">
+                  </div>
+                  <div class="mb-3">
+                      <label class="form-label">IMEI / 일련번호</label>
+                      <input type="text" class="form-control" id="in_imei" placeholder="바코드 스캔 또는 입력" required>
+                  </div>
+              </form>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
+              <button type="button" class="btn btn-primary" onclick="submitInventory(event)">등록하기</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
     <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
     <script>
-        // 아까 복사한 Apps Script 배포 URL을 여기에 넣으세요
+        // 사장님의 GAS URL
         const GAS_URL = "https://script.google.com/macros/s/AKfycbyB_mC39GwfguxtYMm4P4jbszB8d10UhvL9AWZYRGXQxhApSkYP4x-yLiCzmoxhSNDY/exec";
 
-        // 구글 로그인 성공 시 실행되는 함수
+        // 1. 로그인 처리 함수
         function handleCredentialResponse(response) {
-            console.log("Encoded JWT ID token: " + response.credential);
+            console.log("Token: " + response.credential);
             
-            // Apps Script로 토큰을 보내 검증
             fetch(GAS_URL, {
                 method: "POST",
                 body: JSON.stringify({
@@ -83,12 +129,10 @@
             .then(res => res.json())
             .then(data => {
                 if (data.status === 'success') {
-                    // 로그인 성공 처리
                     document.getElementById('login-view').style.display = 'none';
                     document.getElementById('dashboard-view').style.display = 'block';
                     document.getElementById('user-name').innerText = data.name;
                 } else {
-                    // 로그인 실패 (도메인 불일치 등)
                     document.getElementById('login-msg').innerText = data.message;
                 }
             })
@@ -100,6 +144,54 @@
 
         function logout() {
             location.reload();
+        }
+
+        // 2. 입고 등록 처리 함수
+        function submitInventory(event) {
+            const branch = document.getElementById('in_branch').value;
+            const model = document.getElementById('in_model').value;
+            const storage = document.getElementById('in_storage').value;
+            const color = document.getElementById('in_color').value;
+            const imei = document.getElementById('in_imei').value;
+
+            if(!model || !imei) {
+                alert("모델명과 IMEI는 필수입니다.");
+                return;
+            }
+
+            const btn = event.target;
+            const originalText = btn.innerText;
+            btn.innerText = "처리중...";
+            btn.disabled = true;
+
+            fetch(GAS_URL, {
+                method: "POST",
+                body: JSON.stringify({
+                    action: "add_inventory",
+                    branch: branch,
+                    model: model,
+                    storage: storage,
+                    color: color,
+                    imei: imei
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    alert("✅ 입고 완료!");
+                    document.getElementById('invenForm').reset(); 
+                    document.getElementById('in_model').focus();
+                } else {
+                    alert("오류: " + data.message);
+                }
+            })
+            .catch(error => {
+                alert("통신 오류 발생: " + error);
+            })
+            .finally(() => {
+                btn.innerText = originalText;
+                btn.disabled = false;
+            });
         }
     </script>
 </body>
