@@ -13,9 +13,8 @@
         .scan-area {
             background-color: #212529;
             color: white;
-            padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 20px;
+            padding: 15px;
+            border-radius: 10px;
             text-align: center;
         }
         .scan-input {
@@ -25,21 +24,25 @@
             font-weight: bold;
             text-align: center;
             font-size: 1.2rem;
-            letter-spacing: 2px;
+            letter-spacing: 1px;
         }
         .scan-input:focus {
             background-color: #000;
             color: #00ff00;
             border-color: #00ff00;
-            box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
         }
-        .result-card {
-            display: none;
-            background-color: #e8f5e9;
-            border: 1px solid #c8e6c9;
-            border-radius: 10px;
-            padding: 15px;
-            margin-top: 15px;
+        /* 대기열 리스트 스타일 */
+        .pending-list-container {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            background: white;
+        }
+        .delete-btn {
+            color: #dc3545;
+            cursor: pointer;
+            font-weight: bold;
         }
     </style>
 </head>
@@ -81,53 +84,66 @@
         </div>
     </div>
 
-    <div class="modal fade" id="invenModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-          <div class="modal-content">
+    <div class="modal fade" id="invenModal" tabindex="-1" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered modal-lg"> <div class="modal-content">
             <div class="modal-header bg-light">
-              <h5 class="modal-title">🚀 스피드 입고</h5>
-              <div class="form-check form-switch ms-auto">
-                  <input class="form-check-input" type="checkbox" id="continuous_mode" checked>
-                  <label class="form-check-label small fw-bold" for="continuous_mode">연속 모드</label>
-              </div>
-              <button type="button" class="btn-close ms-2" data-bs-dismiss="modal"></button>
+              <h5 class="modal-title">🚀 연속 입고 시스템</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" onclick="clearList()"></button>
             </div>
             <div class="modal-body">
               
               <div class="row g-2 mb-3">
                   <div class="col-6">
-                      <input type="text" class="form-control form-control-sm" id="in_supplier" placeholder="거래처 (예: SK)" list="supplierOptions">
+                      <input type="text" class="form-control" id="in_supplier" placeholder="거래처 (예: SK)" list="supplierOptions">
                       <datalist id="supplierOptions">
                           <option value="SK네트웍스"><option value="삼성전자"><option value="애플코리아"><option value="대리점"><option value="중고매입">
                       </datalist>
                   </div>
                   <div class="col-6">
-                      <select class="form-select form-select-sm" id="in_branch">
+                      <select class="form-select" id="in_branch">
                           <option value="장지 본점">장지 본점</option>
                           <option value="명일 직영점">명일 직영점</option>
                       </select>
                   </div>
               </div>
 
-              <div class="scan-area">
-                  <label class="form-label small text-white-50 mb-2">바코드를 스캔하세요</label>
-                  <input type="text" class="form-control form-control-lg scan-input" 
-                         id="scan_input" placeholder="CLICK & SCAN" 
+              <div class="scan-area mb-3">
+                  <label class="small text-white-50 mb-1">바코드를 스캔하면 아래 리스트에 추가됩니다</label>
+                  <input type="text" class="form-control scan-input" 
+                         id="scan_input" placeholder="스캔 대기중..." 
                          onkeydown="handleScan(event)" autocomplete="off">
-                  <div id="loading-spinner" class="spinner-border text-success mt-3" style="display:none" role="status"></div>
+                  <div id="loading-msg" class="text-warning small mt-2" style="display:none">정보 확인 중...</div>
               </div>
+              
+              <div id="error-msg" class="alert alert-danger py-1 small mb-2" style="display:none"></div>
 
-              <div id="result-area" class="result-card">
-                  <h5 class="fw-bold text-success mb-1">✅ 입고 완료!</h5>
-                  <div class="small text-muted mb-2" id="res_timestamp"></div>
-                  <table class="table table-sm table-borderless mb-0">
-                      <tr><td class="text-secondary">모델</td><td class="fw-bold" id="res_model">-</td></tr>
-                      <tr><td class="text-secondary">정보</td><td class="fw-bold"><span id="res_cap">-</span> / <span id="res_color">-</span></td></tr>
-                      <tr><td class="text-secondary">S/N</td><td class="fw-bold font-monospace" id="res_serial">-</td></tr>
+              <h6 class="fw-bold mt-4 mb-2">
+                  입고 대기 목록 <span class="badge bg-primary" id="list-count">0</span>
+              </h6>
+              <div class="pending-list-container">
+                  <table class="table table-striped table-hover mb-0 text-center small">
+                      <thead class="table-light sticky-top">
+                          <tr>
+                              <th>모델명(용량)</th>
+                              <th>색상</th>
+                              <th>일련번호</th>
+                              <th>삭제</th>
+                          </tr>
+                      </thead>
+                      <tbody id="pending-tbody">
+                          </tbody>
                   </table>
+                  <div id="empty-msg" class="text-center text-muted py-4">
+                      아직 스캔된 기기가 없습니다.
+                  </div>
               </div>
 
-              <div id="error-area" class="alert alert-danger mt-3" style="display:none;"></div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" onclick="clearList()">취소</button>
+              <button type="button" class="btn btn-success fw-bold px-4" id="btn-submit" onclick="submitBatch()" disabled>
+                  총 <span id="submit-count">0</span>대 입고 확정
+              </button>
             </div>
           </div>
         </div>
@@ -137,123 +153,172 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
     <script>
-        // ★★★ 사장님의 GAS URL을 여기에 넣어주세요 ★★★
+        // ★ URL 수정 필수
         const GAS_URL = "https://script.google.com/macros/s/AKfycbyB_mC39GwfguxtYMm4P4jbszB8d10UhvL9AWZYRGXQxhApSkYP4x-yLiCzmoxhSNDY/exec";
 
-        // 초기화
+        // 입고 대기열 배열
+        let pendingItems = [];
+
+        // --- 초기화 & 로그인 ---
         window.onload = function() {
             const savedUser = localStorage.getItem('dbphone_user');
-            if (savedUser) {
-                const user = JSON.parse(savedUser);
-                showDashboard(user.name);
-            }
+            if (savedUser) showDashboard(JSON.parse(savedUser).name);
         };
 
         function handleCredentialResponse(response) {
-            fetch(GAS_URL, {
-                method: "POST",
-                body: JSON.stringify({ action: "login", token: response.credential })
-            })
+            fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "login", token: response.credential }) })
             .then(res => res.json())
             .then(data => {
                 if (data.status === 'success') {
                     localStorage.setItem('dbphone_user', JSON.stringify({ name: data.name, email: data.user }));
                     showDashboard(data.name);
-                } else {
-                    alert(data.message);
-                }
+                } else alert(data.message);
             });
         }
-
         function showDashboard(name) {
             document.getElementById('login-view').style.display = 'none';
             document.getElementById('dashboard-view').style.display = 'block';
             document.getElementById('user-name').innerText = name;
         }
+        function logout() { localStorage.removeItem('dbphone_user'); location.reload(); }
 
-        function logout() {
-            localStorage.removeItem('dbphone_user');
-            location.reload();
-        }
 
-        // --- 스캔 핸들러 ---
+        // --- [1] 스캔 처리 (미리보기 요청) ---
         function handleScan(event) {
             if (event.key === 'Enter') {
                 event.preventDefault();
                 const barcode = event.target.value.trim();
-                const supplier = document.getElementById('in_supplier').value;
-                const branch = document.getElementById('in_branch').value;
-
                 if (!barcode) return;
-                
-                // UI 잠금
-                const input = document.getElementById('scan_input');
-                input.disabled = true;
-                document.getElementById('loading-spinner').style.display = 'inline-block';
-                document.getElementById('result-area').style.display = 'none';
-                document.getElementById('error-area').style.display = 'none';
 
-                // 서버 전송
+                // 중복 방지 (리스트에 이미 있는지 확인)
+                if (pendingItems.some(item => item.barcode === barcode)) {
+                    showError("⚠️ 이미 목록에 추가된 기기입니다.");
+                    event.target.value = "";
+                    return;
+                }
+
+                document.getElementById('scan_input').disabled = true;
+                document.getElementById('loading-msg').style.display = 'block';
+                document.getElementById('error-msg').style.display = 'none';
+
                 fetch(GAS_URL, {
                     method: "POST",
-                    body: JSON.stringify({
-                        action: "scan_and_register",
-                        barcode: barcode,
-                        supplier: supplier,
-                        branch: branch
-                    })
+                    body: JSON.stringify({ action: "scan_preview", barcode: barcode })
                 })
                 .then(res => res.json())
                 .then(data => {
                     if (data.status === 'success') {
-                        showSuccess(data.data);
+                        // 대기열에 추가
+                        addItemToList(data.data);
                     } else if (data.status === 'unknown_model') {
-                        showError(`🚨 미등록 모델코드: <b>${data.modelCode}</b><br>맵데이터 시트에 정보를 추가해주세요.`);
+                        showError(`🚨 미등록 모델코드: ${data.modelCode}`);
                     } else {
                         showError("⛔ " + data.message);
                     }
                 })
-                .catch(err => {
-                    showError("통신 오류 발생");
-                })
+                .catch(() => showError("통신 오류"))
                 .finally(() => {
+                    const input = document.getElementById('scan_input');
                     input.disabled = false;
                     input.value = "";
                     input.focus();
-                    document.getElementById('loading-spinner').style.display = 'none';
+                    document.getElementById('loading-msg').style.display = 'none';
                 });
             }
         }
 
-        function showSuccess(data) {
-            const isContinuous = document.getElementById('continuous_mode').checked;
-            
-            document.getElementById('res_model').innerText = data.model;
-            document.getElementById('res_cap').innerText = data.capacity;
-            document.getElementById('res_color').innerText = data.color;
-            document.getElementById('res_serial').innerText = data.serial;
-            document.getElementById('res_timestamp').innerText = new Date().toLocaleTimeString();
-            
-            document.getElementById('result-area').style.display = 'block';
+        // --- [2] 대기열 UI 관리 ---
+        function addItemToList(item) {
+            pendingItems.push(item);
+            renderList();
+        }
 
-            if (!isContinuous) {
-                setTimeout(() => {
-                    bootstrap.Modal.getInstance(document.getElementById('invenModal')).hide();
-                }, 1500);
-            }
+        function removeItem(index) {
+            pendingItems.splice(index, 1);
+            renderList();
+            document.getElementById('scan_input').focus();
+        }
+
+        function renderList() {
+            const tbody = document.getElementById('pending-tbody');
+            tbody.innerHTML = "";
+            
+            pendingItems.forEach((item, index) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="fw-bold">${item.model}</td>
+                    <td>${item.color}</td>
+                    <td class="font-monospace">${item.serial}</td>
+                    <td><span class="delete-btn" onclick="removeItem(${index})">X</span></td>
+                `;
+                // 최신 항목을 위로? 아래로? -> 여기선 아래로 추가됨 (prepend하면 위로)
+                tbody.prepend(tr); 
+            });
+
+            // UI 업데이트
+            const count = pendingItems.length;
+            document.getElementById('list-count').innerText = count;
+            document.getElementById('submit-count').innerText = count;
+            document.getElementById('btn-submit').disabled = count === 0;
+            document.getElementById('empty-msg').style.display = count === 0 ? 'block' : 'none';
+        }
+
+        function clearList() {
+            if(pendingItems.length > 0 && !confirm("대기 목록을 초기화 하시겠습니까?")) return;
+            pendingItems = [];
+            renderList();
         }
 
         function showError(msg) {
-            const errDiv = document.getElementById('error-area');
-            errDiv.innerHTML = msg;
-            errDiv.style.display = 'block';
+            const err = document.getElementById('error-msg');
+            err.innerText = msg;
+            err.style.display = 'block';
+        }
+
+        // --- [3] 최종 일괄 입고 ---
+        function submitBatch() {
+            const supplier = document.getElementById('in_supplier').value;
+            const branch = document.getElementById('in_branch').value;
+
+            if (pendingItems.length === 0) return;
+            if (!confirm(`총 ${pendingItems.length}대의 기기를 입고 등록하시겠습니까?`)) return;
+
+            const btn = document.getElementById('btn-submit');
+            btn.innerText = "저장 중...";
+            btn.disabled = true;
+
+            fetch(GAS_URL, {
+                method: "POST",
+                body: JSON.stringify({
+                    action: "batch_register",
+                    items: pendingItems,
+                    supplier: supplier,
+                    branch: branch
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    alert(`✅ ${data.count}대 입고가 완료되었습니다!`);
+                    pendingItems = []; // 리스트 비우기
+                    renderList();
+                    // 모달 닫기
+                    bootstrap.Modal.getInstance(document.getElementById('invenModal')).hide();
+                } else {
+                    alert("오류: " + data.message);
+                }
+            })
+            .catch(() => alert("서버 통신 오류"))
+            .finally(() => {
+                btn.innerHTML = `총 <span id="submit-count">0</span>대 입고 확정`;
+                btn.disabled = true;
+            });
         }
 
         // 모달 열리면 포커스
-        const invenModal = document.getElementById('invenModal')
-        invenModal.addEventListener('shown.bs.modal', event => {
+        document.getElementById('invenModal').addEventListener('shown.bs.modal', () => {
             document.getElementById('scan_input').focus();
-        })
+        });
     </script>
 </body>
 </html>
