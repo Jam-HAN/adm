@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>대박통신 관리자</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f8f9fa; }
+        #dashboard-view { display: none; } /* 처음엔 대시보드 숨김 */
+    </style>
+</head>
+<body>
+
+    <div class="container mt-5">
+        <div id="login-view" class="text-center">
+            <h1 class="mb-4">DBPhone Manager</h1>
+            <div class="card p-5 mx-auto" style="max-width: 400px;">
+                <p class="mb-3">워크스페이스 계정으로 로그인하세요</p>
+                <div id="g_id_onload"
+                     data-client_id="98614909172-tj2a973qqgi1l7iukvfnnek0e09bpupl.apps.googleusercontent.com" 
+                     data-callback="handleCredentialResponse"
+                     data-auto_select="false">
+                </div>
+                <div class="g_id_signin" data-type="standard"></div>
+                <div id="login-msg" class="text-danger mt-3"></div>
+            </div>
+        </div>
+
+        <div id="dashboard-view">
+            <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm mb-4 rounded">
+                <div class="container-fluid">
+                    <a class="navbar-brand fw-bold" href="#">대박통신 관리자</a>
+                    <span class="navbar-text">
+                        반갑습니다, <strong id="user-name">님</strong>
+                        <button onclick="logout()" class="btn btn-sm btn-outline-secondary ms-2">로그아웃</button>
+                    </span>
+                </div>
+            </nav>
+
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="card text-white bg-primary mb-3">
+                        <div class="card-header">금일 개통</div>
+                        <div class="card-body">
+                            <h3 class="card-title">준비중</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card text-white bg-success mb-3">
+                        <div class="card-header">현재 재고</div>
+                        <div class="card-body">
+                            <h3 class="card-title">준비중</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                     <button class="btn btn-lg btn-light w-100 h-100 border">입고 잡기</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    
+    <script>
+        // 아까 복사한 Apps Script 배포 URL을 여기에 넣으세요
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbyB_mC39GwfguxtYMm4P4jbszB8d10UhvL9AWZYRGXQxhApSkYP4x-yLiCzmoxhSNDY/exec";
+
+        // 구글 로그인 성공 시 실행되는 함수
+        function handleCredentialResponse(response) {
+            console.log("Encoded JWT ID token: " + response.credential);
+            
+            // Apps Script로 토큰을 보내 검증
+            fetch(GAS_URL, {
+                method: "POST",
+                body: JSON.stringify({
+                    action: "login",
+                    token: response.credential
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // 로그인 성공 처리
+                    document.getElementById('login-view').style.display = 'none';
+                    document.getElementById('dashboard-view').style.display = 'block';
+                    document.getElementById('user-name').innerText = data.name;
+                } else {
+                    // 로그인 실패 (도메인 불일치 등)
+                    document.getElementById('login-msg').innerText = data.message;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('login-msg').innerText = "서버 연결 오류 발생";
+            });
+        }
+
+        function logout() {
+            location.reload();
+        }
+    </script>
+</body>
+</html>
