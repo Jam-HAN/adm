@@ -12,20 +12,22 @@
         :root { --primary-bg: #eef2f6; --card-bg: #ffffff; --accent-color: #4e73df; --accent-gradient: linear-gradient(135deg, #4e73df 0%, #224abe 100%); }
         body { background-color: var(--primary-bg); font-family: 'Noto Sans KR', sans-serif; color: #2e384d; }
         .glass-card { background: var(--card-bg); border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); border: none; overflow: hidden; margin-bottom: 20px; }
-        #login-view { height: 100vh; background: var(--accent-gradient); display: flex; align-items: center; justify-content: center; }
-        .custom-navbar { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(0,0,0,0.05); }
-        .nav-pills .nav-link { color: #8795a1; font-weight: 500; border-radius: 12px; padding: 10px 16px; transition: all 0.2s; }
-        .nav-pills .nav-link.active { background-color: var(--accent-color); color: white; box-shadow: 0 4px 10px rgba(78, 115, 223, 0.3); }
+        #login-view { height: 100vh; background: var(--accent-gradient); display: flex; align-items: center; justify-content: center; position: fixed; top: 0; left: 0; width: 100%; z-index: 9999; }
+        .custom-navbar { background: rgba(255, 255, 255, 0.98); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(0,0,0,0.05); padding: 10px 15px; }
+        .nav-link { color: #555; font-weight: 600; cursor: pointer; }
+        .nav-link:hover, .nav-link.active { color: var(--accent-color); }
+        .dropdown-item { padding: 10px 20px; font-weight: 500; }
+        .dropdown-item:active { background-color: var(--accent-color); }
         .scan-wrapper { background: #2d3436; border-radius: 16px; padding: 24px; text-align: center; color: white; box-shadow: 0 10px 30px rgba(45, 52, 54, 0.3); }
         .scan-input { background: rgba(255, 255, 255, 0.1); border: 2px solid rgba(255, 255, 255, 0.2); border-radius: 12px; color: #00ff9d; text-align: center; font-size: 1.3rem; font-weight: 700; }
         .scan-input:focus { background: rgba(255, 255, 255, 0.15); border-color: #00ff9d; box-shadow: 0 0 15px rgba(0, 255, 157, 0.2); color: #00ff9d; }
-        .form-control, .form-select { border-radius: 10px; border: 1px solid #e0e6ed; padding: 12px; }
         .section-view { display: none; }
         .active-section { display: block; animation: fadeIn 0.4s ease-out forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
+
     <div id="login-view">
         <div class="glass-card p-5 text-center" style="width: 90%; max-width: 400px;">
             <h3 class="fw-bold mb-4 text-primary"><i class="bi bi-phone-vibrate"></i> DBPhone ERP</h3>
@@ -36,120 +38,103 @@
     </div>
 
     <div id="main-view" style="display:none;">
-        <nav class="navbar custom-navbar sticky-top px-3 py-3">
-            <div class="d-flex align-items-center w-100 justify-content-between">
-                <div class="fw-bold fs-5"><i class="bi bi-grid-fill text-primary me-2"></i>대박통신</div>
-                <div>
-                    <span class="small text-muted me-2"><strong id="user-name">관리자</strong>님</span>
-                    <button onclick="logout()" class="btn btn-sm btn-light rounded-pill border"><i class="bi bi-box-arrow-right"></i></button>
+        <nav class="navbar navbar-expand bg-white custom-navbar sticky-top shadow-sm">
+            <div class="container-fluid px-0">
+                <a class="navbar-brand fw-bold text-primary" href="#"><i class="bi bi-grid-fill me-2"></i>대박통신</a>
+                <div class="collapse navbar-collapse">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">📦 재고관리</a>
+                            <ul class="dropdown-menu border-0 shadow-lg">
+                                <li><a class="dropdown-item" onclick="showSection('section-in')">입고 등록</a></li>
+                                <li><a class="dropdown-item" onclick="showSection('section-move')">재고 이동</a></li>
+                                <li><a class="dropdown-item" onclick="showSection('section-out')">반품 처리</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" onclick="showSection('section-history')">📜 이력 조회</a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                    <ul class="navbar-nav ms-auto align-items-center">
+                        <li class="nav-item me-2"><a class="nav-link" onclick="showSection('section-vendor')">🏢 거래처</a></li>
+                        <li class="nav-item d-flex align-items-center ms-2">
+                            <span class="small text-muted me-2"><strong id="user-name">...</strong>님</span>
+                            <button onclick="logout()" class="btn btn-sm btn-light border rounded-circle"><i class="bi bi-power text-danger"></i></button>
+                        </li>
+                    </ul>
                 </div>
-            </div>
-            <div class="w-100 mt-3 overflow-auto">
-                <ul class="nav nav-pills flex-nowrap pb-1">
-                    <li class="nav-item"><a class="nav-link active" onclick="showSection('section-in')">📦 입고</a></li>
-                    <li class="nav-item"><a class="nav-link" onclick="showSection('section-move')">🚚 이동</a></li>
-                    <li class="nav-item"><a class="nav-link" onclick="showSection('section-out')">↩️ 반품</a></li>
-                    <li class="nav-item"><a class="nav-link" onclick="showSection('section-history')">📜 조회</a></li>
-                    <li class="nav-item"><a class="nav-link" onclick="showSection('section-vendor')">🏢 거래처</a></li>
-                </ul>
             </div>
         </nav>
 
         <div class="container py-4">
             
-            <div id="section-in" class="section-view active-section">
+            <div id="section-in" class="section-view active-section fade-in">
                 <div class="glass-card p-4">
+                    <h5 class="fw-bold mb-3">입고 등록</h5>
                     <div class="row g-3 mb-4">
-                        <div class="col-6">
-                            <label class="small text-muted fw-bold">거래처</label>
-                            <select class="form-select fw-bold" id="in_supplier"></select>
-                        </div>
-                        <div class="col-6">
-                            <label class="small text-muted fw-bold">지점</label>
-                            <select class="form-select fw-bold" id="in_branch">
-                                <option value="장지 본점">장지 본점</option>
-                                <option value="명일 직영점">명일 직영점</option>
-                            </select>
-                        </div>
+                        <div class="col-6"><label class="small text-muted fw-bold">거래처</label><select class="form-select fw-bold" id="in_supplier"></select></div>
+                        <div class="col-6"><label class="small text-muted fw-bold">지점</label><select class="form-select fw-bold" id="in_branch"><option value="장지 본점">장지 본점</option><option value="명일 직영점">명일 직영점</option></select></div>
                     </div>
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <span class="fw-bold small text-secondary">입고 스캔</span>
+                        <span class="small text-muted">스캔 모드</span>
                         <div class="form-check form-switch">
                             <input class="form-check-input" type="checkbox" id="in_mode_toggle" onchange="toggleInMode()">
                             <label class="form-check-label small fw-bold text-muted" for="in_mode_toggle" id="in_mode_label">일반</label>
                         </div>
                     </div>
-                    <div class="scan-wrapper mb-3">
-                        <input type="text" class="form-control scan-input" id="in_scan" placeholder="바코드 스캔" onkeydown="handleInScan(event)" autocomplete="off">
-                    </div>
+                    <div class="scan-wrapper mb-3"><input type="text" class="form-control scan-input" id="in_scan" placeholder="바코드 스캔" onkeydown="handleInScan(event)" autocomplete="off"></div>
                     <div id="in-msg" class="alert py-2 text-center small fw-bold rounded-3" style="display:none"></div>
-                    
                     <div id="in_batch_area" style="display:none;">
                         <div class="bg-light rounded-3 p-3 border">
-                            <div class="d-flex justify-content-between mb-2">
-                                <h6 class="fw-bold">대기 목록 <span class="badge bg-primary rounded-pill" id="in_count">0</span></h6>
-                                <button class="btn btn-sm text-danger fw-bold" onclick="clearInList()">비우기</button>
-                            </div>
-                            <div style="max-height: 200px; overflow-y: auto;">
-                                <table class="table table-sm table-borderless small align-middle"><tbody id="in_tbody"></tbody></table>
-                            </div>
+                            <div class="d-flex justify-content-between mb-2"><h6 class="fw-bold">대기 목록 <span class="badge bg-primary rounded-pill" id="in_count">0</span></h6><button class="btn btn-sm text-danger fw-bold" onclick="clearInList()">비우기</button></div>
+                            <div style="max-height: 200px; overflow-y: auto;"><table class="table table-sm table-borderless small align-middle"><tbody id="in_tbody"></tbody></table></div>
                             <button class="btn btn-primary w-100 rounded-3 mt-2 fw-bold" id="btn_in_submit" onclick="submitInBatch()" disabled>입고 확정</button>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div id="section-move" class="section-view">
+            <div id="section-move" class="section-view fade-in">
                 <div class="glass-card p-4">
                     <h5 class="fw-bold mb-4 text-primary">재고 이동</h5>
-                    <select class="form-select bg-light fw-bold py-3 mb-3" id="move_to_branch">
-                        <option value="명일 직영점">👉 명일 직영점으로</option>
-                        <option value="장지 본점">👉 장지 본점으로</option>
-                    </select>
-                    <div class="scan-wrapper my-4">
-                        <input type="text" class="form-control scan-input" id="move_scan" placeholder="바코드 또는 일련번호" onkeydown="handleMoveScan(event)" autocomplete="off">
-                    </div>
+                    <select class="form-select bg-light fw-bold py-3 mb-3" id="move_to_branch"><option value="명일 직영점">👉 명일 직영점으로</option><option value="장지 본점">👉 장지 본점으로</option></select>
+                    <div class="scan-wrapper my-4"><input type="text" class="form-control scan-input" id="move_scan" placeholder="바코드 또는 일련번호" onkeydown="handleMoveScan(event)" autocomplete="off"></div>
                     <div id="move-msg" class="alert py-2 text-center small fw-bold rounded-3" style="display:none"></div>
                 </div>
             </div>
 
-            <div id="section-out" class="section-view">
+            <div id="section-out" class="section-view fade-in">
                 <div class="glass-card p-4 border-top border-4 border-danger">
                     <h5 class="fw-bold mb-4 text-danger">반품 처리</h5>
-                    <div class="form-floating mb-3">
-                        <input type="text" class="form-control" id="out_note" placeholder="사유">
-                        <label>반품 사유 / 메모</label>
-                    </div>
-                    <div class="scan-wrapper bg-danger bg-opacity-75 my-4" style="background-color: #d63031;">
-                        <input type="text" class="form-control scan-input border-danger" id="out_scan" placeholder="바코드 또는 일련번호" onkeydown="handleOutScan(event)" autocomplete="off">
-                    </div>
+                    <div class="form-floating mb-3"><input type="text" class="form-control" id="out_note" placeholder="사유"><label>반품 사유 / 메모</label></div>
+                    <div class="scan-wrapper bg-danger bg-opacity-75 my-4" style="background-color: #d63031;"><input type="text" class="form-control scan-input border-danger" id="out_scan" placeholder="바코드 또는 일련번호" onkeydown="handleOutScan(event)" autocomplete="off"></div>
                     <div id="out-msg" class="alert py-2 text-center small fw-bold rounded-3" style="display:none"></div>
                 </div>
             </div>
 
-            <div id="section-history" class="section-view">
+            <div id="section-history" class="section-view fade-in">
                 <div class="glass-card p-3 mb-3 sticky-top" style="top: 80px; z-index: 10;">
+                    <h5 class="fw-bold mb-3">이력 조회</h5>
                     <div class="input-group">
-                        <input type="text" class="form-control border-end-0" id="hist_keyword" placeholder="일련번호/모델명 검색" onkeydown="if(event.key==='Enter') searchHistory()">
+                        <input type="text" class="form-control border-end-0" id="hist_keyword" placeholder="일련번호 / 바코드 / 모델명" onkeydown="if(event.key==='Enter') searchHistory()">
                         <button class="btn btn-outline-secondary border-start-0 bg-white" onclick="searchHistory()"><i class="bi bi-search"></i></button>
                     </div>
                 </div>
                 <div id="hist_result"></div>
             </div>
 
-            <div id="section-vendor" class="section-view">
+            <div id="section-vendor" class="section-view fade-in">
                 <div class="glass-card p-4">
-                    <h5 class="fw-bold mb-3">신규 등록</h5>
+                    <h5 class="fw-bold mb-3">거래처 등록</h5>
                     <div class="row g-2 mb-3">
                         <div class="col-12"><input type="text" class="form-control enter-trigger" id="v_name" placeholder="거래처명 (필수)"></div>
                         <div class="col-6"><input type="text" class="form-control enter-trigger" id="v_sales" placeholder="영업사원"></div>
                         <div class="col-6"><input type="text" class="form-control enter-trigger" id="v_phone" placeholder="연락처"></div>
                         <div class="col-12"><input type="text" class="form-control enter-trigger" id="v_office" placeholder="개통실 전화번호"></div>
                     </div>
-                    <button class="btn btn-primary w-100 fw-bold rounded-3" onclick="addVendor()">등록하기</button>
+                    <button class="btn btn-secondary w-100 fw-bold rounded-3" onclick="addVendor()">등록하기</button>
                 </div>
                 <div class="glass-card p-0">
-                    <div class="p-3 border-bottom bg-light"><h6 class="mb-0 fw-bold">거래처 목록</h6></div>
+                    <div class="p-3 border-bottom bg-light"><h6 class="mb-0 fw-bold">등록된 거래처</h6></div>
                     <div id="vendor_list_ui" class="list-group list-group-flush"></div>
                 </div>
             </div>
@@ -159,23 +144,14 @@
     <div class="modal fade" id="vendorEditModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title fw-bold">거래처 수정</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
+                <div class="modal-header"><h5 class="modal-title fw-bold">거래처 수정</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
                 <div class="modal-body">
                     <input type="hidden" id="edit_v_old_name">
                     <div class="mb-2"><label class="small text-muted">거래처명</label><input type="text" class="form-control" id="edit_v_name"></div>
-                    <div class="row g-2 mb-2">
-                        <div class="col-6"><label class="small text-muted">영업사원</label><input type="text" class="form-control" id="edit_v_sales"></div>
-                        <div class="col-6"><label class="small text-muted">연락처</label><input type="text" class="form-control" id="edit_v_phone"></div>
-                    </div>
+                    <div class="row g-2 mb-2"><div class="col-6"><label class="small text-muted">영업사원</label><input type="text" class="form-control" id="edit_v_sales"></div><div class="col-6"><label class="small text-muted">연락처</label><input type="text" class="form-control" id="edit_v_phone"></div></div>
                     <div class="mb-2"><label class="small text-muted">개통실</label><input type="text" class="form-control" id="edit_v_office"></div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
-                    <button type="button" class="btn btn-primary" onclick="submitEditVendor()">수정 완료</button>
-                </div>
+                <div class="modal-footer"><button class="btn btn-secondary" data-bs-dismiss="modal">취소</button><button class="btn btn-primary" onclick="submitEditVendor()">저장</button></div>
             </div>
         </div>
     </div>
@@ -189,22 +165,23 @@
 
         window.onload = function() {
             const saved = localStorage.getItem('dbphone_user');
-            if(saved) { currentUser = JSON.parse(saved).name; showMain(); }
-            
-            // 거래처 엔터키 이벤트 일괄 등록
+            if(saved) {
+                const u = JSON.parse(saved);
+                currentUser = u.name;
+                document.getElementById('login-view').style.display = 'none';
+                document.getElementById('main-view').style.display = 'block';
+                document.getElementById('user-name').innerText = currentUser;
+                loadVendors();
+            }
             document.querySelectorAll('.enter-trigger').forEach(input => {
-                input.addEventListener('keydown', function(e) {
-                    if(e.key === 'Enter') addVendor();
-                });
+                input.addEventListener('keydown', function(e) { if(e.key === 'Enter') addVendor(); });
             });
         };
 
         function showSection(id) {
-            document.querySelectorAll('.section-view').forEach(el => el.classList.remove('active-section'));
-            document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
-            document.getElementById(id).classList.add('active-section');
-            const navBtn = document.querySelector(`a[onclick="showSection('${id}')"]`);
-            if(navBtn) navBtn.classList.add('active');
+            document.querySelectorAll('.section-view').forEach(el => el.classList.remove('active-section', 'fade-in'));
+            const target = document.getElementById(id);
+            target.classList.add('active-section', 'fade-in');
             
             if(id === 'section-in') loadVendors();
             if(id === 'section-vendor') loadVendorsToList();
@@ -212,17 +189,13 @@
             if(input) input.focus();
         }
 
-        // --- 거래처 관리 ---
+        // --- 거래처 ---
         function loadVendors() {
             fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "get_vendors" }) })
             .then(r => r.json()).then(d => {
                 const sel = document.getElementById('in_supplier');
                 sel.innerHTML = "";
-                d.list.forEach(v => {
-                    const opt = document.createElement('option');
-                    opt.value = v.name; opt.innerText = v.name;
-                    sel.appendChild(opt);
-                });
+                d.list.forEach(v => { const opt = document.createElement('option'); opt.value = v.name; opt.innerText = v.name; sel.appendChild(opt); });
             });
         }
         function loadVendorsToList() {
@@ -231,177 +204,57 @@
                 const div = document.getElementById('vendor_list_ui');
                 div.innerHTML = "";
                 d.list.forEach(v => {
-                    // 특수문자 이스케이프 처리 (JSON.stringify 이용)
                     const safeV = JSON.stringify(v).replace(/"/g, '&quot;');
-                    div.innerHTML += `
-                        <div class="list-group-item p-3">
-                            <div class="d-flex justify-content-between align-items-start mb-1">
-                                <div>
-                                    <h6 class="fw-bold mb-0 text-primary">${v.name}</h6>
-                                    <div class="small text-muted mt-1">
-                                        <i class="bi bi-person me-1"></i>${v.salesName||'-'} 
-                                        <i class="bi bi-telephone ms-2 me-1"></i>${v.salesPhone||'-'}
-                                    </div>
-                                    <div class="small text-muted">
-                                        <i class="bi bi-building me-1"></i>개통실: ${v.officePhone||'-'}
-                                    </div>
-                                </div>
-                                <div>
-                                    <button class="btn btn-sm btn-outline-secondary me-1" onclick="openEditVendor(${safeV})"><i class="bi bi-pencil"></i></button>
-                                    <button class="btn btn-sm btn-outline-danger" onclick="deleteVendor('${v.name}')"><i class="bi bi-trash"></i></button>
-                                </div>
-                            </div>
-                        </div>`;
+                    div.innerHTML += `<div class="list-group-item p-3"><div class="d-flex justify-content-between align-items-center"><div><h6 class="fw-bold mb-0 text-primary">${v.name}</h6><div class="small text-muted mt-1"><i class="bi bi-person me-1"></i>${v.salesName||'-'} | ${v.salesPhone||'-'}</div><div class="small text-muted"><i class="bi bi-building me-1"></i>개통실: ${v.officePhone||'-'}</div></div><div><button class="btn btn-sm btn-outline-secondary me-1" onclick="openEditVendor(${safeV})"><i class="bi bi-pencil"></i></button><button class="btn btn-sm btn-outline-danger" onclick="deleteVendor('${v.name}')"><i class="bi bi-trash"></i></button></div></div></div>`;
                 });
             });
         }
         function addVendor() {
-            const data = {
-                action: "add_vendor",
-                name: document.getElementById('v_name').value,
-                salesName: document.getElementById('v_sales').value,
-                salesPhone: document.getElementById('v_phone').value,
-                officePhone: document.getElementById('v_office').value
-            };
-            if(!data.name) return alert("거래처명은 필수입니다.");
-            
-            fetch(GAS_URL, { method: "POST", body: JSON.stringify(data) })
-            .then(r => r.json()).then(d => {
-                alert(d.message);
-                document.querySelectorAll('.enter-trigger').forEach(i => i.value = "");
-                loadVendorsToList();
-            });
+            const data = { action: "add_vendor", name: document.getElementById('v_name').value, salesName: document.getElementById('v_sales').value, salesPhone: document.getElementById('v_phone').value, officePhone: document.getElementById('v_office').value };
+            if(!data.name) return alert("거래처명 필수");
+            fetch(GAS_URL, { method: "POST", body: JSON.stringify(data) }).then(r=>r.json()).then(d=>{ alert(d.message); document.querySelectorAll('.enter-trigger').forEach(i=>i.value=""); loadVendorsToList(); });
         }
-        function deleteVendor(name) {
-            if(!confirm(`[${name}] 거래처를 삭제하시겠습니까?`)) return;
-            fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "delete_vendor", name: name }) })
-            .then(r => r.json()).then(d => { alert(d.message); loadVendorsToList(); });
-        }
-        function openEditVendor(v) {
-            document.getElementById('edit_v_old_name').value = v.name;
-            document.getElementById('edit_v_name').value = v.name;
-            document.getElementById('edit_v_sales').value = v.salesName;
-            document.getElementById('edit_v_phone').value = v.salesPhone;
-            document.getElementById('edit_v_office').value = v.officePhone;
-            new bootstrap.Modal(document.getElementById('vendorEditModal')).show();
-        }
-        function submitEditVendor() {
-            const data = {
-                action: "update_vendor",
-                oldName: document.getElementById('edit_v_old_name').value,
-                name: document.getElementById('edit_v_name').value,
-                salesName: document.getElementById('edit_v_sales').value,
-                salesPhone: document.getElementById('edit_v_phone').value,
-                officePhone: document.getElementById('edit_v_office').value
-            };
-            fetch(GAS_URL, { method: "POST", body: JSON.stringify(data) })
-            .then(r => r.json()).then(d => {
-                alert(d.message);
-                bootstrap.Modal.getInstance(document.getElementById('vendorEditModal')).hide();
-                loadVendorsToList();
-            });
-        }
+        function deleteVendor(name) { if(confirm("삭제하시겠습니까?")) fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "delete_vendor", name: name }) }).then(r=>r.json()).then(d=>{ alert(d.message); loadVendorsToList(); }); }
+        function openEditVendor(v) { document.getElementById('edit_v_old_name').value=v.name; document.getElementById('edit_v_name').value=v.name; document.getElementById('edit_v_sales').value=v.salesName; document.getElementById('edit_v_phone').value=v.salesPhone; document.getElementById('edit_v_office').value=v.officePhone; new bootstrap.Modal(document.getElementById('vendorEditModal')).show(); }
+        function submitEditVendor() { const data={ action:"update_vendor", oldName:document.getElementById('edit_v_old_name').value, name:document.getElementById('edit_v_name').value, salesName:document.getElementById('edit_v_sales').value, salesPhone:document.getElementById('edit_v_phone').value, officePhone:document.getElementById('edit_v_office').value }; fetch(GAS_URL,{method:"POST",body:JSON.stringify(data)}).then(r=>r.json()).then(d=>{ alert(d.message); bootstrap.Modal.getInstance(document.getElementById('vendorEditModal')).hide(); loadVendorsToList(); }); }
 
         // --- 입고 ---
-        function toggleInMode() {
-            const isBatch = document.getElementById('in_mode_toggle').checked;
-            const label = document.getElementById('in_mode_label');
-            label.innerText = isBatch ? "연속 (대기열)" : "일반 (즉시)";
-            label.classList.toggle("text-primary", isBatch);
-            document.getElementById('in_batch_area').style.display = isBatch ? 'block' : 'none';
-            document.getElementById('in_scan').focus();
-        }
+        function toggleInMode() { const isBatch = document.getElementById('in_mode_toggle').checked; document.getElementById('in_mode_label').innerText = isBatch ? "연속 (대기열)" : "일반 (즉시)"; document.getElementById('in_batch_area').style.display = isBatch ? 'block' : 'none'; document.getElementById('in_scan').focus(); }
         function handleInScan(e) {
             if(e.key !== 'Enter') return;
-            const barcode = e.target.value.trim();
-            if(!barcode) return;
+            const barcode = e.target.value.trim(); if(!barcode) return;
             const isBatch = document.getElementById('in_mode_toggle').checked;
-            const supplier = document.getElementById('in_supplier').value;
-            const branch = document.getElementById('in_branch').value;
             e.target.disabled = true;
-            fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: isBatch ? "scan_preview" : "register_single", barcode: barcode, supplier: supplier, branch: branch, user: currentUser })})
+            fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: isBatch?"scan_preview":"register_single", barcode: barcode, supplier: document.getElementById('in_supplier').value, branch: document.getElementById('in_branch').value, user: currentUser })})
             .then(r => r.json()).then(d => {
-                if(d.status === 'success') {
-                    if(isBatch) {
-                        inPendingList.push({ ...d.data, supplier: supplier });
-                        renderInList();
-                        showMsg('in-msg', 'success', `추가됨: ${d.data.model}`);
-                    } else showMsg('in-msg', 'success', `✅ 완료: ${d.data.model}`);
-                } else showMsg('in-msg', 'error', d.message);
-            }).finally(() => { e.target.disabled = false; e.target.value = ""; e.target.focus(); });
-        }
-        function renderInList() {
-            const tbody = document.getElementById('in_tbody');
-            tbody.innerHTML = "";
-            inPendingList.forEach((item, idx) => {
-                tbody.innerHTML += `<tr><td class="fw-bold">${item.model}</td><td class="font-monospace text-muted">${item.serial}</td><td><button class="btn btn-sm text-danger p-0" onclick="removeInItem(${idx})"><i class="bi bi-x-circle-fill"></i></button></td></tr>`;
-            });
-            document.getElementById('in_count').innerText = inPendingList.length;
-            document.getElementById('btn_in_submit').disabled = inPendingList.length === 0;
-        }
-        function removeInItem(idx) { inPendingList.splice(idx, 1); renderInList(); }
-        function clearInList() { inPendingList = []; renderInList(); }
-        function submitInBatch() {
-            if(!confirm(`${inPendingList.length}대를 입고하시겠습니까?`)) return;
-            const branch = document.getElementById('in_branch').value;
-            fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "batch_register", items: inPendingList, branch: branch, user: currentUser })})
-            .then(r => r.json()).then(d => {
-                if(d.status==='success') { showMsg('in-msg','success',`${d.count}대 입고완료`); clearInList(); }
+                if(d.status==='success') { if(isBatch) { inPendingList.push({...d.data, supplier:document.getElementById('in_supplier').value}); renderInList(); showMsg('in-msg','success',`추가: ${d.data.model}`); } else showMsg('in-msg','success',`✅ 입고: ${d.data.model}`); }
                 else showMsg('in-msg','error',d.message);
-            });
+            }).finally(() => { e.target.disabled=false; e.target.value=""; e.target.focus(); });
         }
+        function renderInList() { const t=document.getElementById('in_tbody'); t.innerHTML=""; inPendingList.forEach((i,x)=>t.innerHTML+=`<tr><td class="fw-bold">${i.model}</td><td class="font-monospace text-muted">${i.serial}</td><td><button class="btn btn-sm text-danger" onclick="removeInItem(${x})">X</button></td></tr>`); document.getElementById('in_count').innerText=inPendingList.length; document.getElementById('btn_in_submit').disabled=inPendingList.length===0; }
+        function removeInItem(x) { inPendingList.splice(x,1); renderInList(); }
+        function clearInList() { inPendingList=[]; renderInList(); }
+        function submitInBatch() { if(!confirm(`${inPendingList.length}대 입고?`)) return; fetch(GAS_URL,{method:"POST",body:JSON.stringify({action:"batch_register",items:inPendingList,branch:document.getElementById('in_branch').value,user:currentUser})}).then(r=>r.json()).then(d=>{ if(d.status==='success') {showMsg('in-msg','success',`${d.count}대 완료`); clearInList();} else showMsg('in-msg','error',d.message); }); }
 
-        // --- 이동/반품 (일련번호 지원 placeholder 변경됨) ---
-        function handleMoveScan(e) {
-            if(e.key !== 'Enter') return;
-            const input = e.target.value.trim(); // barcode or serial
-            const toBranch = document.getElementById('move_to_branch').value;
-            e.target.disabled = true;
-            fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "transfer_stock", input: input, toBranch: toBranch, user: currentUser })})
-            .then(r => r.json()).then(d => showMsg('move-msg', d.status==='success'?'success':'error', d.message))
-            .finally(() => { e.target.disabled = false; e.target.value = ""; e.target.focus(); });
-        }
-        function handleOutScan(e) {
-            if(e.key !== 'Enter') return;
-            const input = e.target.value.trim(); // barcode or serial
-            const note = document.getElementById('out_note').value;
-            if(!note) { alert("사유 필수"); return; }
-            e.target.disabled = true;
-            fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "return_stock", input: input, note: note, user: currentUser })})
-            .then(r => r.json()).then(d => showMsg('out-msg', d.status==='success'?'success':'error', d.message))
-            .finally(() => { e.target.disabled = false; e.target.value = ""; e.target.focus(); });
-        }
+        // --- 이동/반품 ---
+        function handleMoveScan(e) { if(e.key!=='Enter')return; const v=e.target.value.trim(); e.target.disabled=true; fetch(GAS_URL,{method:"POST",body:JSON.stringify({action:"transfer_stock",input:v,toBranch:document.getElementById('move_to_branch').value,user:currentUser})}).then(r=>r.json()).then(d=>showMsg('move-msg',d.status==='success'?'success':'error',d.message)).finally(()=>{e.target.disabled=false;e.target.value="";e.target.focus();}); }
+        function handleOutScan(e) { if(e.key!=='Enter')return; const v=e.target.value.trim(); if(!document.getElementById('out_note').value){alert("사유필수");return;} e.target.disabled=true; fetch(GAS_URL,{method:"POST",body:JSON.stringify({action:"return_stock",input:v,note:document.getElementById('out_note').value,user:currentUser})}).then(r=>r.json()).then(d=>showMsg('out-msg',d.status==='success'?'success':'error',d.message)).finally(()=>{e.target.disabled=false;e.target.value="";e.target.focus();}); }
 
-        // --- 기타 ---
+        // --- 조회 ---
         function searchHistory() {
-            const key = document.getElementById('hist_keyword').value;
-            const div = document.getElementById('hist_result');
-            div.innerHTML = `<div class="text-center py-4"><span class="spinner-border text-primary"></span></div>`;
-            fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "search_history", keyword: key }) })
+            const k = document.getElementById('hist_keyword').value;
+            const r = document.getElementById('hist_result');
+            r.innerHTML = `<div class="text-center py-3"><span class="spinner-border text-primary"></span></div>`;
+            fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "search_history", keyword: k }) })
             .then(r => r.json()).then(d => {
-                if(!d.list.length) { div.innerHTML = `<div class="text-center text-muted py-3">결과 없음</div>`; return; }
-                let html = "";
-                d.list.forEach(h => {
-                    let badge = h.type === '입고' ? 'bg-primary' : (h.type==='반품처리' ? 'bg-danger' : 'bg-info');
-                    html += `<div class="glass-card p-3 mb-2"><div class="d-flex justify-content-between mb-1"><span class="badge ${badge}">${h.type}</span><small class="text-muted">${h.time}</small></div><h6 class="fw-bold mb-1">${h.model}</h6><p class="mb-1 small text-secondary">${h.desc}</p><div class="small text-muted bg-light rounded p-1 d-inline-block"><i class="bi bi-upc"></i> ${h.serial} | ${h.user}</div></div>`;
-                });
-                div.innerHTML = html;
+                if(!d.list.length) { r.innerHTML=`<div class="text-center text-muted">결과 없음</div>`; return; }
+                let h=""; d.list.forEach(i=>{ let c=i.type==='입고'?'primary':(i.type==='반품처리'?'danger':'info'); h+=`<div class="glass-card p-3 mb-2"><div class="d-flex justify-content-between mb-1"><span class="badge bg-${c}">${i.type}</span><small class="text-muted">${i.time}</small></div><h6 class="fw-bold mb-1">${i.model}</h6><p class="mb-1 small text-secondary">${i.desc}</p><div class="small text-muted bg-light rounded p-1 d-inline-block"><i class="bi bi-upc"></i> ${i.serial} | ${i.user}</div></div>`; });
+                r.innerHTML=h;
             });
         }
-        function showMsg(id, type, text) {
-            const el = document.getElementById(id);
-            el.style.display = 'block';
-            el.className = `alert py-2 text-center small fw-bold rounded-3 alert-${type==='success'?'success':'danger'}`;
-            el.innerHTML = type==='success' ? `<i class="bi bi-check-circle-fill me-1"></i> ${text}` : `<i class="bi bi-exclamation-triangle-fill me-1"></i> ${text}`;
-            setTimeout(() => el.style.display='none', 2000);
-        }
-        function handleCredentialResponse(r) {
-            fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "login", token: r.credential }) })
-            .then(res => res.json()).then(d => {
-                if(d.status==='success') { localStorage.setItem('dbphone_user', JSON.stringify({name:d.name,email:d.user})); currentUser=d.name; document.getElementById('login-view').style.display='none'; document.getElementById('main-view').style.display='block'; loadVendors(); }
-                else document.getElementById('login-msg').innerText = d.message;
-            });
-        }
+
+        function showMsg(id, type, text) { const el=document.getElementById(id); el.style.display='block'; el.className=`alert py-2 text-center small fw-bold rounded-3 alert-${type==='success'?'success':'danger'}`; el.innerHTML=type==='success'?`<i class="bi bi-check-circle-fill me-1"></i> ${text}`:`<i class="bi bi-exclamation-triangle-fill me-1"></i> ${text}`; setTimeout(()=>el.style.display='none',2000); }
+        function handleCredentialResponse(r) { fetch(GAS_URL,{method:"POST",body:JSON.stringify({action:"login",token:r.credential})}).then(res=>res.json()).then(d=>{ if(d.status==='success') { localStorage.setItem('dbphone_user',JSON.stringify({name:d.name,email:d.user})); currentUser=d.name; document.getElementById('login-view').style.display='none'; document.getElementById('main-view').style.display='block'; document.getElementById('user-name').innerText=currentUser; loadVendors(); } else document.getElementById('login-msg').innerText=d.message; }); }
         function logout() { localStorage.removeItem('dbphone_user'); location.reload(); }
     </script>
 </body>
