@@ -7,6 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    
     <style>
         :root { --primary-bg: #eef2f6; --card-bg: #ffffff; --accent-color: #4e73df; --accent-gradient: linear-gradient(135deg, #4e73df 0%, #224abe 100%); }
         body { background-color: var(--primary-bg); font-family: 'Noto Sans KR', sans-serif; color: #2e384d; }
@@ -23,7 +24,7 @@
         .section-view { display: none; }
         .active-section { display: block; animation: fadeIn 0.4s ease-out forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        /* 재고 조회 테이블 */
+        /* 테이블 스타일 */
         .stock-table th { background-color: #f8f9fa; color: #6c757d; font-weight: 600; font-size: 0.85rem; text-align: center; white-space: nowrap; }
         .stock-table td { font-size: 0.9rem; vertical-align: middle; text-align: center; }
     </style>
@@ -53,7 +54,8 @@
                                 <li><a class="dropdown-item" onclick="showSection('section-move')">재고 이동</a></li>
                                 <li><a class="dropdown-item" onclick="showSection('section-out')">반품 처리</a></li>
                                 <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" onclick="showSection('section-stock')">🔍 재고 조회</a></li>
+                                <li><a class="dropdown-item" onclick="showSection('section-stock')">🔍 재고 조회 (현재고)</a></li>
+                                <li><a class="dropdown-item" onclick="showSection('section-history')">📜 이력 추적 (로그)</a></li>
                             </ul>
                         </li>
                     </ul>
@@ -98,7 +100,7 @@
 
             <div id="section-stock" class="section-view fade-in">
                 <div class="glass-card p-4">
-                    <h5 class="fw-bold mb-3"><i class="bi bi-search"></i> 재고 조회</h5>
+                    <h5 class="fw-bold mb-3"><i class="bi bi-search"></i> 재고 조회 (보유분)</h5>
                     <div class="row g-2 align-items-center mb-3">
                         <div class="col-4">
                             <select class="form-select fw-bold" id="search_criteria" onchange="updateSearchUI()">
@@ -112,6 +114,17 @@
                     </div>
                     <button class="btn btn-primary w-100 fw-bold rounded-3 mb-3" onclick="searchStock()">조회하기</button>
                     <div id="stock_result"></div>
+                </div>
+            </div>
+
+            <div id="section-history" class="section-view fade-in">
+                <div class="glass-card p-4">
+                    <h5 class="fw-bold mb-3"><i class="bi bi-clock-history"></i> 이력 추적 (로그)</h5>
+                    <div class="input-group mb-3">
+                        <input type="text" class="form-control" id="hist_keyword" placeholder="일련번호 / 바코드 / 모델명 검색" onkeydown="if(event.key==='Enter') searchHistory()">
+                        <button class="btn btn-outline-secondary" onclick="searchHistory()">검색</button>
+                    </div>
+                    <div id="hist_result"></div>
                 </div>
             </div>
 
@@ -211,6 +224,7 @@
             fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "get_models" }) }).then(r => r.json()).then(d => globalModelList = d.list);
         }
 
+        // --- 재고 조회 UI ---
         function updateSearchUI() {
             const criteria = document.getElementById('search_criteria').value;
             const area = document.getElementById('search_input_area');
@@ -242,11 +256,9 @@
             fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "search_stock", criteria: crit, keyword: val }) })
             .then(r => r.json()).then(d => {
                 if(!d.list || d.list.length === 0) { div.innerHTML = `<div class="text-center text-muted py-5">결과 없음</div>`; return; }
-                // ★ [수정] 색상 컬럼 추가
                 let html = `<div class="table-responsive"><table class="table table-hover stock-table"><thead><tr><th>입고일</th><th>모델</th><th>색상</th><th>일련번호</th><th>상태</th><th>위치</th></tr></thead><tbody>`;
                 d.list.forEach(item => {
                     let st = item.status === '보유' ? 'text-success' : 'text-danger';
-                    // ★ [수정] 날짜(item.date) 자르지 않고 그대로 출력
                     html += `<tr><td>${item.date}</td><td class="fw-bold">${item.model}</td><td>${item.color}</td><td class="font-monospace">${item.serial}</td><td class="${st} fw-bold">${item.status}</td><td>${item.branch}</td></tr>`;
                 });
                 html += `</tbody></table></div><div class="text-end small text-muted">총 ${d.list.length}건</div>`;
@@ -254,6 +266,27 @@
             });
         }
 
+        // --- 이력 조회 (New) ---
+        function searchHistory() {
+            const key = document.getElementById('hist_keyword').value;
+            const resArea = document.getElementById('hist_result');
+            resArea.innerHTML = `<div class="text-center py-3"><span class="spinner-border text-primary"></span></div>`;
+            fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "search_history", keyword: key }) })
+            .then(r => r.json()).then(d => {
+                if(!d.list.length) { resArea.innerHTML = `<div class="text-center text-muted py-3">결과 없음</div>`; return; }
+                let html = ""; 
+                d.list.forEach(item => { 
+                    let badgeColor = 'bg-secondary';
+                    if(item.type === '입고') badgeColor = 'bg-primary';
+                    if(item.type === '재고이동') badgeColor = 'bg-info';
+                    if(item.type === '반품처리') badgeColor = 'bg-danger';
+                    html += `<div class="glass-card p-3 mb-2"><div class="d-flex justify-content-between mb-1"><span class="badge ${badgeColor}">${item.type}</span><small class="text-muted">${item.time}</small></div><h6 class="fw-bold mb-1">${item.model}</h6><p class="mb-1 small text-secondary">${item.desc}</p><div class="small text-muted bg-light rounded p-1 d-inline-block"><i class="bi bi-upc"></i> ${item.serial} | <i class="bi bi-person"></i> ${item.user}</div></div>`; 
+                });
+                resArea.innerHTML = html;
+            });
+        }
+
+        // --- 입고 ---
         function toggleInMode() { const isBatch = document.getElementById('in_mode_toggle').checked; document.getElementById('in_mode_label').innerText = isBatch ? "연속 (대기열)" : "일반 (즉시)"; document.getElementById('in_mode_label').classList.toggle("text-primary", isBatch); document.getElementById('in_batch_area').style.display = isBatch ? 'block' : 'none'; document.getElementById('in_scan').focus(); }
         function handleInScan(e) {
             if(e.key !== 'Enter') return;
