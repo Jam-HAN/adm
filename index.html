@@ -7,7 +7,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
-    
     <style>
         :root { --primary-bg: #eef2f6; --card-bg: #ffffff; --accent-color: #4e73df; --accent-gradient: linear-gradient(135deg, #4e73df 0%, #224abe 100%); }
         body { background-color: var(--primary-bg); font-family: 'Noto Sans KR', sans-serif; color: #2e384d; }
@@ -25,8 +24,8 @@
         .active-section { display: block; animation: fadeIn 0.4s ease-out forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         /* 재고 조회 테이블 */
-        .stock-table th { background-color: #f8f9fa; color: #6c757d; font-weight: 600; font-size: 0.85rem; }
-        .stock-table td { font-size: 0.9rem; vertical-align: middle; }
+        .stock-table th { background-color: #f8f9fa; color: #6c757d; font-weight: 600; font-size: 0.85rem; text-align: center; white-space: nowrap; }
+        .stock-table td { font-size: 0.9rem; vertical-align: middle; text-align: center; }
     </style>
 </head>
 <body>
@@ -97,6 +96,25 @@
                 </div>
             </div>
 
+            <div id="section-stock" class="section-view fade-in">
+                <div class="glass-card p-4">
+                    <h5 class="fw-bold mb-3"><i class="bi bi-search"></i> 재고 조회</h5>
+                    <div class="row g-2 align-items-center mb-3">
+                        <div class="col-4">
+                            <select class="form-select fw-bold" id="search_criteria" onchange="updateSearchUI()">
+                                <option value="supplier">거래처별</option>
+                                <option value="branch">지점별</option>
+                                <option value="model">모델별</option>
+                                <option value="serial">일련번호/바코드</option>
+                            </select>
+                        </div>
+                        <div class="col-8" id="search_input_area"><select class="form-select" id="search_value_supplier"></select></div>
+                    </div>
+                    <button class="btn btn-primary w-100 fw-bold rounded-3 mb-3" onclick="searchStock()">조회하기</button>
+                    <div id="stock_result"></div>
+                </div>
+            </div>
+
             <div id="section-move" class="section-view fade-in">
                 <div class="glass-card p-4">
                     <h5 class="fw-bold mb-4 text-primary">재고 이동</h5>
@@ -112,32 +130,6 @@
                     <div class="form-floating mb-3"><input type="text" class="form-control" id="out_note" placeholder="사유"><label>반품 사유 / 메모 (필수)</label></div>
                     <div class="scan-wrapper bg-danger bg-opacity-75 my-4" style="background-color: #d63031;"><input type="text" class="form-control scan-input border-danger" id="out_scan" placeholder="바코드 또는 일련번호" onkeydown="handleOutScan(event)" autocomplete="off"></div>
                     <div id="out-msg" class="alert py-2 text-center small fw-bold rounded-3" style="display:none"></div>
-                </div>
-            </div>
-
-            <div id="section-stock" class="section-view fade-in">
-                <div class="glass-card p-4">
-                    <h5 class="fw-bold mb-3"><i class="bi bi-search"></i> 재고 조회</h5>
-                    
-                    <div class="row g-2 align-items-center mb-3">
-                        <div class="col-4">
-                            <select class="form-select fw-bold" id="search_criteria" onchange="updateSearchUI()">
-                                <option value="supplier">거래처별</option>
-                                <option value="branch">지점별</option>
-                                <option value="model">모델별</option>
-                                <option value="serial">일련번호/바코드</option>
-                            </select>
-                        </div>
-                        <div class="col-8" id="search_input_area">
-                            <select class="form-select" id="search_value_supplier"></select>
-                        </div>
-                    </div>
-                    
-                    <button class="btn btn-primary w-100 fw-bold rounded-3 mb-3" onclick="searchStock()">조회하기</button>
-                    
-                    <div id="stock_result">
-                        <div class="text-center text-muted py-5"><i class="bi bi-inbox fs-1"></i><br>조건을 선택하고 조회를 누르세요</div>
-                    </div>
                 </div>
             </div>
 
@@ -181,8 +173,8 @@
         const GAS_URL = "https://script.google.com/macros/s/AKfycbyB_mC39GwfguxtYMm4P4jbszB8d10UhvL9AWZYRGXQxhApSkYP4x-yLiCzmoxhSNDY/exec";
         let currentUser = "";
         let inPendingList = [];
-        let globalVendorList = []; // 거래처 목록 캐싱
-        let globalModelList = [];  // 모델 목록 캐싱
+        let globalVendorList = [];
+        let globalModelList = [];
 
         window.onload = function() {
             const saved = localStorage.getItem('dbphone_user');
@@ -202,60 +194,43 @@
         function showSection(id) {
             document.querySelectorAll('.section-view').forEach(el => el.classList.remove('active-section', 'fade-in'));
             document.getElementById(id).classList.add('active-section', 'fade-in');
-            
             if(id === 'section-in') loadInitData();
             if(id === 'section-vendor') loadVendorsToList();
-            if(id === 'section-stock') updateSearchUI(); // UI 초기화
-            
+            if(id === 'section-stock') updateSearchUI();
             const input = document.querySelector(`#${id} input`);
             if(input) input.focus();
         }
 
         function loadInitData() {
-            // 거래처 및 모델 리스트 로딩
-            fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "get_vendors" }) })
-            .then(r => r.json()).then(d => {
+            fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "get_vendors" }) }).then(r => r.json()).then(d => {
                 globalVendorList = d.list.map(v => v.name);
-                // 입고 화면 드롭다운 채우기
-                const sel = document.getElementById('in_supplier');
-                sel.innerHTML = "";
-                globalVendorList.forEach(v => {
-                    const opt = document.createElement('option'); opt.value = v; opt.innerText = v; sel.appendChild(opt);
-                });
-                // 재고 조회 화면 드롭다운 채우기 (만약 현재 선택이 supplier라면)
+                const sel = document.getElementById('in_supplier'); sel.innerHTML = "";
+                globalVendorList.forEach(v => { const opt = document.createElement('option'); opt.value=v; opt.innerText=v; sel.appendChild(opt); });
                 if(document.getElementById('search_criteria').value === 'supplier') updateSearchUI();
             });
-
-            fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "get_models" }) })
-            .then(r => r.json()).then(d => {
-                globalModelList = d.list;
-            });
+            fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "get_models" }) }).then(r => r.json()).then(d => globalModelList = d.list);
         }
 
-        // --- 재고 조회 UI 동적 변경 ---
         function updateSearchUI() {
             const criteria = document.getElementById('search_criteria').value;
             const area = document.getElementById('search_input_area');
             area.innerHTML = "";
-
             if(criteria === 'supplier') {
                 const sel = document.createElement('select'); sel.className = "form-select"; sel.id = "search_value";
-                globalVendorList.forEach(v => { const opt = document.createElement('option'); opt.value = v; opt.innerText = v; sel.appendChild(opt); });
+                globalVendorList.forEach(v => { const opt = document.createElement('option'); opt.value=v; opt.innerText=v; sel.appendChild(opt); });
                 area.appendChild(sel);
             } else if(criteria === 'branch') {
                 const sel = document.createElement('select'); sel.className = "form-select"; sel.id = "search_value";
-                const branches = ["장지 본점", "명일 직영점"];
-                branches.forEach(v => { const opt = document.createElement('option'); opt.value = v; opt.innerText = v; sel.appendChild(opt); });
+                ["장지 본점", "명일 직영점"].forEach(v => { const opt = document.createElement('option'); opt.value=v; opt.innerText=v; sel.appendChild(opt); });
                 area.appendChild(sel);
             } else if(criteria === 'model') {
                 const sel = document.createElement('select'); sel.className = "form-select"; sel.id = "search_value";
-                globalModelList.forEach(v => { const opt = document.createElement('option'); opt.value = v; opt.innerText = v; sel.appendChild(opt); });
+                globalModelList.forEach(v => { const opt = document.createElement('option'); opt.value=v; opt.innerText=v; sel.appendChild(opt); });
                 area.appendChild(sel);
             } else {
                 const inp = document.createElement('input'); inp.className = "form-control"; inp.id = "search_value"; inp.placeholder = "입력하세요";
                 inp.onkeydown = function(e){ if(e.key==='Enter') searchStock(); };
-                area.appendChild(inp);
-                inp.focus();
+                area.appendChild(inp); inp.focus();
             }
         }
 
@@ -263,90 +238,49 @@
             const crit = document.getElementById('search_criteria').value;
             const val = document.getElementById('search_value').value;
             const div = document.getElementById('stock_result');
-            
             div.innerHTML = `<div class="text-center py-4"><span class="spinner-border text-primary"></span></div>`;
-            
             fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "search_stock", criteria: crit, keyword: val }) })
             .then(r => r.json()).then(d => {
-                if(!d.list || d.list.length === 0) {
-                    div.innerHTML = `<div class="text-center text-muted py-5">결과가 없습니다.</div>`;
-                    return;
-                }
-                
-                let html = `<div class="table-responsive"><table class="table table-hover stock-table"><thead><tr><th>입고일</th><th>모델</th><th>일련번호</th><th>상태</th><th>위치</th></tr></thead><tbody>`;
+                if(!d.list || d.list.length === 0) { div.innerHTML = `<div class="text-center text-muted py-5">결과 없음</div>`; return; }
+                let html = `<div class="table-responsive"><table class="table table-hover stock-table"><thead><tr><th>입고일</th><th>모델</th><th>색상</th><th>일련번호</th><th>상태</th><th>위치</th></tr></thead><tbody>`;
                 d.list.forEach(item => {
-                    let statusClass = item.status === '보유' ? 'text-success' : 'text-danger';
-                    html += `
-                        <tr>
-                            <td>${item.date.split(' ')[0]}</td>
-                            <td class="fw-bold">${item.model}</td>
-                            <td class="font-monospace">${item.serial}</td>
-                            <td class="${statusClass} fw-bold">${item.status}</td>
-                            <td>${item.branch}</td>
-                        </tr>`;
+                    let st = item.status === '보유' ? 'text-success' : 'text-danger';
+                    html += `<tr><td>${item.date.split(' ')[0]}</td><td class="fw-bold">${item.model}</td><td>${item.color}</td><td class="font-monospace">${item.serial}</td><td class="${st} fw-bold">${item.status}</td><td>${item.branch}</td></tr>`;
                 });
                 html += `</tbody></table></div><div class="text-end small text-muted">총 ${d.list.length}건</div>`;
                 div.innerHTML = html;
             });
         }
 
-        // --- 입고 ---
         function toggleInMode() { const isBatch = document.getElementById('in_mode_toggle').checked; document.getElementById('in_mode_label').innerText = isBatch ? "연속 (대기열)" : "일반 (즉시)"; document.getElementById('in_mode_label').classList.toggle("text-primary", isBatch); document.getElementById('in_batch_area').style.display = isBatch ? 'block' : 'none'; document.getElementById('in_scan').focus(); }
         function handleInScan(e) {
             if(e.key !== 'Enter') return;
             const barcode = e.target.value.trim(); if(!barcode) return;
-            
-            // ★ 중복 방지 로직 (대기열에 있으면 차단)
-            if(inPendingList.some(item => item.barcode === barcode)) {
-                showMsg('in-msg', 'error', '🚫 이미 대기목록에 있습니다.');
-                e.target.value = "";
-                return;
-            }
-
+            if(inPendingList.some(item => item.barcode === barcode)) { showMsg('in-msg', 'error', '🚫 이미 대기목록에 있습니다.'); e.target.value = ""; return; }
             const isBatch = document.getElementById('in_mode_toggle').checked;
             e.target.disabled = true;
             fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: isBatch?"scan_preview":"register_single", barcode: barcode, supplier: document.getElementById('in_supplier').value, branch: document.getElementById('in_branch').value, user: currentUser })})
             .then(r => r.json()).then(d => {
                 if(d.status==='success') { 
-                    if(isBatch) { 
-                        inPendingList.push({...d.data, supplier:document.getElementById('in_supplier').value}); 
-                        renderInList(); 
-                        showMsg('in-msg','success',`대기열 추가: ${d.data.model}`); 
-                    } else showMsg('in-msg','success',`✅ 입고 완료: ${d.data.model}`); 
+                    if(isBatch) { inPendingList.push({...d.data, supplier:document.getElementById('in_supplier').value}); renderInList(); showMsg('in-msg','success',`추가: ${d.data.model} (${d.data.color})`); } 
+                    else showMsg('in-msg','success',`✅ 입고: ${d.data.model} (${d.data.color})`); 
                 } else showMsg('in-msg','error',d.message);
             }).finally(() => { e.target.disabled=false; e.target.value=""; e.target.focus(); });
         }
         function renderInList() { const t=document.getElementById('in_tbody'); t.innerHTML=""; inPendingList.forEach((i,x)=>t.innerHTML+=`<tr><td class="fw-bold">${i.model}</td><td class="font-monospace text-muted">${i.serial}</td><td><button class="btn btn-sm text-danger" onclick="removeInItem(${x})">X</button></td></tr>`); document.getElementById('in_count').innerText=inPendingList.length; document.getElementById('btn_in_submit').disabled=inPendingList.length===0; }
         function removeInItem(x) { inPendingList.splice(x,1); renderInList(); }
         function clearInList() { inPendingList=[]; renderInList(); }
-        function submitInBatch() { if(!confirm(`${inPendingList.length}대 입고?`)) return; fetch(GAS_URL,{method:"POST",body:JSON.stringify({action:"batch_register",items:inPendingList,branch:document.getElementById('in_branch').value,user:currentUser})}).then(r=>r.json()).then(d=>{ if(d.status==='success') {showMsg('in-msg','success',`${d.count}대 완료`); clearInList();} else showMsg('in-msg','error',d.message); }); }
+        function submitInBatch() { if(!confirm(`${inPendingList.length}대 입고?`)) return; fetch(GAS_URL,{method:"POST",body:JSON.stringify({action:"batch_register",items:inPendingList,branch:document.getElementById('in_branch').value,user:currentUser})}).then(r=>r.json()).then(d=>{ if(d.status==='success') {showMsg('in-msg','success',`${d.count}대 저장 완료`); clearInList();} else showMsg('in-msg','error',d.message); }); }
 
-        // --- 이동/반품 ---
         function handleMoveScan(e) { if(e.key!=='Enter')return; const v=e.target.value.trim(); e.target.disabled=true; fetch(GAS_URL,{method:"POST",body:JSON.stringify({action:"transfer_stock",input:v,toBranch:document.getElementById('move_to_branch').value,user:currentUser})}).then(r=>r.json()).then(d=>showMsg('move-msg',d.status==='success'?'success':'error',d.message)).finally(()=>{e.target.disabled=false;e.target.value="";e.target.focus();}); }
         function handleOutScan(e) { if(e.key!=='Enter')return; const v=e.target.value.trim(); if(!document.getElementById('out_note').value){alert("사유필수");return;} e.target.disabled=true; fetch(GAS_URL,{method:"POST",body:JSON.stringify({action:"return_stock",input:v,note:document.getElementById('out_note').value,user:currentUser})}).then(r=>r.json()).then(d=>showMsg('out-msg',d.status==='success'?'success':'error',d.message)).finally(()=>{e.target.disabled=false;e.target.value="";e.target.focus();}); }
 
-        // --- 거래처 관리 ---
-        function loadVendorsToList() {
-            fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "get_vendors" }) })
-            .then(r => r.json()).then(d => {
-                const div = document.getElementById('vendor_list_ui');
-                div.innerHTML = "";
-                d.list.forEach(v => {
-                    const safeV = JSON.stringify(v).replace(/"/g, '&quot;');
-                    div.innerHTML += `<div class="list-group-item p-3"><div class="d-flex justify-content-between align-items-center"><div><h6 class="fw-bold mb-0 text-primary">${v.name}</h6><div class="small text-muted mt-1"><i class="bi bi-person me-1"></i>${v.salesName||'-'} | ${v.salesPhone||'-'}</div><div class="small text-muted"><i class="bi bi-building me-1"></i>개통실: ${v.officePhone||'-'}</div></div><div><button class="btn btn-sm btn-outline-secondary me-1" onclick="openEditVendor(${safeV})"><i class="bi bi-pencil"></i></button><button class="btn btn-sm btn-outline-danger" onclick="deleteVendor('${v.name}')"><i class="bi bi-trash"></i></button></div></div></div>`;
-                });
-            });
-        }
-        function addVendor() {
-            const data = { action: "add_vendor", name: document.getElementById('v_name').value, salesName: document.getElementById('v_sales').value, salesPhone: document.getElementById('v_phone').value, officePhone: document.getElementById('v_office').value };
-            if(!data.name) return alert("거래처명 필수");
-            fetch(GAS_URL, { method: "POST", body: JSON.stringify(data) }).then(r=>r.json()).then(d=>{ alert(d.message); document.querySelectorAll('.enter-trigger').forEach(i=>i.value=""); loadVendorsToList(); });
-        }
-        function deleteVendor(name) { if(confirm("삭제하시겠습니까?")) fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "delete_vendor", name: name }) }).then(r=>r.json()).then(d=>{ alert(d.message); loadVendorsToList(); }); }
+        function loadVendorsToList() { fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "get_vendors" }) }).then(r => r.json()).then(d => { const div = document.getElementById('vendor_list_ui'); div.innerHTML = ""; d.list.forEach(v => { const safeV = JSON.stringify(v).replace(/"/g, '&quot;'); div.innerHTML += `<div class="list-group-item p-3"><div class="d-flex justify-content-between align-items-center"><div><h6 class="fw-bold mb-0 text-primary">${v.name}</h6><div class="small text-muted mt-1"><i class="bi bi-person me-1"></i>${v.salesName||'-'} | ${v.salesPhone||'-'}</div><div class="small text-muted"><i class="bi bi-building me-1"></i>개통실: ${v.officePhone||'-'}</div></div><div><button class="btn btn-sm btn-outline-secondary me-1" onclick="openEditVendor(${safeV})"><i class="bi bi-pencil"></i></button><button class="btn btn-sm btn-outline-danger" onclick="deleteVendor('${v.name}')"><i class="bi bi-trash"></i></button></div></div></div>`; }); }); }
+        function addVendor() { const data = { action: "add_vendor", name: document.getElementById('v_name').value, salesName: document.getElementById('v_sales').value, salesPhone: document.getElementById('v_phone').value, officePhone: document.getElementById('v_office').value }; if(!data.name) return alert("거래처명 필수"); fetch(GAS_URL, { method: "POST", body: JSON.stringify(data) }).then(r=>r.json()).then(d=>{ alert(d.message); document.querySelectorAll('.enter-trigger').forEach(i=>i.value=""); loadVendorsToList(); }); }
+        function deleteVendor(name) { if(confirm("삭제?")) fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "delete_vendor", name: name }) }).then(r=>r.json()).then(d=>{ alert(d.message); loadVendorsToList(); }); }
         function openEditVendor(v) { document.getElementById('edit_v_old_name').value=v.name; document.getElementById('edit_v_name').value=v.name; document.getElementById('edit_v_sales').value=v.salesName; document.getElementById('edit_v_phone').value=v.salesPhone; document.getElementById('edit_v_office').value=v.officePhone; new bootstrap.Modal(document.getElementById('vendorEditModal')).show(); }
         function submitEditVendor() { const data={ action:"update_vendor", oldName:document.getElementById('edit_v_old_name').value, name:document.getElementById('edit_v_name').value, salesName:document.getElementById('edit_v_sales').value, salesPhone:document.getElementById('edit_v_phone').value, officePhone:document.getElementById('edit_v_office').value }; fetch(GAS_URL,{method:"POST",body:JSON.stringify(data)}).then(r=>r.json()).then(d=>{ alert(d.message); bootstrap.Modal.getInstance(document.getElementById('vendorEditModal')).hide(); loadVendorsToList(); }); }
 
-        // --- 공통 ---
         function showMsg(id, type, text) { const el=document.getElementById(id); el.style.display='block'; el.className=`alert py-2 text-center small fw-bold rounded-3 alert-${type==='success'?'success':'danger'}`; el.innerHTML=type==='success'?`<i class="bi bi-check-circle-fill me-1"></i> ${text}`:`<i class="bi bi-exclamation-triangle-fill me-1"></i> ${text}`; setTimeout(()=>el.style.display='none',2000); }
         function handleCredentialResponse(r) { fetch(GAS_URL,{method:"POST",body:JSON.stringify({action:"login",token:r.credential})}).then(res=>res.json()).then(d=>{ if(d.status==='success') { localStorage.setItem('dbphone_user',JSON.stringify({name:d.name,email:d.user})); currentUser=d.name; document.getElementById('login-view').style.display='none'; document.getElementById('main-view').style.display='block'; document.getElementById('user-name').innerText=currentUser; loadInitData(); } else document.getElementById('login-msg').innerText=d.message; }); }
         function logout() { localStorage.removeItem('dbphone_user'); location.reload(); }
