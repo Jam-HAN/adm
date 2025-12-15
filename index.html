@@ -7,6 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    
     <style>
         :root { --primary-bg: #eef2f6; --card-bg: #ffffff; --accent-color: #4e73df; --accent-gradient: linear-gradient(135deg, #4e73df 0%, #224abe 100%); }
         body { background-color: var(--primary-bg); font-family: 'Noto Sans KR', sans-serif; color: #2e384d; }
@@ -66,7 +67,7 @@
                         </li>
                     </ul>
                     <ul class="navbar-nav ms-auto align-items-center">
-                        <li class="nav-item me-3"><a class="nav-link" onclick="showSection('section-vendor')"><i class="bi bi-buildings"></i> 거래처</a></li>
+                        <li class="nav-item me-3"><a class="nav-link" onclick="showSection('section-vendor')"><i class="bi bi-buildings"></i> 거래처 관리</a></li>
                         <li class="nav-item d-flex align-items-center bg-light rounded-pill px-3 py-1 mt-2 mt-lg-0">
                             <span class="small text-muted me-2"><i class="bi bi-person-circle text-primary"></i> <strong id="user-name">...</strong>님</span>
                             <button onclick="logout()" class="btn btn-sm text-danger p-0 border-0"><i class="bi bi-box-arrow-right"></i></button>
@@ -203,10 +204,12 @@
         let inPendingList = [];
         let globalVendorList = [];
         let globalModelList = [];
-        let currentOpenType = ""; // 현재 선택된 개통 타입
+        let currentOpenType = "";
+        let logoutTimer;
 
         window.onload = function() {
-            const saved = localStorage.getItem('dbphone_user');
+            // ★ [변경] localStorage -> sessionStorage (창 닫으면 로그아웃)
+            const saved = sessionStorage.getItem('dbphone_user');
             if(saved) {
                 const u = JSON.parse(saved);
                 currentUser = u.name;
@@ -214,11 +217,29 @@
                 document.getElementById('main-view').style.display = 'block';
                 document.getElementById('user-name').innerText = currentUser;
                 loadInitData();
+                setupAutoLogout();
             }
             document.querySelectorAll('.enter-trigger').forEach(input => {
                 input.addEventListener('keydown', function(e) { if(e.key === 'Enter') addVendor(); });
             });
         };
+
+        function setupAutoLogout() {
+            resetLogoutTimer();
+            ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'].forEach(evt => {
+                document.addEventListener(evt, resetLogoutTimer);
+            });
+        }
+
+        function resetLogoutTimer() {
+            clearTimeout(logoutTimer);
+            if(currentUser) {
+                logoutTimer = setTimeout(() => {
+                    alert("10분 동안 활동이 없어 자동 로그아웃 되었습니다.");
+                    logout();
+                }, 600000); // 10분
+            }
+        }
 
         function showSection(id) {
             document.querySelectorAll('.section-view').forEach(el => el.classList.remove('active-section', 'fade-in'));
@@ -230,7 +251,6 @@
             if(input) input.focus();
         }
 
-        // ★ [New] 개통 섹션 동적 처리
         function showOpenSection(type) {
             currentOpenType = type;
             document.getElementById('open_title').innerText = type + " 처리";
@@ -332,19 +352,7 @@
         // --- 이동/반품/개통 ---
         function handleMoveScan(e) { if(e.key!=='Enter')return; const v=e.target.value.trim(); e.target.disabled=true; fetch(GAS_URL,{method:"POST",body:JSON.stringify({action:"transfer_stock",input:v,toBranch:document.getElementById('move_to_branch').value,user:currentUser})}).then(r=>r.json()).then(d=>showMsg('move-msg',d.status==='success'?'success':'error',d.message)).finally(()=>{e.target.disabled=false;e.target.value="";e.target.focus();}); }
         function handleOutScan(e) { if(e.key!=='Enter')return; const v=e.target.value.trim(); if(!document.getElementById('out_note').value){alert("사유필수");return;} e.target.disabled=true; fetch(GAS_URL,{method:"POST",body:JSON.stringify({action:"return_stock",input:v,note:document.getElementById('out_note').value,user:currentUser})}).then(r=>r.json()).then(d=>showMsg('out-msg',d.status==='success'?'success':'error',d.message)).finally(()=>{e.target.disabled=false;e.target.value="";e.target.focus();}); }
-        // ★ [New] 개통 스캔 핸들러
-        function handleOpenScan(e) { 
-            if(e.key!=='Enter')return; 
-            const v=e.target.value.trim(); 
-            e.target.disabled=true; 
-            fetch(GAS_URL,{method:"POST",body:JSON.stringify({
-                action:"open_stock",
-                input:v,
-                openType: currentOpenType, // 선택된 개통 타입 전송
-                note:document.getElementById('open_note').value,
-                user:currentUser
-            })}).then(r=>r.json()).then(d=>showMsg('open-msg',d.status==='success'?'success':'error',d.message)).finally(()=>{e.target.disabled=false;e.target.value="";e.target.focus();}); 
-        }
+        function handleOpenScan(e) { if(e.key!=='Enter')return; const v=e.target.value.trim(); e.target.disabled=true; fetch(GAS_URL,{method:"POST",body:JSON.stringify({action:"open_stock",input:v,openType: currentOpenType, note:document.getElementById('open_note').value,user:currentUser})}).then(r=>r.json()).then(d=>showMsg('open-msg',d.status==='success'?'success':'error',d.message)).finally(()=>{e.target.disabled=false;e.target.value="";e.target.focus();}); }
 
         // --- 거래처 ---
         function loadVendorsToList() { fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "get_vendors" }) }).then(r => r.json()).then(d => { const div = document.getElementById('vendor_list_ui'); div.innerHTML = ""; d.list.forEach(v => { const safeV = JSON.stringify(v).replace(/"/g, '&quot;'); div.innerHTML += `<div class="list-group-item p-3"><div class="d-flex justify-content-between align-items-center"><div><h6 class="fw-bold mb-0 text-primary">${v.name}</h6><div class="small text-muted mt-1"><i class="bi bi-person me-1"></i>${v.salesName||'-'} | ${v.salesPhone||'-'}</div><div class="small text-muted"><i class="bi bi-building me-1"></i>개통실: ${v.officePhone||'-'}</div></div><div><button class="btn btn-sm btn-outline-secondary me-1" onclick="openEditVendor(${safeV})"><i class="bi bi-pencil"></i></button><button class="btn btn-sm btn-outline-danger" onclick="deleteVendor('${v.name}')"><i class="bi bi-trash"></i></button></div></div></div>`; }); }); }
@@ -354,8 +362,26 @@
         function submitEditVendor() { const data={ action:"update_vendor", oldName:document.getElementById('edit_v_old_name').value, name:document.getElementById('edit_v_name').value, salesName:document.getElementById('edit_v_sales').value, salesPhone:document.getElementById('edit_v_phone').value, officePhone:document.getElementById('edit_v_office').value }; fetch(GAS_URL,{method:"POST",body:JSON.stringify(data)}).then(r=>r.json()).then(d=>{ alert(d.message); bootstrap.Modal.getInstance(document.getElementById('vendorEditModal')).hide(); loadVendorsToList(); }); }
 
         function showMsg(id, type, text) { const el=document.getElementById(id); el.style.display='block'; el.className=`alert py-2 text-center small fw-bold rounded-3 alert-${type==='success'?'success':'danger'}`; el.innerHTML=type==='success'?`<i class="bi bi-check-circle-fill me-1"></i> ${text}`:`<i class="bi bi-exclamation-triangle-fill me-1"></i> ${text}`; setTimeout(()=>el.style.display='none',2000); }
-        function handleCredentialResponse(r) { fetch(GAS_URL,{method:"POST",body:JSON.stringify({action:"login",token:r.credential})}).then(res=>res.json()).then(d=>{ if(d.status==='success') { localStorage.setItem('dbphone_user',JSON.stringify({name:d.name,email:d.user})); currentUser=d.name; document.getElementById('login-view').style.display='none'; document.getElementById('main-view').style.display='block'; document.getElementById('user-name').innerText=currentUser; loadInitData(); } else document.getElementById('login-msg').innerText=d.message; }); }
-        function logout() { localStorage.removeItem('dbphone_user'); location.reload(); }
+        
+        // ★ [변경] sessionStorage 적용
+        function handleCredentialResponse(r) { 
+            fetch(GAS_URL,{method:"POST",body:JSON.stringify({action:"login",token:r.credential})}).then(res=>res.json()).then(d=>{ 
+                if(d.status==='success') { 
+                    sessionStorage.setItem('dbphone_user',JSON.stringify({name:d.name,email:d.user})); // 수정됨
+                    currentUser=d.name; 
+                    document.getElementById('login-view').style.display='none'; 
+                    document.getElementById('main-view').style.display='block'; 
+                    document.getElementById('user-name').innerText=currentUser; 
+                    loadInitData(); 
+                    setupAutoLogout(); 
+                } else document.getElementById('login-msg').innerText=d.message; 
+            }); 
+        }
+        
+        function logout() { 
+            sessionStorage.removeItem('dbphone_user'); // 수정됨
+            location.reload(); 
+        }
     </script>
 </body>
 </html>
