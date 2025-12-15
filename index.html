@@ -7,7 +7,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
-    
     <style>
         :root { --primary-bg: #eef2f6; --card-bg: #ffffff; --accent-color: #4e73df; --accent-gradient: linear-gradient(135deg, #4e73df 0%, #224abe 100%); }
         body { background-color: var(--primary-bg); font-family: 'Noto Sans KR', sans-serif; color: #2e384d; }
@@ -24,7 +23,6 @@
         .section-view { display: none; }
         .active-section { display: block; animation: fadeIn 0.4s ease-out forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        /* 테이블 스타일 */
         .stock-table th { background-color: #f8f9fa; color: #6c757d; font-weight: 600; font-size: 0.85rem; text-align: center; white-space: nowrap; }
         .stock-table td { font-size: 0.9rem; vertical-align: middle; text-align: center; }
     </style>
@@ -47,20 +45,28 @@
                 <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"><span class="navbar-toggler-icon"></span></button>
                 <div class="collapse navbar-collapse" id="navbarNav">
                     <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                        <li class="nav-item dropdown">
+                        <li class="nav-item dropdown me-2">
                             <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">📦 재고 관리</a>
                             <ul class="dropdown-menu border-0 shadow-lg">
                                 <li><a class="dropdown-item" onclick="showSection('section-in')">입고 등록</a></li>
                                 <li><a class="dropdown-item" onclick="showSection('section-move')">재고 이동</a></li>
-                                <li><a class="dropdown-item" onclick="showSection('section-out')">반품 처리</a></li>
+                                <li><a class="dropdown-item text-danger" onclick="showSection('section-out')">반품 처리</a></li>
                                 <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" onclick="showSection('section-stock')">🔍 재고 조회 (현재고)</a></li>
-                                <li><a class="dropdown-item" onclick="showSection('section-history')">📜 이력 추적 (로그)</a></li>
+                                <li><a class="dropdown-item" onclick="showSection('section-stock')">🔍 재고 조회 (보유분)</a></li>
+                                <li><a class="dropdown-item" onclick="showSection('section-history')">📜 이력 조회 (로그)</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle text-primary fw-bold" href="#" role="button" data-bs-toggle="dropdown">✅ 개통 처리</a>
+                            <ul class="dropdown-menu border-0 shadow-lg">
+                                <li><a class="dropdown-item" onclick="showOpenSection('무선개통')">📱 무선 개통</a></li>
+                                <li><a class="dropdown-item" onclick="showOpenSection('유선개통')">📺 유선 개통</a></li>
+                                <li><a class="dropdown-item" onclick="showOpenSection('중고개통')">♻️ 중고 개통</a></li>
                             </ul>
                         </li>
                     </ul>
                     <ul class="navbar-nav ms-auto align-items-center">
-                        <li class="nav-item me-3"><a class="nav-link" onclick="showSection('section-vendor')"><i class="bi bi-buildings"></i> 거래처 관리</a></li>
+                        <li class="nav-item me-3"><a class="nav-link" onclick="showSection('section-vendor')"><i class="bi bi-buildings"></i> 거래처</a></li>
                         <li class="nav-item d-flex align-items-center bg-light rounded-pill px-3 py-1 mt-2 mt-lg-0">
                             <span class="small text-muted me-2"><i class="bi bi-person-circle text-primary"></i> <strong id="user-name">...</strong>님</span>
                             <button onclick="logout()" class="btn btn-sm text-danger p-0 border-0"><i class="bi bi-box-arrow-right"></i></button>
@@ -98,6 +104,15 @@
                 </div>
             </div>
 
+            <div id="section-open" class="section-view fade-in">
+                <div class="glass-card p-4 border-top border-4 border-primary">
+                    <h5 class="fw-bold mb-4 text-primary" id="open_title">개통 처리</h5>
+                    <div class="form-floating mb-3"><input type="text" class="form-control" id="open_note" placeholder="메모"><label>개통 정보 / 메모</label></div>
+                    <div class="scan-wrapper bg-primary bg-opacity-75 my-4" style="background-color: #0984e3;"><input type="text" class="form-control scan-input border-primary" id="open_scan" placeholder="바코드 또는 일련번호" onkeydown="handleOpenScan(event)" autocomplete="off"></div>
+                    <div id="open-msg" class="alert py-2 text-center small fw-bold rounded-3" style="display:none"></div>
+                </div>
+            </div>
+
             <div id="section-stock" class="section-view fade-in">
                 <div class="glass-card p-4">
                     <h5 class="fw-bold mb-3"><i class="bi bi-search"></i> 재고 조회 (보유분)</h5>
@@ -119,9 +134,9 @@
 
             <div id="section-history" class="section-view fade-in">
                 <div class="glass-card p-4">
-                    <h5 class="fw-bold mb-3"><i class="bi bi-clock-history"></i> 이력 추적 (로그)</h5>
+                    <h5 class="fw-bold mb-3"><i class="bi bi-clock-history"></i> 이력 조회 (로그)</h5>
                     <div class="input-group mb-3">
-                        <input type="text" class="form-control" id="hist_keyword" placeholder="일련번호 / 바코드 / 모델명 검색" onkeydown="if(event.key==='Enter') searchHistory()">
+                        <input type="text" class="form-control" id="hist_keyword" placeholder="일련번호 또는 바코드 (정확히 입력)" onkeydown="if(event.key==='Enter') searchHistory()">
                         <button class="btn btn-outline-secondary" onclick="searchHistory()">검색</button>
                     </div>
                     <div id="hist_result"></div>
@@ -188,6 +203,7 @@
         let inPendingList = [];
         let globalVendorList = [];
         let globalModelList = [];
+        let currentOpenType = ""; // 현재 선택된 개통 타입
 
         window.onload = function() {
             const saved = localStorage.getItem('dbphone_user');
@@ -214,6 +230,13 @@
             if(input) input.focus();
         }
 
+        // ★ [New] 개통 섹션 동적 처리
+        function showOpenSection(type) {
+            currentOpenType = type;
+            document.getElementById('open_title').innerText = type + " 처리";
+            showSection('section-open');
+        }
+
         function loadInitData() {
             fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "get_vendors" }) }).then(r => r.json()).then(d => {
                 globalVendorList = d.list.map(v => v.name);
@@ -224,7 +247,6 @@
             fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "get_models" }) }).then(r => r.json()).then(d => globalModelList = d.list);
         }
 
-        // --- 재고 조회 UI ---
         function updateSearchUI() {
             const criteria = document.getElementById('search_criteria').value;
             const area = document.getElementById('search_input_area');
@@ -266,7 +288,6 @@
             });
         }
 
-        // --- 이력 조회 (New) ---
         function searchHistory() {
             const key = document.getElementById('hist_keyword').value;
             const resArea = document.getElementById('hist_result');
@@ -280,6 +301,7 @@
                     if(item.type === '입고') badgeColor = 'bg-primary';
                     if(item.type === '재고이동') badgeColor = 'bg-info';
                     if(item.type === '반품처리') badgeColor = 'bg-danger';
+                    if(item.type.includes('개통')) badgeColor = 'bg-success';
                     html += `<div class="glass-card p-3 mb-2"><div class="d-flex justify-content-between mb-1"><span class="badge ${badgeColor}">${item.type}</span><small class="text-muted">${item.time}</small></div><h6 class="fw-bold mb-1">${item.model}</h6><p class="mb-1 small text-secondary">${item.desc}</p><div class="small text-muted bg-light rounded p-1 d-inline-block"><i class="bi bi-upc"></i> ${item.serial} | <i class="bi bi-person"></i> ${item.user}</div></div>`; 
                 });
                 resArea.innerHTML = html;
@@ -307,9 +329,24 @@
         function clearInList() { inPendingList=[]; renderInList(); }
         function submitInBatch() { if(!confirm(`${inPendingList.length}대 입고?`)) return; fetch(GAS_URL,{method:"POST",body:JSON.stringify({action:"batch_register",items:inPendingList,branch:document.getElementById('in_branch').value,user:currentUser})}).then(r=>r.json()).then(d=>{ if(d.status==='success') {showMsg('in-msg','success',`${d.count}대 완료`); clearInList();} else showMsg('in-msg','error',d.message); }); }
 
+        // --- 이동/반품/개통 ---
         function handleMoveScan(e) { if(e.key!=='Enter')return; const v=e.target.value.trim(); e.target.disabled=true; fetch(GAS_URL,{method:"POST",body:JSON.stringify({action:"transfer_stock",input:v,toBranch:document.getElementById('move_to_branch').value,user:currentUser})}).then(r=>r.json()).then(d=>showMsg('move-msg',d.status==='success'?'success':'error',d.message)).finally(()=>{e.target.disabled=false;e.target.value="";e.target.focus();}); }
         function handleOutScan(e) { if(e.key!=='Enter')return; const v=e.target.value.trim(); if(!document.getElementById('out_note').value){alert("사유필수");return;} e.target.disabled=true; fetch(GAS_URL,{method:"POST",body:JSON.stringify({action:"return_stock",input:v,note:document.getElementById('out_note').value,user:currentUser})}).then(r=>r.json()).then(d=>showMsg('out-msg',d.status==='success'?'success':'error',d.message)).finally(()=>{e.target.disabled=false;e.target.value="";e.target.focus();}); }
+        // ★ [New] 개통 스캔 핸들러
+        function handleOpenScan(e) { 
+            if(e.key!=='Enter')return; 
+            const v=e.target.value.trim(); 
+            e.target.disabled=true; 
+            fetch(GAS_URL,{method:"POST",body:JSON.stringify({
+                action:"open_stock",
+                input:v,
+                openType: currentOpenType, // 선택된 개통 타입 전송
+                note:document.getElementById('open_note').value,
+                user:currentUser
+            })}).then(r=>r.json()).then(d=>showMsg('open-msg',d.status==='success'?'success':'error',d.message)).finally(()=>{e.target.disabled=false;e.target.value="";e.target.focus();}); 
+        }
 
+        // --- 거래처 ---
         function loadVendorsToList() { fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "get_vendors" }) }).then(r => r.json()).then(d => { const div = document.getElementById('vendor_list_ui'); div.innerHTML = ""; d.list.forEach(v => { const safeV = JSON.stringify(v).replace(/"/g, '&quot;'); div.innerHTML += `<div class="list-group-item p-3"><div class="d-flex justify-content-between align-items-center"><div><h6 class="fw-bold mb-0 text-primary">${v.name}</h6><div class="small text-muted mt-1"><i class="bi bi-person me-1"></i>${v.salesName||'-'} | ${v.salesPhone||'-'}</div><div class="small text-muted"><i class="bi bi-building me-1"></i>개통실: ${v.officePhone||'-'}</div></div><div><button class="btn btn-sm btn-outline-secondary me-1" onclick="openEditVendor(${safeV})"><i class="bi bi-pencil"></i></button><button class="btn btn-sm btn-outline-danger" onclick="deleteVendor('${v.name}')"><i class="bi bi-trash"></i></button></div></div></div>`; }); }); }
         function addVendor() { const data = { action: "add_vendor", name: document.getElementById('v_name').value, salesName: document.getElementById('v_sales').value, salesPhone: document.getElementById('v_phone').value, officePhone: document.getElementById('v_office').value }; if(!data.name) return alert("거래처명 필수"); fetch(GAS_URL, { method: "POST", body: JSON.stringify(data) }).then(r=>r.json()).then(d=>{ alert(d.message); document.querySelectorAll('.enter-trigger').forEach(i=>i.value=""); loadVendorsToList(); }); }
         function deleteVendor(name) { if(confirm("삭제?")) fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "delete_vendor", name: name }) }).then(r=>r.json()).then(d=>{ alert(d.message); loadVendorsToList(); }); }
