@@ -242,10 +242,12 @@
             fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "search_stock", criteria: crit, keyword: val }) })
             .then(r => r.json()).then(d => {
                 if(!d.list || d.list.length === 0) { div.innerHTML = `<div class="text-center text-muted py-5">결과 없음</div>`; return; }
+                // ★ [수정] 색상 컬럼 추가
                 let html = `<div class="table-responsive"><table class="table table-hover stock-table"><thead><tr><th>입고일</th><th>모델</th><th>색상</th><th>일련번호</th><th>상태</th><th>위치</th></tr></thead><tbody>`;
                 d.list.forEach(item => {
                     let st = item.status === '보유' ? 'text-success' : 'text-danger';
-                    html += `<tr><td>${item.date.split(' ')[0]}</td><td class="fw-bold">${item.model}</td><td>${item.color}</td><td class="font-monospace">${item.serial}</td><td class="${st} fw-bold">${item.status}</td><td>${item.branch}</td></tr>`;
+                    // ★ [수정] 날짜(item.date) 자르지 않고 그대로 출력
+                    html += `<tr><td>${item.date}</td><td class="fw-bold">${item.model}</td><td>${item.color}</td><td class="font-monospace">${item.serial}</td><td class="${st} fw-bold">${item.status}</td><td>${item.branch}</td></tr>`;
                 });
                 html += `</tbody></table></div><div class="text-end small text-muted">총 ${d.list.length}건</div>`;
                 div.innerHTML = html;
@@ -263,14 +265,14 @@
             .then(r => r.json()).then(d => {
                 if(d.status==='success') { 
                     if(isBatch) { inPendingList.push({...d.data, supplier:document.getElementById('in_supplier').value}); renderInList(); showMsg('in-msg','success',`추가: ${d.data.model} (${d.data.color})`); } 
-                    else showMsg('in-msg','success',`✅ 입고: ${d.data.model} (${d.data.color})`); 
+                    else showMsg('in-msg','success',`✅ 입고완료: ${d.data.model} (${d.data.color})`); 
                 } else showMsg('in-msg','error',d.message);
             }).finally(() => { e.target.disabled=false; e.target.value=""; e.target.focus(); });
         }
-        function renderInList() { const t=document.getElementById('in_tbody'); t.innerHTML=""; inPendingList.forEach((i,x)=>t.innerHTML+=`<tr><td class="fw-bold">${i.model}</td><td class="font-monospace text-muted">${i.serial}</td><td><button class="btn btn-sm text-danger" onclick="removeInItem(${x})">X</button></td></tr>`); document.getElementById('in_count').innerText=inPendingList.length; document.getElementById('btn_in_submit').disabled=inPendingList.length===0; }
+        function renderInList() { const t=document.getElementById('in_tbody'); t.innerHTML=""; inPendingList.forEach((i,x)=>t.innerHTML+=`<tr><td class="fw-bold">${i.model} (${i.color})</td><td class="font-monospace text-muted">${i.serial}</td><td><button class="btn btn-sm text-danger" onclick="removeInItem(${x})">X</button></td></tr>`); document.getElementById('in_count').innerText=inPendingList.length; document.getElementById('btn_in_submit').disabled=inPendingList.length===0; }
         function removeInItem(x) { inPendingList.splice(x,1); renderInList(); }
         function clearInList() { inPendingList=[]; renderInList(); }
-        function submitInBatch() { if(!confirm(`${inPendingList.length}대 입고?`)) return; fetch(GAS_URL,{method:"POST",body:JSON.stringify({action:"batch_register",items:inPendingList,branch:document.getElementById('in_branch').value,user:currentUser})}).then(r=>r.json()).then(d=>{ if(d.status==='success') {showMsg('in-msg','success',`${d.count}대 저장 완료`); clearInList();} else showMsg('in-msg','error',d.message); }); }
+        function submitInBatch() { if(!confirm(`${inPendingList.length}대 입고?`)) return; fetch(GAS_URL,{method:"POST",body:JSON.stringify({action:"batch_register",items:inPendingList,branch:document.getElementById('in_branch').value,user:currentUser})}).then(r=>r.json()).then(d=>{ if(d.status==='success') {showMsg('in-msg','success',`${d.count}대 완료`); clearInList();} else showMsg('in-msg','error',d.message); }); }
 
         function handleMoveScan(e) { if(e.key!=='Enter')return; const v=e.target.value.trim(); e.target.disabled=true; fetch(GAS_URL,{method:"POST",body:JSON.stringify({action:"transfer_stock",input:v,toBranch:document.getElementById('move_to_branch').value,user:currentUser})}).then(r=>r.json()).then(d=>showMsg('move-msg',d.status==='success'?'success':'error',d.message)).finally(()=>{e.target.disabled=false;e.target.value="";e.target.focus();}); }
         function handleOutScan(e) { if(e.key!=='Enter')return; const v=e.target.value.trim(); if(!document.getElementById('out_note').value){alert("사유필수");return;} e.target.disabled=true; fetch(GAS_URL,{method:"POST",body:JSON.stringify({action:"return_stock",input:v,note:document.getElementById('out_note').value,user:currentUser})}).then(r=>r.json()).then(d=>showMsg('out-msg',d.status==='success'?'success':'error',d.message)).finally(()=>{e.target.disabled=false;e.target.value="";e.target.focus();}); }
