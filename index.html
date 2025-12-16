@@ -18,21 +18,12 @@
         .form-label-sm { font-size: 0.8rem; color: #6c757d; font-weight: 700; margin-bottom: 3px; }
         .form-control-sm, .form-select-sm { font-size: 0.9rem; padding: 0.4rem 0.6rem; }
         .divider { border-top: 1px solid #dee2e6; margin: 25px 0 15px 0; }
+        .section-header { font-size: 1rem; font-weight: 800; color: #4e73df; margin-bottom: 12px; display: flex; align-items: center; }
+        .section-header i { margin-right: 6px; }
         
+        /* ★ 빨간색 강조 스타일 */
         .text-danger-input { color: #dc3545 !important; font-weight: bold; border-color: #dc3545; }
         .text-danger-input:focus { box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25); border-color: #dc3545; }
-
-        /* [수정 1] 깔끔한 리스트 스타일 */
-        .stock-list-item { 
-            padding: 12px; 
-            border-bottom: 1px solid #eee; 
-            font-size: 0.95rem; 
-            display: flex;
-            align-items: center;
-        }
-        .stock-list-item:last-child { border-bottom: none; }
-        /* [수정 2] 메모(차감) 있으면 빨간 글씨 */
-        .stock-alert { color: #dc3545; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -131,7 +122,7 @@
                                 <div class="col-4"><label class="form-label-sm">방문경로 <span class="text-danger">*</span></label><select class="form-select form-select-sm" id="f_visit" onchange="checkVisitPath()"></select></div>
                                 <div class="col-12" id="div_visit_etc" style="display:none;"><input type="text" class="form-control form-control-sm" id="f_visit_etc" placeholder="상세 경로"></div>
                                 
-                                <div class="col-4"><label class="form-label-sm">고객명 <span class="text-danger">*</span></label><input type="text" class="form-control form-control-sm" id="f_name"></div>
+                                <div class="col-4"><label class="form-label-sm">고객명</label><input type="text" class="form-control form-control-sm" id="f_name"></div>
                                 <div class="col-4"><label class="form-label-sm">생년월일</label><input type="text" class="form-control form-control-sm" id="f_birth" placeholder="900101"></div>
                                 <div class="col-4"><label class="form-label-sm">연락처</label><input type="text" class="form-control form-control-sm" id="f_phone" placeholder="01012345678"></div>
                                 
@@ -231,10 +222,51 @@
                 </div>
             </div>
 
-            <div id="section-history" class="section-view fade-in"><div class="glass-card p-4"><h5 class="fw-bold mb-3"><i class="bi bi-clock-history"></i> 이력 조회 (로그)</h5><div class="input-group mb-3"><input type="text" class="form-control" id="hist_keyword" placeholder="일련번호 또는 바코드 (정확히 입력)" onkeydown="if(event.key==='Enter') searchHistory()"><button class="btn btn-outline-secondary" onclick="searchHistory()">검색</button></div><div id="hist_result"></div></div></div>
-            <div id="section-move" class="section-view fade-in"><div class="glass-card p-4"><h5 class="fw-bold mb-4 text-primary">재고 이동</h5><select class="form-select bg-light fw-bold py-3 mb-3" id="move_to_branch"><option value="명일 직영점">👉 명일 직영점으로 보냄</option><option value="장지 본점">👉 장지 본점으로 보냄</option></select><div class="scan-wrapper my-4"><input type="text" class="form-control scan-input" id="move_scan" placeholder="바코드 또는 일련번호" onkeydown="handleMoveScan(event)" autocomplete="off"></div><div id="move-msg" class="alert py-2 text-center small fw-bold rounded-3" style="display:none"></div></div></div>
-            <div id="section-out" class="section-view fade-in"><div class="glass-card p-4 border-top border-4 border-danger"><h5 class="fw-bold mb-4 text-danger">반품 처리</h5><div class="form-floating mb-3"><input type="text" class="form-control" id="out_note" placeholder="사유"><label>반품 사유 / 메모 (필수)</label></div><div class="scan-wrapper bg-danger bg-opacity-75 my-4" style="background-color: #d63031;"><input type="text" class="form-control scan-input border-danger" id="out_scan" placeholder="바코드 또는 일련번호" onkeydown="handleOutScan(event)" autocomplete="off"></div><div id="out-msg" class="alert py-2 text-center small fw-bold rounded-3" style="display:none"></div></div></div>
-            <div id="section-vendor" class="section-view fade-in"><div class="glass-card p-4"><h5 class="fw-bold mb-3">거래처 등록</h5><div class="row g-2 mb-3"><div class="col-12"><input type="text" class="form-control enter-trigger" id="v_name" placeholder="거래처명 (필수)"></div><div class="col-6"><input type="text" class="form-control enter-trigger" id="v_sales" placeholder="영업사원"></div><div class="col-6"><input type="text" class="form-control enter-trigger" id="v_phone" placeholder="연락처"></div><div class="col-12"><input type="text" class="form-control enter-trigger" id="v_office" placeholder="개통실 전화번호"></div></div><button class="btn btn-secondary w-100 fw-bold rounded-3" onclick="addVendor()">등록하기</button></div><div class="glass-card p-0"><div class="p-3 border-bottom bg-light"><h6 class="mb-0 fw-bold">등록된 거래처</h6></div><div id="vendor_list_ui" class="list-group list-group-flush"></div></div></div>
+            <div id="section-history" class="section-view fade-in">
+                <div class="glass-card p-4">
+                    <h5 class="fw-bold mb-3"><i class="bi bi-clock-history"></i> 이력 조회 (로그)</h5>
+                    <div class="input-group mb-3">
+                        <input type="text" class="form-control" id="hist_keyword" placeholder="일련번호 또는 바코드 (정확히 입력)" onkeydown="if(event.key==='Enter') searchHistory()">
+                        <button class="btn btn-outline-secondary" onclick="searchHistory()">검색</button>
+                    </div>
+                    <div id="hist_result"></div>
+                </div>
+            </div>
+
+            <div id="section-move" class="section-view fade-in">
+                <div class="glass-card p-4">
+                    <h5 class="fw-bold mb-4 text-primary">재고 이동</h5>
+                    <select class="form-select bg-light fw-bold py-3 mb-3" id="move_to_branch"><option value="명일 직영점">👉 명일 직영점으로 보냄</option><option value="장지 본점">👉 장지 본점으로 보냄</option></select>
+                    <div class="scan-wrapper my-4"><input type="text" class="form-control scan-input" id="move_scan" placeholder="바코드 또는 일련번호" onkeydown="handleMoveScan(event)" autocomplete="off"></div>
+                    <div id="move-msg" class="alert py-2 text-center small fw-bold rounded-3" style="display:none"></div>
+                </div>
+            </div>
+
+            <div id="section-out" class="section-view fade-in">
+                <div class="glass-card p-4 border-top border-4 border-danger">
+                    <h5 class="fw-bold mb-4 text-danger">반품 처리</h5>
+                    <div class="form-floating mb-3"><input type="text" class="form-control" id="out_note" placeholder="사유"><label>반품 사유 / 메모 (필수)</label></div>
+                    <div class="scan-wrapper bg-danger bg-opacity-75 my-4" style="background-color: #d63031;"><input type="text" class="form-control scan-input border-danger" id="out_scan" placeholder="바코드 또는 일련번호" onkeydown="handleOutScan(event)" autocomplete="off"></div>
+                    <div id="out-msg" class="alert py-2 text-center small fw-bold rounded-3" style="display:none"></div>
+                </div>
+            </div>
+
+            <div id="section-vendor" class="section-view fade-in">
+                <div class="glass-card p-4">
+                    <h5 class="fw-bold mb-3">거래처 등록</h5>
+                    <div class="row g-2 mb-3">
+                        <div class="col-12"><input type="text" class="form-control enter-trigger" id="v_name" placeholder="거래처명 (필수)"></div>
+                        <div class="col-6"><input type="text" class="form-control enter-trigger" id="v_sales" placeholder="영업사원"></div>
+                        <div class="col-6"><input type="text" class="form-control enter-trigger" id="v_phone" placeholder="연락처"></div>
+                        <div class="col-12"><input type="text" class="form-control enter-trigger" id="v_office" placeholder="개통실 전화번호"></div>
+                    </div>
+                    <button class="btn btn-secondary w-100 fw-bold rounded-3" onclick="addVendor()">등록하기</button>
+                </div>
+                <div class="glass-card p-0">
+                    <div class="p-3 border-bottom bg-light"><h6 class="mb-0 fw-bold">등록된 거래처</h6></div>
+                    <div id="vendor_list_ui" class="list-group list-group-flush"></div>
+                </div>
+            </div>
 
         </div>
     </div>
@@ -282,29 +314,99 @@
             });
         };
 
-        // ... (setupAutoLogout, resetLogoutTimer, showSection, showOpenSection, loadInitData, loadDropdownData, checkVisitPath, handleOpenScan 등은 기존 동일) ...
-        function setupAutoLogout() { resetLogoutTimer(); ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'].forEach(evt => document.addEventListener(evt, resetLogoutTimer)); }
-        function resetLogoutTimer() { clearTimeout(logoutTimer); if(currentUser) { logoutTimer = setTimeout(() => { alert("10분 동안 활동이 없어 자동 로그아웃 되었습니다."); logout(); }, 600000); } }
-        function showSection(id) { document.querySelectorAll('.section-view').forEach(el => el.classList.remove('active-section', 'fade-in')); document.getElementById(id).classList.add('active-section', 'fade-in'); if(id === 'section-in') loadInitData(); if(id === 'section-vendor') loadVendorsToList(); if(id === 'section-stock') updateSearchUI(); const input = document.querySelector(`#${id} input`); if(input) input.focus(); }
-        function showOpenSection(type) { currentOpenType = type; document.getElementById('open_title').innerText = type + " 처리"; resetOpenForm(); loadDropdownData(); showSection('section-open'); }
-        function loadInitData() { fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "get_vendors" }) }).then(r => r.json()).then(d => { globalVendorList = d.list.map(v => v.name); const sel = document.getElementById('in_supplier'); sel.innerHTML = ""; globalVendorList.forEach(v => { const opt = document.createElement('option'); opt.value=v; opt.innerText=v; sel.appendChild(opt); }); if(document.getElementById('search_criteria').value === 'supplier') updateSearchUI(); }); fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "get_models" }) }).then(r => r.json()).then(d => globalModelList = d.list); }
-        function loadDropdownData() { fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "get_dropdown_data" }) }).then(r => r.json()).then(d => { const selVisit = document.getElementById('f_visit'); selVisit.innerHTML = '<option value="" selected>선택</option>'; d.visitList.forEach(item => { selVisit.innerHTML += `<option value="${item}">${item}</option>`; }); selVisit.innerHTML += '<option value="기타">기타 (직접입력)</option>'; const selUsim = document.getElementById('f_usim'); selUsim.innerHTML = '<option value="" selected>선택</option>'; d.usimList.forEach(item => { selUsim.innerHTML += `<option value="${item}">${item}</option>`; }); }); }
-        function checkVisitPath() { const val = document.getElementById('f_visit').value; if(val === '기타') document.getElementById('div_visit_etc').style.display = 'block'; else document.getElementById('div_visit_etc').style.display = 'none'; }
-        function handleOpenScan(e) { if(e.key!=='Enter')return; const v=e.target.value.trim(); e.target.disabled=true; fetch(GAS_URL,{method:"POST",body:JSON.stringify({ action:"get_stock_info_for_open", input:v })}).then(r=>r.json()).then(d=>{ if(d.status==='success') { tempOpenStockData = d.data; tempOpenStockData.inputCode = v; document.getElementById('target_model').innerText = d.data.model; document.getElementById('target_serial').innerText = d.data.serial; document.getElementById('target_branch').innerText = d.data.branch || "지점미상"; document.getElementById('f_avalue').value = d.data.supplier || ""; document.getElementById('open_step_1').style.display = 'none'; document.getElementById('open_step_2').style.display = 'block'; document.getElementById('f_name').focus(); } else { alert(d.message); e.target.disabled=false; e.target.value=""; e.target.focus(); } }); }
+        function setupAutoLogout() {
+            resetLogoutTimer();
+            ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'].forEach(evt => document.addEventListener(evt, resetLogoutTimer));
+        }
+        function resetLogoutTimer() {
+            clearTimeout(logoutTimer);
+            if(currentUser) {
+                logoutTimer = setTimeout(() => { alert("10분 동안 활동이 없어 자동 로그아웃 되었습니다."); logout(); }, 600000);
+            }
+        }
 
+        function showSection(id) {
+            document.querySelectorAll('.section-view').forEach(el => el.classList.remove('active-section', 'fade-in'));
+            document.getElementById(id).classList.add('active-section', 'fade-in');
+            if(id === 'section-in') loadInitData();
+            if(id === 'section-vendor') loadVendorsToList();
+            if(id === 'section-stock') updateSearchUI();
+            const input = document.querySelector(`#${id} input`);
+            if(input) input.focus();
+        }
+
+        function showOpenSection(type) {
+            currentOpenType = type;
+            document.getElementById('open_title').innerText = type + " 처리";
+            resetOpenForm();
+            loadDropdownData(); 
+            showSection('section-open');
+        }
+
+        function loadInitData() {
+            fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "get_vendors" }) }).then(r => r.json()).then(d => {
+                globalVendorList = d.list.map(v => v.name);
+                const sel = document.getElementById('in_supplier'); sel.innerHTML = "";
+                globalVendorList.forEach(v => { const opt = document.createElement('option'); opt.value=v; opt.innerText=v; sel.appendChild(opt); });
+                if(document.getElementById('search_criteria').value === 'supplier') updateSearchUI();
+            });
+            fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "get_models" }) }).then(r => r.json()).then(d => globalModelList = d.list);
+        }
+
+        function loadDropdownData() {
+            fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "get_dropdown_data" }) })
+            .then(r => r.json())
+            .then(d => {
+                const selVisit = document.getElementById('f_visit');
+                selVisit.innerHTML = '<option value="" selected>선택</option>';
+                d.visitList.forEach(item => { selVisit.innerHTML += `<option value="${item}">${item}</option>`; });
+                selVisit.innerHTML += '<option value="기타">기타 (직접입력)</option>';
+                
+                const selUsim = document.getElementById('f_usim');
+                selUsim.innerHTML = '<option value="" selected>선택</option>';
+                d.usimList.forEach(item => { selUsim.innerHTML += `<option value="${item}">${item}</option>`; });
+            });
+        }
+
+        function checkVisitPath() {
+            const val = document.getElementById('f_visit').value;
+            if(val === '기타') document.getElementById('div_visit_etc').style.display = 'block';
+            else document.getElementById('div_visit_etc').style.display = 'none';
+        }
+
+        function handleOpenScan(e) { 
+            if(e.key!=='Enter')return; 
+            const v=e.target.value.trim(); 
+            e.target.disabled=true; 
+            fetch(GAS_URL,{method:"POST",body:JSON.stringify({ action:"get_stock_info_for_open", input:v })})
+            .then(r=>r.json()).then(d=>{
+                if(d.status==='success') {
+                    tempOpenStockData = d.data; 
+                    tempOpenStockData.inputCode = v; 
+                    document.getElementById('target_model').innerText = d.data.model; // 색상 표시 제거 요청 반영
+                    document.getElementById('target_serial').innerText = d.data.serial;
+                    document.getElementById('target_branch').innerText = d.data.branch || "지점미상"; 
+                    document.getElementById('f_avalue').value = d.data.supplier || ""; 
+                    document.getElementById('open_step_1').style.display = 'none';
+                    document.getElementById('open_step_2').style.display = 'block';
+                    document.getElementById('f_name').focus();
+                } else {
+                    alert(d.message); // 팝업 경고
+                    e.target.disabled=false; e.target.value=""; e.target.focus();
+                }
+            });
+        }
 
         function submitFullContract() {
             if(!tempOpenStockData) return;
-            
-            // [수정 3] 필수값 체크 후 focus() 이동
             const custName = document.getElementById('f_name').value;
-            if(!custName) { alert("고객명은 필수입니다."); document.getElementById('f_name').focus(); return; }
+            if(!custName) return alert("고객명은 필수입니다.");
             
             const reviewVal = document.getElementById('f_review').value;
-            if(!reviewVal) { alert("리뷰작성여부를 선택해주세요."); document.getElementById('f_review').focus(); return; }
+            if(!reviewVal) return alert("리뷰작성여부를 선택해주세요.");
             
             const visitValSelect = document.getElementById('f_visit').value;
-            if(!visitValSelect) { alert("방문경로를 선택해주세요."); document.getElementById('f_visit').focus(); return; }
+            if(!visitValSelect) return alert("방문경로를 선택해주세요.");
 
             let visitVal = visitValSelect;
             if(visitVal === '기타') visitVal = "기타: " + document.getElementById('f_visit_etc').value;
@@ -369,7 +471,6 @@
             btn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> 저장 중...`;
             btn.disabled = true;
 
-            // [수정 4] 통신 오류 핸들링 (에러 메시지 팝업 처리)
             fetch(GAS_URL, { method: "POST", body: JSON.stringify(formData) })
             .then(r => r.json())
             .then(d => {
@@ -377,55 +478,69 @@
                     alert(d.message);
                     resetOpenForm();
                 } else {
-                    alert("⚠️ 저장 실패: " + d.message);
+                    alert("오류: " + d.message);
                 }
             })
-            .catch(e => {
-                console.error(e);
-                alert("🚫 통신 오류가 발생했습니다.\n인터넷 연결을 확인하거나 잠시 후 다시 시도해주세요.");
-            })
+            .catch(e => alert("통신 오류"))
             .finally(() => { btn.innerHTML = originalText; btn.disabled = false; });
         }
 
-        // ... (resetOpenForm, updateSearchUI 등 기존 동일) ...
-        function resetOpenForm() { document.getElementById('open_step_1').style.display = 'block'; document.getElementById('open_step_2').style.display = 'none'; document.getElementById('open_scan').value = ""; document.getElementById('open_scan').disabled = false; document.getElementById('open_scan').focus(); document.querySelectorAll('#open_step_2 input').forEach(i => i.value = ""); document.querySelectorAll('#open_step_2 select').forEach(s => s.selectedIndex=0); document.getElementById('div_visit_etc').style.display='none'; tempOpenStockData = null; }
-        function updateSearchUI() { const criteria = document.getElementById('search_criteria').value; const area = document.getElementById('search_input_area'); area.innerHTML = ""; if(criteria === 'supplier') { const sel = document.createElement('select'); sel.className = "form-select"; sel.id = "search_value"; globalVendorList.forEach(v => { const opt = document.createElement('option'); opt.value=v; opt.innerText=v; sel.appendChild(opt); }); area.appendChild(sel); } else if(criteria === 'branch') { const sel = document.createElement('select'); sel.className = "form-select"; sel.id = "search_value"; ["장지 본점", "명일 직영점"].forEach(v => { const opt = document.createElement('option'); opt.value=v; opt.innerText=v; sel.appendChild(opt); }); area.appendChild(sel); } else if(criteria === 'model') { const sel = document.createElement('select'); sel.className = "form-select"; sel.id = "search_value"; globalModelList.forEach(v => { const opt = document.createElement('option'); opt.value=v; opt.innerText=v; sel.appendChild(opt); }); area.appendChild(sel); } else { const inp = document.createElement('input'); inp.className = "form-control"; inp.id = "search_value"; inp.placeholder = "입력하세요"; inp.onkeydown = function(e){ if(e.key==='Enter') searchStock(); }; area.appendChild(inp); inp.focus(); } }
+        function resetOpenForm() {
+            document.getElementById('open_step_1').style.display = 'block';
+            document.getElementById('open_step_2').style.display = 'none';
+            document.getElementById('open_scan').value = "";
+            document.getElementById('open_scan').disabled = false;
+            document.getElementById('open_scan').focus();
+            document.querySelectorAll('#open_step_2 input').forEach(i => i.value = "");
+            document.querySelectorAll('#open_step_2 select').forEach(s => s.selectedIndex=0);
+            document.getElementById('div_visit_etc').style.display='none';
+            tempOpenStockData = null;
+        }
 
-        // [수정 1 & 2] 조회 결과: 심플한 리스트 + 빨간색 강조(메모 미노출)
+        // ... (나머지 searchStock 등등 함수 기존 유지) ...
+        function updateSearchUI() {
+            const criteria = document.getElementById('search_criteria').value;
+            const area = document.getElementById('search_input_area');
+            area.innerHTML = "";
+            if(criteria === 'supplier') {
+                const sel = document.createElement('select'); sel.className = "form-select"; sel.id = "search_value";
+                globalVendorList.forEach(v => { const opt = document.createElement('option'); opt.value=v; opt.innerText=v; sel.appendChild(opt); });
+                area.appendChild(sel);
+            } else if(criteria === 'branch') {
+                const sel = document.createElement('select'); sel.className = "form-select"; sel.id = "search_value";
+                ["장지 본점", "명일 직영점"].forEach(v => { const opt = document.createElement('option'); opt.value=v; opt.innerText=v; sel.appendChild(opt); });
+                area.appendChild(sel);
+            } else if(criteria === 'model') {
+                const sel = document.createElement('select'); sel.className = "form-select"; sel.id = "search_value";
+                globalModelList.forEach(v => { const opt = document.createElement('option'); opt.value=v; opt.innerText=v; sel.appendChild(opt); });
+                area.appendChild(sel);
+            } else {
+                const inp = document.createElement('input'); inp.className = "form-control"; inp.id = "search_value"; inp.placeholder = "입력하세요";
+                inp.onkeydown = function(e){ if(e.key==='Enter') searchStock(); };
+                area.appendChild(inp); inp.focus();
+            }
+        }
+
         function searchStock() {
             const crit = document.getElementById('search_criteria').value;
             const val = document.getElementById('search_value').value;
             const div = document.getElementById('stock_result');
             div.innerHTML = `<div class="text-center py-4"><span class="spinner-border text-primary"></span></div>`;
-            
             fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "search_stock", criteria: crit, keyword: val }) })
             .then(r => r.json()).then(d => {
                 if(!d.list || d.list.length === 0) { div.innerHTML = `<div class="text-center text-muted py-5">결과 없음</div>`; return; }
-                
-                let html = '<ul class="list-group list-group-flush">';
+                let html = `<div class="table-responsive"><table class="table table-hover stock-table"><thead><tr><th>입고일</th><th>모델</th><th>색상</th><th>일련번호</th><th>상태</th><th>위치</th></tr></thead><tbody>`;
                 d.list.forEach(item => {
-                    // 메모(hasNote)가 있으면 빨간색 클래스 적용
-                    let alertClass = item.hasNote ? 'stock-alert' : '';
-                    
-                    html += `
-                    <li class="stock-list-item">
-                        <div class="${alertClass}">
-                            <span class="fw-bold">${item.model}</span>
-                            <span class="mx-2 text-muted">|</span>
-                            <span class="font-monospace">${item.serial}</span>
-                            <span class="mx-2 text-muted">|</span>
-                            <span class="small text-secondary">${item.branch}</span>
-                        </div>
-                    </li>`;
+                    let st = item.status === '보유' ? 'text-success' : 'text-danger';
+                    html += `<tr><td>${item.date}</td><td class="fw-bold">${item.model}</td><td>${item.color}</td><td class="font-monospace">${item.serial}</td><td class="${st} fw-bold">${item.status}</td><td>${item.branch}</td></tr>`;
                 });
-                html += '</ul>';
-                html += `<div class="text-end small text-muted mt-2">총 ${d.list.length}건</div>`;
+                html += `</tbody></table></div><div class="text-end small text-muted">총 ${d.list.length}건</div>`;
                 div.innerHTML = html;
             });
         }
 
-        // ... (나머지 searchHistory, handleInScan, renderInList, clearInList, submitInBatch, handleMoveScan, handleOutScan, loadVendorsToList, addVendor, deleteVendor, showMsg, handleCredentialResponse, logout 등 기존과 동일) ...
         function searchHistory() { const k=document.getElementById('hist_keyword').value; fetch(GAS_URL,{method:"POST",body:JSON.stringify({action:"search_history",keyword:k})}).then(r=>r.json()).then(d=>{ let h=""; d.list.forEach(i=>h+=`<div class='glass-card p-2 mb-2'><span class='badge bg-secondary'>${i.type}</span> ${i.model} (${i.time})</div>`); document.getElementById('hist_result').innerHTML=h; }); }
+        
         function handleInScan(e) { if(e.key!=='Enter')return; const v=e.target.value.trim(); if(inPendingList.some(i=>i.barcode===v)){showMsg('in-msg','error','이미 목록에 있음');e.target.value="";return;} fetch(GAS_URL,{method:"POST",body:JSON.stringify({action:document.getElementById('in_mode_toggle').checked?"scan_preview":"register_single",barcode:v,supplier:document.getElementById('in_supplier').value,branch:document.getElementById('in_branch').value,user:currentUser})}).then(r=>r.json()).then(d=>{if(d.status==='success'){if(document.getElementById('in_mode_toggle').checked){inPendingList.push({...d.data,supplier:document.getElementById('in_supplier').value});renderInList();showMsg('in-msg','success',`추가: ${d.data.model}`);}else showMsg('in-msg','success',`입고: ${d.data.model}`);}else showMsg('in-msg','error',d.message);}).finally(()=>{e.target.value="";e.target.focus();}); }
         function renderInList() { const t=document.getElementById('in_tbody'); t.innerHTML=""; inPendingList.forEach((i,x)=>t.innerHTML+=`<tr><td>${i.model}</td><td>${i.serial}</td><td><button onclick="inPendingList.splice(${x},1);renderInList()">X</button></td></tr>`); document.getElementById('in_count').innerText=inPendingList.length; }
         function clearInList() { inPendingList=[]; renderInList(); }
