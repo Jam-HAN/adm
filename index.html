@@ -15,11 +15,12 @@
         .active-section { display: block; animation: fadeIn 0.4s ease-out forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
-        /* 폼 스타일 */
-        .form-label-sm { font-size: 0.8rem; color: #6c757d; font-weight: 600; margin-bottom: 2px; }
-        .form-control-sm, .form-select-sm { font-size: 0.9rem; }
-        .divider { border-top: 2px dashed #e9ecef; margin: 20px 0; }
-        .section-header { font-size: 1rem; font-weight: bold; color: #4e73df; margin-bottom: 10px; border-left: 4px solid #4e73df; padding-left: 10px; }
+        /* 폼 스타일 개선 */
+        .form-label-sm { font-size: 0.8rem; color: #6c757d; font-weight: 700; margin-bottom: 3px; }
+        .form-control-sm, .form-select-sm { font-size: 0.9rem; padding: 0.4rem 0.6rem; }
+        .divider { border-top: 1px solid #dee2e6; margin: 25px 0 15px 0; }
+        .section-header { font-size: 1rem; font-weight: 800; color: #4e73df; margin-bottom: 12px; display: flex; align-items: center; }
+        .section-header i { margin-right: 6px; }
     </style>
 </head>
 <body>
@@ -106,36 +107,30 @@
                         <div id="open_step_2" style="display:none;">
                             <div class="alert alert-primary py-2 small mb-4 d-flex align-items-center">
                                 <i class="bi bi-phone me-2"></i>
-                                <div>
-                                    <span id="target_model" class="fw-bold"></span> 
-                                    <span class="mx-1">|</span> 
-                                    <span id="target_serial"></span>
-                                </div>
+                                <div><span id="target_model" class="fw-bold"></span> <span class="mx-1">|</span> <span id="target_serial"></span></div>
                             </div>
 
-                            <div class="section-header">기본 정보</div>
+                            <div class="section-header"><i class="bi bi-person-lines-fill"></i> 기본 정보</div>
                             <div class="row g-2 mb-3">
-                                <div class="col-4"><label class="form-label-sm">개통유형</label><select class="form-select form-select-sm" id="f_act_type"><option value="신규">신규</option><option value="번호이동">번호이동</option><option value="기기변경">기기변경</option></select></div>
-                                <div class="col-4"><label class="form-label-sm">약정유형</label><select class="form-select form-select-sm" id="f_cont_type"><option value="공시지원">공시지원</option><option value="선택약정">선택약정</option></select></div>
+                                <div class="col-4"><label class="form-label-sm">개통유형</label><select class="form-select form-select-sm" id="f_act_type"><option value="" selected>선택</option><option>신규</option><option>번호이동</option><option>기기변경</option></select></div>
+                                <div class="col-4"><label class="form-label-sm">약정유형</label><select class="form-select form-select-sm" id="f_cont_type"><option value="" selected>선택</option><option>공시지원</option><option>선택약정</option></select></div>
                                 <div class="col-4"><label class="form-label-sm">방문경로</label><select class="form-select form-select-sm" id="f_visit" onchange="checkVisitPath()"></select></div>
-                                <div class="col-12" id="div_visit_etc" style="display:none;"><input type="text" class="form-control form-control-sm" id="f_visit_etc" placeholder="상세 경로 입력"></div>
+                                <div class="col-12" id="div_visit_etc" style="display:none;"><input type="text" class="form-control form-control-sm" id="f_visit_etc" placeholder="상세 경로"></div>
                                 
                                 <div class="col-4"><label class="form-label-sm">고객명</label><input type="text" class="form-control form-control-sm" id="f_name"></div>
                                 <div class="col-4"><label class="form-label-sm">생년월일</label><input type="text" class="form-control form-control-sm" id="f_birth" placeholder="6자리"></div>
-                                <div class="col-4"><label class="form-label-sm">연락처</label><input type="text" class="form-control form-control-sm" id="f_phone" placeholder="010-0000-0000"></div>
+                                <div class="col-4"><label class="form-label-sm">연락처</label><input type="text" class="form-control form-control-sm" id="f_phone" placeholder="010-"></div>
                                 
                                 <div class="col-6"><label class="form-label-sm">요금제</label><input type="text" class="form-control form-control-sm" id="f_plan"></div>
-                                <div class="col-6"><label class="form-label-sm">변경 요금제</label><input type="text" class="form-control form-control-sm" id="f_plan_chg"></div>
-                                
+                                <div class="col-6"><label class="form-label-sm">변경요금제</label><input type="text" class="form-control form-control-sm" id="f_plan_chg"></div>
                                 <div class="col-12"><label class="form-label-sm">부가서비스</label><input type="text" class="form-control form-control-sm" id="f_addon"></div>
                                 
-                                <div class="col-4"><label class="form-label-sm">유심</label><select class="form-select form-select-sm" id="f_usim"><option value="" selected>선택</option><option>후청구</option><option>대납</option><option>선납</option></select></div>
                                 <div class="col-4"><label class="form-label-sm">제휴카드</label><input type="text" class="form-control form-control-sm" id="f_card"></div>
-                                <div class="col-4 d-flex align-items-end"><div class="form-check"><input class="form-check-input" type="checkbox" id="f_review"><label class="form-check-label small" for="f_review">리뷰작성</label></div></div>
+                                <div class="col-4"><label class="form-label-sm">리뷰작성여부</label><select class="form-select form-select-sm" id="f_review"><option value="" selected>선택</option><option>작성</option><option>미작성</option></select></div>
                             </div>
 
                             <div class="divider"></div>
-                            <div class="section-header">정책 및 정산</div>
+                            <div class="section-header"><i class="bi bi-calculator"></i> 정책 및 정산</div>
                             <div class="row g-2 mb-3">
                                 <div class="col-6"><label class="form-label-sm">계약처(A값)</label><input type="text" class="form-control form-control-sm" id="f_avalue"></div>
                                 <div class="col-6"><label class="form-label-sm">정책차수</label><input type="text" class="form-control form-control-sm" id="f_policy"></div>
@@ -150,32 +145,50 @@
                                 <div class="col-6"><label class="form-label-sm">메모</label><input type="text" class="form-control form-control-sm" id="f_inc3_m"></div>
 
                                 <div class="col-6"><label class="form-label-sm text-danger">차감정책</label><input type="number" class="form-control form-control-sm border-danger" id="f_cost1"></div>
+                                <div class="col-6"><label class="form-label-sm text-danger">메모</label><input type="text" class="form-control form-control-sm border-danger" id="f_cost1_m"></div>
+                                
                                 <div class="col-6"><label class="form-label-sm text-danger">프리할인</label><input type="number" class="form-control form-control-sm border-danger" id="f_cost2"></div>
+                                <div class="col-6"><label class="form-label-sm">유심</label><select class="form-select form-select-sm" id="f_usim"><option value="" selected>선택</option><option>후청구</option><option>대납</option><option>선납</option></select></div>
                             </div>
 
                             <div class="divider"></div>
-                            <div class="section-header">수납 및 결제</div>
+                            <div class="section-header"><i class="bi bi-credit-card"></i> 수납 및 지원</div>
                             <div class="row g-2 mb-3">
                                 <div class="col-4"><label class="form-label-sm">대납1</label><input type="number" class="form-control form-control-sm" id="f_pay1"></div>
-                                <div class="col-4"><label class="form-label-sm">방법</label><select class="form-select form-select-sm" id="f_pay1_m"><option value="" selected>선택</option><option>채권</option><option>카드</option></select></div>
-                                <div class="col-4"><label class="form-label-sm">날짜</label><input type="text" class="form-control form-control-sm" id="f_pay1_d" placeholder="MM/DD"></div>
+                                <div class="col-4"><label class="form-label-sm">방법</label><select class="form-select form-select-sm" id="f_pay1_m"><option value="" selected>선택</option><option>채권</option><option>법인카드</option></select></div>
+                                <div class="col-4"><label class="form-label-sm">처리일</label><input type="text" class="form-control form-control-sm" id="f_pay1_d" placeholder="MM/DD"></div>
 
                                 <div class="col-4"><label class="form-label-sm">대납2</label><input type="number" class="form-control form-control-sm" id="f_pay2"></div>
-                                <div class="col-4"><label class="form-label-sm">방법</label><select class="form-select form-select-sm" id="f_pay2_m"><option value="" selected>선택</option><option>채권</option><option>카드</option></select></div>
-                                <div class="col-4"><label class="form-label-sm">날짜</label><input type="text" class="form-control form-control-sm" id="f_pay2_d" placeholder="MM/DD"></div>
+                                <div class="col-4"><label class="form-label-sm">방법</label><select class="form-select form-select-sm" id="f_pay2_m"><option value="" selected>선택</option><option>채권</option><option>법인카드</option></select></div>
+                                <div class="col-4"><label class="form-label-sm">처리일</label><input type="text" class="form-control form-control-sm" id="f_pay2_d" placeholder="MM/DD"></div>
 
                                 <div class="col-6"><label class="form-label-sm">현금지급</label><input type="number" class="form-control form-control-sm" id="f_cash"></div>
                                 <div class="col-6"><label class="form-label-sm">페이백</label><input type="number" class="form-control form-control-sm" id="f_back"></div>
                                 
-                                <div class="col-4"><label class="form-label-sm">단말기수납</label><input type="number" class="form-control form-control-sm" id="f_inc4"></div>
-                                <div class="col-4"><label class="form-label-sm">요금수납</label><input type="number" class="form-control form-control-sm" id="f_inc5"></div>
-                                <div class="col-4"><label class="form-label-sm">중고폰</label><input type="number" class="form-control form-control-sm" id="f_inc6"></div>
-                                <div class="col-12"><label class="form-label-sm">메모(중고폰 등)</label><input type="text" class="form-control form-control-sm" id="f_inc6_m"></div>
+                                <div class="col-4"><label class="form-label-sm">은행명</label><input type="text" class="form-control form-control-sm" id="f_bank"></div>
+                                <div class="col-4"><label class="form-label-sm">계좌번호</label><input type="text" class="form-control form-control-sm" id="f_acc"></div>
+                                <div class="col-4"><label class="form-label-sm">예금주</label><input type="text" class="form-control form-control-sm" id="f_holder"></div>
+                            </div>
+
+                            <div class="divider"></div>
+                            <div class="section-header"><i class="bi bi-wallet2"></i> 수납 상세</div>
+                            <div class="row g-2 mb-3">
+                                <div class="col-6"><label class="form-label-sm">단말기수납1</label><input type="number" class="form-control form-control-sm" id="f_inc4"></div>
+                                <div class="col-6"><label class="form-label-sm">방법</label><select class="form-select form-select-sm" id="f_inc4_m"><option value="" selected>선택</option><option>현금</option><option>계좌</option><option>카드</option></select></div>
+                                
+                                <div class="col-6"><label class="form-label-sm">단말기수납2</label><input type="number" class="form-control form-control-sm" id="f_inc4_2"></div>
+                                <div class="col-6"><label class="form-label-sm">방법</label><select class="form-select form-select-sm" id="f_inc4_2_m"><option value="" selected>선택</option><option>현금</option><option>계좌</option><option>카드</option></select></div>
+                                
+                                <div class="col-6"><label class="form-label-sm">요금수납</label><input type="number" class="form-control form-control-sm" id="f_inc5"></div>
+                                <div class="col-6"><label class="form-label-sm">방법</label><select class="form-select form-select-sm" id="f_inc5_m"><option value="" selected>선택</option><option>현금</option><option>계좌</option><option>카드</option></select></div>
+                                
+                                <div class="col-6"><label class="form-label-sm">중고폰</label><input type="number" class="form-control form-control-sm" id="f_inc6"></div>
+                                <div class="col-6"><label class="form-label-sm">메모</label><input type="text" class="form-control form-control-sm" id="f_inc6_m"></div>
                                 
                                 <div class="col-12"><label class="form-label-sm">기타 특이사항</label><input type="text" class="form-control form-control-sm" id="f_comment"></div>
                             </div>
 
-                            <div class="mt-4">
+                            <div class="mt-4 pb-4">
                                 <button class="btn btn-primary w-100 py-3 fw-bold shadow-sm" onclick="submitFullContract()">
                                     <i class="bi bi-save-fill"></i> 개통 및 저장 완료
                                 </button>
@@ -253,6 +266,21 @@
         </div>
     </div>
 
+    <div class="modal fade" id="vendorEditModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header"><h5 class="modal-title fw-bold">거래처 수정</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body">
+                    <input type="hidden" id="edit_v_old_name">
+                    <div class="mb-2"><label class="small text-muted">거래처명</label><input type="text" class="form-control" id="edit_v_name"></div>
+                    <div class="row g-2 mb-2"><div class="col-6"><label class="small text-muted">영업사원</label><input type="text" class="form-control" id="edit_v_sales"></div><div class="col-6"><label class="small text-muted">연락처</label><input type="text" class="form-control" id="edit_v_phone"></div></div>
+                    <div class="mb-2"><label class="small text-muted">개통실</label><input type="text" class="form-control" id="edit_v_office"></div>
+                </div>
+                <div class="modal-footer"><button class="btn btn-secondary" data-bs-dismiss="modal">취소</button><button class="btn btn-primary" onclick="submitEditVendor()">저장</button></div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
@@ -282,7 +310,6 @@
             });
         };
 
-        // 자동 로그아웃 (10분)
         function setupAutoLogout() {
             resetLogoutTimer();
             ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'].forEach(evt => document.addEventListener(evt, resetLogoutTimer));
@@ -294,7 +321,6 @@
             }
         }
 
-        // 화면 전환
         function showSection(id) {
             document.querySelectorAll('.section-view').forEach(el => el.classList.remove('active-section', 'fade-in'));
             document.getElementById(id).classList.add('active-section', 'fade-in');
@@ -309,11 +335,10 @@
             currentOpenType = type;
             document.getElementById('open_title').innerText = type + " 처리";
             resetOpenForm();
-            loadVisitPaths(); // 방문경로 로드
+            loadVisitPaths(); 
             showSection('section-open');
         }
 
-        // 데이터 로드
         function loadInitData() {
             fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "get_vendors" }) }).then(r => r.json()).then(d => {
                 globalVendorList = d.list.map(v => v.name);
@@ -324,16 +349,14 @@
             fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "get_models" }) }).then(r => r.json()).then(d => globalModelList = d.list);
         }
 
-        // 방문경로 로드
         function loadVisitPaths() {
             fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "get_visit_paths" }) })
             .then(r => r.json())
             .then(d => {
                 const sel = document.getElementById('f_visit');
                 sel.innerHTML = '<option value="" selected>선택</option>';
-                d.list.forEach(item => {
-                    sel.innerHTML += `<option value="${item}">${item}</option>`;
-                });
+                d.list.forEach(item => { sel.innerHTML += `<option value="${item}">${item}</option>`; });
+                sel.innerHTML += '<option value="기타">기타 (직접입력)</option>';
             });
         }
 
@@ -343,7 +366,6 @@
             else document.getElementById('div_visit_etc').style.display = 'none';
         }
 
-        // 개통 스캔
         function handleOpenScan(e) { 
             if(e.key!=='Enter')return; 
             const v=e.target.value.trim(); 
@@ -366,14 +388,13 @@
             });
         }
 
-        // 개통 저장
         function submitFullContract() {
             if(!tempOpenStockData) return;
             const custName = document.getElementById('f_name').value;
             if(!custName) return alert("고객명은 필수입니다.");
 
             let visitVal = document.getElementById('f_visit').value;
-            if(visitVal === '기타') visitVal = "기타 / " + document.getElementById('f_visit_etc').value;
+            if(visitVal === '기타') visitVal = "기타: " + document.getElementById('f_visit_etc').value;
 
             const formData = {
                 action: "open_stock_full",
@@ -391,7 +412,7 @@
                 addon: document.getElementById('f_addon').value,
                 usim: document.getElementById('f_usim').value,
                 card: document.getElementById('f_card').value,
-                review: document.getElementById('f_review').checked ? "작성" : "미작성",
+                review: document.getElementById('f_review').value,
                 
                 aValue: document.getElementById('f_avalue').value,
                 policy: document.getElementById('f_policy').value,
@@ -402,6 +423,7 @@
                 income3: document.getElementById('f_inc3').value,
                 income3Memo: document.getElementById('f_inc3_m').value,
                 cost1: document.getElementById('f_cost1').value,
+                cost1Memo: document.getElementById('f_cost1_m').value,
                 cost2: document.getElementById('f_cost2').value,
                 
                 payment1: document.getElementById('f_pay1').value,
@@ -413,9 +435,16 @@
                 
                 cash: document.getElementById('f_cash').value,
                 payback1: document.getElementById('f_back').value,
+                bankName: document.getElementById('f_bank').value,
+                accountNumber: document.getElementById('f_acc').value,
+                depositor: document.getElementById('f_holder').value,
                 
                 income4_1: document.getElementById('f_inc4').value,
+                income4_1Method: document.getElementById('f_inc4_m').value,
+                income4_2: document.getElementById('f_inc4_2').value,
+                income4_2Method: document.getElementById('f_inc4_2_m').value,
                 income5: document.getElementById('f_inc5').value,
+                income5Method: document.getElementById('f_inc5_m').value,
                 income6: document.getElementById('f_inc6').value,
                 income6Memo: document.getElementById('f_inc6_m').value,
                 
@@ -447,11 +476,13 @@
             document.getElementById('open_scan').value = "";
             document.getElementById('open_scan').disabled = false;
             document.getElementById('open_scan').focus();
-            document.querySelectorAll('#open_step_2 input').forEach(i => { if(i.type==='checkbox') i.checked=false; else i.value=""; });
+            document.querySelectorAll('#open_step_2 input').forEach(i => i.value = "");
             document.querySelectorAll('#open_step_2 select').forEach(s => s.selectedIndex=0);
+            document.getElementById('div_visit_etc').style.display='none';
             tempOpenStockData = null;
         }
 
+        // ... (나머지 searchStock, handleInScan 등등 함수들 기존 코드 유지) ...
         function updateSearchUI() {
             const criteria = document.getElementById('search_criteria').value;
             const area = document.getElementById('search_input_area');
@@ -493,15 +524,14 @@
             });
         }
 
-        // (기타 함수들: in/out/move/history 등 기존 유지 - 복붙 필요시 이전 코드 참조)
-        // ... (handleInScan, handleMoveScan, handleOutScan, searchHistory, loadVendors 등 필수 함수들 포함) ...
+        function searchHistory() { const k=document.getElementById('hist_keyword').value; fetch(GAS_URL,{method:"POST",body:JSON.stringify({action:"search_history",keyword:k})}).then(r=>r.json()).then(d=>{ let h=""; d.list.forEach(i=>h+=`<div class='glass-card p-2 mb-2'><span class='badge bg-secondary'>${i.type}</span> ${i.model} (${i.time})</div>`); document.getElementById('hist_result').innerHTML=h; }); }
+        
         function handleInScan(e) { if(e.key!=='Enter')return; const v=e.target.value.trim(); if(inPendingList.some(i=>i.barcode===v)){showMsg('in-msg','error','이미 목록에 있음');e.target.value="";return;} fetch(GAS_URL,{method:"POST",body:JSON.stringify({action:document.getElementById('in_mode_toggle').checked?"scan_preview":"register_single",barcode:v,supplier:document.getElementById('in_supplier').value,branch:document.getElementById('in_branch').value,user:currentUser})}).then(r=>r.json()).then(d=>{if(d.status==='success'){if(document.getElementById('in_mode_toggle').checked){inPendingList.push({...d.data,supplier:document.getElementById('in_supplier').value});renderInList();showMsg('in-msg','success',`추가: ${d.data.model}`);}else showMsg('in-msg','success',`입고: ${d.data.model}`);}else showMsg('in-msg','error',d.message);}).finally(()=>{e.target.value="";e.target.focus();}); }
         function renderInList() { const t=document.getElementById('in_tbody'); t.innerHTML=""; inPendingList.forEach((i,x)=>t.innerHTML+=`<tr><td>${i.model}</td><td>${i.serial}</td><td><button onclick="inPendingList.splice(${x},1);renderInList()">X</button></td></tr>`); document.getElementById('in_count').innerText=inPendingList.length; }
         function clearInList() { inPendingList=[]; renderInList(); }
-        function submitInBatch() { if(!inPendingList.length)return; if(!confirm("입고?"))return; fetch(GAS_URL,{method:"POST",body:JSON.stringify({action:"batch_register",items:inPendingList,user:currentUser})}).then(r=>r.json()).then(d=>{if(d.status==='success'){alert(d.count+"대 입고완료");clearInList();}else alert(d.message);}); }
+        function submitInBatch() { if(!inPendingList.length)return; if(!confirm("입고?"))return; fetch(GAS_URL,{method:"POST",body:JSON.stringify({action:"batch_register",items:inPendingList,branch:document.getElementById('in_branch').value,user:currentUser})}).then(r=>r.json()).then(d=>{if(d.status==='success'){alert(d.count+"대 입고완료");clearInList();}else alert(d.message);}); }
         function handleMoveScan(e) { if(e.key!=='Enter')return; const v=e.target.value.trim(); fetch(GAS_URL,{method:"POST",body:JSON.stringify({action:"transfer_stock",input:v,toBranch:document.getElementById('move_to_branch').value,user:currentUser})}).then(r=>r.json()).then(d=>showMsg('move-msg',d.status==='success'?'success':'error',d.message)).finally(()=>{e.target.value="";}); }
         function handleOutScan(e) { if(e.key!=='Enter')return; const v=e.target.value.trim(); if(!document.getElementById('out_note').value){alert("사유필수");return;} fetch(GAS_URL,{method:"POST",body:JSON.stringify({action:"return_stock",input:v,note:document.getElementById('out_note').value,user:currentUser})}).then(r=>r.json()).then(d=>showMsg('out-msg',d.status==='success'?'success':'error',d.message)).finally(()=>{e.target.value="";}); }
-        function searchHistory() { const k=document.getElementById('hist_keyword').value; fetch(GAS_URL,{method:"POST",body:JSON.stringify({action:"search_history",keyword:k})}).then(r=>r.json()).then(d=>{ let h=""; d.list.forEach(i=>h+=`<div class='glass-card p-2 mb-2'><span class='badge bg-secondary'>${i.type}</span> ${i.model} (${i.time})</div>`); document.getElementById('hist_result').innerHTML=h; }); }
         function loadVendorsToList() { fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "get_vendors" }) }).then(r => r.json()).then(d => { const div = document.getElementById('vendor_list_ui'); div.innerHTML = ""; d.list.forEach(v => { div.innerHTML += `<div class="list-group-item p-2">${v.name} <button class="btn btn-sm btn-outline-danger float-end" onclick="deleteVendor('${v.name}')">삭제</button></div>`; }); }); }
         function addVendor() { const n=document.getElementById('v_name').value; if(!n)return; fetch(GAS_URL,{method:"POST",body:JSON.stringify({action:"add_vendor",name:n,salesName:document.getElementById('v_sales').value,salesPhone:document.getElementById('v_phone').value,officePhone:document.getElementById('v_office').value})}).then(r=>r.json()).then(d=>{alert(d.message);loadVendorsToList();}); }
         function deleteVendor(n) { if(confirm("삭제?")) fetch(GAS_URL,{method:"POST",body:JSON.stringify({action:"delete_vendor",name:n})}).then(r=>r.json()).then(d=>{alert(d.message);loadVendorsToList();}); }
