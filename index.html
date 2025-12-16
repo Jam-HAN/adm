@@ -15,26 +15,12 @@
         .active-section { display: block; animation: fadeIn 0.4s ease-out forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
+        /* 폼 스타일 */
         .form-label-sm { font-size: 0.8rem; color: #6c757d; font-weight: 700; margin-bottom: 3px; }
         .form-control-sm, .form-select-sm { font-size: 0.9rem; padding: 0.4rem 0.6rem; }
         .divider { border-top: 1px solid #dee2e6; margin: 25px 0 15px 0; }
         .section-header { font-size: 1rem; font-weight: 800; color: #4e73df; margin-bottom: 12px; display: flex; align-items: center; }
         .section-header i { margin-right: 6px; }
-        
-        .text-danger-input { color: #dc3545 !important; font-weight: bold; border-color: #dc3545; }
-        .text-danger-input:focus { box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25); border-color: #dc3545; }
-
-        /* [수정 1] 깔끔한 리스트 스타일 */
-        .stock-list-item { 
-            padding: 12px; 
-            border-bottom: 1px solid #eee; 
-            font-size: 0.95rem; 
-            display: flex;
-            align-items: center;
-        }
-        .stock-list-item:last-child { border-bottom: none; }
-        /* [수정 2] 메모(차감) 있으면 빨간 글씨만 적용 (내용 숨김) */
-        .stock-alert { color: #dc3545; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -119,37 +105,38 @@
                         </div>
 
                         <div id="open_step_2" style="display:none;">
-                            <div class="alert alert-primary py-3 text-center mb-4">
-                                <h5 class="fw-bold mb-0" id="target_display_main"></h5>
+                            <div class="alert alert-primary py-2 small mb-4 d-flex align-items-center justify-content-between">
+                                <div><i class="bi bi-phone me-1"></i> <span id="target_model" class="fw-bold"></span> (<span id="target_serial"></span>)</div>
+                                <div class="badge bg-white text-primary border" id="target_branch"></div>
                             </div>
 
                             <div class="section-header"><i class="bi bi-person-lines-fill"></i> 기본 정보</div>
                             <div class="row g-2 mb-3">
                                 <div class="col-4"><label class="form-label-sm">개통유형</label><select class="form-select form-select-sm" id="f_act_type"><option value="" selected>선택</option><option>신규</option><option>번호이동</option><option>기기변경</option></select></div>
                                 <div class="col-4"><label class="form-label-sm">약정유형</label><select class="form-select form-select-sm" id="f_cont_type"><option value="" selected>선택</option><option>공시지원</option><option>선택약정</option></select></div>
-                                <div class="col-4"><label class="form-label-sm">방문경로 <span class="text-danger">*</span></label><select class="form-select form-select-sm" id="f_visit" onchange="checkVisitPath()"></select></div>
+                                <div class="col-4"><label class="form-label-sm">방문경로</label><select class="form-select form-select-sm" id="f_visit" onchange="checkVisitPath()"></select></div>
                                 <div class="col-12" id="div_visit_etc" style="display:none;"><input type="text" class="form-control form-control-sm" id="f_visit_etc" placeholder="상세 경로"></div>
                                 
-                                <div class="col-4"><label class="form-label-sm">고객명 <span class="text-danger">*</span></label><input type="text" class="form-control form-control-sm" id="f_name"></div>
-                                <div class="col-4"><label class="form-label-sm">생년월일</label><input type="text" class="form-control form-control-sm" id="f_birth" placeholder="900101"></div>
-                                <div class="col-4"><label class="form-label-sm">연락처</label><input type="text" class="form-control form-control-sm" id="f_phone" placeholder="01012345678"></div>
+                                <div class="col-4"><label class="form-label-sm">고객명</label><input type="text" class="form-control form-control-sm" id="f_name"></div>
+                                <div class="col-4"><label class="form-label-sm">생년월일</label><input type="text" class="form-control form-control-sm" id="f_birth" placeholder="6자리"></div>
+                                <div class="col-4"><label class="form-label-sm">연락처</label><input type="text" class="form-control form-control-sm" id="f_phone" placeholder="010-"></div>
                                 
                                 <div class="col-6"><label class="form-label-sm">요금제</label><input type="text" class="form-control form-control-sm" id="f_plan"></div>
                                 <div class="col-6"><label class="form-label-sm">변경요금제</label><input type="text" class="form-control form-control-sm" id="f_plan_chg"></div>
                                 <div class="col-12"><label class="form-label-sm">부가서비스</label><input type="text" class="form-control form-control-sm" id="f_addon"></div>
                                 
                                 <div class="col-4"><label class="form-label-sm">제휴카드</label><input type="text" class="form-control form-control-sm" id="f_card"></div>
-                                <div class="col-4"><label class="form-label-sm">리뷰작성 <span class="text-danger">*</span></label><select class="form-select form-select-sm" id="f_review"><option value="" selected>선택</option><option>작성</option><option>미작성</option></select></div>
+                                <div class="col-4"><label class="form-label-sm">리뷰작성여부</label><select class="form-select form-select-sm" id="f_review"><option value="" selected>선택</option><option>작성</option><option>미작성</option></select></div>
                             </div>
 
                             <div class="divider"></div>
                             <div class="section-header"><i class="bi bi-calculator"></i> 정책 및 정산</div>
                             <div class="row g-2 mb-3">
-                                <div class="col-6"><label class="form-label-sm">개통처</label><input type="text" class="form-control form-control-sm" id="f_avalue"></div>
+                                <div class="col-12"><label class="form-label-sm">계약처</label><input type="text" class="form-control form-control-sm" id="f_avalue"></div>
                                 <div class="col-6"><label class="form-label-sm">정책차수</label><input type="text" class="form-control form-control-sm" id="f_policy"></div>
                                 
                                 <div class="col-6"><label class="form-label-sm">액면/히든</label><input type="number" class="form-control form-control-sm" id="f_inc1"></div>
-                                <div class="col-6"><label class="form-label-sm">메모</label><input type="text" class="form-control form-control-sm" id="f_inc1_m"></div>
+                                <div class="col-12"><label class="form-label-sm">메모</label><input type="text" class="form-control form-control-sm" id="f_inc1_m"></div>
                                 
                                 <div class="col-6"><label class="form-label-sm">추가정책</label><input type="number" class="form-control form-control-sm" id="f_inc2"></div>
                                 <div class="col-6"><label class="form-label-sm">메모</label><input type="text" class="form-control form-control-sm" id="f_inc2_m"></div>
@@ -157,26 +144,26 @@
                                 <div class="col-6"><label class="form-label-sm">부가정책</label><input type="number" class="form-control form-control-sm" id="f_inc3"></div>
                                 <div class="col-6"><label class="form-label-sm">메모</label><input type="text" class="form-control form-control-sm" id="f_inc3_m"></div>
 
-                                <div class="col-6"><label class="form-label-sm text-danger">차감정책</label><input type="number" class="form-control form-control-sm text-danger-input" id="f_cost1"></div>
-                                <div class="col-6"><label class="form-label-sm text-danger">메모</label><input type="text" class="form-control form-control-sm text-danger-input" id="f_cost1_m"></div>
+                                <div class="col-6"><label class="form-label-sm text-danger">차감정책</label><input type="number" class="form-control form-control-sm border-danger" id="f_cost1"></div>
+                                <div class="col-6"><label class="form-label-sm text-danger">메모</label><input type="text" class="form-control form-control-sm border-danger" id="f_cost1_m"></div>
                                 
-                                <div class="col-6"><label class="form-label-sm text-danger">프리할인</label><input type="number" class="form-control form-control-sm text-danger-input" id="f_cost2"></div>
+                                <div class="col-6"><label class="form-label-sm text-danger">프리할인</label><input type="number" class="form-control form-control-sm border-danger" id="f_cost2"></div>
                                 <div class="col-6"><label class="form-label-sm">유심</label><select class="form-select form-select-sm" id="f_usim"></select></div>
                             </div>
 
                             <div class="divider"></div>
                             <div class="section-header"><i class="bi bi-credit-card"></i> 대납 및 지원</div>
                             <div class="row g-2 mb-3">
-                                <div class="col-4"><label class="form-label-sm text-danger">대납1</label><input type="number" class="form-control form-control-sm text-danger-input" id="f_pay1"></div>
+                                <div class="col-4"><label class="form-label-sm">대납1</label><input type="number" class="form-control form-control-sm" id="f_pay1"></div>
                                 <div class="col-4"><label class="form-label-sm">방법</label><select class="form-select form-select-sm" id="f_pay1_m"><option value="" selected>선택</option><option>채권</option><option>법인카드</option></select></div>
                                 <div class="col-4"><label class="form-label-sm">처리일</label><input type="date" class="form-control form-control-sm" id="f_pay1_d"></div>
 
-                                <div class="col-4"><label class="form-label-sm text-danger">대납2</label><input type="number" class="form-control form-control-sm text-danger-input" id="f_pay2"></div>
+                                <div class="col-4"><label class="form-label-sm">대납2</label><input type="number" class="form-control form-control-sm" id="f_pay2"></div>
                                 <div class="col-4"><label class="form-label-sm">방법</label><select class="form-select form-select-sm" id="f_pay2_m"><option value="" selected>선택</option><option>채권</option><option>법인카드</option></select></div>
                                 <div class="col-4"><label class="form-label-sm">처리일</label><input type="date" class="form-control form-control-sm" id="f_pay2_d"></div>
 
-                                <div class="col-6"><label class="form-label-sm text-danger">현금지급</label><input type="number" class="form-control form-control-sm text-danger-input" id="f_cash"></div>
-                                <div class="col-6"><label class="form-label-sm text-danger">페이백</label><input type="number" class="form-control form-control-sm text-danger-input" id="f_back"></div>
+                                <div class="col-6"><label class="form-label-sm">현금지급</label><input type="number" class="form-control form-control-sm" id="f_cash"></div>
+                                <div class="col-6"><label class="form-label-sm">페이백</label><input type="number" class="form-control form-control-sm" id="f_back"></div>
                                 
                                 <div class="col-4"><label class="form-label-sm">은행명</label><input type="text" class="form-control form-control-sm" id="f_bank"></div>
                                 <div class="col-4"><label class="form-label-sm">계좌번호</label><input type="text" class="form-control form-control-sm" id="f_acc"></div>
@@ -230,10 +217,51 @@
                 </div>
             </div>
 
-            <div id="section-history" class="section-view fade-in"><div class="glass-card p-4"><h5 class="fw-bold mb-3"><i class="bi bi-clock-history"></i> 이력 조회 (로그)</h5><div class="input-group mb-3"><input type="text" class="form-control" id="hist_keyword" placeholder="일련번호 또는 바코드 (정확히 입력)" onkeydown="if(event.key==='Enter') searchHistory()"><button class="btn btn-outline-secondary" onclick="searchHistory()">검색</button></div><div id="hist_result"></div></div></div>
-            <div id="section-move" class="section-view fade-in"><div class="glass-card p-4"><h5 class="fw-bold mb-4 text-primary">재고 이동</h5><select class="form-select bg-light fw-bold py-3 mb-3" id="move_to_branch"><option value="명일 직영점">👉 명일 직영점으로 보냄</option><option value="장지 본점">👉 장지 본점으로 보냄</option></select><div class="scan-wrapper my-4"><input type="text" class="form-control scan-input" id="move_scan" placeholder="바코드 또는 일련번호" onkeydown="handleMoveScan(event)" autocomplete="off"></div><div id="move-msg" class="alert py-2 text-center small fw-bold rounded-3" style="display:none"></div></div></div>
-            <div id="section-out" class="section-view fade-in"><div class="glass-card p-4 border-top border-4 border-danger"><h5 class="fw-bold mb-4 text-danger">반품 처리</h5><div class="form-floating mb-3"><input type="text" class="form-control" id="out_note" placeholder="사유"><label>반품 사유 / 메모 (필수)</label></div><div class="scan-wrapper bg-danger bg-opacity-75 my-4" style="background-color: #d63031;"><input type="text" class="form-control scan-input border-danger" id="out_scan" placeholder="바코드 또는 일련번호" onkeydown="handleOutScan(event)" autocomplete="off"></div><div id="out-msg" class="alert py-2 text-center small fw-bold rounded-3" style="display:none"></div></div></div>
-            <div id="section-vendor" class="section-view fade-in"><div class="glass-card p-4"><h5 class="fw-bold mb-3">거래처 등록</h5><div class="row g-2 mb-3"><div class="col-12"><input type="text" class="form-control enter-trigger" id="v_name" placeholder="거래처명 (필수)"></div><div class="col-6"><input type="text" class="form-control enter-trigger" id="v_sales" placeholder="영업사원"></div><div class="col-6"><input type="text" class="form-control enter-trigger" id="v_phone" placeholder="연락처"></div><div class="col-12"><input type="text" class="form-control enter-trigger" id="v_office" placeholder="개통실 전화번호"></div></div><button class="btn btn-secondary w-100 fw-bold rounded-3" onclick="addVendor()">등록하기</button></div><div class="glass-card p-0"><div class="p-3 border-bottom bg-light"><h6 class="mb-0 fw-bold">등록된 거래처</h6></div><div id="vendor_list_ui" class="list-group list-group-flush"></div></div></div>
+            <div id="section-history" class="section-view fade-in">
+                <div class="glass-card p-4">
+                    <h5 class="fw-bold mb-3"><i class="bi bi-clock-history"></i> 이력 조회 (로그)</h5>
+                    <div class="input-group mb-3">
+                        <input type="text" class="form-control" id="hist_keyword" placeholder="일련번호 또는 바코드 (정확히 입력)" onkeydown="if(event.key==='Enter') searchHistory()">
+                        <button class="btn btn-outline-secondary" onclick="searchHistory()">검색</button>
+                    </div>
+                    <div id="hist_result"></div>
+                </div>
+            </div>
+
+            <div id="section-move" class="section-view fade-in">
+                <div class="glass-card p-4">
+                    <h5 class="fw-bold mb-4 text-primary">재고 이동</h5>
+                    <select class="form-select bg-light fw-bold py-3 mb-3" id="move_to_branch"><option value="명일 직영점">👉 명일 직영점으로 보냄</option><option value="장지 본점">👉 장지 본점으로 보냄</option></select>
+                    <div class="scan-wrapper my-4"><input type="text" class="form-control scan-input" id="move_scan" placeholder="바코드 또는 일련번호" onkeydown="handleMoveScan(event)" autocomplete="off"></div>
+                    <div id="move-msg" class="alert py-2 text-center small fw-bold rounded-3" style="display:none"></div>
+                </div>
+            </div>
+
+            <div id="section-out" class="section-view fade-in">
+                <div class="glass-card p-4 border-top border-4 border-danger">
+                    <h5 class="fw-bold mb-4 text-danger">반품 처리</h5>
+                    <div class="form-floating mb-3"><input type="text" class="form-control" id="out_note" placeholder="사유"><label>반품 사유 / 메모 (필수)</label></div>
+                    <div class="scan-wrapper bg-danger bg-opacity-75 my-4" style="background-color: #d63031;"><input type="text" class="form-control scan-input border-danger" id="out_scan" placeholder="바코드 또는 일련번호" onkeydown="handleOutScan(event)" autocomplete="off"></div>
+                    <div id="out-msg" class="alert py-2 text-center small fw-bold rounded-3" style="display:none"></div>
+                </div>
+            </div>
+
+            <div id="section-vendor" class="section-view fade-in">
+                <div class="glass-card p-4">
+                    <h5 class="fw-bold mb-3">거래처 등록</h5>
+                    <div class="row g-2 mb-3">
+                        <div class="col-12"><input type="text" class="form-control enter-trigger" id="v_name" placeholder="거래처명 (필수)"></div>
+                        <div class="col-6"><input type="text" class="form-control enter-trigger" id="v_sales" placeholder="영업사원"></div>
+                        <div class="col-6"><input type="text" class="form-control enter-trigger" id="v_phone" placeholder="연락처"></div>
+                        <div class="col-12"><input type="text" class="form-control enter-trigger" id="v_office" placeholder="개통실 전화번호"></div>
+                    </div>
+                    <button class="btn btn-secondary w-100 fw-bold rounded-3" onclick="addVendor()">등록하기</button>
+                </div>
+                <div class="glass-card p-0">
+                    <div class="p-3 border-bottom bg-light"><h6 class="mb-0 fw-bold">등록된 거래처</h6></div>
+                    <div id="vendor_list_ui" class="list-group list-group-flush"></div>
+                </div>
+            </div>
 
         </div>
     </div>
@@ -265,6 +293,7 @@
         let logoutTimer;
         let tempOpenStockData = null;
 
+        // 초기화
         window.onload = function() {
             const saved = sessionStorage.getItem('dbphone_user');
             if(saved) {
@@ -281,16 +310,68 @@
             });
         };
 
-        // ... (setupAutoLogout, resetLogoutTimer, showSection, showOpenSection, loadInitData, loadDropdownData, checkVisitPath 등 기존 동일) ...
-        function setupAutoLogout() { resetLogoutTimer(); ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'].forEach(evt => document.addEventListener(evt, resetLogoutTimer)); }
-        function resetLogoutTimer() { clearTimeout(logoutTimer); if(currentUser) { logoutTimer = setTimeout(() => { alert("10분 동안 활동이 없어 자동 로그아웃 되었습니다."); logout(); }, 600000); } }
-        function showSection(id) { document.querySelectorAll('.section-view').forEach(el => el.classList.remove('active-section', 'fade-in')); document.getElementById(id).classList.add('active-section', 'fade-in'); if(id === 'section-in') loadInitData(); if(id === 'section-vendor') loadVendorsToList(); if(id === 'section-stock') updateSearchUI(); const input = document.querySelector(`#${id} input`); if(input) input.focus(); }
-        function showOpenSection(type) { currentOpenType = type; document.getElementById('open_title').innerText = type + " 처리"; resetOpenForm(); loadDropdownData(); showSection('section-open'); }
-        function loadInitData() { fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "get_vendors" }) }).then(r => r.json()).then(d => { globalVendorList = d.list.map(v => v.name); const sel = document.getElementById('in_supplier'); sel.innerHTML = ""; globalVendorList.forEach(v => { const opt = document.createElement('option'); opt.value=v; opt.innerText=v; sel.appendChild(opt); }); if(document.getElementById('search_criteria').value === 'supplier') updateSearchUI(); }); fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "get_models" }) }).then(r => r.json()).then(d => globalModelList = d.list); }
-        function loadDropdownData() { fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "get_dropdown_data" }) }).then(r => r.json()).then(d => { const selVisit = document.getElementById('f_visit'); selVisit.innerHTML = '<option value="" selected>선택</option>'; d.visitList.forEach(item => { selVisit.innerHTML += `<option value="${item}">${item}</option>`; }); selVisit.innerHTML += '<option value="기타">기타 (직접입력)</option>'; const selUsim = document.getElementById('f_usim'); selUsim.innerHTML = '<option value="" selected>선택</option>'; d.usimList.forEach(item => { selUsim.innerHTML += `<option value="${item}">${item}</option>`; }); }); }
-        function checkVisitPath() { const val = document.getElementById('f_visit').value; if(val === '기타') document.getElementById('div_visit_etc').style.display = 'block'; else document.getElementById('div_visit_etc').style.display = 'none'; }
-        
-        // [수정 1] 개통 스캔 후 UI 변경 (통합 표시)
+        function setupAutoLogout() {
+            resetLogoutTimer();
+            ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'].forEach(evt => document.addEventListener(evt, resetLogoutTimer));
+        }
+        function resetLogoutTimer() {
+            clearTimeout(logoutTimer);
+            if(currentUser) {
+                logoutTimer = setTimeout(() => { alert("10분 동안 활동이 없어 자동 로그아웃 되었습니다."); logout(); }, 600000);
+            }
+        }
+
+        function showSection(id) {
+            document.querySelectorAll('.section-view').forEach(el => el.classList.remove('active-section', 'fade-in'));
+            document.getElementById(id).classList.add('active-section', 'fade-in');
+            if(id === 'section-in') loadInitData();
+            if(id === 'section-vendor') loadVendorsToList();
+            if(id === 'section-stock') updateSearchUI();
+            const input = document.querySelector(`#${id} input`);
+            if(input) input.focus();
+        }
+
+        function showOpenSection(type) {
+            currentOpenType = type;
+            document.getElementById('open_title').innerText = type + " 처리";
+            resetOpenForm();
+            loadDropdownData(); 
+            showSection('section-open');
+        }
+
+        function loadInitData() {
+            fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "get_vendors" }) }).then(r => r.json()).then(d => {
+                globalVendorList = d.list.map(v => v.name);
+                const sel = document.getElementById('in_supplier'); sel.innerHTML = "";
+                globalVendorList.forEach(v => { const opt = document.createElement('option'); opt.value=v; opt.innerText=v; sel.appendChild(opt); });
+                if(document.getElementById('search_criteria').value === 'supplier') updateSearchUI();
+            });
+            fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "get_models" }) }).then(r => r.json()).then(d => globalModelList = d.list);
+        }
+
+        function loadDropdownData() {
+            fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "get_dropdown_data" }) })
+            .then(r => r.json())
+            .then(d => {
+                // 방문경로
+                const selVisit = document.getElementById('f_visit');
+                selVisit.innerHTML = '<option value="" selected>선택</option>';
+                d.visitList.forEach(item => { selVisit.innerHTML += `<option value="${item}">${item}</option>`; });
+                selVisit.innerHTML += '<option value="기타">기타 (직접입력)</option>';
+                
+                // 유심
+                const selUsim = document.getElementById('f_usim');
+                selUsim.innerHTML = '<option value="" selected>선택</option>';
+                d.usimList.forEach(item => { selUsim.innerHTML += `<option value="${item}">${item}</option>`; });
+            });
+        }
+
+        function checkVisitPath() {
+            const val = document.getElementById('f_visit').value;
+            if(val === '기타') document.getElementById('div_visit_etc').style.display = 'block';
+            else document.getElementById('div_visit_etc').style.display = 'none';
+        }
+
         function handleOpenScan(e) { 
             if(e.key!=='Enter')return; 
             const v=e.target.value.trim(); 
@@ -300,17 +381,15 @@
                 if(d.status==='success') {
                     tempOpenStockData = d.data; 
                     tempOpenStockData.inputCode = v; 
-                    
-                    // UI 표시 (모델 | 일련번호 | 지점)
-                    const displayInfo = `${d.data.model} | ${d.data.serial} | ${d.data.branch || "지점미상"}`;
-                    document.getElementById('target_display_main').innerText = displayInfo;
-                    
+                    document.getElementById('target_model').innerText = `${d.data.model} (${d.data.color})`;
+                    document.getElementById('target_serial').innerText = d.data.serial;
+                    document.getElementById('target_branch').innerText = d.data.branch || "지점미상"; // 지점 표시
                     document.getElementById('f_avalue').value = d.data.supplier || ""; 
                     document.getElementById('open_step_1').style.display = 'none';
                     document.getElementById('open_step_2').style.display = 'block';
                     document.getElementById('f_name').focus();
                 } else {
-                    alert(d.message); 
+                    showMsg('open-msg', 'error', d.message);
                     e.target.disabled=false; e.target.value=""; e.target.focus();
                 }
             });
@@ -318,16 +397,16 @@
 
         function submitFullContract() {
             if(!tempOpenStockData) return;
-            
-            // [수정 3] 필수값 체크 후 focus() 이동
             const custName = document.getElementById('f_name').value;
-            if(!custName) { alert("고객명은 필수입니다."); document.getElementById('f_name').focus(); return; }
+            if(!custName) return alert("고객명은 필수입니다.");
             
+            // 리뷰 필수 체크
             const reviewVal = document.getElementById('f_review').value;
-            if(!reviewVal) { alert("리뷰작성여부를 선택해주세요."); document.getElementById('f_review').focus(); return; }
+            if(!reviewVal) return alert("리뷰작성여부를 선택해주세요.");
             
+            // 방문경로 필수 체크
             const visitValSelect = document.getElementById('f_visit').value;
-            if(!visitValSelect) { alert("방문경로를 선택해주세요."); document.getElementById('f_visit').focus(); return; }
+            if(!visitValSelect) return alert("방문경로를 선택해주세요.");
 
             let visitVal = visitValSelect;
             if(visitVal === '기타') visitVal = "기타: " + document.getElementById('f_visit_etc').value;
@@ -392,7 +471,6 @@
             btn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> 저장 중...`;
             btn.disabled = true;
 
-            // [수정 4] 통신 오류 핸들링
             fetch(GAS_URL, { method: "POST", body: JSON.stringify(formData) })
             .then(r => r.json())
             .then(d => {
@@ -400,55 +478,69 @@
                     alert(d.message);
                     resetOpenForm();
                 } else {
-                    alert("⚠️ 저장 실패: " + d.message);
+                    alert("오류: " + d.message);
                 }
             })
-            .catch(e => {
-                console.error(e);
-                alert("🚫 통신 오류가 발생했습니다.\n서버에서 응답이 없거나 권한이 없습니다.\n관리자에게 문의해주세요.");
-            })
+            .catch(e => alert("통신 오류"))
             .finally(() => { btn.innerHTML = originalText; btn.disabled = false; });
         }
 
-        // ... (resetOpenForm, updateSearchUI 등 기존 동일) ...
-        function resetOpenForm() { document.getElementById('open_step_1').style.display = 'block'; document.getElementById('open_step_2').style.display = 'none'; document.getElementById('open_scan').value = ""; document.getElementById('open_scan').disabled = false; document.getElementById('open_scan').focus(); document.querySelectorAll('#open_step_2 input').forEach(i => i.value = ""); document.querySelectorAll('#open_step_2 select').forEach(s => s.selectedIndex=0); document.getElementById('div_visit_etc').style.display='none'; tempOpenStockData = null; }
-        function updateSearchUI() { const criteria = document.getElementById('search_criteria').value; const area = document.getElementById('search_input_area'); area.innerHTML = ""; if(criteria === 'supplier') { const sel = document.createElement('select'); sel.className = "form-select"; sel.id = "search_value"; globalVendorList.forEach(v => { const opt = document.createElement('option'); opt.value=v; opt.innerText=v; sel.appendChild(opt); }); area.appendChild(sel); } else if(criteria === 'branch') { const sel = document.createElement('select'); sel.className = "form-select"; sel.id = "search_value"; ["장지 본점", "명일 직영점"].forEach(v => { const opt = document.createElement('option'); opt.value=v; opt.innerText=v; sel.appendChild(opt); }); area.appendChild(sel); } else if(criteria === 'model') { const sel = document.createElement('select'); sel.className = "form-select"; sel.id = "search_value"; globalModelList.forEach(v => { const opt = document.createElement('option'); opt.value=v; opt.innerText=v; sel.appendChild(opt); }); area.appendChild(sel); } else { const inp = document.createElement('input'); inp.className = "form-control"; inp.id = "search_value"; inp.placeholder = "입력하세요"; inp.onkeydown = function(e){ if(e.key==='Enter') searchStock(); }; area.appendChild(inp); inp.focus(); } }
+        function resetOpenForm() {
+            document.getElementById('open_step_1').style.display = 'block';
+            document.getElementById('open_step_2').style.display = 'none';
+            document.getElementById('open_scan').value = "";
+            document.getElementById('open_scan').disabled = false;
+            document.getElementById('open_scan').focus();
+            document.querySelectorAll('#open_step_2 input').forEach(i => i.value = "");
+            document.querySelectorAll('#open_step_2 select').forEach(s => s.selectedIndex=0);
+            document.getElementById('div_visit_etc').style.display='none';
+            tempOpenStockData = null;
+        }
 
-        // [수정 2] 메모 숨기고 빨간색 강조만 적용
+        // ... (이하 searchStock, handleInScan 등등 함수들 기존과 동일) ...
+        function updateSearchUI() {
+            const criteria = document.getElementById('search_criteria').value;
+            const area = document.getElementById('search_input_area');
+            area.innerHTML = "";
+            if(criteria === 'supplier') {
+                const sel = document.createElement('select'); sel.className = "form-select"; sel.id = "search_value";
+                globalVendorList.forEach(v => { const opt = document.createElement('option'); opt.value=v; opt.innerText=v; sel.appendChild(opt); });
+                area.appendChild(sel);
+            } else if(criteria === 'branch') {
+                const sel = document.createElement('select'); sel.className = "form-select"; sel.id = "search_value";
+                ["장지 본점", "명일 직영점"].forEach(v => { const opt = document.createElement('option'); opt.value=v; opt.innerText=v; sel.appendChild(opt); });
+                area.appendChild(sel);
+            } else if(criteria === 'model') {
+                const sel = document.createElement('select'); sel.className = "form-select"; sel.id = "search_value";
+                globalModelList.forEach(v => { const opt = document.createElement('option'); opt.value=v; opt.innerText=v; sel.appendChild(opt); });
+                area.appendChild(sel);
+            } else {
+                const inp = document.createElement('input'); inp.className = "form-control"; inp.id = "search_value"; inp.placeholder = "입력하세요";
+                inp.onkeydown = function(e){ if(e.key==='Enter') searchStock(); };
+                area.appendChild(inp); inp.focus();
+            }
+        }
+
         function searchStock() {
             const crit = document.getElementById('search_criteria').value;
             const val = document.getElementById('search_value').value;
             const div = document.getElementById('stock_result');
             div.innerHTML = `<div class="text-center py-4"><span class="spinner-border text-primary"></span></div>`;
-            
             fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "search_stock", criteria: crit, keyword: val }) })
             .then(r => r.json()).then(d => {
                 if(!d.list || d.list.length === 0) { div.innerHTML = `<div class="text-center text-muted py-5">결과 없음</div>`; return; }
-                
-                let html = '<ul class="list-group list-group-flush">';
+                let html = `<div class="table-responsive"><table class="table table-hover stock-table"><thead><tr><th>입고일</th><th>모델</th><th>색상</th><th>일련번호</th><th>상태</th><th>위치</th></tr></thead><tbody>`;
                 d.list.forEach(item => {
-                    // 메모(hasNote)가 있으면 빨간색 클래스 적용 (텍스트는 출력 안 함)
-                    let alertClass = item.hasNote ? 'stock-alert' : '';
-                    
-                    html += `
-                    <li class="stock-list-item">
-                        <div class="${alertClass}">
-                            <span class="fw-bold">${item.model}</span>
-                            <span class="mx-2 text-muted">|</span>
-                            <span class="font-monospace">${item.serial}</span>
-                            <span class="mx-2 text-muted">|</span>
-                            <span class="small text-secondary">${item.branch}</span>
-                        </div>
-                    </li>`;
+                    let st = item.status === '보유' ? 'text-success' : 'text-danger';
+                    html += `<tr><td>${item.date}</td><td class="fw-bold">${item.model}</td><td>${item.color}</td><td class="font-monospace">${item.serial}</td><td class="${st} fw-bold">${item.status}</td><td>${item.branch}</td></tr>`;
                 });
-                html += '</ul>';
-                html += `<div class="text-end small text-muted mt-2">총 ${d.list.length}건</div>`;
+                html += `</tbody></table></div><div class="text-end small text-muted">총 ${d.list.length}건</div>`;
                 div.innerHTML = html;
             });
         }
 
-        // ... (나머지 searchHistory 등은 V8.5 베이스 유지) ...
         function searchHistory() { const k=document.getElementById('hist_keyword').value; fetch(GAS_URL,{method:"POST",body:JSON.stringify({action:"search_history",keyword:k})}).then(r=>r.json()).then(d=>{ let h=""; d.list.forEach(i=>h+=`<div class='glass-card p-2 mb-2'><span class='badge bg-secondary'>${i.type}</span> ${i.model} (${i.time})</div>`); document.getElementById('hist_result').innerHTML=h; }); }
+        
         function handleInScan(e) { if(e.key!=='Enter')return; const v=e.target.value.trim(); if(inPendingList.some(i=>i.barcode===v)){showMsg('in-msg','error','이미 목록에 있음');e.target.value="";return;} fetch(GAS_URL,{method:"POST",body:JSON.stringify({action:document.getElementById('in_mode_toggle').checked?"scan_preview":"register_single",barcode:v,supplier:document.getElementById('in_supplier').value,branch:document.getElementById('in_branch').value,user:currentUser})}).then(r=>r.json()).then(d=>{if(d.status==='success'){if(document.getElementById('in_mode_toggle').checked){inPendingList.push({...d.data,supplier:document.getElementById('in_supplier').value});renderInList();showMsg('in-msg','success',`추가: ${d.data.model}`);}else showMsg('in-msg','success',`입고: ${d.data.model}`);}else showMsg('in-msg','error',d.message);}).finally(()=>{e.target.value="";e.target.focus();}); }
         function renderInList() { const t=document.getElementById('in_tbody'); t.innerHTML=""; inPendingList.forEach((i,x)=>t.innerHTML+=`<tr><td>${i.model}</td><td>${i.serial}</td><td><button onclick="inPendingList.splice(${x},1);renderInList()">X</button></td></tr>`); document.getElementById('in_count').innerText=inPendingList.length; }
         function clearInList() { inPendingList=[]; renderInList(); }
