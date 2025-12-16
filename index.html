@@ -25,6 +25,12 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .stock-table th { background-color: #f8f9fa; color: #6c757d; font-weight: 600; font-size: 0.85rem; text-align: center; white-space: nowrap; }
         .stock-table td { font-size: 0.9rem; vertical-align: middle; text-align: center; }
+        
+        /* 폼 스타일 */
+        .form-label-sm { font-size: 0.8rem; color: #6c757d; font-weight: 600; margin-bottom: 2px; }
+        .form-control-sm, .form-select-sm { font-size: 0.9rem; }
+        .nav-tabs .nav-link { color: #495057; font-size: 0.9rem; }
+        .nav-tabs .nav-link.active { color: #4e73df; font-weight: bold; border-bottom: 2px solid #4e73df; }
     </style>
 </head>
 <body>
@@ -107,28 +113,72 @@
             <div id="section-open" class="section-view fade-in">
                 <div class="glass-card p-4 border-top border-4 border-primary">
                     <h5 class="fw-bold mb-4 text-primary" id="open_title">개통 처리</h5>
+                    
                     <div id="open_step_1">
                         <div class="scan-wrapper bg-primary bg-opacity-75 mb-3" style="background-color: #0984e3;"><input type="text" class="form-control scan-input border-primary" id="open_scan" placeholder="일련번호 입력" onkeydown="handleOpenScan(event)" autocomplete="off"></div>
                     </div>
+
                     <div id="open_step_2" style="display:none;" class="fade-in">
-                        <div class="alert alert-info py-2 small fw-bold mb-3"><i class="bi bi-check-circle"></i> <span id="open_target_info"></span></div>
-                        <div class="row g-2 mb-3">
-                            <div class="col-6"><label class="small text-muted">고객명</label><input type="text" class="form-control" id="open_cust_name" placeholder="홍길동"></div>
-                            <div class="col-6"><label class="small text-muted">생년월일</label><input type="text" class="form-control" id="open_cust_birth" placeholder="900101"></div>
-                            <div class="col-12"><label class="small text-muted">연락처</label><input type="text" class="form-control" id="open_cust_phone" placeholder="010-1234-5678"></div>
+                        <div class="alert alert-info py-2 small fw-bold mb-3"><i class="bi bi-check-circle"></i> <span id="target_model" class="fw-bold"></span> (<span id="target_serial"></span>)</div>
+                        
+                        <ul class="nav nav-tabs nav-fill mb-3" id="openTabs" role="tablist">
+                            <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#tab-basic">기본정보</a></li>
+                            <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tab-policy">정책/정산</a></li>
+                            <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tab-pay">수납/결제</a></li>
+                        </ul>
+
+                        <div class="tab-content">
+                            <div class="tab-pane fade show active" id="tab-basic">
+                                <div class="row g-2">
+                                    <div class="col-6"><label class="form-label-sm">개통유형</label><select class="form-select form-select-sm" id="f_act_type"><option value="신규">신규</option><option value="번호이동">번호이동</option><option value="기기변경">기기변경</option></select></div>
+                                    <div class="col-6"><label class="form-label-sm">약정유형</label><select class="form-select form-select-sm" id="f_cont_type"><option value="공시지원">공시지원</option><option value="선택약정">선택약정</option></select></div>
+                                    <div class="col-4"><label class="form-label-sm">고객명</label><input type="text" class="form-control form-control-sm" id="f_name"></div>
+                                    <div class="col-4"><label class="form-label-sm">생년월일</label><input type="text" class="form-control form-control-sm" id="f_birth" placeholder="6자리"></div>
+                                    <div class="col-4"><label class="form-label-sm">방문경로</label><input type="text" class="form-control form-control-sm" id="f_visit"></div>
+                                    <div class="col-12"><label class="form-label-sm">연락처</label><input type="text" class="form-control form-control-sm" id="f_phone" placeholder="010-0000-0000"></div>
+                                    <div class="col-6"><label class="form-label-sm">요금제</label><input type="text" class="form-control form-control-sm" id="f_plan"></div>
+                                    <div class="col-6"><label class="form-label-sm">변경 요금제</label><input type="text" class="form-control form-control-sm" id="f_plan_chg"></div>
+                                    <div class="col-12"><label class="form-label-sm">부가서비스</label><input type="text" class="form-control form-control-sm" id="f_addon"></div>
+                                    <div class="col-4"><label class="form-label-sm">유심</label><select class="form-select form-select-sm" id="f_usim"><option>후청구</option><option>대납</option><option>선납</option></select></div>
+                                    <div class="col-4"><label class="form-label-sm">제휴카드</label><input type="text" class="form-control form-control-sm" id="f_card"></div>
+                                    <div class="col-4"><label class="form-label-sm">리뷰</label><select class="form-select form-select-sm" id="f_review"><option>미작성</option><option>작성</option></select></div>
+                                </div>
+                            </div>
+                            <div class="tab-pane fade" id="tab-policy">
+                                <div class="row g-2">
+                                    <div class="col-12"><label class="form-label-sm">계약처(A값)</label><input type="text" class="form-control form-control-sm" id="f_avalue"></div>
+                                    <div class="col-6"><label class="form-label-sm">정책차수</label><input type="text" class="form-control form-control-sm" id="f_policy"></div>
+                                    <div class="col-6"><label class="form-label-sm">액면/히든</label><input type="number" class="form-control form-control-sm" id="f_inc1" placeholder="금액"></div>
+                                    <div class="col-12"><input type="text" class="form-control form-control-sm" id="f_inc1_m" placeholder="메모"></div>
+                                    <div class="col-6"><label class="form-label-sm">추가정책</label><input type="number" class="form-control form-control-sm" id="f_inc2"></div>
+                                    <div class="col-6"><label class="form-label-sm">부가정책</label><input type="number" class="form-control form-control-sm" id="f_inc3"></div>
+                                    <div class="col-12"><input type="text" class="form-control form-control-sm" id="f_inc2_m" placeholder="추가/부가 메모"></div>
+                                    <div class="col-6"><label class="form-label-sm text-danger">차감정책</label><input type="number" class="form-control form-control-sm border-danger" id="f_cost1"></div>
+                                    <div class="col-6"><label class="form-label-sm text-danger">프리할인</label><input type="number" class="form-control form-control-sm border-danger" id="f_cost2"></div>
+                                </div>
+                            </div>
+                            <div class="tab-pane fade" id="tab-pay">
+                                <div class="row g-2">
+                                    <div class="col-4"><label class="form-label-sm">대납1</label><input type="number" class="form-control form-control-sm" id="f_pay1"></div>
+                                    <div class="col-4"><label class="form-label-sm">방법</label><select class="form-select form-select-sm" id="f_pay1_m"><option>채권</option><option>카드</option></select></div>
+                                    <div class="col-4"><label class="form-label-sm">날짜</label><input type="text" class="form-control form-control-sm" id="f_pay1_d" placeholder="MM/DD"></div>
+                                    <div class="col-4"><label class="form-label-sm">대납2</label><input type="number" class="form-control form-control-sm" id="f_pay2"></div>
+                                    <div class="col-4"><label class="form-label-sm">방법</label><select class="form-select form-select-sm" id="f_pay2_m"><option>채권</option><option>카드</option></select></div>
+                                    <div class="col-4"><label class="form-label-sm">날짜</label><input type="text" class="form-control form-control-sm" id="f_pay2_d" placeholder="MM/DD"></div>
+                                    <div class="col-6"><label class="form-label-sm">현금지급</label><input type="number" class="form-control form-control-sm" id="f_cash"></div>
+                                    <div class="col-6"><label class="form-label-sm">페이백</label><input type="number" class="form-control form-control-sm" id="f_back"></div>
+                                    <div class="col-4"><label class="form-label-sm">단말기수납</label><input type="number" class="form-control form-control-sm" id="f_inc4"></div>
+                                    <div class="col-4"><label class="form-label-sm">요금수납</label><input type="number" class="form-control form-control-sm" id="f_inc5"></div>
+                                    <div class="col-4"><label class="form-label-sm">중고폰</label><input type="number" class="form-control form-control-sm" id="f_inc6"></div>
+                                    <div class="col-12"><label class="form-label-sm">특이사항</label><input type="text" class="form-control form-control-sm" id="f_comment"></div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="row g-2 mb-3">
-                            <div class="col-6"><label class="small text-muted">요금제</label><input type="text" class="form-control" id="open_plan" placeholder="5GX 프라임"></div>
-                            <div class="col-6"><label class="small text-muted">약정유형</label><select class="form-select" id="open_contract_type"><option value="공시지원">공시지원</option><option value="선택약정">선택약정</option></select></div>
-                        </div>
-                        <div class="mb-3"><label class="small text-muted">부가서비스</label><input type="text" class="form-control" id="open_addon" placeholder="우주패스, 보험 등"></div>
-                        <div class="row g-2 mb-4">
-                            <div class="col-6"><label class="small text-muted">유심비</label><select class="form-select" id="open_usim"><option value="후납">후납</option><option value="선납">선납</option><option value="면제">면제</option></select></div>
-                            <div class="col-6"><label class="small text-muted">비고</label><input type="text" class="form-control" id="open_note" placeholder="특이사항"></div>
-                        </div>
-                        <div class="d-flex gap-2">
-                            <button class="btn btn-secondary w-25" onclick="resetOpenForm()">취소</button>
-                            <button class="btn btn-primary w-75 fw-bold" onclick="submitOpenContract()">개통 확정</button>
+
+                        <div class="mt-4">
+                            <button class="btn btn-primary w-100 py-2 fw-bold shadow-sm" onclick="submitFullContract()">
+                                <i class="bi bi-save"></i> 개통 저장 완료
+                            </button>
                         </div>
                     </div>
                     <div id="open-msg" class="alert py-2 text-center small fw-bold rounded-3 mt-3" style="display:none"></div>
@@ -388,10 +438,13 @@
                     tempOpenStockData = d.data; // 정보 저장
                     tempOpenStockData.inputCode = v; // 입력한 코드(바코드/일련번호) 저장
                     
-                    document.getElementById('open_target_info').innerText = `${d.data.model} (${d.data.color})`;
+                    document.getElementById('target_model').innerText = `${d.data.model} (${d.data.color})`;
+                    document.getElementById('target_serial').innerText = d.data.serial;
+                    document.getElementById('f_avalue').value = d.data.supplier || ""; // 계약처 자동세팅
+
                     document.getElementById('open_step_1').style.display = 'none';
                     document.getElementById('open_step_2').style.display = 'block';
-                    document.getElementById('open_cust_name').focus();
+                    document.getElementById('f_name').focus();
                 } else {
                     showMsg('open-msg', 'error', d.message);
                     e.target.disabled=false; e.target.value=""; e.target.focus();
@@ -406,43 +459,86 @@
             document.getElementById('open_scan').disabled = false;
             document.getElementById('open_scan').focus();
             
-            // 입력 필드 초기화
-            document.getElementById('open_cust_name').value = "";
-            document.getElementById('open_cust_birth').value = "";
-            document.getElementById('open_cust_phone').value = "";
-            document.getElementById('open_plan').value = "";
-            document.getElementById('open_addon').value = "";
-            document.getElementById('open_note').value = "";
+            // 모든 input 초기화
+            document.querySelectorAll('#open_step_2 input').forEach(i => i.value = "");
             tempOpenStockData = null;
         }
 
-        function submitOpenContract() {
+        function submitFullContract() {
             if(!tempOpenStockData) return;
-            const data = {
-                action: "open_stock_detail",
-                stockInput: tempOpenStockData.inputCode, // 스캔했던 코드
-                openType: currentOpenType,
-                custName: document.getElementById('open_cust_name').value,
-                custBirth: document.getElementById('open_cust_birth').value,
-                custPhone: document.getElementById('open_cust_phone').value,
-                plan: document.getElementById('open_plan').value,
-                addon: document.getElementById('open_addon').value,
-                contractType: document.getElementById('open_contract_type').value,
-                usim: document.getElementById('open_usim').value,
-                note: document.getElementById('open_note').value,
-                user: currentUser
+            const custName = document.getElementById('f_name').value;
+            if(!custName) return alert("고객명은 필수입니다.");
+
+            const formData = {
+                action: "open_stock_full",
+                stockInput: tempOpenStockData.inputCode,
+                user: currentUser,
+                
+                activationType: document.getElementById('f_act_type').value,
+                contractType: document.getElementById('f_cont_type').value,
+                name: custName,
+                birth: document.getElementById('f_birth').value,
+                visitPath: document.getElementById('f_visit').value,
+                phoneNumber: document.getElementById('f_phone').value,
+                pricePlan: document.getElementById('f_plan').value,
+                changePlan: document.getElementById('f_plan_chg').value,
+                addon: document.getElementById('f_addon').value,
+                usim: document.getElementById('f_usim').value,
+                card: document.getElementById('f_card').value,
+                review: document.getElementById('f_review').value,
+                
+                aValue: document.getElementById('f_avalue').value,
+                policy: document.getElementById('f_policy').value,
+                income1: document.getElementById('f_inc1').value,
+                income1Memo: document.getElementById('f_inc1_m').value,
+                income2: document.getElementById('f_inc2').value,
+                income3: document.getElementById('f_inc3').value,
+                income2Memo: document.getElementById('f_inc2_m').value,
+                cost1: document.getElementById('f_cost1').value,
+                cost1Memo: "",
+                cost2: document.getElementById('f_cost2').value,
+                
+                payment1: document.getElementById('f_pay1').value,
+                payment1Method: document.getElementById('f_pay1_m').value,
+                payment1Date: document.getElementById('f_pay1_d').value,
+                payment2: document.getElementById('f_pay2').value,
+                payment2Method: document.getElementById('f_pay2_m').value,
+                payment2Date: document.getElementById('f_pay2_d').value,
+                
+                cash: document.getElementById('f_cash').value,
+                payback1: document.getElementById('f_back').value,
+                
+                income4_1: document.getElementById('f_inc4').value,
+                income4_1Method: "",
+                income4_2: "",
+                income4_2Method: "",
+                income5: document.getElementById('f_inc5').value,
+                income5Method: "",
+                income6: document.getElementById('f_inc6').value,
+                income6Memo: "",
+                
+                comment: document.getElementById('f_comment').value
             };
 
-            if(!data.custName) return alert("고객명은 필수입니다.");
+            const btn = event.target;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> 저장 중...`;
+            btn.disabled = true;
 
-            fetch(GAS_URL, { method: "POST", body: JSON.stringify(data) })
-            .then(r => r.json()).then(d => {
+            fetch(GAS_URL, { method: "POST", body: JSON.stringify(formData) })
+            .then(r => r.json())
+            .then(d => {
                 if(d.status === 'success') {
-                    showMsg('open-msg', 'success', d.message);
+                    alert(d.message);
                     resetOpenForm();
                 } else {
-                    alert(d.message); 
+                    alert("오류: " + d.message);
                 }
+            })
+            .catch(e => alert("통신 오류"))
+            .finally(() => {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
             });
         }
 
