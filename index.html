@@ -24,6 +24,19 @@
         /* ★ 빨간색 강조 스타일 */
         .text-danger-input { color: #dc3545 !important; font-weight: bold; border-color: #dc3545; }
         .text-danger-input:focus { box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25); border-color: #dc3545; }
+
+        /* ★ [수정1] 리스트 스타일 */
+        .stock-list-item { 
+            padding: 12px; 
+            border-bottom: 1px solid #eee; 
+            font-size: 0.95rem; 
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .stock-list-item:last-child { border-bottom: none; }
+        /* [수정2] 차감정책 등 특이사항(hasNote)이 있으면 빨간색으로 표시 */
+        .stock-alert { color: #dc3545; font-weight: bold; background-color: #fff5f5; }
     </style>
 </head>
 <body>
@@ -122,7 +135,7 @@
                                 <div class="col-4"><label class="form-label-sm">방문경로 <span class="text-danger">*</span></label><select class="form-select form-select-sm" id="f_visit" onchange="checkVisitPath()"></select></div>
                                 <div class="col-12" id="div_visit_etc" style="display:none;"><input type="text" class="form-control form-control-sm" id="f_visit_etc" placeholder="상세 경로"></div>
                                 
-                                <div class="col-4"><label class="form-label-sm">고객명</label><input type="text" class="form-control form-control-sm" id="f_name"></div>
+                                <div class="col-4"><label class="form-label-sm">고객명 <span class="text-danger">*</span></label><input type="text" class="form-control form-control-sm" id="f_name"></div>
                                 <div class="col-4"><label class="form-label-sm">생년월일</label><input type="text" class="form-control form-control-sm" id="f_birth" placeholder="900101"></div>
                                 <div class="col-4"><label class="form-label-sm">연락처</label><input type="text" class="form-control form-control-sm" id="f_phone" placeholder="01012345678"></div>
                                 
@@ -383,7 +396,7 @@
                 if(d.status==='success') {
                     tempOpenStockData = d.data; 
                     tempOpenStockData.inputCode = v; 
-                    document.getElementById('target_model').innerText = d.data.model; // 색상 표시 제거 요청 반영
+                    document.getElementById('target_model').innerText = d.data.model; 
                     document.getElementById('target_serial').innerText = d.data.serial;
                     document.getElementById('target_branch').innerText = d.data.branch || "지점미상"; 
                     document.getElementById('f_avalue').value = d.data.supplier || ""; 
@@ -391,7 +404,7 @@
                     document.getElementById('open_step_2').style.display = 'block';
                     document.getElementById('f_name').focus();
                 } else {
-                    alert(d.message); // 팝업 경고
+                    alert(d.message); 
                     e.target.disabled=false; e.target.value=""; e.target.focus();
                 }
             });
@@ -399,14 +412,16 @@
 
         function submitFullContract() {
             if(!tempOpenStockData) return;
+            
+            // [수정3] 필수값 체크 후 focus() 이동
             const custName = document.getElementById('f_name').value;
-            if(!custName) return alert("고객명은 필수입니다.");
+            if(!custName) { alert("고객명은 필수입니다."); document.getElementById('f_name').focus(); return; }
             
             const reviewVal = document.getElementById('f_review').value;
-            if(!reviewVal) return alert("리뷰작성여부를 선택해주세요.");
+            if(!reviewVal) { alert("리뷰작성여부를 선택해주세요."); document.getElementById('f_review').focus(); return; }
             
             const visitValSelect = document.getElementById('f_visit').value;
-            if(!visitValSelect) return alert("방문경로를 선택해주세요.");
+            if(!visitValSelect) { alert("방문경로를 선택해주세요."); document.getElementById('f_visit').focus(); return; }
 
             let visitVal = visitValSelect;
             if(visitVal === '기타') visitVal = "기타: " + document.getElementById('f_visit_etc').value;
@@ -471,6 +486,7 @@
             btn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> 저장 중...`;
             btn.disabled = true;
 
+            // [수정4] 통신 오류 핸들링 강화
             fetch(GAS_URL, { method: "POST", body: JSON.stringify(formData) })
             .then(r => r.json())
             .then(d => {
@@ -481,7 +497,10 @@
                     alert("오류: " + d.message);
                 }
             })
-            .catch(e => alert("통신 오류"))
+            .catch(e => {
+                console.error(e);
+                alert("서버와 통신할 수 없습니다.\n인터넷 연결을 확인하거나, 잠시 후 다시 시도해주세요.\n(지속될 경우 관리자에게 문의)");
+            })
             .finally(() => { btn.innerHTML = originalText; btn.disabled = false; });
         }
 
@@ -497,7 +516,6 @@
             tempOpenStockData = null;
         }
 
-        // ... (나머지 searchStock 등등 함수 기존 유지) ...
         function updateSearchUI() {
             const criteria = document.getElementById('search_criteria').value;
             const area = document.getElementById('search_input_area');
@@ -521,20 +539,35 @@
             }
         }
 
+        // [수정1] 조회 결과 테이블 -> 리스트로 변경
         function searchStock() {
             const crit = document.getElementById('search_criteria').value;
             const val = document.getElementById('search_value').value;
             const div = document.getElementById('stock_result');
             div.innerHTML = `<div class="text-center py-4"><span class="spinner-border text-primary"></span></div>`;
+            
             fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "search_stock", criteria: crit, keyword: val }) })
             .then(r => r.json()).then(d => {
                 if(!d.list || d.list.length === 0) { div.innerHTML = `<div class="text-center text-muted py-5">결과 없음</div>`; return; }
-                let html = `<div class="table-responsive"><table class="table table-hover stock-table"><thead><tr><th>입고일</th><th>모델</th><th>색상</th><th>일련번호</th><th>상태</th><th>위치</th></tr></thead><tbody>`;
+                
+                let html = '<ul class="list-group list-group-flush">';
                 d.list.forEach(item => {
-                    let st = item.status === '보유' ? 'text-success' : 'text-danger';
-                    html += `<tr><td>${item.date}</td><td class="fw-bold">${item.model}</td><td>${item.color}</td><td class="font-monospace">${item.serial}</td><td class="${st} fw-bold">${item.status}</td><td>${item.branch}</td></tr>`;
+                    // [수정2] hasNote(차감 등)가 있으면 빨간 스타일, 하지만 메모 텍스트는 출력 안 함
+                    let alertClass = item.hasNote ? 'stock-alert' : '';
+                    
+                    html += `
+                    <li class="stock-list-item ${alertClass}">
+                        <div>
+                            <span class="fw-bold">${item.model}</span>
+                            <span class="mx-2 text-muted">|</span>
+                            <span class="font-monospace">${item.serial}</span>
+                            <span class="mx-2 text-muted">|</span>
+                            <span class="small text-secondary">${item.branch}</span>
+                        </div>
+                    </li>`;
                 });
-                html += `</tbody></table></div><div class="text-end small text-muted">총 ${d.list.length}건</div>`;
+                html += '</ul>';
+                html += `<div class="text-end small text-muted mt-2">총 ${d.list.length}건</div>`;
                 div.innerHTML = html;
             });
         }
