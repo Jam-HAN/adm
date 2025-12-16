@@ -15,7 +15,7 @@
         .active-section { display: block; animation: fadeIn 0.4s ease-out forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
-        /* 폼 스타일 개선 */
+        /* 폼 스타일 */
         .form-label-sm { font-size: 0.8rem; color: #6c757d; font-weight: 700; margin-bottom: 3px; }
         .form-control-sm, .form-select-sm { font-size: 0.9rem; padding: 0.4rem 0.6rem; }
         .divider { border-top: 1px solid #dee2e6; margin: 25px 0 15px 0; }
@@ -105,9 +105,9 @@
                         </div>
 
                         <div id="open_step_2" style="display:none;">
-                            <div class="alert alert-primary py-2 small mb-4 d-flex align-items-center">
-                                <i class="bi bi-phone me-2"></i>
-                                <div><span id="target_model" class="fw-bold"></span> <span class="mx-1">|</span> <span id="target_serial"></span></div>
+                            <div class="alert alert-primary py-2 small mb-4 d-flex align-items-center justify-content-between">
+                                <div><i class="bi bi-phone me-1"></i> <span id="target_model" class="fw-bold"></span> (<span id="target_serial"></span>)</div>
+                                <div class="badge bg-white text-primary border" id="target_branch"></div>
                             </div>
 
                             <div class="section-header"><i class="bi bi-person-lines-fill"></i> 기본 정보</div>
@@ -119,7 +119,7 @@
                                 
                                 <div class="col-4"><label class="form-label-sm">고객명</label><input type="text" class="form-control form-control-sm" id="f_name"></div>
                                 <div class="col-4"><label class="form-label-sm">생년월일</label><input type="text" class="form-control form-control-sm" id="f_birth" placeholder="6자리"></div>
-                                <div class="col-4"><label class="form-label-sm">연락처</label><input type="text" class="form-control form-control-sm" id="f_phone" placeholder="010-"></div>
+                                <div class="col-4"><label class="form-label-sm">연락처</label><input type="text" class="form-control form-control-sm" id="f_phone" placeholder="010-0000-0000"></div>
                                 
                                 <div class="col-6"><label class="form-label-sm">요금제</label><input type="text" class="form-control form-control-sm" id="f_plan"></div>
                                 <div class="col-6"><label class="form-label-sm">변경요금제</label><input type="text" class="form-control form-control-sm" id="f_plan_chg"></div>
@@ -132,11 +132,11 @@
                             <div class="divider"></div>
                             <div class="section-header"><i class="bi bi-calculator"></i> 정책 및 정산</div>
                             <div class="row g-2 mb-3">
-                                <div class="col-6"><label class="form-label-sm">계약처(A값)</label><input type="text" class="form-control form-control-sm" id="f_avalue"></div>
+                                <div class="col-12"><label class="form-label-sm">계약처</label><input type="text" class="form-control form-control-sm" id="f_avalue"></div>
                                 <div class="col-6"><label class="form-label-sm">정책차수</label><input type="text" class="form-control form-control-sm" id="f_policy"></div>
                                 
                                 <div class="col-6"><label class="form-label-sm">액면/히든</label><input type="number" class="form-control form-control-sm" id="f_inc1"></div>
-                                <div class="col-6"><label class="form-label-sm">메모</label><input type="text" class="form-control form-control-sm" id="f_inc1_m"></div>
+                                <div class="col-12"><label class="form-label-sm">메모</label><input type="text" class="form-control form-control-sm" id="f_inc1_m"></div>
                                 
                                 <div class="col-6"><label class="form-label-sm">추가정책</label><input type="number" class="form-control form-control-sm" id="f_inc2"></div>
                                 <div class="col-6"><label class="form-label-sm">메모</label><input type="text" class="form-control form-control-sm" id="f_inc2_m"></div>
@@ -148,19 +148,19 @@
                                 <div class="col-6"><label class="form-label-sm text-danger">메모</label><input type="text" class="form-control form-control-sm border-danger" id="f_cost1_m"></div>
                                 
                                 <div class="col-6"><label class="form-label-sm text-danger">프리할인</label><input type="number" class="form-control form-control-sm border-danger" id="f_cost2"></div>
-                                <div class="col-6"><label class="form-label-sm">유심</label><select class="form-select form-select-sm" id="f_usim"><option value="" selected>선택</option><option>후청구</option><option>대납</option><option>선납</option></select></div>
+                                <div class="col-6"><label class="form-label-sm">유심</label><select class="form-select form-select-sm" id="f_usim"></select></div>
                             </div>
 
                             <div class="divider"></div>
-                            <div class="section-header"><i class="bi bi-credit-card"></i> 수납 및 지원</div>
+                            <div class="section-header"><i class="bi bi-credit-card"></i> 대납 및 지원</div>
                             <div class="row g-2 mb-3">
                                 <div class="col-4"><label class="form-label-sm">대납1</label><input type="number" class="form-control form-control-sm" id="f_pay1"></div>
                                 <div class="col-4"><label class="form-label-sm">방법</label><select class="form-select form-select-sm" id="f_pay1_m"><option value="" selected>선택</option><option>채권</option><option>법인카드</option></select></div>
-                                <div class="col-4"><label class="form-label-sm">처리일</label><input type="text" class="form-control form-control-sm" id="f_pay1_d" placeholder="MM/DD"></div>
+                                <div class="col-4"><label class="form-label-sm">처리일</label><input type="date" class="form-control form-control-sm" id="f_pay1_d"></div>
 
                                 <div class="col-4"><label class="form-label-sm">대납2</label><input type="number" class="form-control form-control-sm" id="f_pay2"></div>
                                 <div class="col-4"><label class="form-label-sm">방법</label><select class="form-select form-select-sm" id="f_pay2_m"><option value="" selected>선택</option><option>채권</option><option>법인카드</option></select></div>
-                                <div class="col-4"><label class="form-label-sm">처리일</label><input type="text" class="form-control form-control-sm" id="f_pay2_d" placeholder="MM/DD"></div>
+                                <div class="col-4"><label class="form-label-sm">처리일</label><input type="date" class="form-control form-control-sm" id="f_pay2_d"></div>
 
                                 <div class="col-6"><label class="form-label-sm">현금지급</label><input type="number" class="form-control form-control-sm" id="f_cash"></div>
                                 <div class="col-6"><label class="form-label-sm">페이백</label><input type="number" class="form-control form-control-sm" id="f_back"></div>
@@ -335,7 +335,7 @@
             currentOpenType = type;
             document.getElementById('open_title').innerText = type + " 처리";
             resetOpenForm();
-            loadVisitPaths(); 
+            loadDropdownData(); 
             showSection('section-open');
         }
 
@@ -349,14 +349,20 @@
             fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "get_models" }) }).then(r => r.json()).then(d => globalModelList = d.list);
         }
 
-        function loadVisitPaths() {
-            fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "get_visit_paths" }) })
+        function loadDropdownData() {
+            fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "get_dropdown_data" }) })
             .then(r => r.json())
             .then(d => {
-                const sel = document.getElementById('f_visit');
-                sel.innerHTML = '<option value="" selected>선택</option>';
-                d.list.forEach(item => { sel.innerHTML += `<option value="${item}">${item}</option>`; });
-                sel.innerHTML += '<option value="기타">기타 (직접입력)</option>';
+                // 방문경로
+                const selVisit = document.getElementById('f_visit');
+                selVisit.innerHTML = '<option value="" selected>선택</option>';
+                d.visitList.forEach(item => { selVisit.innerHTML += `<option value="${item}">${item}</option>`; });
+                selVisit.innerHTML += '<option value="기타">기타 (직접입력)</option>';
+                
+                // 유심
+                const selUsim = document.getElementById('f_usim');
+                selUsim.innerHTML = '<option value="" selected>선택</option>';
+                d.usimList.forEach(item => { selUsim.innerHTML += `<option value="${item}">${item}</option>`; });
             });
         }
 
@@ -377,6 +383,7 @@
                     tempOpenStockData.inputCode = v; 
                     document.getElementById('target_model').innerText = `${d.data.model} (${d.data.color})`;
                     document.getElementById('target_serial').innerText = d.data.serial;
+                    document.getElementById('target_branch').innerText = d.data.branch || "지점미상"; // 지점 표시
                     document.getElementById('f_avalue').value = d.data.supplier || ""; 
                     document.getElementById('open_step_1').style.display = 'none';
                     document.getElementById('open_step_2').style.display = 'block';
@@ -392,6 +399,10 @@
             if(!tempOpenStockData) return;
             const custName = document.getElementById('f_name').value;
             if(!custName) return alert("고객명은 필수입니다.");
+            
+            // 리뷰 필수 체크
+            const reviewVal = document.getElementById('f_review').value;
+            if(!reviewVal) return alert("리뷰작성여부를 선택해주세요.");
 
             let visitVal = document.getElementById('f_visit').value;
             if(visitVal === '기타') visitVal = "기타: " + document.getElementById('f_visit_etc').value;
@@ -412,7 +423,7 @@
                 addon: document.getElementById('f_addon').value,
                 usim: document.getElementById('f_usim').value,
                 card: document.getElementById('f_card').value,
-                review: document.getElementById('f_review').value,
+                review: reviewVal,
                 
                 aValue: document.getElementById('f_avalue').value,
                 policy: document.getElementById('f_policy').value,
@@ -482,7 +493,7 @@
             tempOpenStockData = null;
         }
 
-        // ... (나머지 searchStock, handleInScan 등등 함수들 기존 코드 유지) ...
+        // ... (이하 searchStock, handleInScan 등등 함수들 기존과 동일) ...
         function updateSearchUI() {
             const criteria = document.getElementById('search_criteria').value;
             const area = document.getElementById('search_input_area');
