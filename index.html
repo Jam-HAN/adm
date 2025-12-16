@@ -22,9 +22,10 @@
         .section-header { font-size: 1rem; font-weight: 800; color: #4e73df; margin-bottom: 12px; display: flex; align-items: center; }
         .section-header i { margin-right: 6px; }
         
-        /* 빨간색 강조 클래스 */
-        .text-danger-custom { color: #dc3545 !important; font-weight: bold; }
-        .border-danger-custom { border-color: #dc3545 !important; color: #dc3545 !important; }
+        /* 커스텀 스타일 */
+        .required-star { color: #dc3545; margin-left: 2px; font-weight: bold; } /* 빨간 별표 */
+        .text-danger-custom { color: #dc3545 !important; font-weight: bold; } /* 빨간 글자 */
+        .border-danger-custom { border-color: #dc3545 !important; color: #dc3545 !important; font-weight: bold; } /* 빨간 테두리 */
     </style>
 </head>
 <body>
@@ -119,10 +120,10 @@
                             <div class="row g-2 mb-3">
                                 <div class="col-4"><label class="form-label-sm">개통유형</label><select class="form-select form-select-sm" id="f_act_type"><option value="" selected>선택</option><option>신규</option><option>번호이동</option><option>기기변경</option></select></div>
                                 <div class="col-4"><label class="form-label-sm">약정유형</label><select class="form-select form-select-sm" id="f_cont_type"><option value="" selected>선택</option><option>공시지원</option><option>선택약정</option></select></div>
-                                <div class="col-4"><label class="form-label-sm text-primary">방문경로(필수)</label><select class="form-select form-select-sm border-primary" id="f_visit" onchange="checkVisitPath()"></select></div>
+                                <div class="col-4"><label class="form-label-sm">방문경로<span class="required-star">*</span></label><select class="form-select form-select-sm" id="f_visit" onchange="checkVisitPath()"></select></div>
                                 <div class="col-12" id="div_visit_etc" style="display:none;"><input type="text" class="form-control form-control-sm" id="f_visit_etc" placeholder="상세 경로"></div>
                                 
-                                <div class="col-4"><label class="form-label-sm">고객명</label><input type="text" class="form-control form-control-sm" id="f_name"></div>
+                                <div class="col-4"><label class="form-label-sm">고객명<span class="required-star">*</span></label><input type="text" class="form-control form-control-sm" id="f_name"></div>
                                 <div class="col-4"><label class="form-label-sm">생년월일</label><input type="text" class="form-control form-control-sm" id="f_birth" placeholder="6자리"></div>
                                 <div class="col-4"><label class="form-label-sm">연락처</label><input type="text" class="form-control form-control-sm" id="f_phone" placeholder="숫자만 입력"></div>
                                 
@@ -131,7 +132,7 @@
                                 <div class="col-12"><label class="form-label-sm">부가서비스</label><input type="text" class="form-control form-control-sm" id="f_addon"></div>
                                 
                                 <div class="col-4"><label class="form-label-sm">제휴카드</label><input type="text" class="form-control form-control-sm" id="f_card"></div>
-                                <div class="col-4"><label class="form-label-sm">리뷰작성여부</label><select class="form-select form-select-sm" id="f_review"><option value="" selected>선택</option><option>작성</option><option>미작성</option></select></div>
+                                <div class="col-4"><label class="form-label-sm">리뷰작성여부<span class="required-star">*</span></label><select class="form-select form-select-sm" id="f_review"><option value="" selected>선택</option><option>작성</option><option>미작성</option></select></div>
                             </div>
 
                             <div class="divider"></div>
@@ -160,12 +161,12 @@
                             <div class="section-header"><i class="bi bi-credit-card"></i> 대납 및 지원</div>
                             <div class="row g-2 mb-3">
                                 <div class="col-4"><label class="form-label-sm text-danger-custom">대납1</label><input type="number" class="form-control form-control-sm border-danger-custom" id="f_pay1"></div>
-                                <div class="col-4"><label class="form-label-sm text-danger-custom">방법</label><select class="form-select form-select-sm border-danger-custom" id="f_pay1_m"><option value="" selected>선택</option><option>채권</option><option>법인카드</option></select></div>
-                                <div class="col-4"><label class="form-label-sm text-danger-custom">처리일</label><input type="date" class="form-control form-control-sm border-danger-custom" id="f_pay1_d"></div>
+                                <div class="col-4"><label class="form-label-sm">방법</label><select class="form-select form-select-sm" id="f_pay1_m"><option value="" selected>선택</option><option>채권</option><option>법인카드</option></select></div>
+                                <div class="col-4"><label class="form-label-sm">처리일</label><input type="date" class="form-control form-control-sm" id="f_pay1_d"></div>
 
                                 <div class="col-4"><label class="form-label-sm text-danger-custom">대납2</label><input type="number" class="form-control form-control-sm border-danger-custom" id="f_pay2"></div>
-                                <div class="col-4"><label class="form-label-sm text-danger-custom">방법</label><select class="form-select form-select-sm border-danger-custom" id="f_pay2_m"><option value="" selected>선택</option><option>채권</option><option>법인카드</option></select></div>
-                                <div class="col-4"><label class="form-label-sm text-danger-custom">처리일</label><input type="date" class="form-control form-control-sm border-danger-custom" id="f_pay2_d"></div>
+                                <div class="col-4"><label class="form-label-sm">방법</label><select class="form-select form-select-sm" id="f_pay2_m"><option value="" selected>선택</option><option>채권</option><option>법인카드</option></select></div>
+                                <div class="col-4"><label class="form-label-sm">처리일</label><input type="date" class="form-control form-control-sm" id="f_pay2_d"></div>
 
                                 <div class="col-6"><label class="form-label-sm text-danger-custom">현금지급</label><input type="number" class="form-control form-control-sm border-danger-custom" id="f_cash"></div>
                                 <div class="col-6"><label class="form-label-sm text-danger-custom">페이백</label><input type="number" class="form-control form-control-sm border-danger-custom" id="f_back"></div>
@@ -359,12 +360,9 @@
             else document.getElementById('div_visit_etc').style.display = 'none';
         }
 
-        // 수정: 무반응 해결 및 모델명 뒤 색상 제거
         function handleOpenScan(e) { 
             if(e.key!=='Enter') return; 
             const v=e.target.value.trim(); 
-            
-            // 로딩 표시
             e.target.disabled = true;
             document.getElementById('open_spinner').style.display = 'block';
 
@@ -374,11 +372,8 @@
                     tempOpenStockData = d.data; 
                     tempOpenStockData.inputCode = v; 
                     
-                    // 모델명에서 색상 제거하여 표시
                     document.getElementById('target_model').innerText = d.data.model; 
                     document.getElementById('target_serial').innerText = d.data.serial;
-                    
-                    // 지점 표시 강화
                     document.getElementById('target_branch').innerText = d.data.branch || "지점미상"; 
                     document.getElementById('f_avalue').value = d.data.supplier || ""; 
                     
@@ -386,7 +381,6 @@
                     document.getElementById('open_step_2').style.display = 'block';
                     document.getElementById('f_name').focus();
                 } else {
-                    // 무반응 대신 Alert 띄움
                     alert(d.message);
                     e.target.disabled=false; e.target.value=""; e.target.focus();
                 }
@@ -400,19 +394,31 @@
             });
         }
 
+        // 유효성 검사 헬퍼 함수
+        function validateField(id, name) {
+            const el = document.getElementById(id);
+            if (!el.value) {
+                alert(name + "을(를) 입력/선택해주세요.");
+                el.focus();
+                return false;
+            }
+            return true;
+        }
+
         function submitFullContract() {
             if(!tempOpenStockData) return;
-            const custName = document.getElementById('f_name').value;
-            if(!custName) return alert("고객명은 필수입니다.");
             
-            // 방문경로 필수 체크 (기존 + 로직 강화)
-            const visitValSelect = document.getElementById('f_visit').value;
-            if(!visitValSelect) return alert("방문경로를 반드시 선택해주세요.");
+            // 1. 필수값 검사 및 포커스 이동
+            if (!validateField('f_visit', '방문경로')) return;
+            if (!validateField('f_name', '고객명')) return;
+            if (!validateField('f_review', '리뷰작성여부')) return;
 
-            let visitVal = visitValSelect;
-            if(visitVal === '기타') visitVal = "기타: " + document.getElementById('f_visit_etc').value;
-
-            const reviewVal = document.getElementById('f_review').value;
+            // 기타 방문경로 처리
+            let visitVal = document.getElementById('f_visit').value;
+            if(visitVal === '기타') {
+                if(!validateField('f_visit_etc', '상세 방문경로')) return;
+                visitVal = "기타: " + document.getElementById('f_visit_etc').value;
+            }
 
             const formData = {
                 action: "open_stock_full",
@@ -421,7 +427,7 @@
                 
                 activationType: document.getElementById('f_act_type').value,
                 contractType: document.getElementById('f_cont_type').value,
-                name: custName,
+                name: document.getElementById('f_name').value,
                 birth: document.getElementById('f_birth').value,
                 visitPath: visitVal,
                 phoneNumber: document.getElementById('f_phone').value,
@@ -430,7 +436,7 @@
                 addon: document.getElementById('f_addon').value,
                 usim: document.getElementById('f_usim').value,
                 card: document.getElementById('f_card').value,
-                review: reviewVal,
+                review: document.getElementById('f_review').value,
                 
                 aValue: document.getElementById('f_avalue').value,
                 policy: document.getElementById('f_policy').value,
@@ -496,7 +502,6 @@
             document.getElementById('open_spinner').style.display = 'none';
             document.getElementById('open_scan').focus();
             
-            // 모든 입력 필드 초기화
             document.querySelectorAll('#open_step_2 input').forEach(i => i.value = "");
             document.querySelectorAll('#open_step_2 select').forEach(s => s.selectedIndex=0);
             document.getElementById('div_visit_etc').style.display='none';
