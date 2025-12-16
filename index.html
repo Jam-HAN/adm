@@ -15,17 +15,15 @@
         .active-section { display: block; animation: fadeIn 0.4s ease-out forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
-        /* 폼 스타일 */
         .form-label-sm { font-size: 0.8rem; color: #6c757d; font-weight: 700; margin-bottom: 3px; }
         .form-control-sm, .form-select-sm { font-size: 0.9rem; padding: 0.4rem 0.6rem; }
         .divider { border-top: 1px solid #dee2e6; margin: 25px 0 15px 0; }
         .section-header { font-size: 1rem; font-weight: 800; color: #4e73df; margin-bottom: 12px; display: flex; align-items: center; }
         .section-header i { margin-right: 6px; }
         
-        /* 커스텀 스타일 */
-        .required-star { color: #dc3545; margin-left: 2px; font-weight: bold; } /* 빨간 별표 */
-        .text-danger-custom { color: #dc3545 !important; font-weight: bold; } /* 빨간 글자 */
-        .border-danger-custom { border-color: #dc3545 !important; color: #dc3545 !important; font-weight: bold; } /* 빨간 테두리 */
+        .required-star { color: #dc3545; margin-left: 2px; font-weight: bold; }
+        .text-danger-custom { color: #dc3545 !important; font-weight: bold; }
+        .border-danger-custom { border-color: #dc3545 !important; color: #dc3545 !important; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -360,6 +358,7 @@
             else document.getElementById('div_visit_etc').style.display = 'none';
         }
 
+        // ★ [수정] 화면에 색상 다시 표시
         function handleOpenScan(e) { 
             if(e.key!=='Enter') return; 
             const v=e.target.value.trim(); 
@@ -372,7 +371,8 @@
                     tempOpenStockData = d.data; 
                     tempOpenStockData.inputCode = v; 
                     
-                    document.getElementById('target_model').innerText = d.data.model; 
+                    // 화면 표시용 (색상 포함)
+                    document.getElementById('target_model').innerText = `${d.data.model} (${d.data.color})`; 
                     document.getElementById('target_serial').innerText = d.data.serial;
                     document.getElementById('target_branch').innerText = d.data.branch || "지점미상"; 
                     document.getElementById('f_avalue').value = d.data.supplier || ""; 
