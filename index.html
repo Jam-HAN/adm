@@ -7,7 +7,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
-    
     <style>
         :root { --primary-bg: #eef2f6; --card-bg: #ffffff; --accent-color: #4e73df; --accent-gradient: linear-gradient(135deg, #4e73df 0%, #224abe 100%); }
         body { background-color: var(--primary-bg); font-family: 'Noto Sans KR', sans-serif; color: #2e384d; }
@@ -108,9 +107,31 @@
             <div id="section-open" class="section-view fade-in">
                 <div class="glass-card p-4 border-top border-4 border-primary">
                     <h5 class="fw-bold mb-4 text-primary" id="open_title">개통 처리</h5>
-                    <div class="form-floating mb-3"><input type="text" class="form-control" id="open_note" placeholder="메모"><label>개통 정보 / 메모</label></div>
-                    <div class="scan-wrapper bg-primary bg-opacity-75 my-4" style="background-color: #0984e3;"><input type="text" class="form-control scan-input border-primary" id="open_scan" placeholder="바코드 또는 일련번호" onkeydown="handleOpenScan(event)" autocomplete="off"></div>
-                    <div id="open-msg" class="alert py-2 text-center small fw-bold rounded-3" style="display:none"></div>
+                    <div id="open_step_1">
+                        <div class="scan-wrapper bg-primary bg-opacity-75 mb-3" style="background-color: #0984e3;"><input type="text" class="form-control scan-input border-primary" id="open_scan" placeholder="개통할 기기 스캔" onkeydown="handleOpenScan(event)" autocomplete="off"></div>
+                    </div>
+                    <div id="open_step_2" style="display:none;" class="fade-in">
+                        <div class="alert alert-info py-2 small fw-bold mb-3"><i class="bi bi-check-circle"></i> <span id="open_target_info"></span></div>
+                        <div class="row g-2 mb-3">
+                            <div class="col-6"><label class="small text-muted">고객명</label><input type="text" class="form-control" id="open_cust_name" placeholder="홍길동"></div>
+                            <div class="col-6"><label class="small text-muted">생년월일</label><input type="text" class="form-control" id="open_cust_birth" placeholder="900101"></div>
+                            <div class="col-12"><label class="small text-muted">연락처</label><input type="text" class="form-control" id="open_cust_phone" placeholder="010-1234-5678"></div>
+                        </div>
+                        <div class="row g-2 mb-3">
+                            <div class="col-6"><label class="small text-muted">요금제</label><input type="text" class="form-control" id="open_plan" placeholder="5GX 프라임"></div>
+                            <div class="col-6"><label class="small text-muted">약정유형</label><select class="form-select" id="open_contract_type"><option value="공시지원">공시지원</option><option value="선택약정">선택약정</option></select></div>
+                        </div>
+                        <div class="mb-3"><label class="small text-muted">부가서비스</label><input type="text" class="form-control" id="open_addon" placeholder="우주패스, 보험 등"></div>
+                        <div class="row g-2 mb-4">
+                            <div class="col-6"><label class="small text-muted">유심비</label><select class="form-select" id="open_usim"><option value="후납">후납</option><option value="선납">선납</option><option value="면제">면제</option></select></div>
+                            <div class="col-6"><label class="small text-muted">비고</label><input type="text" class="form-control" id="open_note" placeholder="특이사항"></div>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-secondary w-25" onclick="resetOpenForm()">취소</button>
+                            <button class="btn btn-primary w-75 fw-bold" onclick="submitOpenContract()">개통 확정</button>
+                        </div>
+                    </div>
+                    <div id="open-msg" class="alert py-2 text-center small fw-bold rounded-3 mt-3" style="display:none"></div>
                 </div>
             </div>
 
@@ -206,9 +227,9 @@
         let globalModelList = [];
         let currentOpenType = "";
         let logoutTimer;
+        let tempOpenStockData = null;
 
         window.onload = function() {
-            // ★ [변경] localStorage -> sessionStorage (창 닫으면 로그아웃)
             const saved = sessionStorage.getItem('dbphone_user');
             if(saved) {
                 const u = JSON.parse(saved);
@@ -237,7 +258,7 @@
                 logoutTimer = setTimeout(() => {
                     alert("10분 동안 활동이 없어 자동 로그아웃 되었습니다.");
                     logout();
-                }, 600000); // 10분
+                }, 600000); 
             }
         }
 
@@ -254,6 +275,7 @@
         function showOpenSection(type) {
             currentOpenType = type;
             document.getElementById('open_title').innerText = type + " 처리";
+            resetOpenForm();
             showSection('section-open');
         }
 
@@ -349,12 +371,81 @@
         function clearInList() { inPendingList=[]; renderInList(); }
         function submitInBatch() { if(!confirm(`${inPendingList.length}대 입고?`)) return; fetch(GAS_URL,{method:"POST",body:JSON.stringify({action:"batch_register",items:inPendingList,branch:document.getElementById('in_branch').value,user:currentUser})}).then(r=>r.json()).then(d=>{ if(d.status==='success') {showMsg('in-msg','success',`${d.count}대 완료`); clearInList();} else showMsg('in-msg','error',d.message); }); }
 
-        // --- 이동/반품/개통 ---
         function handleMoveScan(e) { if(e.key!=='Enter')return; const v=e.target.value.trim(); e.target.disabled=true; fetch(GAS_URL,{method:"POST",body:JSON.stringify({action:"transfer_stock",input:v,toBranch:document.getElementById('move_to_branch').value,user:currentUser})}).then(r=>r.json()).then(d=>showMsg('move-msg',d.status==='success'?'success':'error',d.message)).finally(()=>{e.target.disabled=false;e.target.value="";e.target.focus();}); }
         function handleOutScan(e) { if(e.key!=='Enter')return; const v=e.target.value.trim(); if(!document.getElementById('out_note').value){alert("사유필수");return;} e.target.disabled=true; fetch(GAS_URL,{method:"POST",body:JSON.stringify({action:"return_stock",input:v,note:document.getElementById('out_note').value,user:currentUser})}).then(r=>r.json()).then(d=>showMsg('out-msg',d.status==='success'?'success':'error',d.message)).finally(()=>{e.target.disabled=false;e.target.value="";e.target.focus();}); }
-        function handleOpenScan(e) { if(e.key!=='Enter')return; const v=e.target.value.trim(); e.target.disabled=true; fetch(GAS_URL,{method:"POST",body:JSON.stringify({action:"open_stock",input:v,openType: currentOpenType, note:document.getElementById('open_note').value,user:currentUser})}).then(r=>r.json()).then(d=>showMsg('open-msg',d.status==='success'?'success':'error',d.message)).finally(()=>{e.target.disabled=false;e.target.value="";e.target.focus();}); }
+        
+        // --- ★ 개통 처리 로직 ---
+        function handleOpenScan(e) { 
+            if(e.key!=='Enter')return; 
+            const v=e.target.value.trim(); 
+            e.target.disabled=true; 
+            
+            // 미리보기 (재고 상태 확인용)
+            fetch(GAS_URL,{method:"POST",body:JSON.stringify({
+                action:"scan_preview", barcode:v 
+            })}).then(r=>r.json()).then(d=>{
+                if(d.status==='success') {
+                    tempOpenStockData = d.data; // 정보 저장
+                    tempOpenStockData.inputCode = v; // 입력한 코드(바코드/일련번호) 저장
+                    
+                    document.getElementById('open_target_info').innerText = `${d.data.model} (${d.data.color})`;
+                    document.getElementById('open_step_1').style.display = 'none';
+                    document.getElementById('open_step_2').style.display = 'block';
+                    document.getElementById('open_cust_name').focus();
+                } else {
+                    showMsg('open-msg', 'error', d.message);
+                    e.target.disabled=false; e.target.value=""; e.target.focus();
+                }
+            });
+        }
 
-        // --- 거래처 ---
+        function resetOpenForm() {
+            document.getElementById('open_step_1').style.display = 'block';
+            document.getElementById('open_step_2').style.display = 'none';
+            document.getElementById('open_scan').value = "";
+            document.getElementById('open_scan').disabled = false;
+            document.getElementById('open_scan').focus();
+            
+            // 입력 필드 초기화
+            document.getElementById('open_cust_name').value = "";
+            document.getElementById('open_cust_birth').value = "";
+            document.getElementById('open_cust_phone').value = "";
+            document.getElementById('open_plan').value = "";
+            document.getElementById('open_addon').value = "";
+            document.getElementById('open_note').value = "";
+            tempOpenStockData = null;
+        }
+
+        function submitOpenContract() {
+            if(!tempOpenStockData) return;
+            const data = {
+                action: "open_stock_detail",
+                stockInput: tempOpenStockData.inputCode, // 스캔했던 코드
+                openType: currentOpenType,
+                custName: document.getElementById('open_cust_name').value,
+                custBirth: document.getElementById('open_cust_birth').value,
+                custPhone: document.getElementById('open_cust_phone').value,
+                plan: document.getElementById('open_plan').value,
+                addon: document.getElementById('open_addon').value,
+                contractType: document.getElementById('open_contract_type').value,
+                usim: document.getElementById('open_usim').value,
+                note: document.getElementById('open_note').value,
+                user: currentUser
+            };
+
+            if(!data.custName) return alert("고객명은 필수입니다.");
+
+            fetch(GAS_URL, { method: "POST", body: JSON.stringify(data) })
+            .then(r => r.json()).then(d => {
+                if(d.status === 'success') {
+                    showMsg('open-msg', 'success', d.message);
+                    resetOpenForm();
+                } else {
+                    alert(d.message); 
+                }
+            });
+        }
+
         function loadVendorsToList() { fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "get_vendors" }) }).then(r => r.json()).then(d => { const div = document.getElementById('vendor_list_ui'); div.innerHTML = ""; d.list.forEach(v => { const safeV = JSON.stringify(v).replace(/"/g, '&quot;'); div.innerHTML += `<div class="list-group-item p-3"><div class="d-flex justify-content-between align-items-center"><div><h6 class="fw-bold mb-0 text-primary">${v.name}</h6><div class="small text-muted mt-1"><i class="bi bi-person me-1"></i>${v.salesName||'-'} | ${v.salesPhone||'-'}</div><div class="small text-muted"><i class="bi bi-building me-1"></i>개통실: ${v.officePhone||'-'}</div></div><div><button class="btn btn-sm btn-outline-secondary me-1" onclick="openEditVendor(${safeV})"><i class="bi bi-pencil"></i></button><button class="btn btn-sm btn-outline-danger" onclick="deleteVendor('${v.name}')"><i class="bi bi-trash"></i></button></div></div></div>`; }); }); }
         function addVendor() { const data = { action: "add_vendor", name: document.getElementById('v_name').value, salesName: document.getElementById('v_sales').value, salesPhone: document.getElementById('v_phone').value, officePhone: document.getElementById('v_office').value }; if(!data.name) return alert("거래처명 필수"); fetch(GAS_URL, { method: "POST", body: JSON.stringify(data) }).then(r=>r.json()).then(d=>{ alert(d.message); document.querySelectorAll('.enter-trigger').forEach(i=>i.value=""); loadVendorsToList(); }); }
         function deleteVendor(name) { if(confirm("삭제?")) fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "delete_vendor", name: name }) }).then(r=>r.json()).then(d=>{ alert(d.message); loadVendorsToList(); }); }
@@ -362,26 +453,8 @@
         function submitEditVendor() { const data={ action:"update_vendor", oldName:document.getElementById('edit_v_old_name').value, name:document.getElementById('edit_v_name').value, salesName:document.getElementById('edit_v_sales').value, salesPhone:document.getElementById('edit_v_phone').value, officePhone:document.getElementById('edit_v_office').value }; fetch(GAS_URL,{method:"POST",body:JSON.stringify(data)}).then(r=>r.json()).then(d=>{ alert(d.message); bootstrap.Modal.getInstance(document.getElementById('vendorEditModal')).hide(); loadVendorsToList(); }); }
 
         function showMsg(id, type, text) { const el=document.getElementById(id); el.style.display='block'; el.className=`alert py-2 text-center small fw-bold rounded-3 alert-${type==='success'?'success':'danger'}`; el.innerHTML=type==='success'?`<i class="bi bi-check-circle-fill me-1"></i> ${text}`:`<i class="bi bi-exclamation-triangle-fill me-1"></i> ${text}`; setTimeout(()=>el.style.display='none',2000); }
-        
-        // ★ [변경] sessionStorage 적용
-        function handleCredentialResponse(r) { 
-            fetch(GAS_URL,{method:"POST",body:JSON.stringify({action:"login",token:r.credential})}).then(res=>res.json()).then(d=>{ 
-                if(d.status==='success') { 
-                    sessionStorage.setItem('dbphone_user',JSON.stringify({name:d.name,email:d.user})); // 수정됨
-                    currentUser=d.name; 
-                    document.getElementById('login-view').style.display='none'; 
-                    document.getElementById('main-view').style.display='block'; 
-                    document.getElementById('user-name').innerText=currentUser; 
-                    loadInitData(); 
-                    setupAutoLogout(); 
-                } else document.getElementById('login-msg').innerText=d.message; 
-            }); 
-        }
-        
-        function logout() { 
-            sessionStorage.removeItem('dbphone_user'); // 수정됨
-            location.reload(); 
-        }
+        function handleCredentialResponse(r) { fetch(GAS_URL,{method:"POST",body:JSON.stringify({action:"login",token:r.credential})}).then(res=>res.json()).then(d=>{ if(d.status==='success') { sessionStorage.setItem('dbphone_user',JSON.stringify({name:d.name,email:d.user})); currentUser=d.name; document.getElementById('login-view').style.display='none'; document.getElementById('main-view').style.display='block'; document.getElementById('user-name').innerText=currentUser; loadInitData(); setupAutoLogout(); } else document.getElementById('login-msg').innerText=d.message; }); }
+        function logout() { sessionStorage.removeItem('dbphone_user'); location.reload(); }
     </script>
 </body>
 </html>
