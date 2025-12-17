@@ -127,7 +127,13 @@
                                 
                                 <div class="col-6"><label class="form-label-sm">요금제</label><input type="text" class="form-control form-control-sm" id="f_plan"></div>
                                 <div class="col-6"><label class="form-label-sm">변경요금제</label><input type="text" class="form-control form-control-sm" id="f_plan_chg"></div>
-                                <div class="col-12"><label class="form-label-sm">부가서비스</label><input type="text" class="form-control form-control-sm" id="f_addon"></div>
+                                
+                                <div class="col-12">
+                                    <label class="form-label-sm">부가서비스</label>
+                                    <div id="div_addon_container" class="border rounded p-2 bg-light" style="min-height: 40px;">
+                                        <span class="text-muted small">개통처를 확인중입니다...</span>
+                                    </div>
+                                </div>
                                 
                                 <div class="col-4"><label class="form-label-sm">제휴카드</label><input type="text" class="form-control form-control-sm" id="f_card"></div>
                                 <div class="col-4"><label class="form-label-sm">리뷰작성여부<span class="required-star">*</span></label><select class="form-select form-select-sm" id="f_review"><option value="" selected>선택</option></select></div>
@@ -278,6 +284,7 @@
         let inPendingList = [];
         let globalVendorList = [];
         let globalModelList = [];
+        let globalAddonList = []; // ★ 추가: 전체 부가서비스 리스트 저장
         let currentOpenType = "";
         let logoutTimer;
         let tempOpenStockData = null;
@@ -337,14 +344,12 @@
             fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "get_models" }) }).then(r => r.json()).then(d => globalModelList = d.list);
         }
 
-        // ★ [수정] 동적 데이터 바인딩
         function loadDropdownData() {
             fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "get_dropdown_data" }) })
             .then(r => r.json())
             .then(d => {
                 if(d.status !== 'success') return;
                 
-                // Helper function to populate select
                 const fill = (id, list) => {
                     const sel = document.getElementById(id);
                     sel.innerHTML = '<option value="" selected>선택</option>';
@@ -356,18 +361,19 @@
                 fill('f_review', d.reviewList);
                 fill('f_usim', d.usimList);
                 
-                // 방문경로 + 기타
                 const vSel = document.getElementById('f_visit');
                 vSel.innerHTML = '<option value="" selected>선택</option>';
                 d.visitList.forEach(item => { vSel.innerHTML += `<option value="${item}">${item}</option>`; });
                 vSel.innerHTML += '<option value="기타">기타 (직접입력)</option>';
 
-                // 수납/대납 방법들 (동일한 리스트 사용)
                 fill('f_pay1_m', d.payMethodList);
                 fill('f_pay2_m', d.payMethodList);
                 fill('f_inc4_m', d.colMethodList);
                 fill('f_inc4_2_m', d.colMethodList);
                 fill('f_inc5_m', d.colMethodList);
+
+                // ★ 추가: 전체 부가서비스 리스트 저장
+                globalAddonList = d.addonList || [];
             });
         }
 
@@ -375,6 +381,38 @@
             const val = document.getElementById('f_visit').value;
             if(val === '기타') document.getElementById('div_visit_etc').style.display = 'block';
             else document.getElementById('div_visit_etc').style.display = 'none';
+        }
+
+        // ★ [수정] 개통처(supplier)에 맞는 부가서비스 체크박스 생성
+        function renderAddonCheckboxes(supplier) {
+            const container = document.getElementById('div_addon_container');
+            container.innerHTML = "";
+            
+            // supplier와 일치하는 통신사를 찾음 (일단 단순 매핑이나 이름 포함 여부로 확인해야 하나,
+            // 여기서는 Ref시트의 B열(통신사)과 재고의 개통처(supplier)가 다를 수 있음.
+            // 정확히는 "개통처 -> 통신사" 매핑이 필요한데, 클라이언트엔 그 정보가 없으므로
+            // 일단 "개통처" 이름이 포함된 부가서비스를 보여주거나, 모든 부가서비스를 보여주되 carrier를 표시하는 방식 사용.
+            // *코드 개선: 서버에서 매핑 로직이 있지만 클라이언트는 단순함*
+            // -> 여기서는 편의상 "모든 부가서비스"를 보여주거나, 만약 supplier가 SKT, KT 등을 포함하면 필터링.
+            // -> 가장 좋은 방법: 재고 데이터(d.data.supplier)가 곧 개통처이므로, globalAddonList에서 carrier가 개통처와 일치하는 것만 필터링?
+            // -> 하지만 재고의 '개통처'는 대리점명(예: XX통신)일 수 있고, 부가서비스는 'SKT'일 수 있음.
+            // -> 일단은 **전체 리스트를 보여주되, 통신사별로 그룹핑**해서 보여주는 게 안전함.
+            
+            // 사용 편의를 위해 전체 출력 (통신사 구분 표시)
+            if(globalAddonList.length === 0) {
+                container.innerHTML = "<span class='text-muted small'>설정된 부가서비스가 없습니다.</span>";
+                return;
+            }
+
+            globalAddonList.forEach(item => {
+                const div = document.createElement('div');
+                div.className = "form-check form-check-inline";
+                div.innerHTML = `
+                    <input class="form-check-input addon-check" type="checkbox" id="addon_${item.name}" value="${item.name}">
+                    <label class="form-check-label small" for="addon_${item.name}">[${item.carrier}] ${item.name}</label>
+                `;
+                container.appendChild(div);
+            });
         }
 
         function handleOpenScan(e) { 
@@ -394,6 +432,9 @@
                     document.getElementById('target_branch').innerText = d.data.branch || "지점미상"; 
                     document.getElementById('f_avalue').value = d.data.supplier || ""; 
                     
+                    // ★ 추가: 부가서비스 렌더링 호출
+                    renderAddonCheckboxes(d.data.supplier);
+
                     document.getElementById('open_step_1').style.display = 'none';
                     document.getElementById('open_step_2').style.display = 'block';
                     document.getElementById('f_name').focus();
@@ -434,6 +475,12 @@
                 visitVal = "기타: " + document.getElementById('f_visit_etc').value;
             }
 
+            // ★ 추가: 선택된 부가서비스 수집
+            const selectedAddons = [];
+            document.querySelectorAll('.addon-check:checked').forEach(cb => {
+                selectedAddons.push(cb.value);
+            });
+
             const formData = {
                 action: "open_stock_full",
                 stockInput: tempOpenStockData.inputCode,
@@ -447,7 +494,9 @@
                 phoneNumber: document.getElementById('f_phone').value,
                 pricePlan: document.getElementById('f_plan').value,
                 changePlan: document.getElementById('f_plan_chg').value,
-                addon: document.getElementById('f_addon').value,
+                
+                selectedAddons: selectedAddons, // ★ 배열로 전송
+                
                 usim: document.getElementById('f_usim').value,
                 card: document.getElementById('f_card').value,
                 review: document.getElementById('f_review').value,
@@ -519,6 +568,7 @@
             document.querySelectorAll('#open_step_2 input').forEach(i => i.value = "");
             document.querySelectorAll('#open_step_2 select').forEach(s => s.selectedIndex=0);
             document.getElementById('div_visit_etc').style.display='none';
+            document.getElementById('div_addon_container').innerHTML = "<span class='text-muted small'>...</span>";
             
             tempOpenStockData = null;
         }
