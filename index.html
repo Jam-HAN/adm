@@ -116,9 +116,9 @@
 
                             <div class="section-header"><i class="bi bi-person-lines-fill"></i> 기본 정보</div>
                             <div class="row g-2 mb-3">
-                                <div class="col-4"><label class="form-label-sm">개통유형</label><select class="form-select form-select-sm" id="f_act_type"><option value="" selected>선택</option><option>신규</option><option>번호이동</option><option>기기변경</option></select></div>
-                                <div class="col-4"><label class="form-label-sm">약정유형</label><select class="form-select form-select-sm" id="f_cont_type"><option value="" selected>선택</option><option>공시지원</option><option>선택약정</option></select></div>
-                                <div class="col-4"><label class="form-label-sm">방문경로<span class="required-star">*</span></label><select class="form-select form-select-sm" id="f_visit" onchange="checkVisitPath()"></select></div>
+                                <div class="col-4"><label class="form-label-sm">개통유형</label><select class="form-select form-select-sm" id="f_act_type"><option value="" selected>선택</option></select></div>
+                                <div class="col-4"><label class="form-label-sm">약정유형</label><select class="form-select form-select-sm" id="f_cont_type"><option value="" selected>선택</option></select></div>
+                                <div class="col-4"><label class="form-label-sm">방문경로<span class="required-star">*</span></label><select class="form-select form-select-sm" id="f_visit" onchange="checkVisitPath()"><option value="" selected>선택</option></select></div>
                                 <div class="col-12" id="div_visit_etc" style="display:none;"><input type="text" class="form-control form-control-sm" id="f_visit_etc" placeholder="상세 경로"></div>
                                 
                                 <div class="col-4"><label class="form-label-sm">고객명<span class="required-star">*</span></label><input type="text" class="form-control form-control-sm" id="f_name"></div>
@@ -130,7 +130,7 @@
                                 <div class="col-12"><label class="form-label-sm">부가서비스</label><input type="text" class="form-control form-control-sm" id="f_addon"></div>
                                 
                                 <div class="col-4"><label class="form-label-sm">제휴카드</label><input type="text" class="form-control form-control-sm" id="f_card"></div>
-                                <div class="col-4"><label class="form-label-sm">리뷰작성여부<span class="required-star">*</span></label><select class="form-select form-select-sm" id="f_review"><option value="" selected>선택</option><option>작성</option><option>미작성</option></select></div>
+                                <div class="col-4"><label class="form-label-sm">리뷰작성여부<span class="required-star">*</span></label><select class="form-select form-select-sm" id="f_review"><option value="" selected>선택</option></select></div>
                             </div>
 
                             <div class="divider"></div>
@@ -152,18 +152,18 @@
                                 <div class="col-6"><label class="form-label-sm">메모</label><input type="text" class="form-control form-control-sm" id="f_cost1_m"></div>
                                 
                                 <div class="col-6"><label class="form-label-sm text-danger-custom">프리할인</label><input type="number" class="form-control form-control-sm border-danger-custom" id="f_cost2"></div>
-                                <div class="col-6"><label class="form-label-sm">유심</label><select class="form-select form-select-sm" id="f_usim"></select></div>
+                                <div class="col-6"><label class="form-label-sm">유심</label><select class="form-select form-select-sm" id="f_usim"><option value="" selected>선택</option></select></div>
                             </div>
 
                             <div class="divider"></div>
                             <div class="section-header"><i class="bi bi-credit-card"></i> 대납 및 지원</div>
                             <div class="row g-2 mb-3">
                                 <div class="col-4"><label class="form-label-sm text-danger-custom">대납1</label><input type="number" class="form-control form-control-sm border-danger-custom" id="f_pay1"></div>
-                                <div class="col-4"><label class="form-label-sm">방법</label><select class="form-select form-select-sm" id="f_pay1_m"><option value="" selected>선택</option><option>채권</option><option>법인카드</option></select></div>
+                                <div class="col-4"><label class="form-label-sm">방법</label><select class="form-select form-select-sm" id="f_pay1_m"><option value="" selected>선택</option></select></div>
                                 <div class="col-4"><label class="form-label-sm">처리일</label><input type="date" class="form-control form-control-sm" id="f_pay1_d"></div>
 
                                 <div class="col-4"><label class="form-label-sm text-danger-custom">대납2</label><input type="number" class="form-control form-control-sm border-danger-custom" id="f_pay2"></div>
-                                <div class="col-4"><label class="form-label-sm">방법</label><select class="form-select form-select-sm" id="f_pay2_m"><option value="" selected>선택</option><option>채권</option><option>법인카드</option></select></div>
+                                <div class="col-4"><label class="form-label-sm">방법</label><select class="form-select form-select-sm" id="f_pay2_m"><option value="" selected>선택</option></select></div>
                                 <div class="col-4"><label class="form-label-sm">처리일</label><input type="date" class="form-control form-control-sm" id="f_pay2_d"></div>
 
                                 <div class="col-6"><label class="form-label-sm text-danger-custom">현금지급</label><input type="number" class="form-control form-control-sm border-danger-custom" id="f_cash"></div>
@@ -178,13 +178,13 @@
                             <div class="section-header"><i class="bi bi-wallet2"></i> 수납 상세</div>
                             <div class="row g-2 mb-3">
                                 <div class="col-6"><label class="form-label-sm">단말기수납1</label><input type="number" class="form-control form-control-sm" id="f_inc4"></div>
-                                <div class="col-6"><label class="form-label-sm">방법</label><select class="form-select form-select-sm" id="f_inc4_m"><option value="" selected>선택</option><option>현금</option><option>계좌</option><option>카드</option></select></div>
+                                <div class="col-6"><label class="form-label-sm">방법</label><select class="form-select form-select-sm" id="f_inc4_m"><option value="" selected>선택</option></select></div>
                                 
                                 <div class="col-6"><label class="form-label-sm">단말기수납2</label><input type="number" class="form-control form-control-sm" id="f_inc4_2"></div>
-                                <div class="col-6"><label class="form-label-sm">방법</label><select class="form-select form-select-sm" id="f_inc4_2_m"><option value="" selected>선택</option><option>현금</option><option>계좌</option><option>카드</option></select></div>
+                                <div class="col-6"><label class="form-label-sm">방법</label><select class="form-select form-select-sm" id="f_inc4_2_m"><option value="" selected>선택</option></select></div>
                                 
                                 <div class="col-6"><label class="form-label-sm">요금수납</label><input type="number" class="form-control form-control-sm" id="f_inc5"></div>
-                                <div class="col-6"><label class="form-label-sm">방법</label><select class="form-select form-select-sm" id="f_inc5_m"><option value="" selected>선택</option><option>현금</option><option>계좌</option><option>카드</option></select></div>
+                                <div class="col-6"><label class="form-label-sm">방법</label><select class="form-select form-select-sm" id="f_inc5_m"><option value="" selected>선택</option></select></div>
                                 
                                 <div class="col-6"><label class="form-label-sm">중고폰</label><input type="number" class="form-control form-control-sm" id="f_inc6"></div>
                                 <div class="col-6"><label class="form-label-sm">메모</label><input type="text" class="form-control form-control-sm" id="f_inc6_m"></div>
@@ -337,18 +337,37 @@
             fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "get_models" }) }).then(r => r.json()).then(d => globalModelList = d.list);
         }
 
+        // ★ [수정] 동적 데이터 바인딩
         function loadDropdownData() {
             fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "get_dropdown_data" }) })
             .then(r => r.json())
             .then(d => {
-                const selVisit = document.getElementById('f_visit');
-                selVisit.innerHTML = '<option value="" selected>선택</option>';
-                d.visitList.forEach(item => { selVisit.innerHTML += `<option value="${item}">${item}</option>`; });
-                selVisit.innerHTML += '<option value="기타">기타 (직접입력)</option>';
+                if(d.status !== 'success') return;
                 
-                const selUsim = document.getElementById('f_usim');
-                selUsim.innerHTML = '<option value="" selected>선택</option>';
-                d.usimList.forEach(item => { selUsim.innerHTML += `<option value="${item}">${item}</option>`; });
+                // Helper function to populate select
+                const fill = (id, list) => {
+                    const sel = document.getElementById(id);
+                    sel.innerHTML = '<option value="" selected>선택</option>';
+                    list.forEach(item => { sel.innerHTML += `<option value="${item}">${item}</option>`; });
+                };
+                
+                fill('f_act_type', d.actList);
+                fill('f_cont_type', d.contList);
+                fill('f_review', d.reviewList);
+                fill('f_usim', d.usimList);
+                
+                // 방문경로 + 기타
+                const vSel = document.getElementById('f_visit');
+                vSel.innerHTML = '<option value="" selected>선택</option>';
+                d.visitList.forEach(item => { vSel.innerHTML += `<option value="${item}">${item}</option>`; });
+                vSel.innerHTML += '<option value="기타">기타 (직접입력)</option>';
+
+                // 수납/대납 방법들 (동일한 리스트 사용)
+                fill('f_pay1_m', d.payMethodList);
+                fill('f_pay2_m', d.payMethodList);
+                fill('f_inc4_m', d.colMethodList);
+                fill('f_inc4_2_m', d.colMethodList);
+                fill('f_inc5_m', d.colMethodList);
             });
         }
 
@@ -358,7 +377,6 @@
             else document.getElementById('div_visit_etc').style.display = 'none';
         }
 
-        // ★ [수정] 화면에 색상 다시 표시
         function handleOpenScan(e) { 
             if(e.key!=='Enter') return; 
             const v=e.target.value.trim(); 
@@ -371,7 +389,6 @@
                     tempOpenStockData = d.data; 
                     tempOpenStockData.inputCode = v; 
                     
-                    // 화면 표시용 (색상 포함)
                     document.getElementById('target_model').innerText = `${d.data.model} (${d.data.color})`; 
                     document.getElementById('target_serial').innerText = d.data.serial;
                     document.getElementById('target_branch').innerText = d.data.branch || "지점미상"; 
@@ -394,7 +411,6 @@
             });
         }
 
-        // 유효성 검사 헬퍼 함수
         function validateField(id, name) {
             const el = document.getElementById(id);
             if (!el.value) {
@@ -408,12 +424,10 @@
         function submitFullContract() {
             if(!tempOpenStockData) return;
             
-            // 1. 필수값 검사 및 포커스 이동
             if (!validateField('f_visit', '방문경로')) return;
             if (!validateField('f_name', '고객명')) return;
             if (!validateField('f_review', '리뷰작성여부')) return;
 
-            // 기타 방문경로 처리
             let visitVal = document.getElementById('f_visit').value;
             if(visitVal === '기타') {
                 if(!validateField('f_visit_etc', '상세 방문경로')) return;
