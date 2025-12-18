@@ -1,8 +1,8 @@
 // ==========================================
-// script.js (V43.0 - Final)
+// script.js (V43.1 - Dashboard Graph Update)
 // ==========================================
 
-const GAS_URL = "https://script.google.com/macros/s/AKfycbw5LTC58ETvruLTOZTvDQihjDCZNfPb23QOISkN24Ex2qaA8j2zWaiylFIOMVm_vTGb/exec";
+const GAS_URL = "https://script.google.com/macros/s/AKfycbw1k159kDezV8JwcImu7GM4q-bTTcUrPv6CwIYC_q47mpT5GlIGRy7OC4BduwL1vG5G/exec";
 
 let currentUser = "";
 let inPendingList = [];
@@ -147,7 +147,7 @@ function renderDashboard(data) {
         data.todayList.forEach(item => {
             const marginStr = Math.floor(Number(item.margin)).toLocaleString();
             const badgeClass = item.isWired ? "bg-success" : "bg-primary";
-            // ★ [수정] text-end 제거 -> CSS 가운데 정렬 적용
+            // 마진 가운데 정렬 적용 (CSS dash-table td 설정 따름)
             listBody.innerHTML += `<tr><td><span class="badge bg-secondary">${item.branch}</span></td><td><span class="badge ${badgeClass} text-white">${item.type}</span></td><td class="fw-bold">${item.name}</td><td class="text-muted small">${item.user}</td><td class="text-danger fw-bold">${marginStr}</td></tr>`;
         });
     }
@@ -156,20 +156,31 @@ function renderDashboard(data) {
     rankBody.innerHTML = "";
     if (data.userRank.length === 0) { rankBody.innerHTML = '<div class="text-center text-muted">이달의 실적이 없습니다.</div>'; } 
     else {
-        // ★ [수정] 무선/유선 스택 바(Stacked Bar) 생성
-        const max = data.userRank[0].total; // 1등의 전체 건수 기준
+        // ★ [수정] 무선/유선 막대 분리 (위아래)
+        const max = data.userRank[0].total; // 전체 1등의 총 건수 기준
+        
         data.userRank.forEach(u => {
-            const mobilePct = (u.mobile / max) * 100;
-            const wiredPct = (u.wired / max) * 100;
+            const mobilePct = max > 0 ? (u.mobile / max) * 100 : 0;
+            const wiredPct = max > 0 ? (u.wired / max) * 100 : 0;
             
             rankBody.innerHTML += `
-                <div class="user-rank-item">
-                    <span class="user-rank-name">${u.name}</span>
-                    <div class="progress">
-                        <div class="progress-bar bg-primary" style="width: ${mobilePct}%" title="무선: ${u.mobile}건"></div>
-                        <div class="progress-bar bg-success" style="width: ${wiredPct}%" title="유선: ${u.wired}건"></div>
+                <div class="user-rank-item py-2 border-bottom">
+                    <div class="user-rank-name">${u.name}</div>
+                    <div class="flex-grow-1 mx-2">
+                        <div class="d-flex align-items-center mb-1">
+                            <div class="progress w-100" style="height: 6px; margin:0; background-color:#eaecf4;">
+                                <div class="progress-bar bg-primary" style="width: ${mobilePct}%"></div>
+                            </div>
+                            <span class="ms-2 text-primary fw-bold" style="font-size:0.75rem; width:25px; text-align:right;">${u.mobile}</span>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <div class="progress w-100" style="height: 6px; margin:0; background-color:#eaecf4;">
+                                <div class="progress-bar bg-success" style="width: ${wiredPct}%"></div>
+                            </div>
+                            <span class="ms-2 text-success fw-bold" style="font-size:0.75rem; width:25px; text-align:right;">${u.wired}</span>
+                        </div>
                     </div>
-                    <span class="user-rank-count">${u.total}건</span>
+                    <div class="user-rank-count ms-1">${u.total}</div>
                 </div>`;
         });
     }
