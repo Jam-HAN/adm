@@ -9,7 +9,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
     <style>
         :root { --primary-bg: #eef2f6; --card-bg: #ffffff; --accent-color: #4e73df; }
-        body { background-color: var(--primary-bg); font-family: 'Noto Sans KR', sans-serif; color: #2e384d; font-size: 15px; } /* 폰트 살짝 키움 */
+        body { background-color: var(--primary-bg); font-family: 'Noto Sans KR', sans-serif; color: #2e384d; font-size: 15px; } 
         .glass-card { background: var(--card-bg); border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); border: none; overflow: hidden; margin-bottom: 20px; }
         .section-view { display: none; }
         .active-section { display: block; animation: fadeIn 0.4s ease-out forwards; }
@@ -108,7 +108,7 @@
                         <div class="glass-card h-100">
                             <div class="card-header py-3 px-4 bg-white border-bottom d-flex justify-content-between align-items-center">
                                 <h6 class="m-0 fw-bold text-primary"><i class="bi bi-broadcast"></i> 실시간 개통 (Today)</h6>
-                                <button class="btn btn-sm btn-light border rounded-circle shadow-sm" onclick="loadDashboard()"><i class="bi bi-arrow-clockwise"></i></button>
+                                <button class="btn btn-sm btn-light border rounded-circle shadow-sm" onclick="loadDashboard()" title="새로고침"><i class="bi bi-arrow-clockwise"></i></button>
                             </div>
                             <div class="card-body p-0">
                                 <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
@@ -163,7 +163,7 @@
                         </div>
                         <div id="open_step_2" style="display:none;">
                             <div class="alert alert-primary py-2 small mb-4 d-flex align-items-center justify-content-between">
-                                <div><i class="bi bi-phone me-1"></i> <span id="target_model" class="fw-bold fs-6"></span> (<span id="target_serial"></span>)</div>
+                                <div><i class="bi bi-phone me-1"></i> <span id="target_model" class="fw-bold fs-6"></span></div>
                                 <div class="badge bg-primary text-white border fs-6 shadow-sm" id="target_branch"></div>
                             </div>
                             <div class="section-header"><i class="bi bi-person-lines-fill"></i> 기본 정보</div>
@@ -289,8 +289,6 @@
                                 <div class="col-6"><label class="form-label-sm">메모</label><input type="text" class="form-control form-control-sm" id="w_inc3_m"></div>
                                 <div class="col-6"><label class="form-label-sm text-danger-custom">차감정책</label><input type="number" class="form-control form-control-sm border-danger-custom" id="w_cost1"></div>
                                 <div class="col-6"><label class="form-label-sm">메모</label><input type="text" class="form-control form-control-sm" id="w_cost1_m"></div>
-                                <div class="col-6"><label class="form-label-sm text-danger-custom">프리할인</label><input type="number" class="form-control form-control-sm border-danger-custom" id="w_cost2"></div>
-                                <div class="col-6"><label class="form-label-sm">유심</label><select class="form-select form-select-sm" id="w_usim"><option value="" selected>선택</option></select></div>
                             </div>
                             <div class="divider"></div>
                             <div class="section-header"><i class="bi bi-credit-card"></i> 대납 및 지원</div>
@@ -310,10 +308,6 @@
                             <div class="divider"></div>
                             <div class="section-header"><i class="bi bi-wallet2"></i> 수납 상세</div>
                             <div class="row g-2 mb-3">
-                                <div class="col-6"><label class="form-label-sm">단말기수납1</label><input type="number" class="form-control form-control-sm" id="w_inc4"></div>
-                                <div class="col-6"><label class="form-label-sm">방법</label><select class="form-select form-select-sm" id="w_inc4_m"></select></div>
-                                <div class="col-6"><label class="form-label-sm">단말기수납2</label><input type="number" class="form-control form-control-sm" id="w_inc4_2"></div>
-                                <div class="col-6"><label class="form-label-sm">방법</label><select class="form-select form-select-sm" id="w_inc4_2_m"></select></div>
                                 <div class="col-6"><label class="form-label-sm">요금수납</label><input type="number" class="form-control form-control-sm" id="w_inc5"></div>
                                 <div class="col-6"><label class="form-label-sm">방법</label><select class="form-select form-select-sm" id="w_inc5_m"></select></div>
                                 <div class="col-6"><label class="form-label-sm">상품권/기타</label><input type="number" class="form-control form-control-sm" id="w_inc6"></div>
@@ -889,7 +883,7 @@
             const selectedAddons = [];
             document.querySelectorAll('#u_div_addon_container .addon-check:checked').forEach(cb => selectedAddons.push(cb.value));
 
-            // ★ 중고 데이터 전송 (cost2 제거 및 빈값 처리)
+            // ★ 중고 데이터 전송 (삭제된 항목 제외 - cost2 제거)
             const formData = {
                 action: "open_used_full",
                 user: currentUser,
@@ -957,8 +951,7 @@
                 if(d.status==='success') {
                     tempOpenStockData = d.data; 
                     tempOpenStockData.inputCode = v; 
-                    document.getElementById('target_model').innerText = `${d.data.model} (${d.data.color})`; 
-                    document.getElementById('target_serial').innerText = d.data.serial;
+                    document.getElementById('target_model').innerText = `${d.data.model} (${d.data.color}) : ${d.data.serial}`; 
                     document.getElementById('target_branch').innerText = d.data.branch || "지점미상"; 
                     document.getElementById('f_avalue').value = d.data.supplier || ""; 
                     refreshAddons(); 
