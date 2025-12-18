@@ -1,8 +1,8 @@
 // ==========================================
-// script.js (V41.0 - 최종 수정)
+// script.js (V42.0 - Final)
 // ==========================================
 
-const GAS_URL = "https://script.google.com/macros/s/AKfycbw1k159kDezV8JwcImu7GM4q-bTTcUrPv6CwIYC_q47mpT5GlIGRy7OC4BduwL1vG5G/exec";
+const GAS_URL = "https://script.google.com/macros/s/AKfycbw5LTC58ETvruLTOZTvDQihjDCZNfPb23QOISkN24Ex2qaA8j2zWaiylFIOMVm_vTGb/exec";
 
 let currentUser = "";
 let inPendingList = [];
@@ -85,7 +85,7 @@ function showSection(id) {
 
 function showOpenSection(type) {
     currentOpenType = type;
-    document.getElementById('open_title').innerHTML = `<i class="bi bi-phone"></i> 무선 개통`; // ★ 제목 고정
+    // 제목 고정 (script.js에서 덮어쓰지 않음)
     resetOpenForm();
     loadDropdownData(); 
     showSection('section-open');
@@ -255,7 +255,11 @@ function submitWiredContract(event) {
         payment1: document.getElementById('w_pay1').value, payment1Method: document.getElementById('w_pay1_m').value, payment1Date: document.getElementById('w_pay1_d').value, payment2: document.getElementById('w_pay2').value, payment2Method: document.getElementById('w_pay2_m').value, payment2Date: document.getElementById('w_pay2_d').value, cash: document.getElementById('w_cash').value, payback1: document.getElementById('w_back').value, bankName: document.getElementById('w_bank').value, accountNumber: document.getElementById('w_acc').value, depositor: document.getElementById('w_holder').value,
         income5: document.getElementById('w_inc5').value, income5Method: document.getElementById('w_inc5_m').value, income6: document.getElementById('w_inc6').value, income6Memo: document.getElementById('w_inc6_m').value, comment: document.getElementById('w_comment').value
     };
-    const btn = event.currentTarget; const originalText = btn.innerHTML; btn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> 저장 중...`; btn.disabled = true;
+    // ★ 버튼 제어 (this 사용 안함)
+    const btn = event.currentTarget; 
+    const originalText = btn.innerHTML; 
+    btn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> 저장 중...`; 
+    btn.disabled = true;
     fetch(GAS_URL, { method: "POST", body: JSON.stringify(formData) }).then(r => r.json()).then(d => { if(d.status === 'success') { alert(d.message); resetWiredForm(); } else { alert("오류: " + d.message); } }).catch(e => alert("통신 오류")).finally(() => { btn.innerHTML = originalText; btn.disabled = false; });
 }
 
@@ -285,7 +289,11 @@ function submitUsedContract(event) {
         payment1: document.getElementById('u_pay1').value, payment1Method: document.getElementById('u_pay1_m').value, payment1Date: document.getElementById('u_pay1_d').value, payment2: document.getElementById('u_pay2').value, payment2Method: document.getElementById('u_pay2_m').value, payment2Date: document.getElementById('u_pay2_d').value, cash: "", payback1: "", bankName: "", accountNumber: "", depositor: "", income4_1: "", income4_2: "",
         income5: document.getElementById('u_inc5').value, income5Method: document.getElementById('u_inc5_m').value, income6: document.getElementById('u_inc6').value, income6Memo: document.getElementById('u_inc6_m').value, comment: document.getElementById('u_comment').value
     };
-    const btn = event.currentTarget; const originalText = btn.innerHTML; btn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> 저장 중...`; btn.disabled = true;
+    // ★ 버튼 제어
+    const btn = event.currentTarget; 
+    const originalText = btn.innerHTML; 
+    btn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> 저장 중...`; 
+    btn.disabled = true;
     fetch(GAS_URL, { method: "POST", body: JSON.stringify(formData) }).then(r => r.json()).then(d => { if(d.status === 'success') { alert(d.message); resetUsedForm(); } else { alert("오류: " + d.message); } }).catch(e => alert("통신 오류")).finally(() => { btn.innerHTML = originalText; btn.disabled = false; });
 }
 
@@ -392,7 +400,8 @@ function submitFullContract(event) {
         comment: document.getElementById('f_comment').value
     };
 
-    const btn = event.currentTarget;
+    // ★ 버튼 제어
+    const btn = document.getElementById('btn-mobile-save');
     const originalText = btn.innerHTML;
     btn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> 저장 중...`;
     btn.disabled = true;
@@ -485,7 +494,17 @@ function loadVendorsToList() {
             const sales = v.salesName ? `👤${v.salesName}` : '';
             const phone = v.salesPhone ? ` 📞${v.salesPhone}` : '';
             const office = v.officePhone ? ` 🏢${v.officePhone}` : '';
-            div.innerHTML += `<div class="list-group-item p-3"><div class="d-flex justify-content-between align-items-center mb-1"><span class="fw-bold text-dark">${v.name}</span><button class="btn btn-sm btn-outline-danger py-0" onclick="deleteVendor('${v.name}')" style="font-size:0.8rem;">삭제</button></div><div class="small text-muted text-truncate">${sales}${phone}${office}</div></div>`; 
+            
+            div.innerHTML += `
+                <div class="list-group-item p-3">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="fw-bold text-dark">${v.name}</span>
+                        <button class="btn btn-sm btn-outline-danger py-0" onclick="deleteVendor('${v.name}')" style="font-size:0.8rem;">삭제</button>
+                    </div>
+                    <div class="small text-muted text-truncate">
+                        ${sales}${phone}${office}
+                    </div>
+                </div>`; 
         }); 
     }); 
 }
