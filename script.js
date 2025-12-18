@@ -1,8 +1,7 @@
 // ==========================================
-// script.js (V38.0 - Final with New URL)
+// script.js (V37.3 - Final Bug Fix)
 // ==========================================
 
-// ★ 사장님이 보내주신 최신 웹 앱 URL 적용됨
 const GAS_URL = "https://script.google.com/macros/s/AKfycbw1k159kDezV8JwcImu7GM4q-bTTcUrPv6CwIYC_q47mpT5GlIGRy7OC4BduwL1vG5G/exec";
 
 let currentUser = "";
@@ -14,7 +13,7 @@ let currentOpenType = "";
 let logoutTimer;
 let tempOpenStockData = null;
 
-// 1. 구글 로그인 핸들러 (window 객체에 등록)
+// 1. 구글 로그인 핸들러
 window.handleCredentialResponse = function(response) {
     if (!response.credential) {
         alert("구글 인증 정보를 받아오지 못했습니다.");
@@ -45,7 +44,7 @@ window.handleCredentialResponse = function(response) {
     });
 };
 
-// 2. 페이지 로드 시 세션 체크
+// 2. 페이지 로드
 window.onload = function() {
     const saved = sessionStorage.getItem('dbphone_user');
     if(saved) {
@@ -58,14 +57,11 @@ window.onload = function() {
         setupAutoLogout();
         loadDashboard();
     }
-    
-    // 엔터키 입력 이벤트 연결 (거래처 등록 등)
     document.querySelectorAll('.enter-trigger').forEach(input => {
         input.addEventListener('keydown', function(e) { if(e.key === 'Enter') addVendor(); });
     });
 };
 
-// --- 자동 로그아웃 ---
 function setupAutoLogout() {
     resetLogoutTimer();
     ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'].forEach(evt => document.addEventListener(evt, resetLogoutTimer));
@@ -77,7 +73,6 @@ function resetLogoutTimer() {
     }
 }
 
-// --- 네비게이션 ---
 function showSection(id) {
     document.querySelectorAll('.section-view').forEach(el => el.classList.remove('active-section', 'fade-in'));
     document.getElementById(id).classList.add('active-section', 'fade-in');
@@ -168,7 +163,6 @@ function renderDashboard(data) {
     }
 }
 
-// --- 기초 데이터 로드 ---
 function loadInitData() {
     fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "get_vendors" }) }).then(r => r.json()).then(d => {
         globalVendorList = d.list.map(v => v.name);
@@ -205,7 +199,6 @@ function loadDropdownData() {
     });
 }
 
-// --- 유틸리티 ---
 function checkVisitPath() { const val = document.getElementById('f_visit').value; document.getElementById('div_visit_etc').style.display = (val === '기타') ? 'block' : 'none'; }
 function checkWiredVisitPath() { const val = document.getElementById('w_visit').value; document.getElementById('w_div_visit_etc').style.display = (val === '기타') ? 'block' : 'none'; }
 function checkUsedVisitPath() { const val = document.getElementById('u_visit').value; document.getElementById('u_div_visit_etc').style.display = (val === '기타') ? 'block' : 'none'; }
@@ -266,7 +259,6 @@ function submitWiredContract(event) {
     fetch(GAS_URL, { method: "POST", body: JSON.stringify(formData) }).then(r => r.json()).then(d => { if(d.status === 'success') { alert(d.message); resetWiredForm(); } else { alert("오류: " + d.message); } }).catch(e => alert("통신 오류")).finally(() => { btn.innerHTML = originalText; btn.disabled = false; });
 }
 
-// --- 중고 개통 ---
 function startUsedActivation() {
     const branch = document.getElementById('u_branch').value; const vendor = document.getElementById('u_pre_avalue').value; const type = document.getElementById('u_pre_act_type').value; const contract = document.getElementById('u_pre_cont_type').value;
     if(!branch || !vendor || !type || !contract) return alert("모든 항목을 선택해주세요.");
@@ -296,7 +288,7 @@ function submitUsedContract(event) {
     fetch(GAS_URL, { method: "POST", body: JSON.stringify(formData) }).then(r => r.json()).then(d => { if(d.status === 'success') { alert(d.message); resetUsedForm(); } else { alert("오류: " + d.message); } }).catch(e => alert("통신 오류")).finally(() => { btn.innerHTML = originalText; btn.disabled = false; });
 }
 
-// --- 무선 개통 & 스캔 ---
+// ★ [수정] 무선 개통 스캔 & 저장 (연결 강화)
 function handleOpenScan(e) { 
     if(e.key!=='Enter') return; 
     const v=e.target.value.trim(); 
@@ -324,24 +316,158 @@ function handleOpenScan(e) {
     .finally(() => { document.getElementById('open_spinner').style.display = 'none'; });
 }
 
-function submitFullContract(event) {
-    if(!tempOpenStockData) { alert("단말기를 먼저 스캔해야 합니다 (Step 1)."); return; }
-    if (!validateField('f_visit', '방문경로')) return; if (!validateField('f_name', '고객명')) return; if (!validateField('f_review', '리뷰작성여부')) return;
-    let visitVal = document.getElementById('f_visit').value; if(visitVal === '기타') { if(!validateField('f_visit_etc', '상세 방문경로')) return; visitVal = "기타: " + document.getElementById('f_visit_etc').value; }
-    const selectedAddons = []; document.querySelectorAll('#div_addon_container .addon-check:checked').forEach(cb => selectedAddons.push(cb.value));
+// ⚠️ window에 등록하여 HTML에서 무조건 찾을 수 있게 함
+window.submitFullContract = function() {
+    // 0. 버튼 상태 변경 (event 없이 ID로 제어)
+    const btn = document.getElementById('btn-mobile-save');
+    const originalText = '<i class="bi bi-save-fill"></i> 개통 및 저장 완료';
+    
+    // 1. 재고 스캔 확인
+    if(!tempOpenStockData) {
+        alert("단말기를 먼저 스캔해야 합니다 (Step 1).");
+        return;
+    }
+    
+    // 2. 유효성 검사
+    if (!validateField('f_visit', '방문경로')) return;
+    if (!validateField('f_name', '고객명')) return;
+    if (!validateField('f_review', '리뷰작성여부')) return;
+    
+    let visitVal = document.getElementById('f_visit').value;
+    if(visitVal === '기타') {
+        if(!validateField('f_visit_etc', '상세 방문경로')) return;
+        visitVal = "기타: " + document.getElementById('f_visit_etc').value;
+    }
+
+    // 저장 시작 알림 (테스트용) - 작동 확인 후 삭제 가능
+    // alert("저장을 시작합니다...");
+
+    btn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> 저장 중...`;
+    btn.disabled = true;
+
+    const selectedAddons = [];
+    document.querySelectorAll('#div_addon_container .addon-check:checked').forEach(cb => selectedAddons.push(cb.value));
+
     const formData = {
-        action: "open_stock_full", stockInput: tempOpenStockData.inputCode, user: currentUser, activationType: document.getElementById('f_act_type').value, contractType: document.getElementById('f_cont_type').value, name: document.getElementById('f_name').value, birth: document.getElementById('f_birth').value, visitPath: visitVal, phoneNumber: document.getElementById('f_phone').value, pricePlan: document.getElementById('f_plan').value, changePlan: document.getElementById('f_plan_chg').value, selectedAddons: selectedAddons, usim: document.getElementById('f_usim').value, card: document.getElementById('f_card').value, review: document.getElementById('f_review').value, aValue: document.getElementById('f_avalue').value, policy: document.getElementById('f_policy').value, income1: document.getElementById('f_inc1').value, income1Memo: document.getElementById('f_inc1_m').value, income2: document.getElementById('f_inc2').value, income2Memo: document.getElementById('f_inc2_m').value, income3: document.getElementById('f_inc3').value, income3Memo: document.getElementById('f_inc3_m').value, cost1: document.getElementById('f_cost1').value, cost1Memo: document.getElementById('f_cost1_m').value, cost2: document.getElementById('f_cost2').value, payment1: document.getElementById('f_pay1').value, payment1Method: document.getElementById('f_pay1_m').value, payment1Date: document.getElementById('f_pay1_d').value, payment2: document.getElementById('f_pay2').value, payment2Method: document.getElementById('f_pay2_m').value, payment2Date: document.getElementById('f_pay2_d').value, cash: document.getElementById('f_cash').value, payback1: document.getElementById('f_back').value, bankName: document.getElementById('f_bank').value, accountNumber: document.getElementById('f_acc').value, depositor: document.getElementById('f_holder').value, income4_1: document.getElementById('f_inc4').value, income4_1Method: document.getElementById('f_inc4_m').value, income4_2: document.getElementById('f_inc4_2').value, income4_2Method: document.getElementById('f_inc4_2_m').value, income5: document.getElementById('f_inc5').value, income5Method: document.getElementById('f_inc5_m').value, income6: document.getElementById('f_inc6').value, income6Memo: document.getElementById('f_inc6_m').value, comment: document.getElementById('f_comment').value
+        action: "open_stock_full",
+        stockInput: tempOpenStockData.inputCode,
+        user: currentUser,
+        activationType: document.getElementById('f_act_type').value,
+        contractType: document.getElementById('f_cont_type').value,
+        name: document.getElementById('f_name').value,
+        birth: document.getElementById('f_birth').value,
+        visitPath: visitVal,
+        phoneNumber: document.getElementById('f_phone').value,
+        pricePlan: document.getElementById('f_plan').value,
+        changePlan: document.getElementById('f_plan_chg').value,
+        selectedAddons: selectedAddons, 
+        usim: document.getElementById('f_usim').value,
+        card: document.getElementById('f_card').value,
+        review: document.getElementById('f_review').value,
+        aValue: document.getElementById('f_avalue').value,
+        policy: document.getElementById('f_policy').value,
+        income1: document.getElementById('f_inc1').value,
+        income1Memo: document.getElementById('f_inc1_m').value,
+        income2: document.getElementById('f_inc2').value,
+        income2Memo: document.getElementById('f_inc2_m').value,
+        income3: document.getElementById('f_inc3').value,
+        income3Memo: document.getElementById('f_inc3_m').value,
+        cost1: document.getElementById('f_cost1').value,
+        cost1Memo: document.getElementById('f_cost1_m').value,
+        cost2: document.getElementById('f_cost2').value,
+        payment1: document.getElementById('f_pay1').value,
+        payment1Method: document.getElementById('f_pay1_m').value,
+        payment1Date: document.getElementById('f_pay1_d').value,
+        payment2: document.getElementById('f_pay2').value,
+        payment2Method: document.getElementById('f_pay2_m').value,
+        payment2Date: document.getElementById('f_pay2_d').value,
+        cash: document.getElementById('f_cash').value,
+        payback1: document.getElementById('f_back').value,
+        bankName: document.getElementById('f_bank').value,
+        accountNumber: document.getElementById('f_acc').value,
+        depositor: document.getElementById('f_holder').value,
+        income4_1: document.getElementById('f_inc4').value,
+        income4_1Method: document.getElementById('f_inc4_m').value,
+        income4_2: document.getElementById('f_inc4_2').value,
+        income4_2Method: document.getElementById('f_inc4_2_m').value,
+        income5: document.getElementById('f_inc5').value,
+        income5Method: document.getElementById('f_inc5_m').value,
+        income6: document.getElementById('f_inc6').value,
+        income6Memo: document.getElementById('f_inc6_m').value,
+        comment: document.getElementById('f_comment').value
     };
-    const btn = event.currentTarget; const originalText = btn.innerHTML; btn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> 저장 중...`; btn.disabled = true;
-    fetch(GAS_URL, { method: "POST", body: JSON.stringify(formData) }).then(r => r.json()).then(d => { if(d.status === 'success') { alert(d.message); resetOpenForm(); } else { alert("오류: " + d.message); } }).catch(e => alert("통신 오류")).finally(() => { btn.innerHTML = originalText; btn.disabled = false; });
-}
+
+    fetch(GAS_URL, { method: "POST", body: JSON.stringify(formData) })
+    .then(r => r.json())
+    .then(d => {
+        if(d.status === 'success') { 
+            alert(d.message); 
+            resetOpenForm(); 
+        } else { 
+            alert("오류: " + d.message); 
+        }
+    })
+    .catch(e => alert("통신 오류"))
+    .finally(() => { 
+        btn.innerHTML = originalText; 
+        btn.disabled = false; 
+    });
+};
+
 function resetOpenForm() {
-    document.getElementById('open_step_1').style.display = 'block'; document.getElementById('open_step_2').style.display = 'none'; document.getElementById('open_scan').value = ""; document.getElementById('open_scan').disabled = false; document.getElementById('open_spinner').style.display = 'none'; document.getElementById('open_scan').focus(); document.querySelectorAll('#open_step_2 input').forEach(i => i.value = ""); document.querySelectorAll('#open_step_2 select').forEach(s => s.selectedIndex=0); document.getElementById('div_visit_etc').style.display='none'; document.getElementById('div_addon_container').innerHTML = "<span class='text-muted small'>...</span>"; tempOpenStockData = null;
+    document.getElementById('open_step_1').style.display = 'block';
+    document.getElementById('open_step_2').style.display = 'none';
+    document.getElementById('open_scan').value = "";
+    document.getElementById('open_scan').disabled = false;
+    document.getElementById('open_spinner').style.display = 'none';
+    document.getElementById('open_scan').focus();
+    document.querySelectorAll('#open_step_2 input').forEach(i => i.value = "");
+    document.querySelectorAll('#open_step_2 select').forEach(s => s.selectedIndex=0);
+    document.getElementById('div_visit_etc').style.display='none';
+    document.getElementById('div_addon_container').innerHTML = "<span class='text-muted small'>...</span>";
+    tempOpenStockData = null;
 }
 
-// --- 재고 및 기타 ---
-function updateSearchUI() { const criteria = document.getElementById('search_criteria').value; const area = document.getElementById('search_input_area'); area.innerHTML = ""; if(criteria === 'supplier') { const sel = document.createElement('select'); sel.className = "form-select"; sel.id = "search_value"; globalVendorList.forEach(v => { const opt = document.createElement('option'); opt.value=v; opt.innerText=v; sel.appendChild(opt); }); area.appendChild(sel); } else if(criteria === 'branch') { const sel = document.createElement('select'); sel.className = "form-select"; sel.id = "search_value"; ["장지 본점", "명일 직영점"].forEach(v => { const opt = document.createElement('option'); opt.value=v; opt.innerText=v; sel.appendChild(opt); }); area.appendChild(sel); } else if(criteria === 'model') { const sel = document.createElement('select'); sel.className = "form-select"; sel.id = "search_value"; globalModelList.forEach(v => { const opt = document.createElement('option'); opt.value=v; opt.innerText=v; sel.appendChild(opt); }); area.appendChild(sel); } else { const inp = document.createElement('input'); inp.className = "form-control"; inp.id = "search_value"; inp.placeholder = "입력하세요"; inp.onkeydown = function(e){ if(e.key==='Enter') searchStock(); }; area.appendChild(inp); inp.focus(); } }
-function searchStock() { const crit = document.getElementById('search_criteria').value; const val = document.getElementById('search_value').value; const div = document.getElementById('stock_result'); div.innerHTML = `<div class="text-center py-4"><span class="spinner-border text-primary"></span></div>`; fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "search_stock", criteria: crit, keyword: val }) }).then(r => r.json()).then(d => { if(!d.list || d.list.length === 0) { div.innerHTML = `<div class="text-center text-muted py-5">결과 없음</div>`; return; } let html = `<div class="table-responsive"><table class="table table-hover stock-table"><thead><tr><th>입고일</th><th>모델</th><th>색상</th><th>일련번호</th><th>상태</th><th>위치</th></tr></thead><tbody>`; d.list.forEach(item => { let st = item.status === '보유' ? 'text-success' : 'text-danger'; html += `<tr><td>${item.date}</td><td class="fw-bold">${item.model}</td><td>${item.color}</td><td class="font-monospace">${item.serial}</td><td class="${st} fw-bold">${item.status}</td><td>${item.branch}</td></tr>`; }); html += `</tbody></table></div><div class="text-end small text-muted">총 ${d.list.length}건</div>`; div.innerHTML = html; }); }
+// --- 기타 기능 ---
+function updateSearchUI() {
+    const criteria = document.getElementById('search_criteria').value;
+    const area = document.getElementById('search_input_area');
+    area.innerHTML = "";
+    if(criteria === 'supplier') {
+        const sel = document.createElement('select'); sel.className = "form-select"; sel.id = "search_value";
+        globalVendorList.forEach(v => { const opt = document.createElement('option'); opt.value=v; opt.innerText=v; sel.appendChild(opt); });
+        area.appendChild(sel);
+    } else if(criteria === 'branch') {
+        const sel = document.createElement('select'); sel.className = "form-select"; sel.id = "search_value";
+        ["장지 본점", "명일 직영점"].forEach(v => { const opt = document.createElement('option'); opt.value=v; opt.innerText=v; sel.appendChild(opt); });
+        area.appendChild(sel);
+    } else if(criteria === 'model') {
+        const sel = document.createElement('select'); sel.className = "form-select"; sel.id = "search_value";
+        globalModelList.forEach(v => { const opt = document.createElement('option'); opt.value=v; opt.innerText=v; sel.appendChild(opt); });
+        area.appendChild(sel);
+    } else {
+        const inp = document.createElement('input'); inp.className = "form-control"; inp.id = "search_value"; inp.placeholder = "입력하세요";
+        inp.onkeydown = function(e){ if(e.key==='Enter') searchStock(); };
+        area.appendChild(inp); inp.focus();
+    }
+}
+function searchStock() {
+    const crit = document.getElementById('search_criteria').value;
+    const val = document.getElementById('search_value').value;
+    const div = document.getElementById('stock_result');
+    div.innerHTML = `<div class="text-center py-4"><span class="spinner-border text-primary"></span></div>`;
+    fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "search_stock", criteria: crit, keyword: val }) })
+    .then(r => r.json()).then(d => {
+        if(!d.list || d.list.length === 0) { div.innerHTML = `<div class="text-center text-muted py-5">결과 없음</div>`; return; }
+        let html = `<div class="table-responsive"><table class="table table-hover stock-table"><thead><tr><th>입고일</th><th>모델</th><th>색상</th><th>일련번호</th><th>상태</th><th>위치</th></tr></thead><tbody>`;
+        d.list.forEach(item => {
+            let st = item.status === '보유' ? 'text-success' : 'text-danger';
+            html += `<tr><td>${item.date}</td><td class="fw-bold">${item.model}</td><td>${item.color}</td><td class="font-monospace">${item.serial}</td><td class="${st} fw-bold">${item.status}</td><td>${item.branch}</td></tr>`;
+        });
+        html += `</tbody></table></div><div class="text-end small text-muted">총 ${d.list.length}건</div>`;
+        div.innerHTML = html;
+    });
+}
 function searchHistory() { const k=document.getElementById('hist_keyword').value; fetch(GAS_URL,{method:"POST",body:JSON.stringify({action:"search_history",keyword:k})}).then(r=>r.json()).then(d=>{ let h=""; d.list.forEach(i=>h+=`<div class='glass-card p-2 mb-2'><span class='badge bg-secondary'>${i.type}</span> ${i.model} (${i.time})</div>`); document.getElementById('hist_result').innerHTML=h; }); }
 function handleInScan(e) { if(e.key!=='Enter')return; const v=e.target.value.trim(); if(inPendingList.some(i=>i.barcode===v)){showMsg('in-msg','error','이미 목록에 있음');e.target.value="";return;} fetch(GAS_URL,{method:"POST",body:JSON.stringify({action:document.getElementById('in_mode_toggle').checked?"scan_preview":"register_single",barcode:v,supplier:document.getElementById('in_supplier').value,branch:document.getElementById('in_branch').value,user:currentUser})}).then(r=>r.json()).then(d=>{if(d.status==='success'){if(document.getElementById('in_mode_toggle').checked){inPendingList.push({...d.data,supplier:document.getElementById('in_supplier').value});renderInList();showMsg('in-msg','success',`추가: ${d.data.model}`);}else showMsg('in-msg','success',`입고: ${d.data.model}`);}else showMsg('in-msg','error',d.message);}).finally(()=>{e.target.value="";e.target.focus();}); }
 function renderInList() { const t=document.getElementById('in_tbody'); t.innerHTML=""; inPendingList.forEach((i,x)=>t.innerHTML+=`<tr><td>${i.model}</td><td>${i.serial}</td><td><button onclick="inPendingList.splice(${x},1);renderInList()">X</button></td></tr>`); document.getElementById('in_count').innerText=inPendingList.length; }
@@ -350,15 +476,26 @@ function submitInBatch() { if(!inPendingList.length)return; if(!confirm("입고?
 function handleMoveScan(e) { if(e.key!=='Enter')return; const v=e.target.value.trim(); fetch(GAS_URL,{method:"POST",body:JSON.stringify({action:"transfer_stock",input:v,toBranch:document.getElementById('move_to_branch').value,user:currentUser})}).then(r=>r.json()).then(d=>showMsg('move-msg',d.status==='success'?'success':'error',d.message)).finally(()=>{e.target.value="";}); }
 function handleOutScan(e) { if(e.key!=='Enter')return; const v=e.target.value.trim(); if(!document.getElementById('out_note').value){alert("사유필수");return;} fetch(GAS_URL,{method:"POST",body:JSON.stringify({action:"return_stock",input:v,note:document.getElementById('out_note').value,user:currentUser})}).then(r=>r.json()).then(d=>showMsg('out-msg',d.status==='success'?'success':'error',d.message)).finally(()=>{e.target.value="";}); }
 
-// 거래처 리스트
+// ★ [수정] 거래처 리스트 (상세 정보 표시)
 function loadVendorsToList() { 
     fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "get_vendors" }) }).then(r => r.json()).then(d => { 
-        const div = document.getElementById('vendor_list_ui'); div.innerHTML = ""; 
+        const div = document.getElementById('vendor_list_ui'); 
+        div.innerHTML = ""; 
         d.list.forEach(v => { 
             const sales = v.salesName ? `👤${v.salesName}` : '';
             const phone = v.salesPhone ? ` 📞${v.salesPhone}` : '';
             const office = v.officePhone ? ` 🏢${v.officePhone}` : '';
-            div.innerHTML += `<div class="list-group-item p-3"><div class="d-flex justify-content-between align-items-center mb-1"><span class="fw-bold text-dark">${v.name}</span><button class="btn btn-sm btn-outline-danger py-0" onclick="deleteVendor('${v.name}')" style="font-size:0.8rem;">삭제</button></div><div class="small text-muted text-truncate">${sales}${phone}${office}</div></div>`; 
+            
+            div.innerHTML += `
+                <div class="list-group-item p-3">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="fw-bold text-dark">${v.name}</span>
+                        <button class="btn btn-sm btn-outline-danger py-0" onclick="deleteVendor('${v.name}')" style="font-size:0.8rem;">삭제</button>
+                    </div>
+                    <div class="small text-muted text-truncate">
+                        ${sales}${phone}${office}
+                    </div>
+                </div>`; 
         }); 
     }); 
 }
@@ -366,4 +503,5 @@ function loadVendorsToList() {
 function addVendor() { const n=document.getElementById('v_name').value; if(!n)return; fetch(GAS_URL,{method:"POST",body:JSON.stringify({action:"add_vendor",name:n,salesName:document.getElementById('v_sales').value,salesPhone:document.getElementById('v_phone').value,officePhone:document.getElementById('v_office').value})}).then(r=>r.json()).then(d=>{alert(d.message);loadVendorsToList();}); }
 function deleteVendor(n) { if(confirm("삭제?")) fetch(GAS_URL,{method:"POST",body:JSON.stringify({action:"delete_vendor",name:n})}).then(r=>r.json()).then(d=>{alert(d.message);loadVendorsToList();}); }
 function showMsg(id, type, text) { const el=document.getElementById(id); el.style.display='block'; el.className=`alert py-2 text-center small fw-bold rounded-3 alert-${type==='success'?'success':'danger'}`; el.innerText=text; setTimeout(()=>el.style.display='none',2000); }
+function handleCredentialResponse(r) { fetch(GAS_URL,{method:"POST",body:JSON.stringify({action:"login",token:r.credential})}).then(res=>res.json()).then(d=>{ if(d.status==='success') { sessionStorage.setItem('dbphone_user',JSON.stringify({name:d.name,email:d.user})); currentUser=d.name; document.getElementById('login-view').style.display='none'; document.getElementById('main-view').style.display='block'; document.getElementById('user-name').innerText=currentUser; loadInitData(); setupAutoLogout(); } else document.getElementById('login-msg').innerText=d.message; }); }
 function logout() { sessionStorage.removeItem('dbphone_user'); location.reload(); }
