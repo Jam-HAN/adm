@@ -14,7 +14,7 @@
 
     <div id="login-view" style="height: 100vh; background: linear-gradient(135deg, #4e73df 10%, #224abe 100%); display: flex; align-items: center; justify-content: center; position: fixed; top: 0; left: 0; width: 100%; z-index: 9999;">
         <div class="glass-card p-5 text-center shadow-lg" style="width: 90%; max-width: 400px; border-radius: 20px;">
-            <h3 class="fw-bold mb-4 text-primary"><i class="bi bi-phone-vibrate"></i> 대박통신 관리자 시스템</h3>
+            <h3 class="fw-bold mb-4 text-primary fs-4"><i class="bi bi-phone-vibrate"></i> 대박통신 관리자 시스템</h3>
             <div id="g_id_onload" data-client_id="98614909172-tj2a973qqgi1l7iukvfnnek0e09bpupl.apps.googleusercontent.com" data-callback="handleCredentialResponse"></div>
             <div class="g_id_signin" data-type="standard" data-size="large" data-theme="outline" data-text="sign_in_with" data-shape="rectangular" data-logo_alignment="left"></div>
             <div id="login-msg" class="text-danger mt-3 small fw-bold"></div>
@@ -59,6 +59,7 @@
         </nav>
 
         <div class="container py-4">
+
             <div id="section-dashboard" class="section-view active-section">
                 <div class="row g-3 mb-4">
                     <div class="col-lg-6">
@@ -92,9 +93,15 @@
                             </div>
                             <div class="card-body p-0">
                                 <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
-                                    <table class="table table-hover align-middle mb-0 dash-table w-100">
+                                    <table class="table table-hover align-middle mb-0 dash-table">
                                         <thead class="sticky-top border-bottom">
-                                            <tr><th>지점</th><th>유형</th><th>고객명</th><th>담당매니저</th><th>마진</th></tr>
+                                            <tr>
+                                                <th>지점</th>
+                                                <th>유형</th>
+                                                <th>고객명</th>
+                                                <th>담당매니저</th>
+                                                <th>마진</th>
+                                            </tr>
                                         </thead>
                                         <tbody id="dash_today_list">
                                             <tr><td colspan="5" class="text-center py-5 text-muted">데이터 로딩 중...</td></tr>
@@ -116,7 +123,7 @@
                     </div>
                 </div>
             </div>
-
+            
             <div id="section-in" class="section-view">
                 <div class="glass-card p-4">
                     <h5 class="fw-bold mb-4 text-secondary"><i class="bi bi-box-seam"></i> 입고 등록</h5>
@@ -134,7 +141,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <div id="section-open" class="section-view">
                 <div class="glass-card border-top border-4 border-primary">
                     <div class="p-3 bg-light border-bottom d-flex justify-content-between align-items-center">
@@ -215,7 +222,7 @@
                                 <div class="col-12"><label class="form-label-sm">기타 특이사항</label><input type="text" class="form-control form-control-sm" id="f_comment"></div>
                             </div>
                             <div class="mt-4 pb-4">
-                                <button class="btn btn-primary w-100 py-3 fw-bold shadow-sm" onclick="submitFullContract(event)">
+                                <button type="button" class="btn btn-primary w-100 py-3 fw-bold shadow-sm" onclick="submitFullContract(event)">
                                     <i class="bi bi-save-fill"></i> 개통 및 저장 완료
                                 </button>
                             </div>
@@ -292,7 +299,7 @@
                                 <div class="col-12"><label class="form-label-sm">기타 특이사항</label><input type="text" class="form-control form-control-sm" id="w_comment"></div>
                             </div>
                             <div class="mt-4 pb-4">
-                                <button class="btn btn-success w-100 py-3 fw-bold shadow-sm" onclick="submitWiredContract(event)">
+                                <button type="button" class="btn btn-success w-100 py-3 fw-bold shadow-sm" onclick="submitWiredContract(event)">
                                     <i class="bi bi-save-fill"></i> 유선 개통 저장
                                 </button>
                             </div>
@@ -300,7 +307,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <div id="section-used" class="section-view">
                  <div class="glass-card border-top border-4 border-warning">
                     <div class="p-3 bg-light border-bottom d-flex justify-content-between align-items-center">
@@ -377,15 +384,15 @@
                                 <div class="col-12"><label class="form-label-sm">기타 특이사항</label><input type="text" class="form-control form-control-sm" id="u_comment"></div>
                             </div>
                             <div class="mt-4 pb-4">
-                                <button class="btn btn-warning w-100 py-3 fw-bold text-white shadow-sm" onclick="submitUsedContract(event)">
+                                <button type="button" class="btn btn-warning w-100 py-3 fw-bold text-white shadow-sm" onclick="submitUsedContract(event)">
                                     <i class="bi bi-save-fill"></i> 중고폰 개통 저장
                                 </button>
                             </div>
                         </div>
                     </div>
-                 </div>
+                </div>
             </div>
-            
+
             <div id="section-stock" class="section-view">
                 <div class="glass-card p-4">
                     <h5 class="fw-bold mb-3"><i class="bi bi-search"></i> 재고 조회 (보유분)</h5>
