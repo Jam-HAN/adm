@@ -24,7 +24,6 @@
             font-size: 0.95rem; 
         }
         
-        /* 카드 디자인 */
         .glass-card { 
             background: #ffffff; 
             border-radius: 12px; 
@@ -35,12 +34,10 @@
             transition: transform 0.2s ease-in-out;
         }
         
-        /* 섹션 전환 애니메이션 */
         .section-view { display: none; }
         .active-section { display: block; animation: fadeIn 0.3s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* 폼 요소 스타일 */
         .form-label-sm { font-size: 0.8rem; font-weight: 700; color: #858796; margin-bottom: 4px; }
         .form-control-sm, .form-select-sm { 
             border-radius: 6px; 
@@ -52,11 +49,7 @@
             border-color: #bac8f3;
             box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
         }
-
-        /* 구분선 */
         .divider { border-top: 1px solid #e3e6f0; margin: 1.5rem 0 1rem 0; }
-        
-        /* 섹션 헤더 */
         .section-header { 
             font-size: 0.95rem; 
             font-weight: 800; 
@@ -68,17 +61,15 @@
             letter-spacing: 0.05em;
         }
         .section-header i { margin-right: 8px; font-size: 1.1rem; }
-
-        /* 강조 텍스트 */
         .required-star { color: #e74a3b; font-weight: bold; margin-left: 2px; }
         .text-danger-custom { color: #e74a3b !important; font-weight: bold; }
         .border-danger-custom { border-color: #e74a3b !important; color: #e74a3b !important; font-weight: bold; }
 
-        /* 대시보드 카드 */
+        /* 대시보드 스타일 */
         .stat-card { border-left: 0.25rem solid var(--primary-color); }
         .stat-card.month { border-left-color: var(--success-color); }
         
-        /* ★ [수정] 대시보드 테이블: 균등 분할 및 가운데 정렬 */
+        /* ★ 테이블 디자인 수정 (균등분할, 가운데정렬) */
         .dash-table { table-layout: fixed; width: 100%; }
         .dash-table th { 
             background-color: #f8f9fc; 
@@ -87,28 +78,36 @@
             font-size: 0.8rem; 
             text-transform: uppercase; 
             text-align: center;
-            width: 20%; /* 5개 열이므로 20%씩 균등 분할 */
+            width: 20%;
         }
         .dash-table td { 
             vertical-align: middle; 
             font-size: 0.9rem; 
             text-align: center;
+            padding: 8px 4px;
+        }
+        
+        /* 텍스트 말줄임 (흰색박스 제거됨) */
+        .text-truncate-cell {
             white-space: nowrap; 
             overflow: hidden; 
             text-overflow: ellipsis;
+            display: block;
+            width: 100%;
         }
-        
-        /* 직원 랭킹 */
+
         .user-rank-item { display: flex; align-items: center; margin-bottom: 10px; }
         .user-rank-name { width: 80px; font-weight: bold; font-size: 0.9rem; color: #5a5c69; }
         .progress { height: 12px; border-radius: 6px; flex-grow: 1; margin: 0 10px; background-color: #eaecf4; }
         .user-rank-count { width: 40px; text-align: right; font-weight: 800; color: var(--primary-color); }
 
-        /* 네비게이션 바 */
         .navbar { background-color: #ffffff !important; box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15) !important; }
         .navbar-brand { font-weight: 800; color: var(--primary-color) !important; font-size: 1.2rem; }
-        .nav-link { font-weight: 600; color: #5a5c69 !important; font-size: 0.95rem; }
+        .nav-link { font-weight: 600; color: #5a5c69 !important; font-size: 0.95rem; cursor: pointer; }
         .nav-link:hover { color: var(--primary-color) !important; }
+        
+        /* 드롭다운 아이템 커서 포인터 강제 */
+        .dropdown-item { cursor: pointer; }
     </style>
 </head>
 <body>
@@ -125,7 +124,7 @@
     <div id="main-view" style="display:none;">
         <nav class="navbar navbar-expand-lg sticky-top px-3">
             <div class="container-fluid px-0">
-                <a class="navbar-brand" href="#" onclick="showSection('section-dashboard')"><i class="bi bi-grid-fill"></i> 대박통신</a>
+                <a class="navbar-brand" onclick="showSection('section-dashboard')"><i class="bi bi-grid-fill"></i> 대박통신</a>
                 <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"><span class="navbar-toggler-icon"></span></button>
                 <div class="collapse navbar-collapse" id="navbarNav">
                     <ul class="navbar-nav me-auto ms-lg-3">
@@ -133,20 +132,20 @@
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">📦 재고 관리</a>
                             <ul class="dropdown-menu shadow-sm border-0">
-                                <li><a class="dropdown-item" onclick="showSection('section-in')">입고 등록</a></li>
-                                <li><a class="dropdown-item" onclick="showSection('section-move')">재고 이동</a></li>
-                                <li><a class="dropdown-item text-danger" onclick="showSection('section-out')">반품 처리</a></li>
+                                <li><a class="dropdown-item" href="#" onclick="showSection('section-in')">입고 등록</a></li>
+                                <li><a class="dropdown-item" href="#" onclick="showSection('section-move')">재고 이동</a></li>
+                                <li><a class="dropdown-item text-danger" href="#" onclick="showSection('section-out')">반품 처리</a></li>
                                 <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" onclick="showSection('section-stock')">🔍 재고 조회</a></li>
-                                <li><a class="dropdown-item" onclick="showSection('section-history')">📜 이력 조회</a></li>
+                                <li><a class="dropdown-item" href="#" onclick="showSection('section-stock')">🔍 재고 조회</a></li>
+                                <li><a class="dropdown-item" href="#" onclick="showSection('section-history')">📜 이력 조회</a></li>
                             </ul>
                         </li>
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle text-primary" href="#" data-bs-toggle="dropdown">✅ 개통 처리</a>
                             <ul class="dropdown-menu shadow-sm border-0">
-                                <li><a class="dropdown-item" onclick="showOpenSection('무선개통')"><i class="bi bi-phone text-primary"></i> 무선 개통</a></li>
-                                <li><a class="dropdown-item" onclick="showWiredSection()"><i class="bi bi-router text-success"></i> 유선 개통</a></li>
-                                <li><a class="dropdown-item" onclick="showUsedSection()"><i class="bi bi-recycle text-warning"></i> 중고 개통</a></li>
+                                <li><a class="dropdown-item" href="#" onclick="showOpenSection('무선개통')"><i class="bi bi-phone text-primary"></i> 무선 개통</a></li>
+                                <li><a class="dropdown-item" href="#" onclick="showWiredSection()"><i class="bi bi-router text-success"></i> 유선 개통</a></li>
+                                <li><a class="dropdown-item" href="#" onclick="showUsedSection()"><i class="bi bi-recycle text-warning"></i> 중고 개통</a></li>
                             </ul>
                         </li>
                         <li class="nav-item"><a class="nav-link" onclick="showSection('section-vendor')">🏢 거래처</a></li>
@@ -629,7 +628,8 @@
                 </div>
                 <div class="glass-card p-0">
                     <div class="p-3 border-bottom bg-light"><h6 class="mb-0 fw-bold">등록된 거래처</h6></div>
-                    <div id="vendor_list_ui" class="list-group list-group-flush"></div>
+                    <div id="vendor_list_ui" class="list-group list-group-flush">
+                        </div>
                 </div>
             </div>
 
@@ -670,6 +670,7 @@
             });
         };
 
+        // ... (setupAutoLogout, showSection 등 기존 함수들 동일) ...
         function setupAutoLogout() {
             resetLogoutTimer();
             ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'].forEach(evt => document.addEventListener(evt, resetLogoutTimer));
@@ -680,7 +681,6 @@
                 logoutTimer = setTimeout(() => { alert("10분 동안 활동이 없어 자동 로그아웃 되었습니다."); logout(); }, 600000);
             }
         }
-
         function showSection(id) {
             document.querySelectorAll('.section-view').forEach(el => el.classList.remove('active-section', 'fade-in'));
             document.getElementById(id).classList.add('active-section', 'fade-in');
@@ -690,7 +690,6 @@
             const input = document.querySelector(`#${id} input`);
             if(input) input.focus();
         }
-
         function showOpenSection(type) {
             currentOpenType = type;
             document.getElementById('open_title').innerText = type + " 처리";
@@ -698,13 +697,11 @@
             loadDropdownData(); 
             showSection('section-open');
         }
-
         function showWiredSection() {
             resetWiredForm();
             loadDropdownData(); 
             showSection('section-wired');
         }
-
         function showUsedSection() {
             resetUsedForm();
             loadDropdownData(); 
@@ -720,7 +717,7 @@
             dashList.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted"><div class="spinner-border spinner-border-sm text-primary"></div> 로딩 중...</td></tr>';
             dashUser.innerHTML = '<div class="text-center py-4"><div class="spinner-border spinner-border-sm text-success"></div></div>';
 
-            fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "get_dashboard_data" }) }) // GAS에 이 액션 처리 추가 필요 (기존 코드에 있다면 OK)
+            fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "get_dashboard_data" }) })
             .then(r => r.json())
             .then(d => {
                 if(d.status === 'success') {
@@ -730,18 +727,14 @@
                 }
             })
             .catch(() => {
-                 // 데모 데이터 or 에러 처리
                  dashList.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">데이터 없음</td></tr>';
                  dashUser.innerHTML = '<div class="text-center text-muted">데이터 없음</div>';
             });
         }
 
         function renderDashboard(data) {
-            // 오늘 개통
             document.getElementById('dash_today_mobile').innerText = data.today.mobile;
             document.getElementById('dash_today_wired').innerText = data.today.wired;
-
-            // 이번 달 누적 (매장별)
             const monthDiv = document.getElementById('dash_month_stats');
             monthDiv.innerHTML = "";
             let branches = Object.keys(data.month);
@@ -762,31 +755,27 @@
                     `;
                 });
             }
-
-            // 오늘 리스트
             const listBody = document.getElementById('dash_today_list');
             listBody.innerHTML = "";
             if (data.todayList.length === 0) {
                 listBody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">오늘 개통 내역이 없습니다.</td></tr>';
             } else {
                 data.todayList.forEach(item => {
-                    // 마진 콤마 포맷
-                    const marginStr = Math.floor(Number(item.margin)).toLocaleString(); // 소수점 버림
+                    // 마진 포맷
+                    const marginStr = Math.floor(Number(item.margin)).toLocaleString();
                     const badgeClass = item.isWired ? "bg-success" : "bg-primary";
                     
                     listBody.innerHTML += `
                         <tr>
                             <td><span class="badge bg-secondary">${item.branch}</span></td>
                             <td><span class="badge ${badgeClass} text-white">${item.type}</span></td>
-                            <td class="fw-bold text-truncate-box" style="max-width: 80px;">${item.name}</td>
-                            <td class="text-truncate-box" style="max-width: 50px;">${item.user}</td>
+                            <td class="fw-bold text-truncate-cell">${item.name}</td>
+                            <td class="text-truncate-cell text-muted small">${item.user}</td>
                             <td class="text-end text-danger fw-bold">${marginStr}</td>
                         </tr>
                     `;
                 });
             }
-
-            // 직원별 랭킹
             const rankBody = document.getElementById('dash_user_rank');
             rankBody.innerHTML = "";
             if (data.userRank.length === 0) {
@@ -808,6 +797,7 @@
             }
         }
 
+        // ... (나머지 로직들은 기존과 동일, loadVendorsToList 수정됨) ...
         function loadInitData() {
             fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "get_vendors" }) }).then(r => r.json()).then(d => {
                 globalVendorList = d.list.map(v => v.name);
@@ -942,6 +932,12 @@
             document.querySelectorAll('#wired_step_2 input').forEach(i => i.value = "");
             document.querySelectorAll('#wired_step_2 select').forEach(s => s.selectedIndex=0);
             document.getElementById('w_div_visit_etc').style.display = 'none';
+            
+            // ★ [안전장치] 포커스 시점 지연
+            setTimeout(() => {
+                const firstInput = document.querySelector('#wired_step_1 select');
+                if(firstInput) firstInput.focus();
+            }, 100);
         }
 
         function submitWiredContract(event) {
@@ -1043,6 +1039,11 @@
             document.querySelectorAll('#used_step_2 select').forEach(s => s.selectedIndex=0);
             document.getElementById('u_div_visit_etc').style.display = 'none';
             document.getElementById('u_div_addon_container').innerHTML = "";
+
+            setTimeout(() => {
+                const firstInput = document.querySelector('#used_step_1 select');
+                if(firstInput) firstInput.focus();
+            }, 100);
         }
 
         function submitUsedContract(event) {
@@ -1056,7 +1057,6 @@
             }
             const selectedAddons = [];
             document.querySelectorAll('#u_div_addon_container .addon-check:checked').forEach(cb => selectedAddons.push(cb.value));
-
             const formData = {
                 action: "open_used_full",
                 user: currentUser,
@@ -1085,16 +1085,14 @@
                 income3Memo: document.getElementById('u_inc3_m').value,
                 cost1: document.getElementById('u_cost1').value,
                 cost1Memo: document.getElementById('u_cost1_m').value,
-                cost2: "", // 제거된 cost2
+                cost2: "", 
                 payment1: document.getElementById('u_pay1').value,
                 payment1Method: document.getElementById('u_pay1_m').value,
                 payment1Date: document.getElementById('u_pay1_d').value,
                 payment2: document.getElementById('u_pay2').value,
                 payment2Method: document.getElementById('u_pay2_m').value,
                 payment2Date: document.getElementById('u_pay2_d').value,
-                // 제거된 항목들
                 cash: "", payback1: "", bankName: "", accountNumber: "", depositor: "", income4_1: "", income4_2: "",
-                
                 income5: document.getElementById('u_inc5').value,
                 income5Method: document.getElementById('u_inc5_m').value,
                 income6: document.getElementById('u_inc6').value,
@@ -1145,6 +1143,8 @@
             if (!el.value) { alert(name + "을(를) 입력/선택해주세요."); el.focus(); return false; }
             return true;
         }
+
+        // ★ [수정] event.currentTarget 사용 (안전성 강화)
         function submitFullContract(event) {
             if(!tempOpenStockData) return;
             if (!validateField('f_visit', '방문경로')) return;
@@ -1217,6 +1217,7 @@
             .catch(e => alert("통신 오류"))
             .finally(() => { btn.innerHTML = originalText; btn.disabled = false; });
         }
+
         function resetOpenForm() {
             document.getElementById('open_step_1').style.display = 'block';
             document.getElementById('open_step_2').style.display = 'none';
