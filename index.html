@@ -254,8 +254,7 @@
                                 <div class="col-4"><label class="form-label-sm">생년월일</label><input type="text" class="form-control form-control-sm" id="w_birth"></div>
                                 <div class="col-4"><label class="form-label-sm">연락처</label><input type="text" class="form-control form-control-sm" id="w_phone"></div>
                                 
-                                <div class="col-12" id="w_plan_input_area">
-                                    </div>
+                                <div class="col-12" id="w_plan_input_area"></div>
                                 
                                 <div class="col-4"><label class="form-label-sm">제휴카드</label><input type="text" class="form-control form-control-sm" id="w_card"></div>
                                 <div class="col-4"><label class="form-label-sm">리뷰작성<span class="required-star">*</span></label><select class="form-select form-select-sm" id="w_review"></select></div>
@@ -278,8 +277,7 @@
 
                                 <div class="col-6"><label class="form-label-sm text-danger-custom">차감정책</label><input type="number" class="form-control form-control-sm border-danger-custom" id="w_cost1"></div>
                                 <div class="col-6"><label class="form-label-sm">메모</label><input type="text" class="form-control form-control-sm" id="w_cost1_m"></div>
-                                
-                                </div>
+                            </div>
 
                             <div class="divider"></div>
                             <div class="section-header"><i class="bi bi-credit-card"></i> 대납 및 지원</div>
@@ -502,10 +500,12 @@
                 if(document.getElementById('f_visit')) document.getElementById('f_visit').innerHTML = vOpts;
                 if(document.getElementById('w_visit')) document.getElementById('w_visit').innerHTML = vOpts;
 
-                // 결제방법
-                const mList = d.colMethodList || [];
-                ['f_pay1_m','f_pay2_m','f_inc4_m','f_inc4_2_m','f_inc5_m',
-                 'w_pay1_m','w_pay2_m','w_inc5_m'].forEach(id => fill(id, mList));
+                // 결제방법 (수정: 대납1,2는 R열 payMethodList 사용)
+                const pList = d.payMethodList || [];
+                const cList = d.colMethodList || [];
+                
+                ['f_pay1_m','f_pay2_m', 'w_pay1_m','w_pay2_m'].forEach(id => fill(id, pList));
+                ['f_inc4_m','f_inc4_2_m','f_inc5_m', 'w_inc5_m'].forEach(id => fill(id, cList));
 
                 globalAddonList = d.addonList || [];
             });
@@ -540,7 +540,7 @@
         }
 
         function refreshAddons() { renderAddonCheckboxes(document.getElementById('f_avalue').value, 'div_addon_container'); }
-        // 유선은 부가서비스 없음
+        function refreshWiredAddons() { renderAddonCheckboxes(document.getElementById('w_avalue').value, 'w_div_addon_container'); }
 
         // --- 유선 기능 (동적 요금제 적용) ---
         function startWiredActivation() {
@@ -620,9 +620,11 @@
             const tv = document.getElementById('w_plan_tv');
             const other = document.getElementById('w_plan_other');
 
-            if(net && net.value) pricePlan = net.value;
-            if(tv && tv.value) pricePlan += " / " + tv.value;
-            if(other && other.value) pricePlan += " / " + other.value;
+            const parts = [];
+            if(net && net.value) parts.push(net.value);
+            if(tv && tv.value) parts.push(tv.value);
+            if(other && other.value) parts.push(other.value);
+            pricePlan = parts.join(" / ");
 
             const formData = {
                 action: "open_wired_full",
@@ -635,7 +637,7 @@
                 birth: document.getElementById('w_birth').value,
                 visitPath: visitVal,
                 phoneNumber: document.getElementById('w_phone').value,
-                pricePlan: pricePlan, // ★ 합쳐진 요금제
+                pricePlan: pricePlan, 
                 
                 card: document.getElementById('w_card').value,
                 review: document.getElementById('w_review').value,
