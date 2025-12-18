@@ -1,7 +1,8 @@
 // ==========================================
-// script.js (V39.0 - Final Design Fix)
+// script.js (V39.0 - 제목 고정, 기능 안정화)
 // ==========================================
 
+// 🚨 [중요] 아래 URL은 3단계에서 '새 배포' 후 나온 주소로 꼭 바꿔주세요!
 const GAS_URL = "https://script.google.com/macros/s/AKfycbw1k159kDezV8JwcImu7GM4q-bTTcUrPv6CwIYC_q47mpT5GlIGRy7OC4BduwL1vG5G/exec";
 
 let currentUser = "";
@@ -40,7 +41,7 @@ window.handleCredentialResponse = function(response) {
         }
     })
     .catch(error => {
-        alert("서버 통신 오류. URL을 확인해주세요.");
+        alert("서버 통신 오류. GAS URL을 확인해주세요.");
     });
 };
 
@@ -85,7 +86,7 @@ function showSection(id) {
 
 function showOpenSection(type) {
     currentOpenType = type;
-    document.getElementById('open_title').innerText = type + " 처리";
+    // ★ [수정됨] 제목 덮어쓰기 코드 삭제함 (HTML에 적힌 그대로 나옴)
     resetOpenForm();
     loadDropdownData(); 
     showSection('section-open');
@@ -147,7 +148,6 @@ function renderDashboard(data) {
         data.todayList.forEach(item => {
             const marginStr = Math.floor(Number(item.margin)).toLocaleString();
             const badgeClass = item.isWired ? "bg-success" : "bg-primary";
-            // ★ [수정] class 제거 (CSS에서 td 전체 제어)
             listBody.innerHTML += `<tr><td><span class="badge bg-secondary">${item.branch}</span></td><td><span class="badge ${badgeClass} text-white">${item.type}</span></td><td class="fw-bold">${item.name}</td><td class="text-muted small">${item.user}</td><td class="text-end text-danger fw-bold">${marginStr}</td></tr>`;
         });
     }
@@ -314,23 +314,23 @@ function handleOpenScan(e) {
             e.target.disabled=false; e.target.value=""; e.target.focus();
         }
     })
-    .catch(err => { alert("통신 오류 발생"); e.target.disabled=false; })
+    .catch(err => { alert("통신 오류 발생: " + err); e.target.disabled=false; })
     .finally(() => { document.getElementById('open_spinner').style.display = 'none'; });
 }
 
-function validateField(id, name) {
-    const el = document.getElementById(id);
-    if (!el.value) { alert(name + "을(를) 입력/선택해주세요."); el.focus(); return false; }
-    return true;
-}
-
-// ★ [수정] 무선 개통 저장
-function submitFullContract(event) {
+// ★ 무선 개통 저장 함수
+window.submitFullContract = function() {
+    // 0. 버튼 제어
+    const btn = document.getElementById('btn-mobile-save');
+    const originalText = '<i class="bi bi-save-fill"></i> 개통 및 저장 완료';
+    
+    // 1. 재고 스캔 확인
     if(!tempOpenStockData) {
         alert("단말기를 먼저 스캔해야 합니다 (Step 1).");
         return;
     }
     
+    // 2. 유효성 검사
     if (!validateField('f_visit', '방문경로')) return;
     if (!validateField('f_name', '고객명')) return;
     if (!validateField('f_review', '리뷰작성여부')) return;
@@ -340,6 +340,10 @@ function submitFullContract(event) {
         if(!validateField('f_visit_etc', '상세 방문경로')) return;
         visitVal = "기타: " + document.getElementById('f_visit_etc').value;
     }
+
+    // 3. 로딩 상태
+    btn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> 저장 중...`;
+    btn.disabled = true;
 
     const selectedAddons = [];
     document.querySelectorAll('#div_addon_container .addon-check:checked').forEach(cb => selectedAddons.push(cb.value));
@@ -393,11 +397,6 @@ function submitFullContract(event) {
         comment: document.getElementById('f_comment').value
     };
 
-    const btn = event.currentTarget;
-    const originalText = btn.innerHTML;
-    btn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> 저장 중...`;
-    btn.disabled = true;
-
     fetch(GAS_URL, { method: "POST", body: JSON.stringify(formData) })
     .then(r => r.json())
     .then(d => {
@@ -408,12 +407,12 @@ function submitFullContract(event) {
             alert("오류: " + d.message); 
         }
     })
-    .catch(e => alert("통신 오류"))
+    .catch(e => alert("통신 오류: " + e))
     .finally(() => { 
         btn.innerHTML = originalText; 
         btn.disabled = false; 
     });
-}
+};
 
 function resetOpenForm() {
     document.getElementById('open_step_1').style.display = 'block';
@@ -477,7 +476,7 @@ function submitInBatch() { if(!inPendingList.length)return; if(!confirm("입고?
 function handleMoveScan(e) { if(e.key!=='Enter')return; const v=e.target.value.trim(); fetch(GAS_URL,{method:"POST",body:JSON.stringify({action:"transfer_stock",input:v,toBranch:document.getElementById('move_to_branch').value,user:currentUser})}).then(r=>r.json()).then(d=>showMsg('move-msg',d.status==='success'?'success':'error',d.message)).finally(()=>{e.target.value="";}); }
 function handleOutScan(e) { if(e.key!=='Enter')return; const v=e.target.value.trim(); if(!document.getElementById('out_note').value){alert("사유필수");return;} fetch(GAS_URL,{method:"POST",body:JSON.stringify({action:"return_stock",input:v,note:document.getElementById('out_note').value,user:currentUser})}).then(r=>r.json()).then(d=>showMsg('out-msg',d.status==='success'?'success':'error',d.message)).finally(()=>{e.target.value="";}); }
 
-// ★ [수정] 거래처 리스트 (상세 정보 표시)
+// 거래처 리스트
 function loadVendorsToList() { 
     fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "get_vendors" }) }).then(r => r.json()).then(d => { 
         const div = document.getElementById('vendor_list_ui'); 
@@ -486,17 +485,7 @@ function loadVendorsToList() {
             const sales = v.salesName ? `👤${v.salesName}` : '';
             const phone = v.salesPhone ? ` 📞${v.salesPhone}` : '';
             const office = v.officePhone ? ` 🏢${v.officePhone}` : '';
-            
-            div.innerHTML += `
-                <div class="list-group-item p-3">
-                    <div class="d-flex justify-content-between align-items-center mb-1">
-                        <span class="fw-bold text-dark">${v.name}</span>
-                        <button class="btn btn-sm btn-outline-danger py-0" onclick="deleteVendor('${v.name}')" style="font-size:0.8rem;">삭제</button>
-                    </div>
-                    <div class="small text-muted text-truncate">
-                        ${sales}${phone}${office}
-                    </div>
-                </div>`; 
+            div.innerHTML += `<div class="list-group-item p-3"><div class="d-flex justify-content-between align-items-center mb-1"><span class="fw-bold text-dark">${v.name}</span><button class="btn btn-sm btn-outline-danger py-0" onclick="deleteVendor('${v.name}')" style="font-size:0.8rem;">삭제</button></div><div class="small text-muted text-truncate">${sales}${phone}${office}</div></div>`; 
         }); 
     }); 
 }
