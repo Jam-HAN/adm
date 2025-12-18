@@ -249,10 +249,10 @@
                             <div class="section-header"><i class="bi bi-person-lines-fill"></i> 기본 정보</div>
                             
                             <div class="row g-2 mb-3">
-                                <div class="col-6"><label class="form-label-sm">개통유형</label><input type="text" class="form-control form-control-sm" id="w_act_type" readonly></div>
-                                <div class="col-6"><label class="form-label-sm">약정유형</label><input type="text" class="form-control form-control-sm" id="w_cont_type" readonly></div>
-                                
+                                <div class="col-4"><label class="form-label-sm">개통유형</label><input type="text" class="form-control form-control-sm" id="w_act_type" readonly></div>
+                                <div class="col-4"><label class="form-label-sm">약정유형</label><input type="text" class="form-control form-control-sm" id="w_cont_type" readonly></div>
                                 <div class="col-4"><label class="form-label-sm">방문경로<span class="required-star">*</span></label><select class="form-select form-select-sm" id="w_visit" onchange="checkWiredVisitPath()"></select></div>
+                                
                                 <div class="col-12" id="w_div_visit_etc" style="display:none;"><input type="text" class="form-control form-control-sm" id="w_visit_etc" placeholder="상세 경로"></div>
                                 
                                 <div class="col-4"><label class="form-label-sm">고객명<span class="required-star">*</span></label><input type="text" class="form-control form-control-sm" id="w_name"></div>
@@ -554,7 +554,7 @@
         function refreshAddons() { renderAddonCheckboxes(document.getElementById('f_avalue').value, 'div_addon_container'); }
         function refreshWiredAddons() { renderAddonCheckboxes(document.getElementById('w_avalue').value, 'w_div_addon_container'); }
 
-        // --- 유선 기능 ---
+        // --- 유선 기능 (동적 요금제 적용) ---
         function startWiredActivation() {
             const branch = document.getElementById('wired_branch').value;
             const vendor = document.getElementById('w_pre_avalue').value;
@@ -572,7 +572,6 @@
             document.getElementById('w_act_type').value = type;
             document.getElementById('w_cont_type').value = contract;
 
-            // ★ 상단 배너 업데이트
             document.getElementById('w_target_info').innerText = `${type} : ${contract}`;
             document.getElementById('w_target_branch').innerText = branch;
 
@@ -618,7 +617,7 @@
             document.getElementById('w_div_visit_etc').style.display = 'none';
         }
 
-        // ★ [수정] 이벤트 객체 받아서 안전하게 처리
+        // ★ [수정] 에러 방지 처리 (삭제된 항목 제외)
         function submitWiredContract(event) {
             if (!validateField('w_visit', '방문경로')) return;
             if (!validateField('w_name', '고객명')) return;
@@ -640,6 +639,7 @@
             if(other && other.value) parts.push(other.value);
             const pricePlan = parts.join(" / ");
 
+            // ★ 중요: 화면에 없는 ID(w_cost2, w_usim 등)는 접근하면 안됨
             const formData = {
                 action: "open_wired_full",
                 user: currentUser,
@@ -666,7 +666,7 @@
                 income3Memo: document.getElementById('w_inc3_m').value,
                 cost1: document.getElementById('w_cost1').value,
                 cost1Memo: document.getElementById('w_cost1_m').value,
-                cost2: document.getElementById('w_cost2').value,
+                // cost2 제거됨
                 
                 payment1: document.getElementById('w_pay1').value,
                 payment1Method: document.getElementById('w_pay1_m').value,
@@ -689,7 +689,7 @@
                 comment: document.getElementById('w_comment').value
             };
 
-            const btn = event.currentTarget; // ★ 안전한 타겟팅
+            const btn = event.currentTarget; 
             const originalText = btn.innerHTML;
             btn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> 저장 중...`;
             btn.disabled = true;
