@@ -182,7 +182,7 @@
                                 <div>
                                     <i class="bi bi-phone-fill me-2"></i>
                                     <span id="target_model" class="fw-bold fs-5"></span>
-                                    <span class="mx-2 text-muted">|</span>
+                                    <span class="mx-2 text-muted">:</span>
                                     <span id="target_serial" class="font-monospace"></span>
                                 </div>
                                 <span class="badge bg-primary fs-6" id="target_branch"></span>
@@ -276,18 +276,24 @@
                             <div class="alert alert-success d-flex justify-content-between align-items-center shadow-sm mb-4"><div><i class="bi bi-check-circle-fill me-2"></i><span id="w_target_info" class="fw-bold fs-5"></span></div><span class="badge bg-success fs-6" id="w_target_branch"></span></div>
                             <div class="section-header"><i class="bi bi-person-lines-fill"></i> 기본 정보</div>
                             <div class="row g-2 mb-3">
-                                <div class="col-6"><label class="form-label-sm">개통유형</label><input type="text" class="form-control form-control-sm" id="w_act_type" readonly></div>
-                                <div class="col-6"><label class="form-label-sm">약정유형</label><input type="text" class="form-control form-control-sm" id="w_cont_type" readonly></div>
+                                <div class="col-4"><label class="form-label-sm">개통유형</label><input type="text" class="form-control form-control-sm" id="w_act_type" readonly></div>
+                                <div class="col-4"><label class="form-label-sm">약정유형</label><input type="text" class="form-control form-control-sm" id="w_cont_type" readonly></div>
                                 <div class="col-4"><label class="form-label-sm">방문경로<span class="required-star">*</span></label><select class="form-select form-select-sm" id="w_visit" onchange="checkWiredVisitPath()"></select></div>
                                 <div class="col-12" id="w_div_visit_etc" style="display:none;"><input type="text" class="form-control form-control-sm" id="w_visit_etc" placeholder="상세 경로"></div>
+                            </div>
+                            <div class="row g-2 mb-3">
                                 <div class="col-4"><label class="form-label-sm">고객명<span class="required-star">*</span></label><input type="text" class="form-control form-control-sm" id="w_name"></div>
                                 <div class="col-4"><label class="form-label-sm">생년월일</label><input type="text" class="form-control form-control-sm" id="w_birth"></div>
                                 <div class="col-4"><label class="form-label-sm">연락처</label><input type="text" class="form-control form-control-sm" id="w_phone"></div>
+                            </div>
+                            <div class="row g-2 mb-3">
                                 <div class="col-12" id="w_plan_input_area"></div>
                                 <div class="col-4"><label class="form-label-sm">제휴카드</label><input type="text" class="form-control form-control-sm" id="w_card"></div>
                                 <div class="col-4"><label class="form-label-sm">리뷰작성<span class="required-star">*</span></label><select class="form-select form-select-sm" id="w_review"></select></div>
                             </div>
-                            <div class="divider"></div><div class="section-header"><i class="bi bi-calculator"></i> 정책 및 정산</div>
+                            
+                            <div class="divider"></div>
+                            <div class="section-header"><i class="bi bi-calculator"></i> 정책 및 정산</div>
                             <div class="row g-2 mb-3">
                                 <div class="col-6"><label class="form-label-sm">개통처</label><input type="text" class="form-control form-control-sm" id="w_avalue"></div>
                                 <div class="col-6"><label class="form-label-sm">정책차수</label><input type="text" class="form-control form-control-sm" id="w_policy"></div>
@@ -299,9 +305,10 @@
                                 <div class="col-6"><label class="form-label-sm">메모</label><input type="text" class="form-control form-control-sm" id="w_inc3_m"></div>
                                 <div class="col-6"><label class="form-label-sm text-danger-custom">차감정책</label><input type="number" class="form-control form-control-sm border-danger-custom" id="w_cost1"></div>
                                 <div class="col-6"><label class="form-label-sm">메모</label><input type="text" class="form-control form-control-sm" id="w_cost1_m"></div>
-                                <div class="col-6"><label class="form-label-sm text-danger-custom">프리할인</label><input type="number" class="form-control form-control-sm border-danger-custom" id="w_cost2"></div>
                             </div>
-                            <div class="divider"></div><div class="section-header"><i class="bi bi-credit-card"></i> 대납 및 지원</div>
+
+                            <div class="divider"></div>
+                            <div class="section-header"><i class="bi bi-credit-card"></i> 대납 및 지원</div>
                             <div class="row g-2 mb-3">
                                 <div class="col-4"><label class="form-label-sm text-danger-custom">대납1</label><input type="number" class="form-control form-control-sm border-danger-custom" id="w_pay1"></div>
                                 <div class="col-4"><label class="form-label-sm">방법</label><select class="form-select form-select-sm" id="w_pay1_m"></select></div>
@@ -315,7 +322,9 @@
                                 <div class="col-4"><label class="form-label-sm">계좌번호</label><input type="text" class="form-control form-control-sm" id="w_acc"></div>
                                 <div class="col-4"><label class="form-label-sm">예금주</label><input type="text" class="form-control form-control-sm" id="w_holder"></div>
                             </div>
-                            <div class="divider"></div><div class="section-header"><i class="bi bi-wallet2"></i> 수납 상세</div>
+
+                            <div class="divider"></div>
+                            <div class="section-header"><i class="bi bi-wallet2"></i> 수납 상세</div>
                             <div class="row g-2 mb-3">
                                 <div class="col-6"><label class="form-label-sm">요금수납</label><input type="number" class="form-control form-control-sm" id="w_inc5"></div>
                                 <div class="col-6"><label class="form-label-sm">방법</label><select class="form-select form-select-sm" id="w_inc5_m"></select></div>
@@ -388,7 +397,6 @@
                                 <div class="col-6"><label class="form-label-sm">메모</label><input type="text" class="form-control form-control-sm" id="u_inc3_m"></div>
                                 <div class="col-6"><label class="form-label-sm text-danger-custom">차감정책</label><input type="number" class="form-control form-control-sm border-danger-custom" id="u_cost1"></div>
                                 <div class="col-6"><label class="form-label-sm">메모</label><input type="text" class="form-control form-control-sm" id="u_cost1_m"></div>
-                                <div class="col-6"><label class="form-label-sm text-danger-custom">프리할인</label><input type="number" class="form-control form-control-sm border-danger-custom" id="u_cost2"></div>
                                 <div class="col-6"><label class="form-label-sm">유심</label><select class="form-select form-select-sm" id="u_usim"><option value="" selected>선택</option></select></div>
                             </div>
                             <div class="divider"></div><div class="section-header"><i class="bi bi-credit-card"></i> 대납 및 지원</div>
@@ -410,7 +418,7 @@
                             </div>
                             <div class="mt-4 pb-4">
                                 <button type="button" class="btn btn-warning w-100 py-3 fw-bold text-white shadow-sm" onclick="submitUsedContract(event)">
-                                    <i class="bi bi-save-fill"></i> 중고폰 개통 저장
+                                    <i class="bi bi-save-fill"></i> 중고 개통 저장
                                 </button>
                             </div>
                         </div>
