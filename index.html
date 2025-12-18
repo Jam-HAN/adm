@@ -90,19 +90,31 @@
 
             <div id="section-dashboard" class="section-view active-section">
                 <div class="row g-3 mb-4">
-                    <div class="col-6">
-                        <div class="glass-card stat-card p-3 h-100 d-flex flex-column justify-content-center">
-                            <div class="text-xs fw-bold text-primary text-uppercase mb-1">오늘 개통 (전체)</div>
-                            <div class="h2 mb-0 fw-bold text-dark" id="dash_today_count"><div class="spinner-border spinner-border-sm text-primary"></div></div>
+                    <div class="col-lg-6">
+                        <div class="glass-card stat-card p-3 h-100">
+                            <div class="text-xs fw-bold text-primary text-uppercase mb-2">오늘 개통 (전체)</div>
+                            <div class="d-flex justify-content-around align-items-center mt-2">
+                                <div class="text-center">
+                                    <div class="small text-muted">📱 무선</div>
+                                    <div class="h3 fw-bold text-dark mb-0" id="dash_today_mobile">-</div>
+                                </div>
+                                <div class="vr"></div>
+                                <div class="text-center">
+                                    <div class="small text-muted">📺 유선</div>
+                                    <div class="h3 fw-bold text-dark mb-0" id="dash_today_wired">-</div>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div class="col-6">
-                        <div class="glass-card stat-card month p-3 h-100 d-flex flex-column justify-content-center">
-                            <div class="text-xs fw-bold text-success text-uppercase mb-1">이번 달 누적</div>
-                            <div class="h2 mb-0 fw-bold text-dark" id="dash_month_count"><div class="spinner-border spinner-border-sm text-success"></div></div>
+                    <div class="col-lg-6">
+                        <div class="glass-card stat-card month p-3 h-100">
+                            <div class="text-xs fw-bold text-success text-uppercase mb-2">이번 달 누적 (매장별)</div>
+                            <div id="dash_month_stats" class="d-flex flex-column justify-content-center" style="min-height: 50px;">
+                                </div>
                         </div>
                     </div>
                 </div>
+
                 <div class="row g-3">
                     <div class="col-lg-7">
                         <div class="glass-card h-100">
@@ -113,17 +125,31 @@
                             <div class="card-body p-0">
                                 <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
                                     <table class="table table-hover align-middle mb-0 dash-table">
-                                        <thead class="sticky-top border-bottom"><tr><th style="width:20%">지점</th><th style="width:25%">유형</th><th style="width:30%">고객명</th><th style="width:25%">담당</th></tr></thead>
-                                        <tbody id="dash_today_list"><tr><td colspan="4" class="text-center py-5 text-muted">데이터를 불러오는 중입니다...</td></tr></tbody>
+                                        <thead class="sticky-top border-bottom">
+                                            <tr>
+                                                <th style="width:20%">지점</th>
+                                                <th style="width:20%">유형</th>
+                                                <th style="width:30%">마진</th>
+                                                <th style="width:30%">담당</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="dash_today_list">
+                                            <tr><td colspan="4" class="text-center py-5 text-muted">데이터를 불러오는 중입니다...</td></tr>
+                                        </tbody>
                                     </table>
                                 </div>
                             </div>
                         </div>
                     </div>
+
                     <div class="col-lg-5">
                         <div class="glass-card h-100">
-                            <div class="card-header py-3 px-4 bg-white border-bottom"><h6 class="m-0 fw-bold text-success"><i class="bi bi-trophy"></i> 이달의 직원 실적</h6></div>
-                            <div class="card-body p-4" id="dash_user_rank" style="min-height: 200px;"><div class="text-center py-5 text-muted"><div class="spinner-border spinner-border-sm"></div> 로딩 중...</div></div>
+                            <div class="card-header py-3 px-4 bg-white border-bottom">
+                                <h6 class="m-0 fw-bold text-success"><i class="bi bi-trophy"></i> 이달의 직원 실적</h6>
+                            </div>
+                            <div class="card-body p-4" id="dash_user_rank" style="min-height: 200px;">
+                                <div class="text-center py-5 text-muted"><div class="spinner-border spinner-border-sm"></div> 로딩 중...</div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -591,8 +617,31 @@
         }
 
         function renderDashboard(data) {
-            document.getElementById('dash_today_count').innerText = data.todayCount;
-            document.getElementById('dash_month_count').innerText = data.monthCount;
+            // 오늘 개통
+            document.getElementById('dash_today_mobile').innerText = data.today.mobile;
+            document.getElementById('dash_today_wired').innerText = data.today.wired;
+
+            // 이번 달 누적 (매장별)
+            const monthDiv = document.getElementById('dash_month_stats');
+            monthDiv.innerHTML = "";
+            let branches = Object.keys(data.month);
+            if(branches.length === 0) {
+                monthDiv.innerHTML = "<div class='text-muted small'>데이터 없음</div>";
+            } else {
+                branches.forEach(b => {
+                    const m = data.month[b].mobile;
+                    const w = data.month[b].wired;
+                    monthDiv.innerHTML += `
+                        <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
+                            <span class="fw-bold small">${b}</span>
+                            <div class="text-end">
+                                <span class="badge bg-primary me-1">📱 ${m}</span>
+                                <span class="badge bg-success">📺 ${w}</span>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
 
             // 오늘 리스트
             const listBody = document.getElementById('dash_today_list');
@@ -601,12 +650,16 @@
                 listBody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-muted">오늘 개통 내역이 없습니다.</td></tr>';
             } else {
                 data.todayList.forEach(item => {
+                    // 마진 콤마 포맷
+                    const marginStr = Number(item.margin).toLocaleString();
+                    const badgeClass = item.isWired ? "bg-success" : "bg-primary";
+                    
                     listBody.innerHTML += `
                         <tr>
                             <td><span class="badge bg-secondary">${item.branch}</span></td>
-                            <td><small>${item.type}</small></td>
-                            <td class="fw-bold text-truncate-box" style="max-width: 80px;">${item.name}</td>
-                            <td><small class="text-muted text-truncate-box" style="max-width: 50px;">${item.user}</small></td>
+                            <td><span class="badge ${badgeClass} text-white">${item.type}</span></td>
+                            <td class="fw-bold text-danger">${marginStr}</td>
+                            <td><small class="text-muted text-truncate-box" style="max-width: 60px;">${item.user}</small></td>
                         </tr>
                     `;
                 });
@@ -951,7 +1004,8 @@
                 if(d.status==='success') {
                     tempOpenStockData = d.data; 
                     tempOpenStockData.inputCode = v; 
-                    document.getElementById('target_model').innerText = `${d.data.model} (${d.data.color}) : ${d.data.serial}`; 
+                    document.getElementById('target_model').innerText = `${d.data.model} (${d.data.color})`; 
+                    document.getElementById('target_serial').innerText = d.data.serial;
                     document.getElementById('target_branch').innerText = d.data.branch || "지점미상"; 
                     document.getElementById('f_avalue').value = d.data.supplier || ""; 
                     refreshAddons(); 
