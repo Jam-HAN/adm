@@ -127,14 +127,15 @@
                                     <table class="table table-hover align-middle mb-0 dash-table">
                                         <thead class="sticky-top border-bottom">
                                             <tr>
-                                                <th style="width:20%">지점</th>
-                                                <th style="width:20%">유형</th>
-                                                <th style="width:30%">마진</th>
-                                                <th style="width:30%">담당</th>
+                                                <th style="width:15%">지점</th>
+                                                <th style="width:15%">유형</th>
+                                                <th style="width:20%">고객명</th>
+                                                <th style="width:20%">담당</th>
+                                                <th style="width:30%" class="text-end">마진</th>
                                             </tr>
                                         </thead>
                                         <tbody id="dash_today_list">
-                                            <tr><td colspan="4" class="text-center py-5 text-muted">데이터를 불러오는 중입니다...</td></tr>
+                                            <tr><td colspan="5" class="text-center py-5 text-muted">데이터를 불러오는 중입니다...</td></tr>
                                         </tbody>
                                     </table>
                                 </div>
@@ -597,7 +598,7 @@
             const dashUser = document.getElementById('dash_user_rank');
             if(!dashList || !dashUser) return;
 
-            dashList.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-muted"><div class="spinner-border spinner-border-sm text-primary"></div> 로딩 중...</td></tr>';
+            dashList.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted"><div class="spinner-border spinner-border-sm text-primary"></div> 로딩 중...</td></tr>';
             dashUser.innerHTML = '<div class="text-center py-4"><div class="spinner-border spinner-border-sm text-success"></div></div>';
 
             fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "get_dashboard_data" }) }) // GAS에 이 액션 처리 추가 필요 (기존 코드에 있다면 OK)
@@ -606,12 +607,12 @@
                 if(d.status === 'success') {
                     renderDashboard(d.data);
                 } else {
-                    dashList.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-danger">로드 실패</td></tr>';
+                    dashList.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-danger">로드 실패</td></tr>';
                 }
             })
             .catch(() => {
                  // 데모 데이터 or 에러 처리
-                 dashList.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-muted">데이터 없음</td></tr>';
+                 dashList.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">데이터 없음</td></tr>';
                  dashUser.innerHTML = '<div class="text-center text-muted">데이터 없음</div>';
             });
         }
@@ -647,19 +648,20 @@
             const listBody = document.getElementById('dash_today_list');
             listBody.innerHTML = "";
             if (data.todayList.length === 0) {
-                listBody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-muted">오늘 개통 내역이 없습니다.</td></tr>';
+                listBody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">오늘 개통 내역이 없습니다.</td></tr>';
             } else {
                 data.todayList.forEach(item => {
                     // 마진 콤마 포맷
-                    const marginStr = Number(item.margin).toLocaleString();
+                    const marginStr = Math.round(Number(item.margin)).toLocaleString();
                     const badgeClass = item.isWired ? "bg-success" : "bg-primary";
                     
                     listBody.innerHTML += `
                         <tr>
                             <td><span class="badge bg-secondary">${item.branch}</span></td>
                             <td><span class="badge ${badgeClass} text-white">${item.type}</span></td>
-                            <td class="fw-bold text-danger">${marginStr}</td>
-                            <td><small class="text-muted text-truncate-box" style="max-width: 60px;">${item.user}</small></td>
+                            <td class="fw-bold text-truncate-box" style="max-width: 80px;">${item.name}</td>
+                            <td><small class="text-muted text-truncate-box" style="max-width: 50px;">${item.user}</small></td>
+                            <td class="text-end text-danger fw-bold">${marginStr}</td>
                         </tr>
                     `;
                 });
