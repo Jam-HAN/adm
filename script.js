@@ -1,5 +1,5 @@
 // ==========================================
-// script.js (V42.0 - Final)
+// script.js (V43.0 - Final)
 // ==========================================
 
 const GAS_URL = "https://script.google.com/macros/s/AKfycbw5LTC58ETvruLTOZTvDQihjDCZNfPb23QOISkN24Ex2qaA8j2zWaiylFIOMVm_vTGb/exec";
@@ -85,7 +85,7 @@ function showSection(id) {
 
 function showOpenSection(type) {
     currentOpenType = type;
-    // 제목 고정 (script.js에서 덮어쓰지 않음)
+    document.getElementById('open_title').innerHTML = `<i class="bi bi-phone"></i> 무선 개통`;
     resetOpenForm();
     loadDropdownData(); 
     showSection('section-open');
@@ -147,7 +147,8 @@ function renderDashboard(data) {
         data.todayList.forEach(item => {
             const marginStr = Math.floor(Number(item.margin)).toLocaleString();
             const badgeClass = item.isWired ? "bg-success" : "bg-primary";
-            listBody.innerHTML += `<tr><td><span class="badge bg-secondary">${item.branch}</span></td><td><span class="badge ${badgeClass} text-white">${item.type}</span></td><td class="fw-bold">${item.name}</td><td class="text-muted small">${item.user}</td><td class="text-end text-danger fw-bold">${marginStr}</td></tr>`;
+            // ★ [수정] text-end 제거 -> CSS 가운데 정렬 적용
+            listBody.innerHTML += `<tr><td><span class="badge bg-secondary">${item.branch}</span></td><td><span class="badge ${badgeClass} text-white">${item.type}</span></td><td class="fw-bold">${item.name}</td><td class="text-muted small">${item.user}</td><td class="text-danger fw-bold">${marginStr}</td></tr>`;
         });
     }
     
@@ -155,10 +156,21 @@ function renderDashboard(data) {
     rankBody.innerHTML = "";
     if (data.userRank.length === 0) { rankBody.innerHTML = '<div class="text-center text-muted">이달의 실적이 없습니다.</div>'; } 
     else {
-        const max = data.userRank[0].count;
+        // ★ [수정] 무선/유선 스택 바(Stacked Bar) 생성
+        const max = data.userRank[0].total; // 1등의 전체 건수 기준
         data.userRank.forEach(u => {
-            const percent = (u.count / max) * 100;
-            rankBody.innerHTML += `<div class="user-rank-item"><span class="user-rank-name">${u.name}</span><div class="progress"><div class="progress-bar bg-success" style="width: ${percent}%"></div></div><span class="user-rank-count">${u.count}건</span></div>`;
+            const mobilePct = (u.mobile / max) * 100;
+            const wiredPct = (u.wired / max) * 100;
+            
+            rankBody.innerHTML += `
+                <div class="user-rank-item">
+                    <span class="user-rank-name">${u.name}</span>
+                    <div class="progress">
+                        <div class="progress-bar bg-primary" style="width: ${mobilePct}%" title="무선: ${u.mobile}건"></div>
+                        <div class="progress-bar bg-success" style="width: ${wiredPct}%" title="유선: ${u.wired}건"></div>
+                    </div>
+                    <span class="user-rank-count">${u.total}건</span>
+                </div>`;
         });
     }
 }
@@ -251,15 +263,11 @@ function submitWiredContract(event) {
     const pricePlan = parts.join(" / ");
     const formData = {
         action: "open_wired_full", user: currentUser, branch: document.getElementById('wired_branch').value, activationType: document.getElementById('w_act_type').value, contractType: document.getElementById('w_cont_type').value, name: document.getElementById('w_name').value, birth: document.getElementById('w_birth').value, visitPath: visitVal, phoneNumber: document.getElementById('w_phone').value, pricePlan: pricePlan, card: document.getElementById('w_card').value, review: document.getElementById('w_review').value, aValue: document.getElementById('w_avalue').value, policy: document.getElementById('w_policy').value,
-        income1: document.getElementById('w_inc1').value, income1Memo: document.getElementById('w_inc1_m').value, income2: document.getElementById('w_inc2').value, income2Memo: document.getElementById('w_inc2_m').value, income3: document.getElementById('w_inc3').value, income3Memo: document.getElementById('w_inc3_m').value, cost1: document.getElementById('w_cost1').value, cost1Memo: document.getElementById('w_cost1_m').value, cost2: "", // ★ 삭제된 프리할인
+        income1: document.getElementById('w_inc1').value, income1Memo: document.getElementById('w_inc1_m').value, income2: document.getElementById('w_inc2').value, income2Memo: document.getElementById('w_inc2_m').value, income3: document.getElementById('w_inc3').value, income3Memo: document.getElementById('w_inc3_m').value, cost1: document.getElementById('w_cost1').value, cost1Memo: document.getElementById('w_cost1_m').value, cost2: "", 
         payment1: document.getElementById('w_pay1').value, payment1Method: document.getElementById('w_pay1_m').value, payment1Date: document.getElementById('w_pay1_d').value, payment2: document.getElementById('w_pay2').value, payment2Method: document.getElementById('w_pay2_m').value, payment2Date: document.getElementById('w_pay2_d').value, cash: document.getElementById('w_cash').value, payback1: document.getElementById('w_back').value, bankName: document.getElementById('w_bank').value, accountNumber: document.getElementById('w_acc').value, depositor: document.getElementById('w_holder').value,
         income5: document.getElementById('w_inc5').value, income5Method: document.getElementById('w_inc5_m').value, income6: document.getElementById('w_inc6').value, income6Memo: document.getElementById('w_inc6_m').value, comment: document.getElementById('w_comment').value
     };
-    // ★ 버튼 제어 (this 사용 안함)
-    const btn = event.currentTarget; 
-    const originalText = btn.innerHTML; 
-    btn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> 저장 중...`; 
-    btn.disabled = true;
+    const btn = event.currentTarget; const originalText = btn.innerHTML; btn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> 저장 중...`; btn.disabled = true;
     fetch(GAS_URL, { method: "POST", body: JSON.stringify(formData) }).then(r => r.json()).then(d => { if(d.status === 'success') { alert(d.message); resetWiredForm(); } else { alert("오류: " + d.message); } }).catch(e => alert("통신 오류")).finally(() => { btn.innerHTML = originalText; btn.disabled = false; });
 }
 
@@ -285,15 +293,11 @@ function submitUsedContract(event) {
     const selectedAddons = []; document.querySelectorAll('#u_div_addon_container .addon-check:checked').forEach(cb => selectedAddons.push(cb.value));
     const formData = {
         action: "open_used_full", user: currentUser, branch: document.getElementById('u_branch').value, activationType: document.getElementById('u_act_type').value, contractType: document.getElementById('u_cont_type').value, name: document.getElementById('u_name').value, birth: document.getElementById('u_birth').value, visitPath: visitVal, phoneNumber: document.getElementById('u_phone').value, pricePlan: document.getElementById('u_plan').value, changePlan: document.getElementById('u_plan_chg').value, selectedAddons: selectedAddons, usim: document.getElementById('u_usim').value, card: document.getElementById('u_card').value, review: document.getElementById('u_review').value, aValue: document.getElementById('u_avalue').value, policy: document.getElementById('u_policy').value, model: document.getElementById('u_model').value, serial: document.getElementById('u_serial').value,
-        income1: document.getElementById('u_inc1').value, income1Memo: document.getElementById('u_inc1_m').value, income2: document.getElementById('u_inc2').value, income2Memo: document.getElementById('u_inc2_m').value, income3: document.getElementById('u_inc3').value, income3Memo: document.getElementById('u_inc3_m').value, cost1: document.getElementById('u_cost1').value, cost1Memo: document.getElementById('u_cost1_m').value, cost2: "", // ★ 삭제된 프리할인
+        income1: document.getElementById('u_inc1').value, income1Memo: document.getElementById('u_inc1_m').value, income2: document.getElementById('u_inc2').value, income2Memo: document.getElementById('u_inc2_m').value, income3: document.getElementById('u_inc3').value, income3Memo: document.getElementById('u_inc3_m').value, cost1: document.getElementById('u_cost1').value, cost1Memo: document.getElementById('u_cost1_m').value, cost2: "", 
         payment1: document.getElementById('u_pay1').value, payment1Method: document.getElementById('u_pay1_m').value, payment1Date: document.getElementById('u_pay1_d').value, payment2: document.getElementById('u_pay2').value, payment2Method: document.getElementById('u_pay2_m').value, payment2Date: document.getElementById('u_pay2_d').value, cash: "", payback1: "", bankName: "", accountNumber: "", depositor: "", income4_1: "", income4_2: "",
         income5: document.getElementById('u_inc5').value, income5Method: document.getElementById('u_inc5_m').value, income6: document.getElementById('u_inc6').value, income6Memo: document.getElementById('u_inc6_m').value, comment: document.getElementById('u_comment').value
     };
-    // ★ 버튼 제어
-    const btn = event.currentTarget; 
-    const originalText = btn.innerHTML; 
-    btn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> 저장 중...`; 
-    btn.disabled = true;
+    const btn = event.currentTarget; const originalText = btn.innerHTML; btn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> 저장 중...`; btn.disabled = true;
     fetch(GAS_URL, { method: "POST", body: JSON.stringify(formData) }).then(r => r.json()).then(d => { if(d.status === 'success') { alert(d.message); resetUsedForm(); } else { alert("오류: " + d.message); } }).catch(e => alert("통신 오류")).finally(() => { btn.innerHTML = originalText; btn.disabled = false; });
 }
 
@@ -400,7 +404,6 @@ function submitFullContract(event) {
         comment: document.getElementById('f_comment').value
     };
 
-    // ★ 버튼 제어
     const btn = document.getElementById('btn-mobile-save');
     const originalText = btn.innerHTML;
     btn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> 저장 중...`;
@@ -494,17 +497,7 @@ function loadVendorsToList() {
             const sales = v.salesName ? `👤${v.salesName}` : '';
             const phone = v.salesPhone ? ` 📞${v.salesPhone}` : '';
             const office = v.officePhone ? ` 🏢${v.officePhone}` : '';
-            
-            div.innerHTML += `
-                <div class="list-group-item p-3">
-                    <div class="d-flex justify-content-between align-items-center mb-1">
-                        <span class="fw-bold text-dark">${v.name}</span>
-                        <button class="btn btn-sm btn-outline-danger py-0" onclick="deleteVendor('${v.name}')" style="font-size:0.8rem;">삭제</button>
-                    </div>
-                    <div class="small text-muted text-truncate">
-                        ${sales}${phone}${office}
-                    </div>
-                </div>`; 
+            div.innerHTML += `<div class="list-group-item p-3"><div class="d-flex justify-content-between align-items-center mb-1"><span class="fw-bold text-dark">${v.name}</span><button class="btn btn-sm btn-outline-danger py-0" onclick="deleteVendor('${v.name}')" style="font-size:0.8rem;">삭제</button></div><div class="small text-muted text-truncate">${sales}${phone}${office}</div></div>`; 
         }); 
     }); 
 }
