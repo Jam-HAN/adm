@@ -2,7 +2,7 @@
 // script.js (V43.1 - Dashboard Graph Update)
 // ==========================================
 
-const GAS_URL = "https://script.google.com/macros/s/AKfycbw5LTC58ETvruLTOZTvDQihjDCZNfPb23QOISkN24Ex2qaA8j2zWaiylFIOMVm_vTGb/exec";
+const GAS_URL = "https://script.google.com/macros/s/AKfycbyWdKUnnkYcURwOtlCExu22eworh44MP7BgRpqMjFviMselDEbOfpeQHKwRLTNeyRBS/exec";
 
 let currentUser = "";
 let inPendingList = [];
