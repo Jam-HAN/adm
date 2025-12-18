@@ -1,4 +1,4 @@
-const GAS_URL = "https://script.google.com/macros/s/AKfycbyB_mC39GwfguxtYMm4P4jbszB8d10UhvL9AWZYRGXQxhApSkYP4x-yLiCzmoxhSNDY/exec";
+const GAS_URL = "https://script.google.com/macros/s/AKfycbw1k159kDezV8JwcImu7GM4q-bTTcUrPv6CwIYC_q47mpT5GlIGRy7OC4BduwL1vG5G/exec";
 let currentUser = "";
 let inPendingList = [];
 let globalVendorList = [];
