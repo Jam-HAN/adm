@@ -1,5 +1,5 @@
 // ==========================================
-// script.js (V37.3 - Final Bug Fix)
+// script.js (V39.0 - Final Design Fix)
 // ==========================================
 
 const GAS_URL = "https://script.google.com/macros/s/AKfycbw1k159kDezV8JwcImu7GM4q-bTTcUrPv6CwIYC_q47mpT5GlIGRy7OC4BduwL1vG5G/exec";
@@ -147,7 +147,8 @@ function renderDashboard(data) {
         data.todayList.forEach(item => {
             const marginStr = Math.floor(Number(item.margin)).toLocaleString();
             const badgeClass = item.isWired ? "bg-success" : "bg-primary";
-            listBody.innerHTML += `<tr><td><span class="badge bg-secondary">${item.branch}</span></td><td><span class="badge ${badgeClass} text-white">${item.type}</span></td><td class="fw-bold text-truncate-cell">${item.name}</td><td class="text-truncate-cell text-muted small">${item.user}</td><td class="text-end text-danger fw-bold">${marginStr}</td></tr>`;
+            // ★ [수정] class 제거 (CSS에서 td 전체 제어)
+            listBody.innerHTML += `<tr><td><span class="badge bg-secondary">${item.branch}</span></td><td><span class="badge ${badgeClass} text-white">${item.type}</span></td><td class="fw-bold">${item.name}</td><td class="text-muted small">${item.user}</td><td class="text-end text-danger fw-bold">${marginStr}</td></tr>`;
         });
     }
     
@@ -259,6 +260,7 @@ function submitWiredContract(event) {
     fetch(GAS_URL, { method: "POST", body: JSON.stringify(formData) }).then(r => r.json()).then(d => { if(d.status === 'success') { alert(d.message); resetWiredForm(); } else { alert("오류: " + d.message); } }).catch(e => alert("통신 오류")).finally(() => { btn.innerHTML = originalText; btn.disabled = false; });
 }
 
+// --- 중고 개통 ---
 function startUsedActivation() {
     const branch = document.getElementById('u_branch').value; const vendor = document.getElementById('u_pre_avalue').value; const type = document.getElementById('u_pre_act_type').value; const contract = document.getElementById('u_pre_cont_type').value;
     if(!branch || !vendor || !type || !contract) return alert("모든 항목을 선택해주세요.");
@@ -288,7 +290,7 @@ function submitUsedContract(event) {
     fetch(GAS_URL, { method: "POST", body: JSON.stringify(formData) }).then(r => r.json()).then(d => { if(d.status === 'success') { alert(d.message); resetUsedForm(); } else { alert("오류: " + d.message); } }).catch(e => alert("통신 오류")).finally(() => { btn.innerHTML = originalText; btn.disabled = false; });
 }
 
-// ★ [수정] 무선 개통 스캔 & 저장 (연결 강화)
+// --- 무선 개통 스캔 & 저장 ---
 function handleOpenScan(e) { 
     if(e.key!=='Enter') return; 
     const v=e.target.value.trim(); 
@@ -316,19 +318,19 @@ function handleOpenScan(e) {
     .finally(() => { document.getElementById('open_spinner').style.display = 'none'; });
 }
 
-// ⚠️ window에 등록하여 HTML에서 무조건 찾을 수 있게 함
-window.submitFullContract = function() {
-    // 0. 버튼 상태 변경 (event 없이 ID로 제어)
-    const btn = document.getElementById('btn-mobile-save');
-    const originalText = '<i class="bi bi-save-fill"></i> 개통 및 저장 완료';
-    
-    // 1. 재고 스캔 확인
+function validateField(id, name) {
+    const el = document.getElementById(id);
+    if (!el.value) { alert(name + "을(를) 입력/선택해주세요."); el.focus(); return false; }
+    return true;
+}
+
+// ★ [수정] 무선 개통 저장
+function submitFullContract(event) {
     if(!tempOpenStockData) {
         alert("단말기를 먼저 스캔해야 합니다 (Step 1).");
         return;
     }
     
-    // 2. 유효성 검사
     if (!validateField('f_visit', '방문경로')) return;
     if (!validateField('f_name', '고객명')) return;
     if (!validateField('f_review', '리뷰작성여부')) return;
@@ -338,12 +340,6 @@ window.submitFullContract = function() {
         if(!validateField('f_visit_etc', '상세 방문경로')) return;
         visitVal = "기타: " + document.getElementById('f_visit_etc').value;
     }
-
-    // 저장 시작 알림 (테스트용) - 작동 확인 후 삭제 가능
-    // alert("저장을 시작합니다...");
-
-    btn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> 저장 중...`;
-    btn.disabled = true;
 
     const selectedAddons = [];
     document.querySelectorAll('#div_addon_container .addon-check:checked').forEach(cb => selectedAddons.push(cb.value));
@@ -397,6 +393,11 @@ window.submitFullContract = function() {
         comment: document.getElementById('f_comment').value
     };
 
+    const btn = event.currentTarget;
+    const originalText = btn.innerHTML;
+    btn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> 저장 중...`;
+    btn.disabled = true;
+
     fetch(GAS_URL, { method: "POST", body: JSON.stringify(formData) })
     .then(r => r.json())
     .then(d => {
@@ -412,7 +413,7 @@ window.submitFullContract = function() {
         btn.innerHTML = originalText; 
         btn.disabled = false; 
     });
-};
+}
 
 function resetOpenForm() {
     document.getElementById('open_step_1').style.display = 'block';
