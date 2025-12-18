@@ -316,7 +316,7 @@
                             </div>
 
                             <div class="mt-4 pb-4">
-                                <button class="btn btn-success w-100 py-3 fw-bold shadow-sm" onclick="submitWiredContract()">
+                                <button class="btn btn-success w-100 py-3 fw-bold shadow-sm" onclick="submitWiredContract(event)">
                                     <i class="bi bi-save-fill"></i> 유선 개통 저장
                                 </button>
                             </div>
@@ -505,12 +505,19 @@
                 if(document.getElementById('f_visit')) document.getElementById('f_visit').innerHTML = vOpts;
                 if(document.getElementById('w_visit')) document.getElementById('w_visit').innerHTML = vOpts;
 
-                // 결제방법 (수정: 대납1,2는 payMethodList 사용)
-                const pList = d.payMethodList || []; // R열 (대납)
-                const cList = d.colMethodList || []; // T열 (입금)
+                // 결제방법
+                const pList = d.payMethodList || []; // R열
+                const cList = d.colMethodList || []; // T열
                 
-                ['f_pay1_m','f_pay2_m', 'w_pay1_m','w_pay2_m'].forEach(id => fill(id, pList));
-                ['f_inc4_m','f_inc4_2_m','f_inc5_m', 'w_inc5_m'].forEach(id => fill(id, cList));
+                fill('f_pay1_m', pList);
+                fill('f_pay2_m', pList);
+                fill('w_pay1_m', pList);
+                fill('w_pay2_m', pList);
+
+                fill('f_inc4_m', cList);
+                fill('f_inc4_2_m', cList);
+                fill('f_inc5_m', cList);
+                fill('w_inc5_m', cList);
 
                 globalAddonList = d.addonList || [];
             });
@@ -547,7 +554,7 @@
         function refreshAddons() { renderAddonCheckboxes(document.getElementById('f_avalue').value, 'div_addon_container'); }
         function refreshWiredAddons() { renderAddonCheckboxes(document.getElementById('w_avalue').value, 'w_div_addon_container'); }
 
-        // --- 유선 기능 (동적 요금제 적용) ---
+        // --- 유선 기능 ---
         function startWiredActivation() {
             const branch = document.getElementById('wired_branch').value;
             const vendor = document.getElementById('w_pre_avalue').value;
@@ -565,7 +572,7 @@
             document.getElementById('w_act_type').value = type;
             document.getElementById('w_cont_type').value = contract;
 
-            // ★ [추가] 유선 요약 배너 데이터 채우기
+            // ★ 상단 배너 업데이트
             document.getElementById('w_target_info').innerText = `${type} : ${contract}`;
             document.getElementById('w_target_branch').innerText = branch;
 
@@ -590,7 +597,6 @@
                         <div class="col-6"><label class="form-label-sm">TV요금제</label><input type="text" class="form-control form-control-sm" id="w_plan_tv"></div>
                     </div>`;
             } else {
-                // 인터넷 등
                 area.innerHTML = `
                     <div class="row g-2">
                         <div class="col-12"><label class="form-label-sm">인터넷요금제</label><input type="text" class="form-control form-control-sm" id="w_plan_net"></div>
@@ -612,7 +618,8 @@
             document.getElementById('w_div_visit_etc').style.display = 'none';
         }
 
-        function submitWiredContract() {
+        // ★ [수정] 이벤트 객체 받아서 안전하게 처리
+        function submitWiredContract(event) {
             if (!validateField('w_visit', '방문경로')) return;
             if (!validateField('w_name', '고객명')) return;
             if (!validateField('w_review', '리뷰작성여부')) return;
@@ -624,16 +631,14 @@
             }
 
             // 요금제 합치기
-            let pricePlan = "";
             const net = document.getElementById('w_plan_net');
             const tv = document.getElementById('w_plan_tv');
             const other = document.getElementById('w_plan_other');
-
             const parts = [];
             if(net && net.value) parts.push(net.value);
             if(tv && tv.value) parts.push(tv.value);
             if(other && other.value) parts.push(other.value);
-            pricePlan = parts.join(" / ");
+            const pricePlan = parts.join(" / ");
 
             const formData = {
                 action: "open_wired_full",
@@ -684,7 +689,7 @@
                 comment: document.getElementById('w_comment').value
             };
 
-            const btn = event.target;
+            const btn = event.currentTarget; // ★ 안전한 타겟팅
             const originalText = btn.innerHTML;
             btn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> 저장 중...`;
             btn.disabled = true;
