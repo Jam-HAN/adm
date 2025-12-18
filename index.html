@@ -9,6 +9,26 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
     
     <link rel="stylesheet" href="style.css">
+
+    <style>
+        .dash-table { table-layout: fixed !important; width: 100% !important; }
+        .dash-table th, .dash-table td {
+            width: 20% !important;
+            text-align: center !important;
+            vertical-align: middle !important;
+            padding: 8px 4px !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+        }
+        #vendor_list_ui .list-group-item { display: block; }
+        #vendor_list_ui .small {
+            display: block !important;
+            color: #6c757d !important;
+            font-size: 0.85em;
+            margin-top: 4px;
+        }
+    </style>
 </head>
 <body>
 
@@ -159,7 +179,12 @@
                         </div>
                         <div id="open_step_2" style="display:none;">
                             <div class="alert alert-primary d-flex justify-content-between align-items-center shadow-sm">
-                                <div><i class="bi bi-phone-fill me-2"></i><span id="target_model" class="fw-bold fs-5"></span></div>
+                                <div>
+                                    <i class="bi bi-phone-fill me-2"></i>
+                                    <span id="target_model" class="fw-bold fs-5"></span>
+                                    <span class="mx-2 text-muted">|</span>
+                                    <span id="target_serial" class="font-monospace"></span>
+                                </div>
                                 <span class="badge bg-primary fs-6" id="target_branch"></span>
                             </div>
                             <div class="section-header"><i class="bi bi-person-badge"></i> 기본 정보</div>
@@ -385,7 +410,7 @@
                             </div>
                             <div class="mt-4 pb-4">
                                 <button type="button" class="btn btn-warning w-100 py-3 fw-bold text-white shadow-sm" onclick="submitUsedContract(event)">
-                                    <i class="bi bi-save-fill"></i> 중고 개통 저장
+                                    <i class="bi bi-save-fill"></i> 중고폰 개통 저장
                                 </button>
                             </div>
                         </div>
