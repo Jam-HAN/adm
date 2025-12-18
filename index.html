@@ -24,6 +24,12 @@
         .required-star { color: #dc3545; margin-left: 2px; font-weight: bold; }
         .text-danger-custom { color: #dc3545 !important; font-weight: bold; }
         .border-danger-custom { border-color: #dc3545 !important; color: #dc3545 !important; font-weight: bold; }
+
+        /* 대시보드 전용 스타일 */
+        .stat-card { border-left: 4px solid #4e73df; }
+        .stat-card.month { border-left-color: #1cc88a; }
+        .user-rank-item { display: flex; align-items: center; margin-bottom: 8px; }
+        .progress { height: 10px; border-radius: 5px; flex-grow: 1; margin: 0 10px; }
     </style>
 </head>
 <body>
@@ -40,10 +46,11 @@
     <div id="main-view" style="display:none;">
         <nav class="navbar navbar-expand-lg bg-white custom-navbar sticky-top shadow-sm p-2">
             <div class="container-fluid px-0">
-                <span class="navbar-brand fw-bold text-primary"><i class="bi bi-grid-fill"></i> 대박통신</span>
+                <a class="navbar-brand fw-bold text-primary" href="#" onclick="showSection('section-dashboard')"><i class="bi bi-grid-fill"></i> 대박통신</a>
                 <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"><span class="navbar-toggler-icon"></span></button>
                 <div class="collapse navbar-collapse" id="navbarNav">
                     <ul class="navbar-nav me-auto">
+                        <li class="nav-item"><a class="nav-link fw-bold" onclick="showSection('section-dashboard')">📊 대시보드</a></li>
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">📦 재고 관리</a>
                             <ul class="dropdown-menu">
@@ -63,6 +70,7 @@
                                 <li><a class="dropdown-item" onclick="showUsedSection()">♻️ 중고 개통</a></li>
                             </ul>
                         </li>
+                        <li class="nav-item"><a class="nav-link" onclick="showSection('section-vendor')">🏢 거래처</a></li>
                     </ul>
                     <div class="d-flex align-items-center mt-2 mt-lg-0">
                         <span class="small me-3 fw-bold text-muted" id="user-name"></span>
@@ -73,8 +81,64 @@
         </nav>
 
         <div class="container py-3">
+
+            <div id="section-dashboard" class="section-view active-section">
+                <div class="row g-3 mb-4">
+                    <div class="col-6">
+                        <div class="glass-card stat-card p-3 h-100">
+                            <div class="text-xs fw-bold text-primary text-uppercase mb-1">오늘 개통 (전지점)</div>
+                            <div class="h3 mb-0 fw-bold text-gray-800" id="dash_today_count">-</div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="glass-card stat-card month p-3 h-100">
+                            <div class="text-xs fw-bold text-success text-uppercase mb-1">이번 달 누적</div>
+                            <div class="h3 mb-0 fw-bold text-gray-800" id="dash_month_count">-</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-lg-7">
+                        <div class="glass-card h-100">
+                            <div class="card-header py-3 bg-white border-bottom d-flex justify-content-between align-items-center">
+                                <h6 class="m-0 fw-bold text-primary"><i class="bi bi-broadcast"></i> 실시간 개통 현황 (Today)</h6>
+                                <button class="btn btn-sm btn-light rounded-circle" onclick="loadDashboard()"><i class="bi bi-arrow-clockwise"></i></button>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+                                    <table class="table table-hover align-middle mb-0 small">
+                                        <thead class="table-light sticky-top">
+                                            <tr>
+                                                <th>지점</th>
+                                                <th>유형</th>
+                                                <th>고객명</th>
+                                                <th>담당자</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="dash_today_list">
+                                            <tr><td colspan="4" class="text-center py-4 text-muted">로딩 중...</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-5">
+                        <div class="glass-card h-100">
+                            <div class="card-header py-3 bg-white border-bottom">
+                                <h6 class="m-0 fw-bold text-success"><i class="bi bi-trophy"></i> 이달의 직원별 실적</h6>
+                            </div>
+                            <div class="card-body p-4" id="dash_user_rank">
+                                <div class="text-center text-muted">데이터를 불러오는 중...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
             
-            <div id="section-in" class="section-view active-section">
+            <div id="section-in" class="section-view">
                 <div class="glass-card p-4">
                     <h5 class="fw-bold mb-3 text-primary">입고 등록</h5>
                     <div class="row g-2 mb-3">
@@ -295,30 +359,25 @@
                                 <div class="badge bg-warning text-dark border fs-6 shadow-sm" id="u_target_branch"></div>
                             </div>
                             <div class="section-header"><i class="bi bi-person-lines-fill"></i> 기본 정보</div>
-                            
                             <div class="row g-2 mb-3">
                                 <div class="col-4"><label class="form-label-sm">개통유형</label><input type="text" class="form-control form-control-sm" id="u_act_type" readonly></div>
                                 <div class="col-4"><label class="form-label-sm">약정유형</label><input type="text" class="form-control form-control-sm" id="u_cont_type" readonly></div>
                                 <div class="col-4"><label class="form-label-sm">방문경로<span class="required-star">*</span></label><select class="form-select form-select-sm" id="u_visit" onchange="checkUsedVisitPath()"></select></div>
                                 <div class="col-12" id="u_div_visit_etc" style="display:none;"><input type="text" class="form-control form-control-sm" id="u_visit_etc" placeholder="상세 경로"></div>
                             </div>
-
                             <div class="row g-2 mb-3">
                                 <div class="col-4"><label class="form-label-sm">고객명<span class="required-star">*</span></label><input type="text" class="form-control form-control-sm" id="u_name"></div>
                                 <div class="col-4"><label class="form-label-sm">생년월일</label><input type="text" class="form-control form-control-sm" id="u_birth"></div>
                                 <div class="col-4"><label class="form-label-sm">연락처</label><input type="text" class="form-control form-control-sm" id="u_phone"></div>
                             </div>
-
                             <div class="row g-2 mb-3">
                                 <div class="col-6"><label class="form-label-sm">기기모델명</label><input type="text" class="form-control form-control-sm" id="u_model"></div>
                                 <div class="col-6"><label class="form-label-sm">일련번호</label><input type="text" class="form-control form-control-sm" id="u_serial"></div>
                             </div>
-
                             <div class="row g-2 mb-3">
                                 <div class="col-6"><label class="form-label-sm">요금제</label><input type="text" class="form-control form-control-sm" id="u_plan"></div>
                                 <div class="col-6"><label class="form-label-sm">변경요금제</label><input type="text" class="form-control form-control-sm" id="u_plan_chg"></div>
                             </div>
-
                             <div class="row g-2 mb-3">
                                 <div class="col-12">
                                     <label class="form-label-sm">부가서비스</label>
@@ -327,7 +386,6 @@
                                 <div class="col-4"><label class="form-label-sm">제휴카드</label><input type="text" class="form-control form-control-sm" id="u_card"></div>
                                 <div class="col-4"><label class="form-label-sm">리뷰작성<span class="required-star">*</span></label><select class="form-select form-select-sm" id="u_review"></select></div>
                             </div>
-
                             <div class="divider"></div>
                             <div class="section-header"><i class="bi bi-calculator"></i> 정책 및 정산</div>
                             <div class="row g-2 mb-3">
@@ -342,8 +400,7 @@
                                 <div class="col-6"><label class="form-label-sm text-danger-custom">차감정책</label><input type="number" class="form-control form-control-sm border-danger-custom" id="u_cost1"></div>
                                 <div class="col-6"><label class="form-label-sm">메모</label><input type="text" class="form-control form-control-sm" id="u_cost1_m"></div>
                                 <div class="col-6"><label class="form-label-sm">유심</label><select class="form-select form-select-sm" id="u_usim"><option value="" selected>선택</option></select></div>
-                                </div>
-
+                            </div>
                             <div class="divider"></div>
                             <div class="section-header"><i class="bi bi-credit-card"></i> 대납 및 지원</div>
                             <div class="row g-2 mb-3">
@@ -353,8 +410,7 @@
                                 <div class="col-4"><label class="form-label-sm text-danger-custom">대납2</label><input type="number" class="form-control form-control-sm border-danger-custom" id="u_pay2"></div>
                                 <div class="col-4"><label class="form-label-sm">방법</label><select class="form-select form-select-sm" id="u_pay2_m"></select></div>
                                 <div class="col-4"><label class="form-label-sm">처리일</label><input type="date" class="form-control form-control-sm" id="u_pay2_d"></div>
-                                </div>
-
+                            </div>
                             <div class="divider"></div>
                             <div class="section-header"><i class="bi bi-wallet2"></i> 수납 상세</div>
                             <div class="row g-2 mb-3">
@@ -364,7 +420,6 @@
                                 <div class="col-6"><label class="form-label-sm">메모</label><input type="text" class="form-control form-control-sm" id="u_inc6_m"></div>
                                 <div class="col-12"><label class="form-label-sm">기타 특이사항</label><input type="text" class="form-control form-control-sm" id="u_comment"></div>
                             </div>
-
                             <div class="mt-4 pb-4">
                                 <button class="btn btn-warning w-100 py-3 fw-bold text-white shadow-sm" onclick="submitUsedContract(event)">
                                     <i class="bi bi-save-fill"></i> 중고폰 개통 저장
@@ -470,6 +525,7 @@
                 document.getElementById('user-name').innerText = currentUser;
                 loadInitData();
                 setupAutoLogout();
+                loadDashboard(); // 대시보드 로드
             }
             document.querySelectorAll('.enter-trigger').forEach(input => {
                 input.addEventListener('keydown', function(e) { if(e.key === 'Enter') addVendor(); });
@@ -517,6 +573,75 @@
             showSection('section-used');
         }
 
+        // --- 대시보드 ---
+        function loadDashboard() {
+            const dashList = document.getElementById('dash_today_list');
+            const dashUser = document.getElementById('dash_user_rank');
+            if(!dashList || !dashUser) return;
+
+            dashList.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-muted"><div class="spinner-border spinner-border-sm text-primary"></div> 로딩 중...</td></tr>';
+            dashUser.innerHTML = '<div class="text-center py-4"><div class="spinner-border spinner-border-sm text-success"></div></div>';
+
+            fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "get_dashboard_data" }) }) // GAS에 이 액션 처리 추가 필요 (기존 코드에 있다면 OK)
+            .then(r => r.json())
+            .then(d => {
+                if(d.status === 'success') {
+                    renderDashboard(d.data);
+                } else {
+                    dashList.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-danger">로드 실패</td></tr>';
+                }
+            })
+            .catch(() => {
+                 // 데모 데이터 or 에러 처리
+                 dashList.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-muted">데이터 없음</td></tr>';
+                 dashUser.innerHTML = '<div class="text-center text-muted">데이터 없음</div>';
+            });
+        }
+
+        function renderDashboard(data) {
+            document.getElementById('dash_today_count').innerText = data.todayCount;
+            document.getElementById('dash_month_count').innerText = data.monthCount;
+
+            // 오늘 리스트
+            const listBody = document.getElementById('dash_today_list');
+            listBody.innerHTML = "";
+            if (data.todayList.length === 0) {
+                listBody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-muted">오늘 개통 내역이 없습니다.</td></tr>';
+            } else {
+                data.todayList.forEach(item => {
+                    listBody.innerHTML += `
+                        <tr>
+                            <td><span class="badge bg-secondary">${item.branch}</span></td>
+                            <td><small>${item.type}</small></td>
+                            <td class="fw-bold">${item.name}</td>
+                            <td><small class="text-muted">${item.user}</small></td>
+                        </tr>
+                    `;
+                });
+            }
+
+            // 직원별 랭킹
+            const rankBody = document.getElementById('dash_user_rank');
+            rankBody.innerHTML = "";
+            if (data.userRank.length === 0) {
+                rankBody.innerHTML = '<div class="text-center text-muted">이달의 실적이 없습니다.</div>';
+            } else {
+                const max = data.userRank[0].count;
+                data.userRank.forEach(u => {
+                    const percent = (u.count / max) * 100;
+                    rankBody.innerHTML += `
+                        <div class="user-rank-item">
+                            <span class="fw-bold small" style="width: 60px;">${u.name}</span>
+                            <div class="progress">
+                                <div class="progress-bar bg-success" style="width: ${percent}%"></div>
+                            </div>
+                            <span class="small fw-bold ms-2">${u.count}건</span>
+                        </div>
+                    `;
+                });
+            }
+        }
+
         function loadInitData() {
             fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "get_vendors" }) }).then(r => r.json()).then(d => {
                 globalVendorList = d.list.map(v => v.name);
@@ -541,37 +666,31 @@
                     }
                 };
                 
-                // 무선
                 fill('f_act_type', d.actListMobile);
                 fill('f_cont_type', d.contListMobile);
                 fill('f_review', d.reviewList);
                 fill('f_usim', d.usimList);
                 
-                // 유선
                 fill('w_pre_act_type', d.actListWired); 
                 fill('w_pre_cont_type', d.contListWired); 
                 fill('w_review', d.reviewList);
 
-                // 중고
                 fill('u_pre_act_type', d.actListUsed); 
                 fill('u_pre_cont_type', d.contListUsed); 
                 fill('u_review', d.reviewList);
                 fill('u_usim', d.usimList);
 
-                // 유선 개통처 (Step 1)
                 if(d.wiredVendorList) {
                     fill('w_pre_avalue', d.wiredVendorList);
                     fill('u_pre_avalue', d.wiredVendorList);
                 }
 
-                // 공통
                 const vList = d.visitList || [];
                 const vOpts = '<option value="" selected>선택</option>' + vList.map(i=>`<option value="${i}">${i}</option>`).join('') + '<option value="기타">기타 (직접입력)</option>';
                 if(document.getElementById('f_visit')) document.getElementById('f_visit').innerHTML = vOpts;
                 if(document.getElementById('w_visit')) document.getElementById('w_visit').innerHTML = vOpts;
                 if(document.getElementById('u_visit')) document.getElementById('u_visit').innerHTML = vOpts;
 
-                // 결제방법
                 const pList = d.payMethodList || []; 
                 const cList = d.colMethodList || [];
                 
@@ -619,32 +738,25 @@
         function refreshWiredAddons() { renderAddonCheckboxes(document.getElementById('w_avalue').value, 'w_div_addon_container'); }
         function refreshUsedAddons() { renderAddonCheckboxes(document.getElementById('u_avalue').value, 'u_div_addon_container'); }
 
-        // --- 유선 기능 ---
         function startWiredActivation() {
             const branch = document.getElementById('wired_branch').value;
             const vendor = document.getElementById('w_pre_avalue').value;
             const type = document.getElementById('w_pre_act_type').value;
             const contract = document.getElementById('w_pre_cont_type').value;
-
             if(!branch || !vendor || !type || !contract) return alert("모든 항목을 선택해주세요.");
-
             document.getElementById('wired_step_1').style.display = 'none';
             document.getElementById('wired_step_2').style.display = 'block';
-
             document.getElementById('w_avalue').value = vendor;
             document.getElementById('w_act_type').value = type;
             document.getElementById('w_cont_type').value = contract;
-
             document.getElementById('w_target_info').innerText = `${type} : ${contract}`;
             document.getElementById('w_target_branch').innerText = branch;
-
             renderWiredPlanInputs(contract);
         }
 
         function renderWiredPlanInputs(contractType) {
             const area = document.getElementById('w_plan_input_area');
             area.innerHTML = "";
-            
             if(contractType === "인터넷+TV+기타서비스") {
                 area.innerHTML = `<div class="row g-2"><div class="col-4"><label class="form-label-sm">인터넷요금제</label><input type="text" class="form-control form-control-sm" id="w_plan_net"></div><div class="col-4"><label class="form-label-sm">TV요금제</label><input type="text" class="form-control form-control-sm" id="w_plan_tv"></div><div class="col-4"><label class="form-label-sm">기타서비스</label><input type="text" class="form-control form-control-sm" id="w_plan_other"></div></div>`;
             } else if(contractType === "인터넷+TV") {
@@ -670,13 +782,11 @@
             if (!validateField('w_visit', '방문경로')) return;
             if (!validateField('w_name', '고객명')) return;
             if (!validateField('w_review', '리뷰작성여부')) return;
-
             let visitVal = document.getElementById('w_visit').value;
             if(visitVal === '기타') {
                 if(!validateField('w_visit_etc', '상세 방문경로')) return;
                 visitVal = "기타: " + document.getElementById('w_visit_etc').value;
             }
-
             const net = document.getElementById('w_plan_net');
             const tv = document.getElementById('w_plan_tv');
             const other = document.getElementById('w_plan_other');
@@ -685,7 +795,6 @@
             if(tv && tv.value) parts.push(tv.value);
             if(other && other.value) parts.push(other.value);
             const pricePlan = parts.join(" / ");
-
             const formData = {
                 action: "open_wired_full",
                 user: currentUser,
@@ -727,12 +836,10 @@
                 income6Memo: document.getElementById('w_inc6_m').value,
                 comment: document.getElementById('w_comment').value
             };
-
             const btn = event.currentTarget; 
             const originalText = btn.innerHTML;
             btn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> 저장 중...`;
             btn.disabled = true;
-
             fetch(GAS_URL, { method: "POST", body: JSON.stringify(formData) })
             .then(r => r.json())
             .then(d => {
@@ -748,19 +855,14 @@
             const vendor = document.getElementById('u_pre_avalue').value;
             const type = document.getElementById('u_pre_act_type').value;
             const contract = document.getElementById('u_pre_cont_type').value;
-
             if(!branch || !vendor || !type || !contract) return alert("모든 항목을 선택해주세요.");
-
             document.getElementById('used_step_1').style.display = 'none';
             document.getElementById('used_step_2').style.display = 'block';
-
             document.getElementById('u_avalue').value = vendor;
             document.getElementById('u_act_type').value = type;
             document.getElementById('u_cont_type').value = contract;
-
             document.getElementById('u_target_info').innerText = `${type} : ${contract}`;
             document.getElementById('u_target_branch').innerText = branch;
-
             refreshUsedAddons();
         }
 
@@ -769,10 +871,8 @@
             document.getElementById('u_pre_avalue').selectedIndex = 0;
             document.getElementById('u_pre_act_type').selectedIndex = 0;
             document.getElementById('u_pre_cont_type').selectedIndex = 0;
-            
             document.getElementById('used_step_1').style.display = 'block';
             document.getElementById('used_step_2').style.display = 'none';
-            
             document.querySelectorAll('#used_step_2 input').forEach(i => i.value = "");
             document.querySelectorAll('#used_step_2 select').forEach(s => s.selectedIndex=0);
             document.getElementById('u_div_visit_etc').style.display = 'none';
@@ -783,21 +883,19 @@
             if (!validateField('u_visit', '방문경로')) return;
             if (!validateField('u_name', '고객명')) return;
             if (!validateField('u_review', '리뷰작성여부')) return;
-
             let visitVal = document.getElementById('u_visit').value;
             if(visitVal === '기타') {
                 if(!validateField('u_visit_etc', '상세 방문경로')) return;
                 visitVal = "기타: " + document.getElementById('u_visit_etc').value;
             }
-
             const selectedAddons = [];
             document.querySelectorAll('#u_div_addon_container .addon-check:checked').forEach(cb => selectedAddons.push(cb.value));
 
+            // ★ 중고 데이터 전송 (삭제된 항목 제외)
             const formData = {
                 action: "open_used_full",
                 user: currentUser,
                 branch: document.getElementById('u_branch').value, 
-                
                 activationType: document.getElementById('u_act_type').value,
                 contractType: document.getElementById('u_cont_type').value,
                 name: document.getElementById('u_name').value,
@@ -806,20 +904,14 @@
                 phoneNumber: document.getElementById('u_phone').value,
                 pricePlan: document.getElementById('u_plan').value,
                 changePlan: document.getElementById('u_plan_chg').value,
-                
                 selectedAddons: selectedAddons,
-                
                 usim: document.getElementById('u_usim').value,
                 card: document.getElementById('u_card').value,
                 review: document.getElementById('u_review').value,
-                
                 aValue: document.getElementById('u_avalue').value,
                 policy: document.getElementById('u_policy').value,
-                
-                // ★ 기기 정보
                 model: document.getElementById('u_model').value,
                 serial: document.getElementById('u_serial').value,
-
                 income1: document.getElementById('u_inc1').value,
                 income1Memo: document.getElementById('u_inc1_m').value,
                 income2: document.getElementById('u_inc2').value,
@@ -828,41 +920,25 @@
                 income3Memo: document.getElementById('u_inc3_m').value,
                 cost1: document.getElementById('u_cost1').value,
                 cost1Memo: document.getElementById('u_cost1_m').value,
-                
-                // 삭제된 항목은 빈 값으로 전송
-                cost2: "", 
-                
+                cost2: document.getElementById('u_cost2').value,
                 payment1: document.getElementById('u_pay1').value,
                 payment1Method: document.getElementById('u_pay1_m').value,
                 payment1Date: document.getElementById('u_pay1_d').value,
                 payment2: document.getElementById('u_pay2').value,
                 payment2Method: document.getElementById('u_pay2_m').value,
                 payment2Date: document.getElementById('u_pay2_d').value,
-                
-                cash: "",
-                payback1: "",
-                bankName: "",
-                accountNumber: "",
-                depositor: "",
-                
-                income4_1: "",
-                income4_1Method: "",
-                income4_2: "",
-                income4_2Method: "",
-                
+                // 제거된 항목들은 빈값 처리
+                cash: "", payback1: "", bankName: "", accountNumber: "", depositor: "", income4_1: "", income4_2: "",
                 income5: document.getElementById('u_inc5').value,
                 income5Method: document.getElementById('u_inc5_m').value,
                 income6: document.getElementById('u_inc6').value,
                 income6Memo: document.getElementById('u_inc6_m').value,
-                
                 comment: document.getElementById('u_comment').value
             };
-
             const btn = event.currentTarget; 
             const originalText = btn.innerHTML;
             btn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> 저장 중...`;
             btn.disabled = true;
-
             fetch(GAS_URL, { method: "POST", body: JSON.stringify(formData) })
             .then(r => r.json())
             .then(d => {
@@ -872,13 +948,11 @@
             .finally(() => { btn.innerHTML = originalText; btn.disabled = false; });
         }
 
-        // --- 공통 기능 ---
         function handleOpenScan(e) { 
             if(e.key!=='Enter') return; 
             const v=e.target.value.trim(); 
             e.target.disabled = true;
             document.getElementById('open_spinner').style.display = 'block';
-
             fetch(GAS_URL,{method:"POST",body:JSON.stringify({ action:"get_stock_info_for_open", input:v })})
             .then(r=>r.json()).then(d=>{
                 if(d.status==='success') {
@@ -900,28 +974,23 @@
             .catch(err => { alert("통신 오류 발생"); e.target.disabled=false; })
             .finally(() => { document.getElementById('open_spinner').style.display = 'none'; });
         }
-
         function validateField(id, name) {
             const el = document.getElementById(id);
             if (!el.value) { alert(name + "을(를) 입력/선택해주세요."); el.focus(); return false; }
             return true;
         }
-
         function submitFullContract() {
             if(!tempOpenStockData) return;
             if (!validateField('f_visit', '방문경로')) return;
             if (!validateField('f_name', '고객명')) return;
             if (!validateField('f_review', '리뷰작성여부')) return;
-
             let visitVal = document.getElementById('f_visit').value;
             if(visitVal === '기타') {
                 if(!validateField('f_visit_etc', '상세 방문경로')) return;
                 visitVal = "기타: " + document.getElementById('f_visit_etc').value;
             }
-
             const selectedAddons = [];
             document.querySelectorAll('#div_addon_container .addon-check:checked').forEach(cb => selectedAddons.push(cb.value));
-
             const formData = {
                 action: "open_stock_full",
                 stockInput: tempOpenStockData.inputCode,
@@ -970,12 +1039,10 @@
                 income6Memo: document.getElementById('f_inc6_m').value,
                 comment: document.getElementById('f_comment').value
             };
-
             const btn = event.target;
             const originalText = btn.innerHTML;
             btn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> 저장 중...`;
             btn.disabled = true;
-
             fetch(GAS_URL, { method: "POST", body: JSON.stringify(formData) })
             .then(r => r.json())
             .then(d => {
@@ -984,7 +1051,6 @@
             .catch(e => alert("통신 오류"))
             .finally(() => { btn.innerHTML = originalText; btn.disabled = false; });
         }
-
         function resetOpenForm() {
             document.getElementById('open_step_1').style.display = 'block';
             document.getElementById('open_step_2').style.display = 'none';
@@ -998,8 +1064,6 @@
             document.getElementById('div_addon_container').innerHTML = "<span class='text-muted small'>...</span>";
             tempOpenStockData = null;
         }
-
-        // --- 기타 기능 (기존 유지) ---
         function updateSearchUI() {
             const criteria = document.getElementById('search_criteria').value;
             const area = document.getElementById('search_input_area');
