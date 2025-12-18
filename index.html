@@ -9,7 +9,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
     <style>
         :root { --primary-bg: #eef2f6; --card-bg: #ffffff; --accent-color: #4e73df; }
-        body { background-color: var(--primary-bg); font-family: 'Noto Sans KR', sans-serif; color: #2e384d; font-size: 15px; } /* 기본 폰트 살짝 키움 */
+        body { background-color: var(--primary-bg); font-family: 'Noto Sans KR', sans-serif; color: #2e384d; font-size: 15px; } /* 폰트 살짝 키움 */
         .glass-card { background: var(--card-bg); border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); border: none; overflow: hidden; margin-bottom: 20px; }
         .section-view { display: none; }
         .active-section { display: block; animation: fadeIn 0.4s ease-out forwards; }
@@ -24,20 +24,17 @@
         .required-star { color: #dc3545; margin-left: 2px; font-weight: bold; }
         .text-danger-custom { color: #dc3545 !important; font-weight: bold; }
         .border-danger-custom { border-color: #dc3545 !important; color: #dc3545 !important; font-weight: bold; }
-
+        
         /* 대시보드 스타일 */
         .stat-card { border-left: 5px solid #4e73df; transition: transform 0.2s; }
         .stat-card:active { transform: scale(0.98); }
         .stat-card.month { border-left-color: #1cc88a; }
-        
         .user-rank-item { display: flex; align-items: center; margin-bottom: 12px; }
         .user-rank-name { width: 70px; font-weight: bold; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .progress { height: 12px; border-radius: 6px; flex-grow: 1; margin: 0 10px; background-color: #e9ecef; }
         .user-rank-count { width: 40px; text-align: right; font-weight: bold; color: #4e73df; }
-        
         .dash-table th { background-color: #f8f9fa; font-size: 0.85rem; color: #6c757d; }
         .dash-table td { vertical-align: middle; font-size: 0.9rem; }
-        /* 텍스트 잘림 방지용 */
         .text-truncate-box { max-width: 100px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: inline-block; vertical-align: middle; }
     </style>
 </head>
@@ -96,56 +93,37 @@
                     <div class="col-6">
                         <div class="glass-card stat-card p-3 h-100 d-flex flex-column justify-content-center">
                             <div class="text-xs fw-bold text-primary text-uppercase mb-1">오늘 개통 (전체)</div>
-                            <div class="h2 mb-0 fw-bold text-dark" id="dash_today_count">
-                                <div class="spinner-border spinner-border-sm text-primary"></div>
-                            </div>
+                            <div class="h2 mb-0 fw-bold text-dark" id="dash_today_count"><div class="spinner-border spinner-border-sm text-primary"></div></div>
                         </div>
                     </div>
                     <div class="col-6">
                         <div class="glass-card stat-card month p-3 h-100 d-flex flex-column justify-content-center">
                             <div class="text-xs fw-bold text-success text-uppercase mb-1">이번 달 누적</div>
-                            <div class="h2 mb-0 fw-bold text-dark" id="dash_month_count">
-                                <div class="spinner-border spinner-border-sm text-success"></div>
-                            </div>
+                            <div class="h2 mb-0 fw-bold text-dark" id="dash_month_count"><div class="spinner-border spinner-border-sm text-success"></div></div>
                         </div>
                     </div>
                 </div>
-
                 <div class="row g-3">
                     <div class="col-lg-7">
                         <div class="glass-card h-100">
                             <div class="card-header py-3 px-4 bg-white border-bottom d-flex justify-content-between align-items-center">
                                 <h6 class="m-0 fw-bold text-primary"><i class="bi bi-broadcast"></i> 실시간 개통 (Today)</h6>
-                                <button class="btn btn-sm btn-light border rounded-circle shadow-sm" onclick="loadDashboard()" title="새로고침"><i class="bi bi-arrow-clockwise"></i></button>
+                                <button class="btn btn-sm btn-light border rounded-circle shadow-sm" onclick="loadDashboard()"><i class="bi bi-arrow-clockwise"></i></button>
                             </div>
                             <div class="card-body p-0">
                                 <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
                                     <table class="table table-hover align-middle mb-0 dash-table">
-                                        <thead class="sticky-top border-bottom">
-                                            <tr>
-                                                <th style="width:20%">지점</th>
-                                                <th style="width:25%">유형</th>
-                                                <th style="width:30%">고객명</th>
-                                                <th style="width:25%">담당</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="dash_today_list">
-                                            <tr><td colspan="4" class="text-center py-5 text-muted">데이터를 불러오는 중입니다...</td></tr>
-                                        </tbody>
+                                        <thead class="sticky-top border-bottom"><tr><th style="width:20%">지점</th><th style="width:25%">유형</th><th style="width:30%">고객명</th><th style="width:25%">담당</th></tr></thead>
+                                        <tbody id="dash_today_list"><tr><td colspan="4" class="text-center py-5 text-muted">데이터를 불러오는 중입니다...</td></tr></tbody>
                                     </table>
                                 </div>
                             </div>
                         </div>
                     </div>
-
                     <div class="col-lg-5">
                         <div class="glass-card h-100">
-                            <div class="card-header py-3 px-4 bg-white border-bottom">
-                                <h6 class="m-0 fw-bold text-success"><i class="bi bi-trophy"></i> 이달의 직원 실적</h6>
-                            </div>
-                            <div class="card-body p-4" id="dash_user_rank" style="min-height: 200px;">
-                                <div class="text-center py-5 text-muted"><div class="spinner-border spinner-border-sm"></div> 로딩 중...</div>
-                            </div>
+                            <div class="card-header py-3 px-4 bg-white border-bottom"><h6 class="m-0 fw-bold text-success"><i class="bi bi-trophy"></i> 이달의 직원 실적</h6></div>
+                            <div class="card-body p-4" id="dash_user_rank" style="min-height: 200px;"><div class="text-center py-5 text-muted"><div class="spinner-border spinner-border-sm"></div> 로딩 중...</div></div>
                         </div>
                     </div>
                 </div>
@@ -281,9 +259,9 @@
                             </div>
                         </div>
                         <div id="wired_step_2" style="display:none;">
-                            <div class="alert alert-primary py-2 small mb-4 d-flex align-items-center justify-content-between">
+                            <div class="alert alert-success py-2 small mb-4 d-flex align-items-center justify-content-between">
                                 <div><i class="bi bi-router me-1"></i> <span id="w_target_info" class="fw-bold fs-6"></span></div>
-                                <div class="badge bg-primary text-white border fs-6 shadow-sm" id="w_target_branch"></div>
+                                <div class="badge bg-success text-white border fs-6 shadow-sm" id="w_target_branch"></div>
                             </div>
                             <div class="section-header"><i class="bi bi-person-lines-fill"></i> 기본 정보</div>
                             <div class="row g-2 mb-3">
@@ -311,6 +289,8 @@
                                 <div class="col-6"><label class="form-label-sm">메모</label><input type="text" class="form-control form-control-sm" id="w_inc3_m"></div>
                                 <div class="col-6"><label class="form-label-sm text-danger-custom">차감정책</label><input type="number" class="form-control form-control-sm border-danger-custom" id="w_cost1"></div>
                                 <div class="col-6"><label class="form-label-sm">메모</label><input type="text" class="form-control form-control-sm" id="w_cost1_m"></div>
+                                <div class="col-6"><label class="form-label-sm text-danger-custom">프리할인</label><input type="number" class="form-control form-control-sm border-danger-custom" id="w_cost2"></div>
+                                <div class="col-6"><label class="form-label-sm">유심</label><select class="form-select form-select-sm" id="w_usim"><option value="" selected>선택</option></select></div>
                             </div>
                             <div class="divider"></div>
                             <div class="section-header"><i class="bi bi-credit-card"></i> 대납 및 지원</div>
@@ -330,6 +310,10 @@
                             <div class="divider"></div>
                             <div class="section-header"><i class="bi bi-wallet2"></i> 수납 상세</div>
                             <div class="row g-2 mb-3">
+                                <div class="col-6"><label class="form-label-sm">단말기수납1</label><input type="number" class="form-control form-control-sm" id="w_inc4"></div>
+                                <div class="col-6"><label class="form-label-sm">방법</label><select class="form-select form-select-sm" id="w_inc4_m"></select></div>
+                                <div class="col-6"><label class="form-label-sm">단말기수납2</label><input type="number" class="form-control form-control-sm" id="w_inc4_2"></div>
+                                <div class="col-6"><label class="form-label-sm">방법</label><select class="form-select form-select-sm" id="w_inc4_2_m"></select></div>
                                 <div class="col-6"><label class="form-label-sm">요금수납</label><input type="number" class="form-control form-control-sm" id="w_inc5"></div>
                                 <div class="col-6"><label class="form-label-sm">방법</label><select class="form-select form-select-sm" id="w_inc5_m"></select></div>
                                 <div class="col-6"><label class="form-label-sm">상품권/기타</label><input type="number" class="form-control form-control-sm" id="w_inc6"></div>
@@ -372,7 +356,6 @@
                                 <div class="badge bg-warning text-dark border fs-6 shadow-sm" id="u_target_branch"></div>
                             </div>
                             <div class="section-header"><i class="bi bi-person-lines-fill"></i> 기본 정보</div>
-                            
                             <div class="row g-2 mb-3">
                                 <div class="col-4"><label class="form-label-sm">개통유형</label><input type="text" class="form-control form-control-sm" id="u_act_type" readonly></div>
                                 <div class="col-4"><label class="form-label-sm">약정유형</label><input type="text" class="form-control form-control-sm" id="u_cont_type" readonly></div>
@@ -400,7 +383,6 @@
                                 <div class="col-4"><label class="form-label-sm">제휴카드</label><input type="text" class="form-control form-control-sm" id="u_card"></div>
                                 <div class="col-4"><label class="form-label-sm">리뷰작성<span class="required-star">*</span></label><select class="form-select form-select-sm" id="u_review"></select></div>
                             </div>
-
                             <div class="divider"></div>
                             <div class="section-header"><i class="bi bi-calculator"></i> 정책 및 정산</div>
                             <div class="row g-2 mb-3">
@@ -417,7 +399,6 @@
                                 <div class="col-6"><label class="form-label-sm text-danger-custom">프리할인</label><input type="number" class="form-control form-control-sm border-danger-custom" id="u_cost2"></div>
                                 <div class="col-6"><label class="form-label-sm">유심</label><select class="form-select form-select-sm" id="u_usim"><option value="" selected>선택</option></select></div>
                             </div>
-                            
                             <div class="divider"></div>
                             <div class="section-header"><i class="bi bi-credit-card"></i> 대납 및 지원</div>
                             <div class="row g-2 mb-3">
@@ -428,7 +409,6 @@
                                 <div class="col-4"><label class="form-label-sm">방법</label><select class="form-select form-select-sm" id="u_pay2_m"></select></div>
                                 <div class="col-4"><label class="form-label-sm">처리일</label><input type="date" class="form-control form-control-sm" id="u_pay2_d"></div>
                             </div>
-
                             <div class="divider"></div>
                             <div class="section-header"><i class="bi bi-wallet2"></i> 수납 상세</div>
                             <div class="row g-2 mb-3">
@@ -909,7 +889,7 @@
             const selectedAddons = [];
             document.querySelectorAll('#u_div_addon_container .addon-check:checked').forEach(cb => selectedAddons.push(cb.value));
 
-            // ★ 중고 데이터 전송 (삭제된 항목 제외 - cost2 제거)
+            // ★ 중고 데이터 전송 (cost2 제거 및 빈값 처리)
             const formData = {
                 action: "open_used_full",
                 user: currentUser,
@@ -938,15 +918,16 @@
                 income3Memo: document.getElementById('u_inc3_m').value,
                 cost1: document.getElementById('u_cost1').value,
                 cost1Memo: document.getElementById('u_cost1_m').value,
-                // cost2: document.getElementById('u_cost2').value, // 제거됨
-                cost2: "",
+                cost2: "", // 제거된 cost2
                 payment1: document.getElementById('u_pay1').value,
                 payment1Method: document.getElementById('u_pay1_m').value,
                 payment1Date: document.getElementById('u_pay1_d').value,
                 payment2: document.getElementById('u_pay2').value,
                 payment2Method: document.getElementById('u_pay2_m').value,
                 payment2Date: document.getElementById('u_pay2_d').value,
+                // 제거된 항목들
                 cash: "", payback1: "", bankName: "", accountNumber: "", depositor: "", income4_1: "", income4_2: "",
+                
                 income5: document.getElementById('u_inc5').value,
                 income5Method: document.getElementById('u_inc5_m').value,
                 income6: document.getElementById('u_inc6').value,
