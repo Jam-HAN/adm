@@ -13,6 +13,8 @@ body {
     color: #5a5c69; 
     font-size: 0.95rem; 
 }
+
+/* 카드 디자인 */
 .glass-card { 
     background: #ffffff; 
     border-radius: 12px; 
@@ -22,10 +24,13 @@ body {
     margin-bottom: 20px; 
     transition: transform 0.2s ease-in-out;
 }
+
+/* 섹션 전환 애니메이션 */
 .section-view { display: none; }
 .active-section { display: block; animation: fadeIn 0.3s ease-out; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
+/* 폼 요소 스타일 */
 .form-label-sm { font-size: 0.8rem; font-weight: 700; color: #858796; margin-bottom: 4px; }
 .form-control-sm, .form-select-sm { 
     border-radius: 6px; padding: 0.5rem 0.75rem; font-size: 0.9rem; border: 1px solid #d1d3e2;
@@ -33,36 +38,64 @@ body {
 .form-control:focus, .form-select:focus {
     border-color: #bac8f3; box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
 }
+
+/* 구분선 및 헤더 */
 .divider { border-top: 1px solid #e3e6f0; margin: 1.5rem 0 1rem 0; }
 .section-header { 
     font-size: 0.95rem; font-weight: 800; color: var(--primary-color); 
     margin-bottom: 12px; display: flex; align-items: center; text-transform: uppercase; letter-spacing: 0.05em;
 }
 .section-header i { margin-right: 8px; font-size: 1.1rem; }
+
+/* 강조 텍스트 */
 .required-star { color: #e74a3b; font-weight: bold; margin-left: 2px; }
 .text-danger-custom { color: #e74a3b !important; font-weight: bold; }
 .border-danger-custom { border-color: #e74a3b !important; color: #e74a3b !important; font-weight: bold; }
 
+/* 대시보드 카드 */
 .stat-card { border-left: 0.25rem solid var(--primary-color); }
 .stat-card.month { border-left-color: var(--success-color); }
 
+/* ★ 대시보드 테이블 (20% 균등 분할, 가운데 정렬, 말줄임표) */
 .dash-table { table-layout: fixed; width: 100%; }
 .dash-table th { 
-    background-color: #f8f9fc; color: #4e73df; font-weight: 800; 
-    font-size: 0.8rem; text-transform: uppercase; text-align: center; width: 20%;
+    background-color: #f8f9fc; 
+    color: #4e73df; 
+    font-weight: 800; 
+    font-size: 0.8rem; 
+    text-transform: uppercase; 
+    text-align: center;
+    width: 20%;
 }
 .dash-table td { 
-    vertical-align: middle; font-size: 0.9rem; text-align: center; 
-    padding: 8px 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    vertical-align: middle; 
+    font-size: 0.9rem; 
+    text-align: center;
+    padding: 8px 4px;
 }
 
+/* 텍스트 말줄임용 클래스 (흰색박스 제거됨) */
+.text-truncate-cell {
+    white-space: nowrap; 
+    overflow: hidden; 
+    text-overflow: ellipsis;
+    display: block;
+    width: 100%;
+}
+
+/* 직원 랭킹 */
 .user-rank-item { display: flex; align-items: center; margin-bottom: 10px; }
 .user-rank-name { width: 80px; font-weight: bold; font-size: 0.9rem; color: #5a5c69; }
 .progress { height: 12px; border-radius: 6px; flex-grow: 1; margin: 0 10px; background-color: #eaecf4; }
 .user-rank-count { width: 40px; text-align: right; font-weight: 800; color: var(--primary-color); }
 
+/* 네비게이션 및 기타 */
 .navbar { background-color: #ffffff !important; box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15) !important; }
 .navbar-brand { font-weight: 800; color: var(--primary-color) !important; font-size: 1.2rem; cursor: pointer; }
 .nav-link { font-weight: 600; color: #5a5c69 !important; font-size: 0.95rem; cursor: pointer; }
 .nav-link:hover { color: var(--primary-color) !important; }
 .dropdown-item { cursor: pointer; }
+
+/* 거래처 리스트 스타일 */
+#vendor_list_ui .list-group-item { display: block; }
+#vendor_list_ui .small { display: block !important; color: #6c757d !important; font-size: 0.85em; margin-top: 4px; }
