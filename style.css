@@ -56,7 +56,7 @@ body {
 .stat-card { border-left: 0.25rem solid var(--primary-color); }
 .stat-card.month { border-left-color: var(--success-color); }
 
-/* ★ 대시보드 테이블 (20% 균등 분할, 가운데 정렬, 말줄임표) */
+/* ★ [수정] 대시보드 테이블: 줄바꿈 방지 및 균등 분할 */
 .dash-table { table-layout: fixed; width: 100%; }
 .dash-table th { 
     background-color: #f8f9fc; 
@@ -72,15 +72,9 @@ body {
     font-size: 0.9rem; 
     text-align: center;
     padding: 8px 4px;
-}
-
-/* 텍스트 말줄임용 클래스 (흰색박스 제거됨) */
-.text-truncate-cell {
-    white-space: nowrap; 
-    overflow: hidden; 
+    white-space: nowrap !important; /* 줄바꿈 강제 방지 */
+    overflow: hidden;
     text-overflow: ellipsis;
-    display: block;
-    width: 100%;
 }
 
 /* 직원 랭킹 */
