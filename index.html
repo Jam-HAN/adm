@@ -22,9 +22,9 @@
     </div>
 
     <div id="main-view" style="display:none;">
-        <nav class="navbar navbar-expand-lg sticky-top px-3">
+        <nav class="navbar navbar-expand-lg sticky-top px-3 bg-white shadow-sm">
             <div class="container-fluid px-0">
-                <a class="navbar-brand" onclick="showSection('section-dashboard')"><i class="bi bi-grid-fill"></i> 대박통신</a>
+                <a class="navbar-brand fw-bold text-primary" onclick="showSection('section-dashboard')" style="cursor:pointer;"><i class="bi bi-grid-fill"></i> 대박통신</a>
                 <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"><span class="navbar-toggler-icon"></span></button>
                 <div class="collapse navbar-collapse" id="navbarNav">
                     <ul class="navbar-nav me-auto ms-lg-3">
@@ -93,7 +93,7 @@
                             </div>
                             <div class="card-body p-0">
                                 <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
-                                    <table class="table table-hover align-middle mb-0 dash-table w-100">
+                                    <table class="table table-hover align-middle mb-0 dash-table">
                                         <thead class="sticky-top border-bottom">
                                             <tr>
                                                 <th>지점</th>
@@ -274,6 +274,7 @@
                                 <div class="col-6"><label class="form-label-sm">메모</label><input type="text" class="form-control form-control-sm" id="w_inc3_m"></div>
                                 <div class="col-6"><label class="form-label-sm text-danger-custom">차감정책</label><input type="number" class="form-control form-control-sm border-danger-custom" id="w_cost1"></div>
                                 <div class="col-6"><label class="form-label-sm">메모</label><input type="text" class="form-control form-control-sm" id="w_cost1_m"></div>
+                                <div class="col-6"><label class="form-label-sm text-danger-custom">프리할인</label><input type="number" class="form-control form-control-sm border-danger-custom" id="w_cost2"></div>
                             </div>
                             <div class="divider"></div><div class="section-header"><i class="bi bi-credit-card"></i> 대납 및 지원</div>
                             <div class="row g-2 mb-3">
@@ -384,7 +385,7 @@
                             </div>
                             <div class="mt-4 pb-4">
                                 <button type="button" class="btn btn-warning w-100 py-3 fw-bold text-white shadow-sm" onclick="submitUsedContract(event)">
-                                    <i class="bi bi-save-fill"></i> 중고폰 개통 저장
+                                    <i class="bi bi-save-fill"></i> 중고 개통 저장
                                 </button>
                             </div>
                         </div>
