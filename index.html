@@ -241,7 +241,12 @@
                         </div>
 
                         <div id="wired_step_2" style="display:none;">
-                            <div class="section-header"><i class="bi bi-router"></i> 유선 정보 입력</div>
+                            <div class="alert alert-primary py-2 small mb-4 d-flex align-items-center justify-content-between">
+                                <div><i class="bi bi-router me-1"></i> <span id="w_target_info" class="fw-bold fs-6"></span></div>
+                                <div class="badge bg-primary text-white border fs-6 shadow-sm" id="w_target_branch"></div>
+                            </div>
+
+                            <div class="section-header"><i class="bi bi-person-lines-fill"></i> 기본 정보</div>
                             
                             <div class="row g-2 mb-3">
                                 <div class="col-6"><label class="form-label-sm">개통유형</label><input type="text" class="form-control form-control-sm" id="w_act_type" readonly></div>
@@ -500,9 +505,9 @@
                 if(document.getElementById('f_visit')) document.getElementById('f_visit').innerHTML = vOpts;
                 if(document.getElementById('w_visit')) document.getElementById('w_visit').innerHTML = vOpts;
 
-                // 결제방법 (수정: 대납1,2는 R열 payMethodList 사용)
-                const pList = d.payMethodList || [];
-                const cList = d.colMethodList || [];
+                // 결제방법 (수정: 대납1,2는 payMethodList 사용)
+                const pList = d.payMethodList || []; // R열 (대납)
+                const cList = d.colMethodList || []; // T열 (입금)
                 
                 ['f_pay1_m','f_pay2_m', 'w_pay1_m','w_pay2_m'].forEach(id => fill(id, pList));
                 ['f_inc4_m','f_inc4_2_m','f_inc5_m', 'w_inc5_m'].forEach(id => fill(id, cList));
@@ -559,6 +564,10 @@
             document.getElementById('w_avalue').value = vendor;
             document.getElementById('w_act_type').value = type;
             document.getElementById('w_cont_type').value = contract;
+
+            // ★ [추가] 유선 요약 배너 데이터 채우기
+            document.getElementById('w_target_info').innerText = `${type} : ${contract}`;
+            document.getElementById('w_target_branch').innerText = branch;
 
             renderWiredPlanInputs(contract);
         }
@@ -652,6 +661,7 @@
                 income3Memo: document.getElementById('w_inc3_m').value,
                 cost1: document.getElementById('w_cost1').value,
                 cost1Memo: document.getElementById('w_cost1_m').value,
+                cost2: document.getElementById('w_cost2').value,
                 
                 payment1: document.getElementById('w_pay1').value,
                 payment1Method: document.getElementById('w_pay1_m').value,
