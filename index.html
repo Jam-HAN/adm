@@ -113,7 +113,7 @@
                                 <div><i class="bi bi-phone me-1"></i> <span id="target_model" class="fw-bold fs-6"></span> (<span id="target_serial"></span>)</div>
                                 <div class="badge bg-primary text-white border fs-6 shadow-sm" id="target_branch"></div>
                             </div>
-                            
+
                             <div class="section-header"><i class="bi bi-person-lines-fill"></i> 기본 정보</div>
                             <div class="row g-2 mb-3">
                                 <div class="col-4"><label class="form-label-sm">개통유형</label><select class="form-select form-select-sm" id="f_act_type"><option value="" selected>선택</option></select></div>
@@ -218,19 +218,26 @@
                     <div class="p-3">
                         <div id="wired_step_1">
                             <div class="p-4 bg-light rounded border mb-3">
-                                <label class="small fw-bold mb-2">지점 선택</label>
+                                <label class="small fw-bold mb-2">1. 지점 선택</label>
                                 <select class="form-select mb-3" id="wired_branch">
                                     <option value="" selected>선택하세요</option>
                                     <option value="장지 본점">장지 본점</option>
                                     <option value="명일 직영점">명일 직영점</option>
                                 </select>
                                 
-                                <label class="small fw-bold mb-2">고객명 (무선이력 확인용)</label>
-                                <div class="input-group">
-                                    <input type="text" class="form-control" id="wired_search_name" placeholder="고객명 입력">
-                                    <button class="btn btn-success" onclick="checkWiredCustomer()">조회</button>
-                                </div>
-                                <div id="wired_search_msg" class="mt-2 small fw-bold"></div>
+                                <label class="small fw-bold mb-2">2. 개통처 선택</label>
+                                <select class="form-select mb-3" id="w_pre_avalue">
+                                    <option value="" selected>선택하세요</option>
+                                </select>
+
+                                <label class="small fw-bold mb-2">3. 개통유형 선택</label>
+                                <select class="form-select mb-3" id="w_pre_act_type">
+                                    <option value="" selected>선택하세요</option>
+                                </select>
+
+                                <button class="btn btn-success w-100 fw-bold" onclick="startWiredActivation()">
+                                    다음 단계 <i class="bi bi-arrow-right"></i>
+                                </button>
                             </div>
                         </div>
 
@@ -238,7 +245,7 @@
                             <div class="section-header"><i class="bi bi-router"></i> 유선 정보 입력</div>
                             
                             <div class="row g-2 mb-3">
-                                <div class="col-4"><label class="form-label-sm">개통유형</label><select class="form-select form-select-sm" id="w_act_type"></select></div>
+                                <div class="col-4"><label class="form-label-sm">개통유형</label><input type="text" class="form-control form-control-sm" id="w_act_type" readonly></div>
                                 <div class="col-4"><label class="form-label-sm">약정유형</label><select class="form-select form-select-sm" id="w_cont_type"></select></div>
                                 <div class="col-4"><label class="form-label-sm">방문경로<span class="required-star">*</span></label><select class="form-select form-select-sm" id="w_visit" onchange="checkWiredVisitPath()"></select></div>
                                 <div class="col-12" id="w_div_visit_etc" style="display:none;"><input type="text" class="form-control form-control-sm" id="w_visit_etc" placeholder="상세 경로"></div>
@@ -252,9 +259,7 @@
                                 
                                 <div class="col-12">
                                     <label class="form-label-sm">부가서비스</label>
-                                    <div id="w_div_addon_container" class="border rounded p-2 bg-light" style="min-height: 40px;">
-                                        <span class="text-muted small">개통처 확인중...</span>
-                                    </div>
+                                    <div id="w_div_addon_container" class="border rounded p-2 bg-light" style="min-height: 40px;"></div>
                                 </div>
                                 
                                 <div class="col-4"><label class="form-label-sm">제휴카드</label><input type="text" class="form-control form-control-sm" id="w_card"></div>
@@ -497,10 +502,13 @@
                 fill('f_usim', d.usimList);
                 
                 // 유선
-                fill('w_act_type', d.actListWired);
-                fill('w_cont_type', d.contListWired);
+                fill('w_pre_act_type', d.actListWired); // Step 1
+                fill('w_cont_type', d.contListWired);   // Step 2
                 fill('w_review', d.reviewList);
                 fill('w_usim', d.usimList);
+
+                // 유선 개통처 (Step 1)
+                if(d.wiredVendorList) fill('w_pre_avalue', d.wiredVendorList);
 
                 // 공통 (방문경로, 결제방법 등)
                 const vList = d.visitList || [];
@@ -548,48 +556,46 @@
         function refreshAddons() { renderAddonCheckboxes(document.getElementById('f_avalue').value, 'div_addon_container'); }
         function refreshWiredAddons() { renderAddonCheckboxes(document.getElementById('w_avalue').value, 'w_div_addon_container'); }
 
-        // --- 유선 기능 ---
-        function checkWiredCustomer() {
+        // --- 유선 기능 (수정됨) ---
+        function startWiredActivation() {
+            // 1. 유효성 검사
             const branch = document.getElementById('wired_branch').value;
-            const name = document.getElementById('wired_search_name').value;
-            if(!branch || !name) return alert("지점과 고객명을 입력하세요");
-            
-            const btn = event.target; 
-            btn.disabled = true; btn.innerText = "...";
+            const vendor = document.getElementById('w_pre_avalue').value;
+            const type = document.getElementById('w_pre_act_type').value;
 
-            fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "check_recent_mobile", branch: branch, name: name }) })
-            .then(r=>r.json()).then(d=>{
-                const msgDiv = document.getElementById('wired_search_msg');
-                if(d.status === 'success') {
-                    if(d.found) {
-                        msgDiv.innerHTML = `<span class="text-success"><i class="bi bi-check-circle"></i> 최근 30일 내 무선 개통 이력이 있습니다! (유선 동시판매 유도)</span>`;
-                    } else {
-                        msgDiv.innerHTML = `<span class="text-muted">최근 무선 개통 이력이 없습니다.</span>`;
-                    }
-                    // 성공하면 폼 열기
-                    document.getElementById('wired_step_2').style.display = 'block';
-                    document.getElementById('w_name').value = name; // 이름 자동 입력
-                } else {
-                    alert(d.message);
-                }
-            }).finally(() => { btn.disabled=false; btn.innerText="조회"; });
+            if(!branch || !vendor || !type) {
+                return alert("지점, 개통처, 개통유형을 모두 선택해주세요.");
+            }
+
+            // 2. 화면 전환
+            document.getElementById('wired_step_1').style.display = 'none';
+            document.getElementById('wired_step_2').style.display = 'block';
+
+            // 3. 값 전달
+            document.getElementById('w_avalue').value = vendor;
+            document.getElementById('w_act_type').value = type;
+
+            // 4. 부가서비스 갱신
+            refreshWiredAddons();
         }
 
         function resetWiredForm() {
             document.getElementById('wired_branch').selectedIndex = 0;
-            document.getElementById('wired_search_name').value = "";
-            document.getElementById('wired_search_msg').innerHTML = "";
+            document.getElementById('w_pre_avalue').selectedIndex = 0;
+            document.getElementById('w_pre_act_type').selectedIndex = 0;
+            
+            document.getElementById('wired_step_1').style.display = 'block';
             document.getElementById('wired_step_2').style.display = 'none';
+            
             // 내부 폼 초기화
             document.querySelectorAll('#wired_step_2 input').forEach(i => i.value = "");
             document.querySelectorAll('#wired_step_2 select').forEach(s => s.selectedIndex=0);
             document.getElementById('w_div_visit_etc').style.display = 'none';
-            document.getElementById('w_div_addon_container').innerHTML = "<span class='text-muted small'>...</span>";
+            document.getElementById('w_div_addon_container').innerHTML = "";
         }
 
         function submitWiredContract() {
             // 유선 필수값 체크
-            if (!document.getElementById('wired_branch').value) return alert("지점을 선택해주세요");
             if (!validateField('w_visit', '방문경로')) return;
             if (!validateField('w_name', '고객명')) return;
             if (!validateField('w_review', '리뷰작성여부')) return;
@@ -606,7 +612,7 @@
             const formData = {
                 action: "open_wired_full",
                 user: currentUser,
-                branch: document.getElementById('wired_branch').value,
+                branch: document.getElementById('wired_branch').value, // Step 1 값
                 
                 activationType: document.getElementById('w_act_type').value,
                 contractType: document.getElementById('w_cont_type').value,
