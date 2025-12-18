@@ -464,6 +464,27 @@ function addVendor() { const n=document.getElementById('v_name').value; if(!n)re
 function deleteVendor(n) { if(confirm("삭제?")) fetch(GAS_URL,{method:"POST",body:JSON.stringify({action:"delete_vendor",name:n})}).then(r=>r.json()).then(d=>{alert(d.message);loadVendorsToList();}); }
 
 function showMsg(id, type, text) { const el=document.getElementById(id); el.style.display='block'; el.className=`alert py-2 text-center small fw-bold rounded-3 alert-${type==='success'?'success':'danger'}`; el.innerText=text; setTimeout(()=>el.style.display='none',2000); }
-function handleCredentialResponse(r) { fetch(GAS_URL,{method:"POST",body:JSON.stringify({action:"login",token:r.credential})}).then(res=>res.json()).then(d=>{ if(d.status==='success') { sessionStorage.setItem('dbphone_user',JSON.stringify({name:d.name,email:d.user})); currentUser=d.name; document.getElementById('login-view').style.display='none'; document.getElementById('main-view').style.display='block'; document.getElementById('user-name').innerText=currentUser; loadInitData(); setupAutoLogout(); } else document.getElementById('login-msg').innerText=d.message; }); }
+// window 객체에 직접 할당하여 전역에서 찾을 수 있게 함
+window.handleCredentialResponse = function(r) { 
+    fetch(GAS_URL,{
+        method:"POST",
+        body:JSON.stringify({action:"login",token:r.credential})
+    })
+    .then(res=>res.json())
+    .then(d=>{ 
+        if(d.status==='success') { 
+            sessionStorage.setItem('dbphone_user',JSON.stringify({name:d.name,email:d.user})); 
+            currentUser=d.name; 
+            document.getElementById('login-view').style.display='none'; 
+            document.getElementById('main-view').style.display='block'; 
+            document.getElementById('user-name').innerText=currentUser; 
+            loadInitData(); 
+            setupAutoLogout(); 
+            loadDashboard(); // 대시보드 로드
+        } else { 
+            document.getElementById('login-msg').innerText=d.message; 
+        }
+    }); 
+}
 function logout() { sessionStorage.removeItem('dbphone_user'); location.reload(); }
 </script>
