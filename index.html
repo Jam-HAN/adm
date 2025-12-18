@@ -226,14 +226,13 @@
                                 </select>
                                 
                                 <label class="small fw-bold mb-2">2. 개통처 선택</label>
-                                <select class="form-select mb-3" id="w_pre_avalue">
-                                    <option value="" selected>선택하세요</option>
-                                </select>
+                                <select class="form-select mb-3" id="w_pre_avalue"><option value="" selected>선택하세요</option></select>
 
                                 <label class="small fw-bold mb-2">3. 개통유형 선택</label>
-                                <select class="form-select mb-3" id="w_pre_act_type">
-                                    <option value="" selected>선택하세요</option>
-                                </select>
+                                <select class="form-select mb-3" id="w_pre_act_type"><option value="" selected>선택하세요</option></select>
+
+                                <label class="small fw-bold mb-2">4. 약정유형 선택</label>
+                                <select class="form-select mb-3" id="w_pre_cont_type"><option value="" selected>선택하세요</option></select>
 
                                 <button class="btn btn-success w-100 fw-bold" onclick="startWiredActivation()">
                                     다음 단계 <i class="bi bi-arrow-right"></i>
@@ -245,8 +244,9 @@
                             <div class="section-header"><i class="bi bi-router"></i> 유선 정보 입력</div>
                             
                             <div class="row g-2 mb-3">
-                                <div class="col-4"><label class="form-label-sm">개통유형</label><input type="text" class="form-control form-control-sm" id="w_act_type" readonly></div>
-                                <div class="col-4"><label class="form-label-sm">약정유형</label><select class="form-select form-select-sm" id="w_cont_type"></select></div>
+                                <div class="col-6"><label class="form-label-sm">개통유형</label><input type="text" class="form-control form-control-sm" id="w_act_type" readonly></div>
+                                <div class="col-6"><label class="form-label-sm">약정유형</label><input type="text" class="form-control form-control-sm" id="w_cont_type" readonly></div>
+                                
                                 <div class="col-4"><label class="form-label-sm">방문경로<span class="required-star">*</span></label><select class="form-select form-select-sm" id="w_visit" onchange="checkWiredVisitPath()"></select></div>
                                 <div class="col-12" id="w_div_visit_etc" style="display:none;"><input type="text" class="form-control form-control-sm" id="w_visit_etc" placeholder="상세 경로"></div>
                                 
@@ -254,13 +254,8 @@
                                 <div class="col-4"><label class="form-label-sm">생년월일</label><input type="text" class="form-control form-control-sm" id="w_birth"></div>
                                 <div class="col-4"><label class="form-label-sm">연락처</label><input type="text" class="form-control form-control-sm" id="w_phone"></div>
                                 
-                                <div class="col-6"><label class="form-label-sm">인터넷요금제</label><input type="text" class="form-control form-control-sm" id="w_plan"></div>
-                                <div class="col-6"><label class="form-label-sm">TV/기타</label><input type="text" class="form-control form-control-sm" id="w_plan_chg"></div>
-                                
-                                <div class="col-12">
-                                    <label class="form-label-sm">부가서비스</label>
-                                    <div id="w_div_addon_container" class="border rounded p-2 bg-light" style="min-height: 40px;"></div>
-                                </div>
+                                <div class="col-12" id="w_plan_input_area">
+                                    </div>
                                 
                                 <div class="col-4"><label class="form-label-sm">제휴카드</label><input type="text" class="form-control form-control-sm" id="w_card"></div>
                                 <div class="col-4"><label class="form-label-sm">리뷰작성<span class="required-star">*</span></label><select class="form-select form-select-sm" id="w_review"></select></div>
@@ -269,7 +264,7 @@
                             <div class="divider"></div>
                             <div class="section-header"><i class="bi bi-calculator"></i> 정책 및 정산</div>
                             <div class="row g-2 mb-3">
-                                <div class="col-6"><label class="form-label-sm">개통처</label><input type="text" class="form-control form-control-sm" id="w_avalue" oninput="refreshWiredAddons()"></div>
+                                <div class="col-6"><label class="form-label-sm">개통처</label><input type="text" class="form-control form-control-sm" id="w_avalue"></div>
                                 <div class="col-6"><label class="form-label-sm">정책차수</label><input type="text" class="form-control form-control-sm" id="w_policy"></div>
                                 
                                 <div class="col-6"><label class="form-label-sm">액면/히든</label><input type="number" class="form-control form-control-sm" id="w_inc1"></div>
@@ -284,9 +279,7 @@
                                 <div class="col-6"><label class="form-label-sm text-danger-custom">차감정책</label><input type="number" class="form-control form-control-sm border-danger-custom" id="w_cost1"></div>
                                 <div class="col-6"><label class="form-label-sm">메모</label><input type="text" class="form-control form-control-sm" id="w_cost1_m"></div>
                                 
-                                <div class="col-6"><label class="form-label-sm text-danger-custom">프리할인</label><input type="number" class="form-control form-control-sm border-danger-custom" id="w_cost2"></div>
-                                <div class="col-6"><label class="form-label-sm">유심</label><select class="form-select form-select-sm" id="w_usim"></select></div>
-                            </div>
+                                </div>
 
                             <div class="divider"></div>
                             <div class="section-header"><i class="bi bi-credit-card"></i> 대납 및 지원</div>
@@ -310,12 +303,6 @@
                             <div class="divider"></div>
                             <div class="section-header"><i class="bi bi-wallet2"></i> 수납 상세</div>
                             <div class="row g-2 mb-3">
-                                <div class="col-6"><label class="form-label-sm">단말기수납1</label><input type="number" class="form-control form-control-sm" id="w_inc4"></div>
-                                <div class="col-6"><label class="form-label-sm">방법</label><select class="form-select form-select-sm" id="w_inc4_m"></select></div>
-                                
-                                <div class="col-6"><label class="form-label-sm">단말기수납2</label><input type="number" class="form-control form-control-sm" id="w_inc4_2"></div>
-                                <div class="col-6"><label class="form-label-sm">방법</label><select class="form-select form-select-sm" id="w_inc4_2_m"></select></div>
-                                
                                 <div class="col-6"><label class="form-label-sm">요금수납</label><input type="number" class="form-control form-control-sm" id="w_inc5"></div>
                                 <div class="col-6"><label class="form-label-sm">방법</label><select class="form-select form-select-sm" id="w_inc5_m"></select></div>
                                 
@@ -502,10 +489,9 @@
                 fill('f_usim', d.usimList);
                 
                 // 유선
-                fill('w_pre_act_type', d.actListWired); // Step 1
-                fill('w_cont_type', d.contListWired);   // Step 2
+                fill('w_pre_act_type', d.actListWired); // Step 1: 개통유형
+                fill('w_pre_cont_type', d.contListWired); // Step 1: 약정유형
                 fill('w_review', d.reviewList);
-                fill('w_usim', d.usimList);
 
                 // 유선 개통처 (Step 1)
                 if(d.wiredVendorList) fill('w_pre_avalue', d.wiredVendorList);
@@ -519,7 +505,7 @@
                 // 결제방법
                 const mList = d.colMethodList || [];
                 ['f_pay1_m','f_pay2_m','f_inc4_m','f_inc4_2_m','f_inc5_m',
-                 'w_pay1_m','w_pay2_m','w_inc4_m','w_inc4_2_m','w_inc5_m'].forEach(id => fill(id, mList));
+                 'w_pay1_m','w_pay2_m','w_inc5_m'].forEach(id => fill(id, mList));
 
                 globalAddonList = d.addonList || [];
             });
@@ -554,48 +540,70 @@
         }
 
         function refreshAddons() { renderAddonCheckboxes(document.getElementById('f_avalue').value, 'div_addon_container'); }
-        function refreshWiredAddons() { renderAddonCheckboxes(document.getElementById('w_avalue').value, 'w_div_addon_container'); }
+        // 유선은 부가서비스 없음
 
-        // --- 유선 기능 (수정됨) ---
+        // --- 유선 기능 (동적 요금제 적용) ---
         function startWiredActivation() {
-            // 1. 유효성 검사
             const branch = document.getElementById('wired_branch').value;
             const vendor = document.getElementById('w_pre_avalue').value;
             const type = document.getElementById('w_pre_act_type').value;
+            const contract = document.getElementById('w_pre_cont_type').value;
 
-            if(!branch || !vendor || !type) {
-                return alert("지점, 개통처, 개통유형을 모두 선택해주세요.");
+            if(!branch || !vendor || !type || !contract) {
+                return alert("모든 항목을 선택해주세요.");
             }
 
-            // 2. 화면 전환
             document.getElementById('wired_step_1').style.display = 'none';
             document.getElementById('wired_step_2').style.display = 'block';
 
-            // 3. 값 전달
             document.getElementById('w_avalue').value = vendor;
             document.getElementById('w_act_type').value = type;
+            document.getElementById('w_cont_type').value = contract;
 
-            // 4. 부가서비스 갱신
-            refreshWiredAddons();
+            renderWiredPlanInputs(contract);
+        }
+
+        function renderWiredPlanInputs(contractType) {
+            const area = document.getElementById('w_plan_input_area');
+            area.innerHTML = "";
+            
+            if(contractType === "인터넷+TV+기타서비스") {
+                area.innerHTML = `
+                    <div class="row g-2">
+                        <div class="col-4"><label class="form-label-sm">인터넷요금제</label><input type="text" class="form-control form-control-sm" id="w_plan_net"></div>
+                        <div class="col-4"><label class="form-label-sm">TV요금제</label><input type="text" class="form-control form-control-sm" id="w_plan_tv"></div>
+                        <div class="col-4"><label class="form-label-sm">기타서비스</label><input type="text" class="form-control form-control-sm" id="w_plan_other"></div>
+                    </div>`;
+            } else if(contractType === "인터넷+TV") {
+                area.innerHTML = `
+                    <div class="row g-2">
+                        <div class="col-6"><label class="form-label-sm">인터넷요금제</label><input type="text" class="form-control form-control-sm" id="w_plan_net"></div>
+                        <div class="col-6"><label class="form-label-sm">TV요금제</label><input type="text" class="form-control form-control-sm" id="w_plan_tv"></div>
+                    </div>`;
+            } else {
+                // 인터넷 등
+                area.innerHTML = `
+                    <div class="row g-2">
+                        <div class="col-12"><label class="form-label-sm">인터넷요금제</label><input type="text" class="form-control form-control-sm" id="w_plan_net"></div>
+                    </div>`;
+            }
         }
 
         function resetWiredForm() {
             document.getElementById('wired_branch').selectedIndex = 0;
             document.getElementById('w_pre_avalue').selectedIndex = 0;
             document.getElementById('w_pre_act_type').selectedIndex = 0;
+            document.getElementById('w_pre_cont_type').selectedIndex = 0;
             
             document.getElementById('wired_step_1').style.display = 'block';
             document.getElementById('wired_step_2').style.display = 'none';
             
-            // 내부 폼 초기화
             document.querySelectorAll('#wired_step_2 input').forEach(i => i.value = "");
             document.querySelectorAll('#wired_step_2 select').forEach(s => s.selectedIndex=0);
             document.getElementById('w_div_visit_etc').style.display = 'none';
-            document.getElementById('w_div_addon_container').innerHTML = "";
         }
 
         function submitWiredContract() {
-            // 유선 필수값 체크
             if (!validateField('w_visit', '방문경로')) return;
             if (!validateField('w_name', '고객명')) return;
             if (!validateField('w_review', '리뷰작성여부')) return;
@@ -606,13 +614,20 @@
                 visitVal = "기타: " + document.getElementById('w_visit_etc').value;
             }
 
-            const selectedAddons = [];
-            document.querySelectorAll('#w_div_addon_container .addon-check:checked').forEach(cb => selectedAddons.push(cb.value));
+            // 요금제 합치기
+            let pricePlan = "";
+            const net = document.getElementById('w_plan_net');
+            const tv = document.getElementById('w_plan_tv');
+            const other = document.getElementById('w_plan_other');
+
+            if(net && net.value) pricePlan = net.value;
+            if(tv && tv.value) pricePlan += " / " + tv.value;
+            if(other && other.value) pricePlan += " / " + other.value;
 
             const formData = {
                 action: "open_wired_full",
                 user: currentUser,
-                branch: document.getElementById('wired_branch').value, // Step 1 값
+                branch: document.getElementById('wired_branch').value, 
                 
                 activationType: document.getElementById('w_act_type').value,
                 contractType: document.getElementById('w_cont_type').value,
@@ -620,12 +635,8 @@
                 birth: document.getElementById('w_birth').value,
                 visitPath: visitVal,
                 phoneNumber: document.getElementById('w_phone').value,
-                pricePlan: document.getElementById('w_plan').value,
-                changePlan: document.getElementById('w_plan_chg').value,
+                pricePlan: pricePlan, // ★ 합쳐진 요금제
                 
-                selectedAddons: selectedAddons,
-                
-                usim: document.getElementById('w_usim').value,
                 card: document.getElementById('w_card').value,
                 review: document.getElementById('w_review').value,
                 
@@ -639,7 +650,6 @@
                 income3Memo: document.getElementById('w_inc3_m').value,
                 cost1: document.getElementById('w_cost1').value,
                 cost1Memo: document.getElementById('w_cost1_m').value,
-                cost2: document.getElementById('w_cost2').value,
                 
                 payment1: document.getElementById('w_pay1').value,
                 payment1Method: document.getElementById('w_pay1_m').value,
@@ -654,10 +664,6 @@
                 accountNumber: document.getElementById('w_acc').value,
                 depositor: document.getElementById('w_holder').value,
                 
-                income4_1: document.getElementById('w_inc4').value,
-                income4_1Method: document.getElementById('w_inc4_m').value,
-                income4_2: document.getElementById('w_inc4_2').value,
-                income4_2Method: document.getElementById('w_inc4_2_m').value,
                 income5: document.getElementById('w_inc5').value,
                 income5Method: document.getElementById('w_inc5_m').value,
                 income6: document.getElementById('w_inc6').value,
@@ -701,7 +707,7 @@
                     document.getElementById('target_serial').innerText = d.data.serial;
                     document.getElementById('target_branch').innerText = d.data.branch || "지점미상"; 
                     document.getElementById('f_avalue').value = d.data.supplier || ""; 
-                    refreshAddons(); // 부가서비스 로드
+                    refreshAddons(); 
                     document.getElementById('open_step_1').style.display = 'none';
                     document.getElementById('open_step_2').style.display = 'block';
                     document.getElementById('f_name').focus();
