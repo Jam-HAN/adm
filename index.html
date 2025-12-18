@@ -33,9 +33,11 @@
         .user-rank-name { width: 70px; font-weight: bold; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .progress { height: 12px; border-radius: 6px; flex-grow: 1; margin: 0 10px; background-color: #e9ecef; }
         .user-rank-count { width: 40px; text-align: right; font-weight: bold; color: #4e73df; }
-        .dash-table th { background-color: #f8f9fa; font-size: 0.85rem; color: #6c757d; }
-        .dash-table td { vertical-align: middle; font-size: 0.9rem; }
-        .text-truncate-box { max-width: 100px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: inline-block; vertical-align: middle; }
+        
+        /* ★ 테이블 스타일 (균등분할, 가운데정렬) */
+        .dash-table { table-layout: fixed; width: 100%; }
+        .dash-table th, .dash-table td { width: 20%; text-align: center; vertical-align: middle; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .dash-table th { background-color: #f8f9fa; color: #6c757d; font-size: 0.85rem; }
     </style>
 </head>
 <body>
@@ -127,11 +129,11 @@
                                     <table class="table table-hover align-middle mb-0 dash-table">
                                         <thead class="sticky-top border-bottom">
                                             <tr>
-                                                <th style="width:15%">지점</th>
-                                                <th style="width:15%">유형</th>
-                                                <th style="width:20%">고객명</th>
-                                                <th style="width:20%">담당</th>
-                                                <th style="width:30%" class="text-end">마진</th>
+                                                <th>지점</th>
+                                                <th>유형</th>
+                                                <th>고객명</th>
+                                                <th>담당매니저</th>
+                                                <th>마진</th>
                                             </tr>
                                         </thead>
                                         <tbody id="dash_today_list">
