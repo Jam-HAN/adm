@@ -1,9 +1,8 @@
 // ==========================================
-// script.js (V49.1 - Final Full Code)
+// script.js (V50.0 - Final Full Logic)
 // ==========================================
 
-// ★ [중요] 배포 후 갱신된 웹 앱 URL인지 반드시 확인하세요!
-const GAS_URL = "https://script.google.com/macros/s/AKfycbx_VpC-PfmQCTGdxdc0kD0vexTPF3xIrBNwEnRkzl2Z2yQJxK9VHsWXvz1UjSt-8ITN/exec"; 
+const GAS_URL = "https://script.google.com/macros/s/AKfycbw1k159kDezV8JwcImu7GM4q-bTTcUrPv6CwIYC_q47mpT5GlIGRy7OC4BduwL1vG5G/exec"; // ★ URL 확인
 
 let currentUser = "";
 let inPendingList = [];
@@ -278,14 +277,6 @@ function handleInScan(e) {
     if(!v) return;
     if(inPendingList.some(i => i.barcode === v)) { showMsg('in-msg','error','이미 목록에 있음'); e.target.value=""; return; }
 
-    // 1. 11자리 체크 (아이폰)
-    if (v.length === 11) {
-        showStockRegisterModal('iphone', v);
-        e.target.value = "";
-        return;
-    }
-
-    // 2. 서버 조회 (미등록 체크)
     fetch(GAS_URL, {
         method: "POST",
         body: JSON.stringify({
@@ -306,8 +297,9 @@ function handleInScan(e) {
             } else {
                 showMsg('in-msg','success',`입고: ${d.data.model}`);
             }
+        } else if (d.status === 'iphone') {
+            showStockRegisterModal('iphone', v);
         } else if (d.status === 'unregistered') {
-            // 미등록 단말기 -> 모달 띄우기 (타입: unregistered)
             showStockRegisterModal('unregistered', v);
         } else {
             showMsg('in-msg','error', d.message);
@@ -409,7 +401,7 @@ function submitStockRegister() {
 
     tempInStockData.model = model;
     tempInStockData.color = color;
-    tempInStockData.serial = tempInStockData.barcode; 
+    tempInStockData.serial = tempInStockData.barcode; // 바코드를 일련번호로 사용
     tempInStockData.supplier = supplier; 
 
     // 서버에 등록 요청
@@ -482,12 +474,21 @@ function submitStockRegister() {
     });
 }
 
-function renderInList() { const t=document.getElementById('in_tbody'); t.innerHTML=""; inPendingList.forEach((i,x)=>t.innerHTML+=`<tr><td>${i.model}</td><td>${i.serial}</td><td><button onclick="inPendingList.splice(${x},1);renderInList()">X</button></td></tr>`); document.getElementById('in_count').innerText=inPendingList.length; document.getElementById('in_batch_area').style.display = inPendingList.length > 0 ? 'block' : 'none'; }
+function renderInList() { 
+    const t = document.getElementById('in_tbody'); 
+    t.innerHTML = ""; 
+    inPendingList.forEach((i, x) => {
+        t.innerHTML += `<tr><td>${i.model}</td><td>${i.serial}</td><td><button class="btn btn-xs btn-outline-danger" onclick="inPendingList.splice(${x},1);renderInList()">X</button></td></tr>`;
+    }); 
+    document.getElementById('in_count').innerText = inPendingList.length; 
+    document.getElementById('in_batch_area').style.display = inPendingList.length > 0 ? 'block' : 'none';
+}
+
 function clearInList() { inPendingList=[]; renderInList(); }
 function submitInBatch() { if(!inPendingList.length)return; if(!confirm("입고?"))return; fetch(GAS_URL,{method:"POST",body:JSON.stringify({action:"batch_register",items:inPendingList,branch:document.getElementById('in_branch').value,user:currentUser})}).then(r=>r.json()).then(d=>{if(d.status==='success'){alert(d.count+"대 입고완료");clearInList();}else alert(d.message);}); }
 
 // ==========================================
-// 7. 무선 개통 (스캔 + 간편입고)
+// 6. 무선 개통
 // ==========================================
 function handleOpenScan(e) { 
     if(e.key!=='Enter') return; 
@@ -632,7 +633,7 @@ function resetOpenForm() {
 }
 
 // ==========================================
-// 8. 유선 개통
+// 7. 유선 개통
 // ==========================================
 function startWiredActivation() {
     const branch = document.getElementById('wired_branch').value; const vendor = document.getElementById('w_pre_avalue').value; const type = document.getElementById('w_pre_act_type').value; const contract = document.getElementById('w_pre_cont_type').value;
