@@ -489,6 +489,32 @@
         </div>
     </div>
 
+    <div class="modal fade" id="modal-stock-detail" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-primary text-white border-0">
+                    <h5 class="modal-title fw-bold"><i class="bi bi-apple"></i> 상세 정보 입력</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="alert alert-info small fw-bold mb-3">
+                        <i class="bi bi-info-circle"></i> 모델 정보가 없는 단말기(아이폰 등)입니다.<br>
+                        모델명과 색상을 입력해주세요.
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted">모델명</label>
+                        <input type="text" class="form-control fw-bold" id="detail_model" placeholder="예: 아이폰17프로">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted">색상</label>
+                        <input type="text" class="form-control fw-bold" id="detail_color" placeholder="예: 화이트티타늄">
+                    </div>
+                    <button class="btn btn-primary w-100 fw-bold py-2 mt-3" onclick="confirmStockDetail()">입력 완료</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="script.js"></script>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
