@@ -467,14 +467,25 @@ function updateIphoneColors() {
 }
 
 // ★ 입력 완료 처리 (연속 스캔 시 서버 전송 방지)
+// [수정] 아이폰 저장 포맷 변경 (모델명_용량)
 function submitStockRegister() {
     const type = tempInStockData.type;
     const supplier = document.getElementById('reg_modal_supplier').value;
     let model = "", color = "";
 
     if (type === 'iphone') {
-        model = document.getElementById('reg_iphone_model').value;
+        const rawModel = document.getElementById('reg_iphone_model').value;
+        const storage = document.getElementById('reg_iphone_storage').value;
+        
+        if (!rawModel) { alert("모델명을 선택해주세요."); return; }
+        if (!storage) { alert("용량을 선택해주세요."); return; }
+        
+        // ★ [수정] 모델명과 용량을 언더바(_)로 연결
+        // 예: 아이폰15_128GB
+        model = `${rawModel}_${storage}`;
+        
         color = document.getElementById('reg_iphone_color').value;
+        
     } else {
         model = document.getElementById('reg_manual_model').value;
         color = document.getElementById('reg_manual_color').value;
