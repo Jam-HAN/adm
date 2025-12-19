@@ -336,6 +336,7 @@ function showStockRegisterModal(type, barcode) {
     tempInStockData = { 
         type: type, 
         barcode: barcode,
+        supplier: defaultSup,
         branch: defaultBranch
     };
 
@@ -401,7 +402,7 @@ function submitStockRegister() {
 
     tempInStockData.model = model;
     tempInStockData.color = color;
-    tempInStockData.serial = tempInStockData.barcode; // 바코드를 일련번호로 사용
+    tempInStockData.serial = tempInStockData.barcode; 
     tempInStockData.supplier = supplier; 
 
     // 서버에 등록 요청
