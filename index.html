@@ -72,6 +72,7 @@
         </nav>
 
         <div class="container py-4">
+
             <div id="section-dashboard" class="section-view active-section">
                 <div class="row g-3 mb-4">
                     <div class="col-lg-6">
@@ -107,9 +108,17 @@
                                 <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
                                     <table class="table table-hover align-middle mb-0 dash-table">
                                         <thead class="sticky-top border-bottom">
-                                            <tr><th>지점</th><th>유형</th><th>고객명</th><th>담당매니저</th><th>마진</th></tr>
+                                            <tr>
+                                                <th>지점</th>
+                                                <th>유형</th>
+                                                <th>고객명</th>
+                                                <th>담당매니저</th>
+                                                <th>마진</th>
+                                            </tr>
                                         </thead>
-                                        <tbody id="dash_today_list"><tr><td colspan="5" class="text-center py-5 text-muted">데이터 로딩 중...</td></tr></tbody>
+                                        <tbody id="dash_today_list">
+                                            <tr><td colspan="5" class="text-center py-5 text-muted">데이터 로딩 중...</td></tr>
+                                        </tbody>
                                     </table>
                                 </div>
                             </div>
@@ -163,7 +172,12 @@
                         </div>
                         <div id="open_step_2" style="display:none;">
                             <div class="alert alert-primary d-flex justify-content-between align-items-center shadow-sm">
-                                <div><i class="bi bi-phone-fill me-2"></i><span id="target_model" class="fw-bold fs-5"></span><span class="mx-2 text-muted">:</span><span id="target_serial" class="fw-bold fs-5"></span></div>
+                                <div>
+                                    <i class="bi bi-phone-fill me-2"></i>
+                                    <span id="target_model" class="fw-bold fs-5"></span>
+                                    <span class="mx-2 text-muted">:</span>
+                                    <span id="target_serial" class="fw-bold fs-5"></span>
+                                </div>
                                 <span class="badge bg-primary fs-6" id="target_branch"></span>
                             </div>
                             <div class="section-header"><i class="bi bi-person-badge"></i> 기본 정보</div>
@@ -181,7 +195,8 @@
                                 <div class="col-4"><label class="form-label-sm">제휴카드</label><input type="text" class="form-control form-control-sm" id="f_card"></div>
                                 <div class="col-4"><label class="form-label-sm">리뷰작성<span class="required-star">*</span></label><select class="form-select form-select-sm" id="f_review"></select></div>
                             </div>
-                            <div class="divider"></div><div class="section-header"><i class="bi bi-calculator"></i> 정책 및 정산</div>
+                            <div class="divider"></div>
+                            <div class="section-header"><i class="bi bi-calculator"></i> 정책 및 정산</div>
                             <div class="row g-2 mb-3">
                                 <div class="col-6"><label class="form-label-sm">개통처</label><input type="text" class="form-control form-control-sm" id="f_avalue" oninput="refreshAddons()"></div>
                                 <div class="col-6"><label class="form-label-sm">정책차수</label><input type="text" class="form-control form-control-sm" id="f_policy"></div>
@@ -196,7 +211,8 @@
                                 <div class="col-6"><label class="form-label-sm text-danger-custom">프리할인</label><input type="number" class="form-control form-control-sm border-danger-custom" id="f_cost2"></div>
                                 <div class="col-6"><label class="form-label-sm">유심</label><select class="form-select form-select-sm" id="f_usim"></select></div>
                             </div>
-                            <div class="divider"></div><div class="section-header"><i class="bi bi-credit-card"></i> 대납 및 지원</div>
+                            <div class="divider"></div>
+                            <div class="section-header"><i class="bi bi-credit-card"></i> 대납 및 지원</div>
                             <div class="row g-2 mb-3">
                                 <div class="col-4"><label class="form-label-sm text-danger-custom">대납1</label><input type="number" class="form-control form-control-sm border-danger-custom" id="f_pay1"></div>
                                 <div class="col-4"><label class="form-label-sm">방법</label><select class="form-select form-select-sm" id="f_pay1_m"></select></div>
@@ -210,7 +226,8 @@
                                 <div class="col-4"><label class="form-label-sm">계좌번호</label><input type="text" class="form-control form-control-sm" id="f_acc"></div>
                                 <div class="col-4"><label class="form-label-sm">예금주</label><input type="text" class="form-control form-control-sm" id="f_holder"></div>
                             </div>
-                            <div class="divider"></div><div class="section-header"><i class="bi bi-wallet2"></i> 수납 상세</div>
+                            <div class="divider"></div>
+                            <div class="section-header"><i class="bi bi-wallet2"></i> 수납 상세</div>
                             <div class="row g-2 mb-3">
                                 <div class="col-6"><label class="form-label-sm">단말기수납1</label><input type="number" class="form-control form-control-sm" id="f_inc4"></div>
                                 <div class="col-6"><label class="form-label-sm">방법</label><select class="form-select form-select-sm" id="f_inc4_m"></select></div>
@@ -456,60 +473,46 @@
         </div>
     </div>
 
-    <div class="modal fade" id="modal-quick-in" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-0 shadow-lg">
-                <div class="modal-header bg-light border-0">
-                    <h5 class="modal-title fw-bold">🚀 간편 입고</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body p-4">
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold text-muted">거래처</label>
-                        <select class="form-select" id="quick_supplier"></select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold text-muted">입고 지점</label>
-                        <select class="form-select" id="quick_branch">
-                            <option value="장지 본점">장지 본점</option>
-                            <option value="명일 직영점">명일 직영점</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold text-muted">단말기 모델명</label>
-                        <input type="text" class="form-control" id="quick_model" placeholder="예: 아이폰15_256">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold text-muted">일련번호</label>
-                        <input type="text" class="form-control bg-light" id="quick_serial" readonly>
-                    </div>
-                    <button class="btn btn-primary w-100 fw-bold py-2 mt-2" onclick="submitQuickIn()">입고 등록 및 진행</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal fade" id="modal-stock-detail" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal fade" id="modal-stock-register" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow-lg">
                 <div class="modal-header bg-primary text-white border-0">
-                    <h5 class="modal-title fw-bold"><i class="bi bi-apple"></i> 상세 정보 입력</h5>
+                    <h5 class="modal-title fw-bold" id="modal-register-title"><i class="bi bi-box-seam"></i> 상세 정보 입력</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body p-4">
-                    <div class="alert alert-info small fw-bold mb-3">
-                        <i class="bi bi-info-circle"></i> 모델 정보가 없는 단말기(아이폰 등)입니다.<br>
-                        모델명과 색상을 입력해주세요.
-                    </div>
                     <div class="mb-3">
-                        <label class="form-label small fw-bold text-muted">모델명</label>
-                        <input type="text" class="form-control fw-bold" id="detail_model" placeholder="예: 아이폰17프로">
+                        <label class="form-label small fw-bold text-muted">바코드 / 일련번호</label>
+                        <input type="text" class="form-control bg-light" id="reg_barcode" readonly>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold text-muted">색상</label>
-                        <input type="text" class="form-control fw-bold" id="detail_color" placeholder="예: 화이트티타늄">
+
+                    <div id="area-iphone" style="display:none;">
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-muted">모델명 선택</label>
+                            <select class="form-select fw-bold" id="reg_iphone_model" onchange="updateIphoneColors()"></select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-muted">색상 선택</label>
+                            <select class="form-select fw-bold" id="reg_iphone_color"></select>
+                        </div>
                     </div>
-                    <button class="btn btn-primary w-100 fw-bold py-2 mt-3" onclick="confirmStockDetail()">입력 완료</button>
+
+                    <div id="area-manual" style="display:none;">
+                        <div class="alert alert-warning small fw-bold mb-3">
+                            <i class="bi bi-exclamation-triangle"></i> 등록되지 않은 단말기입니다.<br>
+                            정보를 입력하면 '맵데이터'에 자동 등록됩니다.
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-muted">모델명 (필수)</label>
+                            <input type="text" class="form-control fw-bold" id="reg_manual_model" placeholder="예: 갤럭시S24_256">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-muted">색상 (필수)</label>
+                            <input type="text" class="form-control fw-bold" id="reg_manual_color" placeholder="예: 오닉스블랙">
+                        </div>
+                    </div>
+
+                    <button class="btn btn-primary w-100 fw-bold py-2 mt-3" onclick="submitStockRegister()">입력 완료</button>
                 </div>
             </div>
         </div>
