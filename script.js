@@ -1,5 +1,5 @@
 // ==========================================
-// script.js (V47.1 - Final Full Version)
+// script.js (V47.3 - Final Fix)
 // ==========================================
 
 const GAS_URL = "https://script.google.com/macros/s/AKfycbx_VpC-PfmQCTGdxdc0kD0vexTPF3xIrBNwEnRkzl2Z2yQJxK9VHsWXvz1UjSt-8ITN/exec"; // ★ URL 확인
@@ -9,11 +9,11 @@ let inPendingList = [];
 let globalVendorList = [];
 let globalModelList = [];
 let globalAddonList = []; 
-let globalIphoneData = {}; // 아이폰 데이터 저장용
+let globalIphoneData = {}; 
 let currentOpenType = "";
 let logoutTimer;
 let tempOpenStockData = null;
-let tempInStockData = null; // 입고용 임시 데이터
+let tempInStockData = null; 
 
 // ==========================================
 // 1. 인증 및 초기화
@@ -368,10 +368,10 @@ function submitStockRegister() {
 
     tempInStockData.model = model;
     tempInStockData.color = color;
-    // 아이폰/미등록 모두 일련번호 = 바코드로 처리
+    // 아이폰/미등록 모두 일련번호 = 바코드로 처리 (간소화)
     tempInStockData.serial = tempInStockData.barcode; 
 
-    // 서버에 등록 요청
+    // 서버에 등록 요청 (action: register_quick 재활용)
     fetch(GAS_URL, {
         method: "POST",
         body: JSON.stringify({
@@ -437,10 +437,18 @@ function handleOpenScan(e) {
             document.getElementById('open_step_2').style.display = 'block';
             document.getElementById('f_name').focus();
         } else {
-            // 무선 개통에서 재고 없을 때 -> 간편 입고로 유도하는 로직은 여기서는 제외됨 (요청하신 기능은 '입고'에서의 로직이었음)
-            // 만약 무선 개통 중에도 간편 입고가 필요하다면 별도 로직 필요. 현재는 입고 메뉴에서의 기능 구현에 집중.
-            alert(d.message);
-            e.target.disabled=false; e.target.value=""; e.target.focus();
+            // ★ [수정] 무선 개통에서도 미등록 재고 발견 시 '미등록 단말기' 입력 모달(unified) 호출
+            if (d.message === '재고 없음') {
+                if(confirm("입고되지 않은 단말기입니다. 간편입고 처리 하시겠습니까?")) {
+                    // ★ 여기가 핵심 수정입니다! (옛날 showQuickInModal -> 새 showStockRegisterModal)
+                    showStockRegisterModal('unregistered', v);
+                } else {
+                    e.target.disabled=false; e.target.value=""; e.target.focus();
+                }
+            } else {
+                alert(d.message);
+                e.target.disabled=false; e.target.value=""; e.target.focus();
+            }
         }
     })
     .catch(err => { alert("통신 오류 발생"); e.target.disabled=false; })
@@ -590,9 +598,7 @@ function submitWiredContract(event) {
     fetch(GAS_URL, { method: "POST", body: JSON.stringify(formData) }).then(r => r.json()).then(d => { if(d.status === 'success') { alert(d.message); resetWiredForm(); } else { alert("오류: " + d.message); } }).catch(e => alert("통신 오류")).finally(() => { btn.innerHTML = originalText; btn.disabled = false; });
 }
 
-// ==========================================
-// 8. 중고 개통
-// ==========================================
+// --- 중고 개통 ---
 function startUsedActivation() {
     const branch = document.getElementById('u_branch').value; const vendor = document.getElementById('u_pre_avalue').value; const type = document.getElementById('u_pre_act_type').value; const contract = document.getElementById('u_pre_cont_type').value;
     if(!branch || !vendor || !type || !contract) return alert("모든 항목을 선택해주세요.");
