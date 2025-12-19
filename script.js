@@ -3,7 +3,7 @@
 // ==========================================
 
 // ★ [중요] 배포 후 갱신된 웹 앱 URL인지 반드시 확인하세요!
-const GAS_URL = "https://script.google.com/macros/s/AKfycbw1k159kDezV8JwcImu7GM4q-bTTcUrPv6CwIYC_q47mpT5GlIGRy7OC4BduwL1vG5G/exec"; 
+const GAS_URL = "https://script.google.com/macros/s/AKfycbx_VpC-PfmQCTGdxdc0kD0vexTPF3xIrBNwEnRkzl2Z2yQJxK9VHsWXvz1UjSt-8ITN/exec"; 
 
 let currentUser = "";
 let inPendingList = [];
