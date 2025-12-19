@@ -300,7 +300,6 @@ function handleInScan(e) {
                 // 연속 모드: 리스트에 추가 (d.data에 파싱된 serial, barcode가 들어있음)
                 inPendingList.push({...d.data, supplier: document.getElementById('in_supplier').value, branch: document.getElementById('in_branch').value});
                 renderInList();
-                showMsg('in-msg','success',`추가: ${d.data.model}`);
             } else {
                 // 단건 바로 등록
                 requestSingleRegister(v);
@@ -451,7 +450,6 @@ function submitStockRegister() {
         modal.hide();
 
         // 3. 메시지 표시 및 포커스 복구
-        showMsg('in-msg', 'success', `대기목록 추가: ${model}`);
         document.getElementById('in_scan').focus();
 
         // ★ 여기서 함수 강제 종료 (서버 통신 안 함)
@@ -523,30 +521,27 @@ function submitStockRegister() {
     });
 }
 
-// [수정] 입고 대기 목록을 글래스 카드 디자인으로 변경
 function renderInList() { 
     const t = document.getElementById('in_tbody'); 
     t.innerHTML = ""; 
     
     inPendingList.forEach((i, x) => {
-        // ★ 글래스 카드 디자인 적용 (테이블 행 대신 div 사용)
+        // [수정] 헤더와 너비(% 비율)를 맞춰서 정렬
         t.innerHTML += `
-        <div class="glass-card p-3 mb-2 d-flex justify-content-between align-items-center">
-            <div>
-                <div class="d-flex align-items-center mb-1">
-                    <span class="badge bg-primary me-2">${i.model}</span>
-                    <span class="small text-muted">${i.supplier}</span>
-                </div>
-                <div class="fw-bold font-monospace text-dark">${i.serial}</div>
+        <div class="glass-card p-2 mb-2 d-flex align-items-center text-center small">
+            <div class="text-truncate text-muted" style="width: 25%;" title="${i.supplier}">${i.supplier}</div>
+            <div class="text-truncate fw-bold text-primary" style="width: 25%;" title="${i.model}">${i.model}</div>
+            <div class="text-truncate" style="width: 15%;">${i.color || '-'}</div>
+            <div class="text-truncate font-monospace" style="width: 25%;" title="${i.serial}">${i.serial}</div>
+            <div style="width: 10%;">
+                <button class="btn btn-sm btn-link text-danger p-0" onclick="inPendingList.splice(${x},1);renderInList()">
+                    <i class="bi bi-x-circle-fill"></i>
+                </button>
             </div>
-            <button class="btn btn-sm btn-outline-danger border-0" onclick="inPendingList.splice(${x},1);renderInList()">
-                <i class="bi bi-trash"></i> 삭제
-            </button>
         </div>`;
     }); 
     
     document.getElementById('in_count').innerText = inPendingList.length; 
-    // 목록이 있을 때만 보이게 설정
     document.getElementById('in_batch_area').style.display = inPendingList.length > 0 ? 'block' : 'none';
 }
 
