@@ -1,5 +1,5 @@
 // ==========================================
-// script.js (V47.3 - Final Fix)
+// script.js (V47.4 - Final Logic Fixed)
 // ==========================================
 
 const GAS_URL = "https://script.google.com/macros/s/AKfycbx_VpC-PfmQCTGdxdc0kD0vexTPF3xIrBNwEnRkzl2Z2yQJxK9VHsWXvz1UjSt-8ITN/exec"; // ★ URL 확인
@@ -254,7 +254,7 @@ function refreshUsedAddons() { renderAddonCheckboxes(document.getElementById('u_
 function validateField(id, name) { const el = document.getElementById(id); if (!el.value) { alert(name + "을(를) 입력/선택해주세요."); el.focus(); return false; } return true; }
 
 // ==========================================
-// ★ [핵심 수정] 재고 입고 로직 (V47.0)
+// ★ 재고 입고 로직 (V47.4)
 // ==========================================
 function handleInScan(e) { 
     if(e.key!=='Enter') return; 
@@ -291,7 +291,7 @@ function handleInScan(e) {
                 showMsg('in-msg','success',`입고: ${d.data.model}`);
             }
         } else if (d.status === 'unregistered') {
-            // 미등록 단말기 -> 모달 띄우기
+            // 미등록 단말기 -> 모달 띄우기 (타입: unregistered)
             showStockRegisterModal('unregistered', v);
         } else {
             showMsg('in-msg','error', d.message);
@@ -308,11 +308,21 @@ function showStockRegisterModal(type, barcode) {
     const areaManual = document.getElementById('area-manual');
     
     document.getElementById('reg_barcode').value = barcode;
+    
+    // supplier/branch 정보는 호출 시점의 UI 값 사용
+    // (무선개통의 경우 f_avalue 등의 값이 아직 없을 수 있으므로 기본값 처리 등 주의)
+    // 여기서는 단순히 '입고' 탭의 select 값을 기본으로 잡고, 필요시 수정하도록 함
+    // *무선개통 간편입고 시에는 거래처/지점을 직접 입력받는 게 좋으나, 현재 통합 모달 디자인 상 '입고' 탭의 값을 가져오거나 별도 처리가 필요함.
+    // *여기서는 간단하게 입고 탭의 값을 가져오되, 무선개통 시 호출된 경우라면 공란일 수 있음. -> 공란이면 '장지 본점' 기본값.
+    
+    let defaultSup = document.getElementById('in_supplier').value || "";
+    let defaultBranch = document.getElementById('in_branch').value || "장지 본점";
+
     tempInStockData = { 
         type: type, 
         barcode: barcode,
-        supplier: document.getElementById('in_supplier').value,
-        branch: document.getElementById('in_branch').value
+        supplier: defaultSup,
+        branch: defaultBranch
     };
 
     if (type === 'iphone') {
@@ -320,15 +330,15 @@ function showStockRegisterModal(type, barcode) {
         areaIphone.style.display = 'block';
         areaManual.style.display = 'none';
         
-        // 아이폰 모델명 드롭다운 채우기
         const modelSel = document.getElementById('reg_iphone_model');
         modelSel.innerHTML = '<option value="">선택하세요</option>';
         Object.keys(globalIphoneData).sort().forEach(m => {
             modelSel.innerHTML += `<option value="${m}">${m}</option>`;
         });
-        document.getElementById('reg_iphone_color').innerHTML = ""; // 색상 초기화
+        document.getElementById('reg_iphone_color').innerHTML = ""; 
     } else {
-        title.innerHTML = '<i class="bi bi-question-circle"></i> 미등록 단말기 입력';
+        // unregistered OR simple_open
+        title.innerHTML = (type === 'simple_open') ? '<i class="bi bi-lightning-fill"></i> 간편 입고 (개통용)' : '<i class="bi bi-question-circle"></i> 미등록 단말기 입력';
         areaIphone.style.display = 'none';
         areaManual.style.display = 'block';
         document.getElementById('reg_manual_model').value = "";
@@ -368,15 +378,18 @@ function submitStockRegister() {
 
     tempInStockData.model = model;
     tempInStockData.color = color;
-    // 아이폰/미등록 모두 일련번호 = 바코드로 처리 (간소화)
     tempInStockData.serial = tempInStockData.barcode; 
 
-    // 서버에 등록 요청 (action: register_quick 재활용)
+    // 서버에 등록 요청
+    const btn = event.currentTarget;
+    btn.disabled = true; 
+    btn.innerHTML = "처리 중...";
+
     fetch(GAS_URL, {
         method: "POST",
         body: JSON.stringify({
             action: "register_quick",
-            type: type, // iphone or unregistered
+            type: type, // iphone / unregistered / simple_open
             barcode: tempInStockData.barcode,
             serial: tempInStockData.serial,
             model: model,
@@ -392,20 +405,50 @@ function submitStockRegister() {
             const modal = bootstrap.Modal.getInstance(document.getElementById('modal-stock-register'));
             modal.hide();
             
-            if(document.getElementById('in_mode_toggle').checked) {
-                inPendingList.push(tempInStockData);
-                renderInList();
-                showMsg('in-msg','success',`추가: ${model}`);
+            // ★ 분기 처리: 무선개통 간편입고 vs 일반 재고입고
+            if (type === 'simple_open') {
+                // 무선 개통 화면으로 데이터 세팅 후 이동
+                alert("간편 입고 완료. 개통 정보를 입력하세요.");
+                
+                tempOpenStockData = {
+                    inputCode: tempInStockData.serial,
+                    model: model,
+                    color: color,
+                    serial: tempInStockData.serial,
+                    branch: tempInStockData.branch,
+                    supplier: tempInStockData.supplier
+                };
+
+                document.getElementById('target_model').innerText = `${model} (${color})`; 
+                document.getElementById('target_serial').innerText = tempInStockData.serial;
+                document.getElementById('target_branch').innerText = tempInStockData.branch; 
+                document.getElementById('f_avalue').value = tempInStockData.supplier; 
+                refreshAddons(); 
+
+                document.getElementById('open_step_1').style.display = 'none';
+                document.getElementById('open_step_2').style.display = 'block';
+                document.getElementById('f_name').focus();
+
             } else {
-                showMsg('in-msg','success',`입고: ${model}`);
+                // 일반 입고 (목록 추가 or 완료 메시지)
+                if(document.getElementById('in_mode_toggle').checked) {
+                    inPendingList.push(tempInStockData);
+                    renderInList();
+                    showMsg('in-msg','success',`추가: ${model}`);
+                } else {
+                    showMsg('in-msg','success',`입고: ${model}`);
+                }
+                document.getElementById('in_scan').focus();
             }
         } else {
             alert("오류: " + d.message);
         }
     })
-    .catch(() => alert("통신 오류"));
-    
-    document.getElementById('in_scan').focus();
+    .catch(() => alert("통신 오류"))
+    .finally(() => {
+        btn.disabled = false;
+        btn.innerHTML = "입력 완료";
+    });
 }
 
 function renderInList() { const t=document.getElementById('in_tbody'); t.innerHTML=""; inPendingList.forEach((i,x)=>t.innerHTML+=`<tr><td>${i.model}</td><td>${i.serial}</td><td><button onclick="inPendingList.splice(${x},1);renderInList()">X</button></td></tr>`); document.getElementById('in_count').innerText=inPendingList.length; }
@@ -437,11 +480,10 @@ function handleOpenScan(e) {
             document.getElementById('open_step_2').style.display = 'block';
             document.getElementById('f_name').focus();
         } else {
-            // ★ [수정] 무선 개통에서도 미등록 재고 발견 시 '미등록 단말기' 입력 모달(unified) 호출
+            // ★ [수정] 무선 개통 중 재고 없음 -> 간편 입고(simple_open) 모달 호출
             if (d.message === '재고 없음') {
                 if(confirm("입고되지 않은 단말기입니다. 간편입고 처리 하시겠습니까?")) {
-                    // ★ 여기가 핵심 수정입니다! (옛날 showQuickInModal -> 새 showStockRegisterModal)
-                    showStockRegisterModal('unregistered', v);
+                    showStockRegisterModal('simple_open', v);
                 } else {
                     e.target.disabled=false; e.target.value=""; e.target.focus();
                 }
