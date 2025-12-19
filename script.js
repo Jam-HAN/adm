@@ -148,7 +148,7 @@ function renderDashboard(data) {
             const marginStr = Math.floor(Number(item.margin)).toLocaleString();
             const badgeClass = item.isWired ? "bg-success" : "bg-primary";
             // 마진 가운데 정렬 적용 (CSS dash-table td 설정 따름)
-            listBody.innerHTML += `<tr><td><span class="badge bg-secondary">${item.branch}</span></td><td><span class="badge ${badgeClass} text-white">${item.type}</span></td><td class="fw-bold">${item.name}</td><td class="text-muted small">${item.user}</td><td class="text-danger fw-bold">${marginStr}</td></tr>`;
+            listBody.innerHTML += `<tr><td><span class="badge bg-secondary">${item.branch}</span></td><td><span class="badge ${badgeClass} text-white">${item.type}</span></td><td class="fw-bold">${item.name}</td><td class="text-muted small">${item.user}님</td><td class="text-danger fw-bold">${marginStr}</td></tr>`;
         });
     }
     
