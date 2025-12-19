@@ -507,13 +507,30 @@ function submitStockRegister() {
     });
 }
 
+// [수정] 입고 대기 목록을 글래스 카드 디자인으로 변경
 function renderInList() { 
     const t = document.getElementById('in_tbody'); 
     t.innerHTML = ""; 
+    
     inPendingList.forEach((i, x) => {
-        t.innerHTML += `<tr><td>${i.model}</td><td>${i.serial}</td><td><button class="btn btn-xs btn-outline-danger" onclick="inPendingList.splice(${x},1);renderInList()">X</button></td></tr>`;
+        // ★ 글래스 카드 디자인 적용 (테이블 행 대신 div 사용)
+        t.innerHTML += `
+        <div class="glass-card p-3 mb-2 d-flex justify-content-between align-items-center">
+            <div>
+                <div class="d-flex align-items-center mb-1">
+                    <span class="badge bg-primary me-2">${i.model}</span>
+                    <span class="small text-muted">${i.supplier}</span>
+                </div>
+                <div class="fw-bold font-monospace text-dark">${i.serial}</div>
+            </div>
+            <button class="btn btn-sm btn-outline-danger border-0" onclick="inPendingList.splice(${x},1);renderInList()">
+                <i class="bi bi-trash"></i> 삭제
+            </button>
+        </div>`;
     }); 
+    
     document.getElementById('in_count').innerText = inPendingList.length; 
+    // 목록이 있을 때만 보이게 설정
     document.getElementById('in_batch_area').style.display = inPendingList.length > 0 ? 'block' : 'none';
 }
 
