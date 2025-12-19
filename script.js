@@ -1,7 +1,8 @@
 // ==========================================
-// script.js (V43.1 - Dashboard Graph Update)
+// script.js (V45.0 - Final Full Version)
 // ==========================================
 
+// ★ 배포 후 갱신된 웹 앱 URL인지 확인 필수!
 const GAS_URL = "https://script.google.com/macros/s/AKfycbyWdKUnnkYcURwOtlCExu22eworh44MP7BgRpqMjFviMselDEbOfpeQHKwRLTNeyRBS/exec";
 
 let currentUser = "";
@@ -13,7 +14,9 @@ let currentOpenType = "";
 let logoutTimer;
 let tempOpenStockData = null;
 
-// 1. 구글 로그인 핸들러
+// ==========================================
+// 1. 인증 및 초기화
+// ==========================================
 window.handleCredentialResponse = function(response) {
     if (!response.credential) {
         alert("구글 인증 정보를 받아오지 못했습니다.");
@@ -44,7 +47,6 @@ window.handleCredentialResponse = function(response) {
     });
 };
 
-// 2. 페이지 로드
 window.onload = function() {
     const saved = sessionStorage.getItem('dbphone_user');
     if(saved) {
@@ -73,6 +75,11 @@ function resetLogoutTimer() {
     }
 }
 
+function logout() { sessionStorage.removeItem('dbphone_user'); location.reload(); }
+
+// ==========================================
+// 2. 화면 전환 (네비게이션)
+// ==========================================
 function showSection(id) {
     document.querySelectorAll('.section-view').forEach(el => el.classList.remove('active-section', 'fade-in'));
     document.getElementById(id).classList.add('active-section', 'fade-in');
@@ -103,7 +110,9 @@ function showUsedSection() {
     showSection('section-used');
 }
 
-// --- 대시보드 ---
+// ==========================================
+// 3. 대시보드
+// ==========================================
 function loadDashboard() {
     const dashList = document.getElementById('dash_today_list');
     const dashUser = document.getElementById('dash_user_rank');
@@ -147,8 +156,7 @@ function renderDashboard(data) {
         data.todayList.forEach(item => {
             const marginStr = Math.floor(Number(item.margin)).toLocaleString();
             const badgeClass = item.isWired ? "bg-success" : "bg-primary";
-            // 마진 가운데 정렬 적용 (CSS dash-table td 설정 따름)
-            listBody.innerHTML += `<tr><td><span class="badge bg-secondary">${item.branch}</span></td><td><span class="badge ${badgeClass} text-white">${item.type}</span></td><td class="fw-bold">${item.name}님</td><td class="text-muted small">${item.user}님</td><td class="text-danger fw-bold">${marginStr}</td></tr>`;
+            listBody.innerHTML += `<tr><td><span class="badge bg-secondary">${item.branch}</span></td><td><span class="badge ${badgeClass} text-white">${item.type}</span></td><td class="fw-bold">${item.name}</td><td class="text-muted small">${item.user}님</td><td class="text-danger fw-bold">${marginStr}</td></tr>`;
         });
     }
     
@@ -156,13 +164,10 @@ function renderDashboard(data) {
     rankBody.innerHTML = "";
     if (data.userRank.length === 0) { rankBody.innerHTML = '<div class="text-center text-muted">이달의 실적이 없습니다.</div>'; } 
     else {
-        // ★ [수정] 무선/유선 막대 분리 (위아래)
-        const max = data.userRank[0].total; // 전체 1등의 총 건수 기준
-        
+        const max = data.userRank[0].total; 
         data.userRank.forEach(u => {
             const mobilePct = max > 0 ? (u.mobile / max) * 100 : 0;
             const wiredPct = max > 0 ? (u.wired / max) * 100 : 0;
-            
             rankBody.innerHTML += `
                 <div class="user-rank-item py-2 border-bottom">
                     <div class="user-rank-name">${u.name}</div>
@@ -180,12 +185,15 @@ function renderDashboard(data) {
                             <span class="ms-2 text-success fw-bold" style="font-size:0.75rem; width:25px; text-align:right;">${u.wired}</span>
                         </div>
                     </div>
-                    <div class="user-rank-count ms-1">${u.total}</div>
+                    <div class="user-rank-count ms-1">${u.total}건</div>
                 </div>`;
         });
     }
 }
 
+// ==========================================
+// 4. 데이터 로드 (기초 데이터)
+// ==========================================
 function loadInitData() {
     fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "get_vendors" }) }).then(r => r.json()).then(d => {
         globalVendorList = d.list.map(v => v.name);
@@ -222,6 +230,9 @@ function loadDropdownData() {
     });
 }
 
+// ==========================================
+// 5. 유틸리티 함수
+// ==========================================
 function checkVisitPath() { const val = document.getElementById('f_visit').value; document.getElementById('div_visit_etc').style.display = (val === '기타') ? 'block' : 'none'; }
 function checkWiredVisitPath() { const val = document.getElementById('w_visit').value; document.getElementById('w_div_visit_etc').style.display = (val === '기타') ? 'block' : 'none'; }
 function checkUsedVisitPath() { const val = document.getElementById('u_visit').value; document.getElementById('u_div_visit_etc').style.display = (val === '기타') ? 'block' : 'none'; }
@@ -244,83 +255,23 @@ function refreshWiredAddons() { renderAddonCheckboxes(document.getElementById('w
 function refreshUsedAddons() { renderAddonCheckboxes(document.getElementById('u_avalue').value, 'u_div_addon_container'); }
 function validateField(id, name) { const el = document.getElementById(id); if (!el.value) { alert(name + "을(를) 입력/선택해주세요."); el.focus(); return false; } return true; }
 
-// --- 유선 개통 ---
-function startWiredActivation() {
-    const branch = document.getElementById('wired_branch').value; const vendor = document.getElementById('w_pre_avalue').value; const type = document.getElementById('w_pre_act_type').value; const contract = document.getElementById('w_pre_cont_type').value;
-    if(!branch || !vendor || !type || !contract) return alert("모든 항목을 선택해주세요.");
-    document.getElementById('wired_step_1').style.display = 'none'; document.getElementById('wired_step_2').style.display = 'block';
-    document.getElementById('w_avalue').value = vendor; document.getElementById('w_act_type').value = type; document.getElementById('w_cont_type').value = contract;
-    document.getElementById('w_target_info').innerText = `${type} : ${contract}`; document.getElementById('w_target_branch').innerText = branch;
-    renderWiredPlanInputs(contract);
-}
-function renderWiredPlanInputs(contractType) {
-    const area = document.getElementById('w_plan_input_area');
-    area.innerHTML = "";
-    if(contractType === "인터넷+TV+기타서비스") { area.innerHTML = `<div class="row g-2"><div class="col-4"><label class="form-label-sm">인터넷요금제</label><input type="text" class="form-control form-control-sm" id="w_plan_net"></div><div class="col-4"><label class="form-label-sm">TV요금제</label><input type="text" class="form-control form-control-sm" id="w_plan_tv"></div><div class="col-4"><label class="form-label-sm">기타서비스</label><input type="text" class="form-control form-control-sm" id="w_plan_other"></div></div>`; } 
-    else if(contractType === "인터넷+TV") { area.innerHTML = `<div class="row g-2"><div class="col-6"><label class="form-label-sm">인터넷요금제</label><input type="text" class="form-control form-control-sm" id="w_plan_net"></div><div class="col-6"><label class="form-label-sm">TV요금제</label><input type="text" class="form-control form-control-sm" id="w_plan_tv"></div></div>`; } 
-    else { area.innerHTML = `<div class="row g-2"><div class="col-12"><label class="form-label-sm">인터넷요금제</label><input type="text" class="form-control form-control-sm" id="w_plan_net"></div></div>`; }
-}
-function resetWiredForm() {
-    document.getElementById('wired_branch').selectedIndex = 0; document.getElementById('w_pre_avalue').selectedIndex = 0; document.getElementById('w_pre_act_type').selectedIndex = 0; document.getElementById('w_pre_cont_type').selectedIndex = 0;
-    document.getElementById('wired_step_1').style.display = 'block'; document.getElementById('wired_step_2').style.display = 'none';
-    document.querySelectorAll('#wired_step_2 input').forEach(i => i.value = ""); document.querySelectorAll('#wired_step_2 select').forEach(s => s.selectedIndex=0);
-    document.getElementById('w_div_visit_etc').style.display = 'none';
-    setTimeout(() => { const firstInput = document.querySelector('#wired_step_1 select'); if(firstInput) firstInput.focus(); }, 100);
-}
-function submitWiredContract(event) {
-    if (!validateField('w_visit', '방문경로')) return; if (!validateField('w_name', '고객명')) return; if (!validateField('w_review', '리뷰작성여부')) return;
-    let visitVal = document.getElementById('w_visit').value; if(visitVal === '기타') { if(!validateField('w_visit_etc', '상세 방문경로')) return; visitVal = "기타: " + document.getElementById('w_visit_etc').value; }
-    const parts = []; ['w_plan_net','w_plan_tv','w_plan_other'].forEach(id => { const el=document.getElementById(id); if(el && el.value) parts.push(el.value); });
-    const pricePlan = parts.join(" / ");
-    const formData = {
-        action: "open_wired_full", user: currentUser, branch: document.getElementById('wired_branch').value, activationType: document.getElementById('w_act_type').value, contractType: document.getElementById('w_cont_type').value, name: document.getElementById('w_name').value, birth: document.getElementById('w_birth').value, visitPath: visitVal, phoneNumber: document.getElementById('w_phone').value, pricePlan: pricePlan, card: document.getElementById('w_card').value, review: document.getElementById('w_review').value, aValue: document.getElementById('w_avalue').value, policy: document.getElementById('w_policy').value,
-        income1: document.getElementById('w_inc1').value, income1Memo: document.getElementById('w_inc1_m').value, income2: document.getElementById('w_inc2').value, income2Memo: document.getElementById('w_inc2_m').value, income3: document.getElementById('w_inc3').value, income3Memo: document.getElementById('w_inc3_m').value, cost1: document.getElementById('w_cost1').value, cost1Memo: document.getElementById('w_cost1_m').value, cost2: "", 
-        payment1: document.getElementById('w_pay1').value, payment1Method: document.getElementById('w_pay1_m').value, payment1Date: document.getElementById('w_pay1_d').value, payment2: document.getElementById('w_pay2').value, payment2Method: document.getElementById('w_pay2_m').value, payment2Date: document.getElementById('w_pay2_d').value, cash: document.getElementById('w_cash').value, payback1: document.getElementById('w_back').value, bankName: document.getElementById('w_bank').value, accountNumber: document.getElementById('w_acc').value, depositor: document.getElementById('w_holder').value,
-        income5: document.getElementById('w_inc5').value, income5Method: document.getElementById('w_inc5_m').value, income6: document.getElementById('w_inc6').value, income6Memo: document.getElementById('w_inc6_m').value, comment: document.getElementById('w_comment').value
-    };
-    const btn = event.currentTarget; const originalText = btn.innerHTML; btn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> 저장 중...`; btn.disabled = true;
-    fetch(GAS_URL, { method: "POST", body: JSON.stringify(formData) }).then(r => r.json()).then(d => { if(d.status === 'success') { alert(d.message); resetWiredForm(); } else { alert("오류: " + d.message); } }).catch(e => alert("통신 오류")).finally(() => { btn.innerHTML = originalText; btn.disabled = false; });
-}
+// ==========================================
+// 6. 무선 개통 (스캔 + 간편입고 + 저장)
+// ==========================================
 
-// --- 중고 개통 ---
-function startUsedActivation() {
-    const branch = document.getElementById('u_branch').value; const vendor = document.getElementById('u_pre_avalue').value; const type = document.getElementById('u_pre_act_type').value; const contract = document.getElementById('u_pre_cont_type').value;
-    if(!branch || !vendor || !type || !contract) return alert("모든 항목을 선택해주세요.");
-    document.getElementById('used_step_1').style.display = 'none'; document.getElementById('used_step_2').style.display = 'block';
-    document.getElementById('u_avalue').value = vendor; document.getElementById('u_act_type').value = type; document.getElementById('u_cont_type').value = contract;
-    document.getElementById('u_target_info').innerText = `${type} : ${contract}`; document.getElementById('u_target_branch').innerText = branch;
-    refreshUsedAddons();
-}
-function resetUsedForm() {
-    document.getElementById('u_branch').selectedIndex = 0; document.getElementById('u_pre_avalue').selectedIndex = 0; document.getElementById('u_pre_act_type').selectedIndex = 0; document.getElementById('u_pre_cont_type').selectedIndex = 0;
-    document.getElementById('used_step_1').style.display = 'block'; document.getElementById('used_step_2').style.display = 'none';
-    document.querySelectorAll('#used_step_2 input').forEach(i => i.value = ""); document.querySelectorAll('#used_step_2 select').forEach(s => s.selectedIndex=0);
-    document.getElementById('u_div_visit_etc').style.display = 'none'; document.getElementById('u_div_addon_container').innerHTML = "";
-    setTimeout(() => { const firstInput = document.querySelector('#used_step_1 select'); if(firstInput) firstInput.focus(); }, 100);
-}
-function submitUsedContract(event) {
-    if (!validateField('u_visit', '방문경로')) return; if (!validateField('u_name', '고객명')) return; if (!validateField('u_review', '리뷰작성여부')) return;
-    let visitVal = document.getElementById('u_visit').value; if(visitVal === '기타') { if(!validateField('u_visit_etc', '상세 방문경로')) return; visitVal = "기타: " + document.getElementById('u_visit_etc').value; }
-    const selectedAddons = []; document.querySelectorAll('#u_div_addon_container .addon-check:checked').forEach(cb => selectedAddons.push(cb.value));
-    const formData = {
-        action: "open_used_full", user: currentUser, branch: document.getElementById('u_branch').value, activationType: document.getElementById('u_act_type').value, contractType: document.getElementById('u_cont_type').value, name: document.getElementById('u_name').value, birth: document.getElementById('u_birth').value, visitPath: visitVal, phoneNumber: document.getElementById('u_phone').value, pricePlan: document.getElementById('u_plan').value, changePlan: document.getElementById('u_plan_chg').value, selectedAddons: selectedAddons, usim: document.getElementById('u_usim').value, card: document.getElementById('u_card').value, review: document.getElementById('u_review').value, aValue: document.getElementById('u_avalue').value, policy: document.getElementById('u_policy').value, model: document.getElementById('u_model').value, serial: document.getElementById('u_serial').value,
-        income1: document.getElementById('u_inc1').value, income1Memo: document.getElementById('u_inc1_m').value, income2: document.getElementById('u_inc2').value, income2Memo: document.getElementById('u_inc2_m').value, income3: document.getElementById('u_inc3').value, income3Memo: document.getElementById('u_inc3_m').value, cost1: document.getElementById('u_cost1').value, cost1Memo: document.getElementById('u_cost1_m').value, cost2: "", 
-        payment1: document.getElementById('u_pay1').value, payment1Method: document.getElementById('u_pay1_m').value, payment1Date: document.getElementById('u_pay1_d').value, payment2: document.getElementById('u_pay2').value, payment2Method: document.getElementById('u_pay2_m').value, payment2Date: document.getElementById('u_pay2_d').value, cash: "", payback1: "", bankName: "", accountNumber: "", depositor: "", income4_1: "", income4_2: "",
-        income5: document.getElementById('u_inc5').value, income5Method: document.getElementById('u_inc5_m').value, income6: document.getElementById('u_inc6').value, income6Memo: document.getElementById('u_inc6_m').value, comment: document.getElementById('u_comment').value
-    };
-    const btn = event.currentTarget; const originalText = btn.innerHTML; btn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> 저장 중...`; btn.disabled = true;
-    fetch(GAS_URL, { method: "POST", body: JSON.stringify(formData) }).then(r => r.json()).then(d => { if(d.status === 'success') { alert(d.message); resetUsedForm(); } else { alert("오류: " + d.message); } }).catch(e => alert("통신 오류")).finally(() => { btn.innerHTML = originalText; btn.disabled = false; });
-}
-
-// --- 무선 개통 스캔 & 저장 ---
+// ★ 무선 개통 스캔 (간편 입고 로직 포함)
 function handleOpenScan(e) { 
     if(e.key!=='Enter') return; 
     const v=e.target.value.trim(); 
+    if(!v) return;
+
     e.target.disabled = true;
     document.getElementById('open_spinner').style.display = 'block';
+    
     fetch(GAS_URL,{method:"POST",body:JSON.stringify({ action:"get_stock_info_for_open", input:v })})
     .then(r=>r.json()).then(d=>{
         if(d.status==='success') {
+            // 정상 조회 시
             tempOpenStockData = d.data; 
             tempOpenStockData.inputCode = v; 
             document.getElementById('target_model').innerText = `${d.data.model} (${d.data.color})`; 
@@ -332,27 +283,118 @@ function handleOpenScan(e) {
             document.getElementById('open_step_2').style.display = 'block';
             document.getElementById('f_name').focus();
         } else {
-            alert(d.message);
-            e.target.disabled=false; e.target.value=""; e.target.focus();
+            // ★ [추가] 재고 없음 시 간편 입고 확인
+            if (d.message === '재고 없음') {
+                if(confirm("입고되지 않은 단말기입니다. 간편입고 처리 하시겠습니까?")) {
+                    showQuickInModal(v);
+                } else {
+                    e.target.disabled=false; e.target.value=""; e.target.focus();
+                }
+            } else {
+                alert(d.message);
+                e.target.disabled=false; e.target.value=""; e.target.focus();
+            }
         }
     })
     .catch(err => { alert("통신 오류 발생"); e.target.disabled=false; })
     .finally(() => { document.getElementById('open_spinner').style.display = 'none'; });
 }
 
-function validateField(id, name) {
-    const el = document.getElementById(id);
-    if (!el.value) { alert(name + "을(를) 입력/선택해주세요."); el.focus(); return false; }
-    return true;
+// ★ 간편 입고 모달 열기
+function showQuickInModal(serial) {
+    const modalEl = document.getElementById('modal-quick-in');
+    const modal = new bootstrap.Modal(modalEl);
+    
+    // 거래처 리스트 채우기
+    const supSel = document.getElementById('quick_supplier');
+    supSel.innerHTML = "";
+    globalVendorList.forEach(v => {
+        const opt = document.createElement('option');
+        opt.value = v;
+        opt.innerText = v;
+        supSel.appendChild(opt);
+    });
+
+    document.getElementById('quick_model').value = "";
+    document.getElementById('quick_serial').value = serial;
+    
+    modal.show();
 }
 
-// ★ 무선 개통 저장
-function submitFullContract(event) {
-    if(!tempOpenStockData) {
-        alert("단말기를 먼저 스캔해야 합니다 (Step 1).");
-        return;
-    }
+// ★ 간편 입고 제출
+function submitQuickIn() {
+    const supplier = document.getElementById('quick_supplier').value;
+    const branch = document.getElementById('quick_branch').value;
+    const model = document.getElementById('quick_model').value;
+    const serial = document.getElementById('quick_serial').value;
+
+    if (!model) { alert("모델명을 입력해주세요."); return; }
+
+    const btn = event.currentTarget; 
+    const originalText = btn.innerHTML;
+    btn.innerHTML = "처리 중...";
+    btn.disabled = true;
+
+    const data = {
+        action: "register_quick",
+        supplier: supplier,
+        branch: branch,
+        model: model,
+        serial: serial,
+        user: currentUser
+    };
+
+    fetch(GAS_URL, { method: "POST", body: JSON.stringify(data) })
+    .then(r => r.json())
+    .then(d => {
+        if (d.status === 'success') {
+            alert("간편 입고가 완료되었습니다. 개통을 진행합니다.");
+            
+            // 모달 닫기
+            const modalEl = document.getElementById('modal-quick-in');
+            const modal = bootstrap.Modal.getInstance(modalEl);
+            modal.hide();
+
+            // ★ 즉시 무선 개통 단계 진입 (데이터 세팅)
+            tempOpenStockData = {
+                inputCode: serial,
+                model: model,
+                color: "-", // 간편입고는 색상 정보 없음
+                serial: serial,
+                branch: branch,
+                supplier: supplier
+            };
+
+            document.getElementById('target_model').innerText = `${model} (-)`; 
+            document.getElementById('target_serial').innerText = serial;
+            document.getElementById('target_branch').innerText = branch; 
+            document.getElementById('f_avalue').value = supplier; 
+            refreshAddons(); 
+
+            document.getElementById('open_step_1').style.display = 'none';
+            document.getElementById('open_step_2').style.display = 'block';
+            document.getElementById('f_name').focus();
+        } else {
+            alert("오류: " + d.message);
+        }
+    })
+    .catch(e => alert("통신 오류"))
+    .finally(() => {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+        // 스캔창 초기화 (혹시 나중에 취소하고 나올 때 대비)
+        const scanInput = document.getElementById('open_scan');
+        scanInput.disabled = false; 
+        scanInput.value = "";
+    });
+}
+
+// ★ 무선 개통 저장 (ID로 버튼 제어)
+window.submitFullContract = function() {
+    const btn = document.getElementById('btn-mobile-save');
+    const originalText = '<i class="bi bi-save-fill"></i> 개통 및 저장 완료';
     
+    if(!tempOpenStockData) { alert("단말기를 먼저 스캔해야 합니다 (Step 1)."); return; }
     if (!validateField('f_visit', '방문경로')) return;
     if (!validateField('f_name', '고객명')) return;
     if (!validateField('f_review', '리뷰작성여부')) return;
@@ -362,6 +404,9 @@ function submitFullContract(event) {
         if(!validateField('f_visit_etc', '상세 방문경로')) return;
         visitVal = "기타: " + document.getElementById('f_visit_etc').value;
     }
+
+    btn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> 저장 중...`;
+    btn.disabled = true;
 
     const selectedAddons = [];
     document.querySelectorAll('#div_addon_container .addon-check:checked').forEach(cb => selectedAddons.push(cb.value));
@@ -415,11 +460,6 @@ function submitFullContract(event) {
         comment: document.getElementById('f_comment').value
     };
 
-    const btn = document.getElementById('btn-mobile-save');
-    const originalText = btn.innerHTML;
-    btn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> 저장 중...`;
-    btn.disabled = true;
-
     fetch(GAS_URL, { method: "POST", body: JSON.stringify(formData) })
     .then(r => r.json())
     .then(d => {
@@ -435,15 +475,17 @@ function submitFullContract(event) {
         btn.innerHTML = originalText; 
         btn.disabled = false; 
     });
-}
+};
 
 function resetOpenForm() {
     document.getElementById('open_step_1').style.display = 'block';
     document.getElementById('open_step_2').style.display = 'none';
-    document.getElementById('open_scan').value = "";
-    document.getElementById('open_scan').disabled = false;
+    const scanInput = document.getElementById('open_scan');
+    scanInput.value = "";
+    scanInput.disabled = false;
     document.getElementById('open_spinner').style.display = 'none';
-    document.getElementById('open_scan').focus();
+    scanInput.focus();
+    
     document.querySelectorAll('#open_step_2 input').forEach(i => i.value = "");
     document.querySelectorAll('#open_step_2 select').forEach(s => s.selectedIndex=0);
     document.getElementById('div_visit_etc').style.display='none';
@@ -451,7 +493,81 @@ function resetOpenForm() {
     tempOpenStockData = null;
 }
 
-// --- 기타 기능 ---
+// ==========================================
+// 7. 유선 개통
+// ==========================================
+function startWiredActivation() {
+    const branch = document.getElementById('wired_branch').value; const vendor = document.getElementById('w_pre_avalue').value; const type = document.getElementById('w_pre_act_type').value; const contract = document.getElementById('w_pre_cont_type').value;
+    if(!branch || !vendor || !type || !contract) return alert("모든 항목을 선택해주세요.");
+    document.getElementById('wired_step_1').style.display = 'none'; document.getElementById('wired_step_2').style.display = 'block';
+    document.getElementById('w_avalue').value = vendor; document.getElementById('w_act_type').value = type; document.getElementById('w_cont_type').value = contract;
+    document.getElementById('w_target_info').innerText = `${type} : ${contract}`; document.getElementById('w_target_branch').innerText = branch;
+    renderWiredPlanInputs(contract);
+}
+function renderWiredPlanInputs(contractType) {
+    const area = document.getElementById('w_plan_input_area');
+    area.innerHTML = "";
+    if(contractType === "인터넷+TV+기타서비스") { area.innerHTML = `<div class="row g-2"><div class="col-4"><label class="form-label-sm">인터넷요금제</label><input type="text" class="form-control form-control-sm" id="w_plan_net"></div><div class="col-4"><label class="form-label-sm">TV요금제</label><input type="text" class="form-control form-control-sm" id="w_plan_tv"></div><div class="col-4"><label class="form-label-sm">기타서비스</label><input type="text" class="form-control form-control-sm" id="w_plan_other"></div></div>`; } 
+    else if(contractType === "인터넷+TV") { area.innerHTML = `<div class="row g-2"><div class="col-6"><label class="form-label-sm">인터넷요금제</label><input type="text" class="form-control form-control-sm" id="w_plan_net"></div><div class="col-6"><label class="form-label-sm">TV요금제</label><input type="text" class="form-control form-control-sm" id="w_plan_tv"></div></div>`; } 
+    else { area.innerHTML = `<div class="row g-2"><div class="col-12"><label class="form-label-sm">인터넷요금제</label><input type="text" class="form-control form-control-sm" id="w_plan_net"></div></div>`; }
+}
+function resetWiredForm() {
+    document.getElementById('wired_branch').selectedIndex = 0; document.getElementById('w_pre_avalue').selectedIndex = 0; document.getElementById('w_pre_act_type').selectedIndex = 0; document.getElementById('w_pre_cont_type').selectedIndex = 0;
+    document.getElementById('wired_step_1').style.display = 'block'; document.getElementById('wired_step_2').style.display = 'none';
+    document.querySelectorAll('#wired_step_2 input').forEach(i => i.value = ""); document.querySelectorAll('#wired_step_2 select').forEach(s => s.selectedIndex=0);
+    document.getElementById('w_div_visit_etc').style.display = 'none';
+    setTimeout(() => { const firstInput = document.querySelector('#wired_step_1 select'); if(firstInput) firstInput.focus(); }, 100);
+}
+function submitWiredContract(event) {
+    if (!validateField('w_visit', '방문경로')) return; if (!validateField('w_name', '고객명')) return; if (!validateField('w_review', '리뷰작성여부')) return;
+    let visitVal = document.getElementById('w_visit').value; if(visitVal === '기타') { if(!validateField('w_visit_etc', '상세 방문경로')) return; visitVal = "기타: " + document.getElementById('w_visit_etc').value; }
+    const parts = []; ['w_plan_net','w_plan_tv','w_plan_other'].forEach(id => { const el=document.getElementById(id); if(el && el.value) parts.push(el.value); });
+    const pricePlan = parts.join(" / ");
+    const formData = {
+        action: "open_wired_full", user: currentUser, branch: document.getElementById('wired_branch').value, activationType: document.getElementById('w_act_type').value, contractType: document.getElementById('w_cont_type').value, name: document.getElementById('w_name').value, birth: document.getElementById('w_birth').value, visitPath: visitVal, phoneNumber: document.getElementById('w_phone').value, pricePlan: pricePlan, card: document.getElementById('w_card').value, review: document.getElementById('w_review').value, aValue: document.getElementById('w_avalue').value, policy: document.getElementById('w_policy').value,
+        income1: document.getElementById('w_inc1').value, income1Memo: document.getElementById('w_inc1_m').value, income2: document.getElementById('w_inc2').value, income2Memo: document.getElementById('w_inc2_m').value, income3: document.getElementById('w_inc3').value, income3Memo: document.getElementById('w_inc3_m').value, cost1: document.getElementById('w_cost1').value, cost1Memo: document.getElementById('w_cost1_m').value, cost2: "", 
+        payment1: document.getElementById('w_pay1').value, payment1Method: document.getElementById('w_pay1_m').value, payment1Date: document.getElementById('w_pay1_d').value, payment2: document.getElementById('w_pay2').value, payment2Method: document.getElementById('w_pay2_m').value, payment2Date: document.getElementById('w_pay2_d').value, cash: document.getElementById('w_cash').value, payback1: document.getElementById('w_back').value, bankName: document.getElementById('w_bank').value, accountNumber: document.getElementById('w_acc').value, depositor: document.getElementById('w_holder').value,
+        income5: document.getElementById('w_inc5').value, income5Method: document.getElementById('w_inc5_m').value, income6: document.getElementById('w_inc6').value, income6Memo: document.getElementById('w_inc6_m').value, comment: document.getElementById('w_comment').value
+    };
+    const btn = event.currentTarget; const originalText = btn.innerHTML; btn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> 저장 중...`; btn.disabled = true;
+    fetch(GAS_URL, { method: "POST", body: JSON.stringify(formData) }).then(r => r.json()).then(d => { if(d.status === 'success') { alert(d.message); resetWiredForm(); } else { alert("오류: " + d.message); } }).catch(e => alert("통신 오류")).finally(() => { btn.innerHTML = originalText; btn.disabled = false; });
+}
+
+// ==========================================
+// 8. 중고 개통
+// ==========================================
+function startUsedActivation() {
+    const branch = document.getElementById('u_branch').value; const vendor = document.getElementById('u_pre_avalue').value; const type = document.getElementById('u_pre_act_type').value; const contract = document.getElementById('u_pre_cont_type').value;
+    if(!branch || !vendor || !type || !contract) return alert("모든 항목을 선택해주세요.");
+    document.getElementById('used_step_1').style.display = 'none'; document.getElementById('used_step_2').style.display = 'block';
+    document.getElementById('u_avalue').value = vendor; document.getElementById('u_act_type').value = type; document.getElementById('u_cont_type').value = contract;
+    document.getElementById('u_target_info').innerText = `${type} : ${contract}`; document.getElementById('u_target_branch').innerText = branch;
+    refreshUsedAddons();
+}
+function resetUsedForm() {
+    document.getElementById('u_branch').selectedIndex = 0; document.getElementById('u_pre_avalue').selectedIndex = 0; document.getElementById('u_pre_act_type').selectedIndex = 0; document.getElementById('u_pre_cont_type').selectedIndex = 0;
+    document.getElementById('used_step_1').style.display = 'block'; document.getElementById('used_step_2').style.display = 'none';
+    document.querySelectorAll('#used_step_2 input').forEach(i => i.value = ""); document.querySelectorAll('#used_step_2 select').forEach(s => s.selectedIndex=0);
+    document.getElementById('u_div_visit_etc').style.display = 'none'; document.getElementById('u_div_addon_container').innerHTML = "";
+    setTimeout(() => { const firstInput = document.querySelector('#used_step_1 select'); if(firstInput) firstInput.focus(); }, 100);
+}
+function submitUsedContract(event) {
+    if (!validateField('u_visit', '방문경로')) return; if (!validateField('u_name', '고객명')) return; if (!validateField('u_review', '리뷰작성여부')) return;
+    let visitVal = document.getElementById('u_visit').value; if(visitVal === '기타') { if(!validateField('u_visit_etc', '상세 방문경로')) return; visitVal = "기타: " + document.getElementById('u_visit_etc').value; }
+    const selectedAddons = []; document.querySelectorAll('#u_div_addon_container .addon-check:checked').forEach(cb => selectedAddons.push(cb.value));
+    const formData = {
+        action: "open_used_full", user: currentUser, branch: document.getElementById('u_branch').value, activationType: document.getElementById('u_act_type').value, contractType: document.getElementById('u_cont_type').value, name: document.getElementById('u_name').value, birth: document.getElementById('u_birth').value, visitPath: visitVal, phoneNumber: document.getElementById('u_phone').value, pricePlan: document.getElementById('u_plan').value, changePlan: document.getElementById('u_plan_chg').value, selectedAddons: selectedAddons, usim: document.getElementById('u_usim').value, card: document.getElementById('u_card').value, review: document.getElementById('u_review').value, aValue: document.getElementById('u_avalue').value, policy: document.getElementById('u_policy').value, model: document.getElementById('u_model').value, serial: document.getElementById('u_serial').value,
+        income1: document.getElementById('u_inc1').value, income1Memo: document.getElementById('u_inc1_m').value, income2: document.getElementById('u_inc2').value, income2Memo: document.getElementById('u_inc2_m').value, income3: document.getElementById('u_inc3').value, income3Memo: document.getElementById('u_inc3_m').value, cost1: document.getElementById('u_cost1').value, cost1Memo: document.getElementById('u_cost1_m').value, cost2: "", 
+        payment1: document.getElementById('u_pay1').value, payment1Method: document.getElementById('u_pay1_m').value, payment1Date: document.getElementById('u_pay1_d').value, payment2: document.getElementById('u_pay2').value, payment2Method: document.getElementById('u_pay2_m').value, payment2Date: document.getElementById('u_pay2_d').value, cash: "", payback1: "", bankName: "", accountNumber: "", depositor: "", income4_1: "", income4_2: "",
+        income5: document.getElementById('u_inc5').value, income5Method: document.getElementById('u_inc5_m').value, income6: document.getElementById('u_inc6').value, income6Memo: document.getElementById('u_inc6_m').value, comment: document.getElementById('u_comment').value
+    };
+    const btn = event.currentTarget; const originalText = btn.innerHTML; btn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> 저장 중...`; btn.disabled = true;
+    fetch(GAS_URL, { method: "POST", body: JSON.stringify(formData) }).then(r => r.json()).then(d => { if(d.status === 'success') { alert(d.message); resetUsedForm(); } else { alert("오류: " + d.message); } }).catch(e => alert("통신 오류")).finally(() => { btn.innerHTML = originalText; btn.disabled = false; });
+}
+
+// ==========================================
+// 9. 재고 및 기타 기능
+// ==========================================
 function updateSearchUI() {
     const criteria = document.getElementById('search_criteria').value;
     const area = document.getElementById('search_input_area');
@@ -499,7 +615,9 @@ function submitInBatch() { if(!inPendingList.length)return; if(!confirm("입고?
 function handleMoveScan(e) { if(e.key!=='Enter')return; const v=e.target.value.trim(); fetch(GAS_URL,{method:"POST",body:JSON.stringify({action:"transfer_stock",input:v,toBranch:document.getElementById('move_to_branch').value,user:currentUser})}).then(r=>r.json()).then(d=>showMsg('move-msg',d.status==='success'?'success':'error',d.message)).finally(()=>{e.target.value="";}); }
 function handleOutScan(e) { if(e.key!=='Enter')return; const v=e.target.value.trim(); if(!document.getElementById('out_note').value){alert("사유필수");return;} fetch(GAS_URL,{method:"POST",body:JSON.stringify({action:"return_stock",input:v,note:document.getElementById('out_note').value,user:currentUser})}).then(r=>r.json()).then(d=>showMsg('out-msg',d.status==='success'?'success':'error',d.message)).finally(()=>{e.target.value="";}); }
 
-// 거래처 리스트
+// ==========================================
+// 10. 거래처 리스트
+// ==========================================
 function loadVendorsToList() { 
     fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "get_vendors" }) }).then(r => r.json()).then(d => { 
         const div = document.getElementById('vendor_list_ui'); 
@@ -516,5 +634,3 @@ function loadVendorsToList() {
 function addVendor() { const n=document.getElementById('v_name').value; if(!n)return; fetch(GAS_URL,{method:"POST",body:JSON.stringify({action:"add_vendor",name:n,salesName:document.getElementById('v_sales').value,salesPhone:document.getElementById('v_phone').value,officePhone:document.getElementById('v_office').value})}).then(r=>r.json()).then(d=>{alert(d.message);loadVendorsToList();}); }
 function deleteVendor(n) { if(confirm("삭제?")) fetch(GAS_URL,{method:"POST",body:JSON.stringify({action:"delete_vendor",name:n})}).then(r=>r.json()).then(d=>{alert(d.message);loadVendorsToList();}); }
 function showMsg(id, type, text) { const el=document.getElementById(id); el.style.display='block'; el.className=`alert py-2 text-center small fw-bold rounded-3 alert-${type==='success'?'success':'danger'}`; el.innerText=text; setTimeout(()=>el.style.display='none',2000); }
-function handleCredentialResponse(r) { fetch(GAS_URL,{method:"POST",body:JSON.stringify({action:"login",token:r.credential})}).then(res=>res.json()).then(d=>{ if(d.status==='success') { sessionStorage.setItem('dbphone_user',JSON.stringify({name:d.name,email:d.user})); currentUser=d.name; document.getElementById('login-view').style.display='none'; document.getElementById('main-view').style.display='block'; document.getElementById('user-name').innerText=currentUser; loadInitData(); setupAutoLogout(); } else document.getElementById('login-msg').innerText=d.message; }); }
-function logout() { sessionStorage.removeItem('dbphone_user'); location.reload(); }
