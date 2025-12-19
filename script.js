@@ -2,7 +2,7 @@
 // script.js (V50.0 - Final Full Logic)
 // ==========================================
 
-const GAS_URL = "https://script.google.com/macros/s/AKfycbw1k159kDezV8JwcImu7GM4q-bTTcUrPv6CwIYC_q47mpT5GlIGRy7OC4BduwL1vG5G/exec"; // ★ URL 확인
+const GAS_URL = "https://script.google.com/macros/s/AKfycbxGpFXB1QH3zPmYafvNYSvwr6pDK323ecLhmzsdVG_oeKCEeYnDSI1GIlpnCMJ-TpeU/exec"; // ★ URL 확인
 
 let currentUser = "";
 let inPendingList = [];
