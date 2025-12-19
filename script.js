@@ -1,8 +1,7 @@
 // ==========================================
-// script.js (V45.0 - Final Full Version)
+// script.js (V46.0 - iPhone Stock In Logic)
 // ==========================================
 
-// ★ 배포 후 갱신된 웹 앱 URL인지 확인 필수!
 const GAS_URL = "https://script.google.com/macros/s/AKfycbyWdKUnnkYcURwOtlCExu22eworh44MP7BgRpqMjFviMselDEbOfpeQHKwRLTNeyRBS/exec";
 
 let currentUser = "";
@@ -13,10 +12,10 @@ let globalAddonList = [];
 let currentOpenType = "";
 let logoutTimer;
 let tempOpenStockData = null;
+// ★ [추가] 입고 시 상세정보 입력을 위한 임시 변수
+let tempInStockData = null; 
 
-// ==========================================
-// 1. 인증 및 초기화
-// ==========================================
+// 1. 구글 로그인 핸들러
 window.handleCredentialResponse = function(response) {
     if (!response.credential) {
         alert("구글 인증 정보를 받아오지 못했습니다.");
@@ -47,6 +46,7 @@ window.handleCredentialResponse = function(response) {
     });
 };
 
+// 2. 페이지 로드
 window.onload = function() {
     const saved = sessionStorage.getItem('dbphone_user');
     if(saved) {
@@ -75,11 +75,6 @@ function resetLogoutTimer() {
     }
 }
 
-function logout() { sessionStorage.removeItem('dbphone_user'); location.reload(); }
-
-// ==========================================
-// 2. 화면 전환 (네비게이션)
-// ==========================================
 function showSection(id) {
     document.querySelectorAll('.section-view').forEach(el => el.classList.remove('active-section', 'fade-in'));
     document.getElementById(id).classList.add('active-section', 'fade-in');
@@ -110,9 +105,7 @@ function showUsedSection() {
     showSection('section-used');
 }
 
-// ==========================================
-// 3. 대시보드
-// ==========================================
+// --- 대시보드 ---
 function loadDashboard() {
     const dashList = document.getElementById('dash_today_list');
     const dashUser = document.getElementById('dash_user_rank');
@@ -191,9 +184,7 @@ function renderDashboard(data) {
     }
 }
 
-// ==========================================
-// 4. 데이터 로드 (기초 데이터)
-// ==========================================
+// --- 기초 데이터 ---
 function loadInitData() {
     fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "get_vendors" }) }).then(r => r.json()).then(d => {
         globalVendorList = d.list.map(v => v.name);
@@ -230,9 +221,6 @@ function loadDropdownData() {
     });
 }
 
-// ==========================================
-// 5. 유틸리티 함수
-// ==========================================
 function checkVisitPath() { const val = document.getElementById('f_visit').value; document.getElementById('div_visit_etc').style.display = (val === '기타') ? 'block' : 'none'; }
 function checkWiredVisitPath() { const val = document.getElementById('w_visit').value; document.getElementById('w_div_visit_etc').style.display = (val === '기타') ? 'block' : 'none'; }
 function checkUsedVisitPath() { const val = document.getElementById('u_visit').value; document.getElementById('u_div_visit_etc').style.display = (val === '기타') ? 'block' : 'none'; }
@@ -256,10 +244,129 @@ function refreshUsedAddons() { renderAddonCheckboxes(document.getElementById('u_
 function validateField(id, name) { const el = document.getElementById(id); if (!el.value) { alert(name + "을(를) 입력/선택해주세요."); el.focus(); return false; } return true; }
 
 // ==========================================
-// 6. 무선 개통 (스캔 + 간편입고 + 저장)
+// 9. 재고 관리 (입고/이동/반품/조회)
 // ==========================================
 
-// ★ 무선 개통 스캔 (간편 입고 로직 포함)
+// ★ [수정] 입고 스캔 핸들러 (아이폰 상세 정보 입력 분기 추가)
+function handleInScan(e) { 
+    if(e.key!=='Enter') return; 
+    const v = e.target.value.trim(); 
+    if(inPendingList.some(i => i.barcode === v)){
+        showMsg('in-msg','error','이미 목록에 있음');
+        e.target.value=""; 
+        return;
+    } 
+    
+    // 서버에 조회 요청 (scan_preview)
+    fetch(GAS_URL, {
+        method: "POST",
+        body: JSON.stringify({
+            action: document.getElementById('in_mode_toggle').checked ? "scan_preview" : "register_single",
+            barcode: v,
+            supplier: document.getElementById('in_supplier').value,
+            branch: document.getElementById('in_branch').value,
+            user: currentUser
+        })
+    })
+    .then(r => r.json())
+    .then(d => {
+        if(d.status === 'success') {
+            // ★ 아이폰(IPHONE)으로 식별되면 상세 입력 모달 띄우기
+            if (d.data.model === 'IPHONE') {
+                tempInStockData = {
+                    ...d.data,
+                    supplier: document.getElementById('in_supplier').value,
+                    branch: document.getElementById('in_branch').value
+                };
+                
+                // 모달 띄우기
+                const modal = new bootstrap.Modal(document.getElementById('modal-stock-detail'));
+                document.getElementById('detail_model').value = ""; // 초기화
+                document.getElementById('detail_color').value = ""; // 초기화
+                modal.show();
+                // 300ms 후 모델명 입력칸에 포커스
+                setTimeout(() => document.getElementById('detail_model').focus(), 300);
+            } else {
+                // 일반 단말기는 바로 처리
+                if(document.getElementById('in_mode_toggle').checked){
+                    inPendingList.push({...d.data, supplier: document.getElementById('in_supplier').value});
+                    renderInList();
+                    showMsg('in-msg','success',`추가: ${d.data.model}`);
+                } else {
+                    showMsg('in-msg','success',`입고: ${d.data.model}`);
+                }
+            }
+        } else {
+            showMsg('in-msg','error', d.message);
+        }
+    })
+    .finally(() => {
+        e.target.value = "";
+        e.target.focus();
+    }); 
+}
+
+// ★ [추가] 상세 정보 입력 완료 (아이폰)
+function confirmStockDetail() {
+    const model = document.getElementById('detail_model').value;
+    const color = document.getElementById('detail_color').value;
+
+    if (!model || !color) {
+        alert("모델명과 색상을 모두 입력해주세요.");
+        return;
+    }
+
+    // 임시 데이터에 입력받은 모델/색상 덮어쓰기
+    tempInStockData.model = model;
+    tempInStockData.color = color;
+
+    const isBatchMode = document.getElementById('in_mode_toggle').checked;
+
+    if (isBatchMode) {
+        // 연속 모드: 리스트에 추가
+        inPendingList.push(tempInStockData);
+        renderInList();
+        showMsg('in-msg','success',`추가: ${model}`);
+    } else {
+        // 단건 모드: 서버에 바로 등록 요청 (batch_register 재활용)
+        fetch(GAS_URL, {
+            method: "POST",
+            body: JSON.stringify({
+                action: "batch_register", // 단건이지만 명시적 모델명 저장을 위해 batch 사용
+                items: [tempInStockData],
+                branch: tempInStockData.branch,
+                user: currentUser
+            })
+        })
+        .then(r => r.json())
+        .then(d => {
+            if (d.status === 'success') {
+                showMsg('in-msg','success',`입고: ${model}`);
+            } else {
+                showMsg('in-msg','error', d.message);
+            }
+        });
+    }
+
+    // 모달 닫기
+    const modalEl = document.getElementById('modal-stock-detail');
+    const modal = bootstrap.Modal.getInstance(modalEl);
+    modal.hide();
+    
+    // 포커스 복귀
+    document.getElementById('in_scan').focus();
+    tempInStockData = null;
+}
+
+function renderInList() { const t=document.getElementById('in_tbody'); t.innerHTML=""; inPendingList.forEach((i,x)=>t.innerHTML+=`<tr><td>${i.model}</td><td>${i.serial}</td><td><button onclick="inPendingList.splice(${x},1);renderInList()">X</button></td></tr>`); document.getElementById('in_count').innerText=inPendingList.length; }
+function clearInList() { inPendingList=[]; renderInList(); }
+function submitInBatch() { if(!inPendingList.length)return; if(!confirm("입고?"))return; fetch(GAS_URL,{method:"POST",body:JSON.stringify({action:"batch_register",items:inPendingList,branch:document.getElementById('in_branch').value,user:currentUser})}).then(r=>r.json()).then(d=>{if(d.status==='success'){alert(d.count+"대 입고완료");clearInList();}else alert(d.message);}); }
+function handleMoveScan(e) { if(e.key!=='Enter')return; const v=e.target.value.trim(); fetch(GAS_URL,{method:"POST",body:JSON.stringify({action:"transfer_stock",input:v,toBranch:document.getElementById('move_to_branch').value,user:currentUser})}).then(r=>r.json()).then(d=>showMsg('move-msg',d.status==='success'?'success':'error',d.message)).finally(()=>{e.target.value="";}); }
+function handleOutScan(e) { if(e.key!=='Enter')return; const v=e.target.value.trim(); if(!document.getElementById('out_note').value){alert("사유필수");return;} fetch(GAS_URL,{method:"POST",body:JSON.stringify({action:"return_stock",input:v,note:document.getElementById('out_note').value,user:currentUser})}).then(r=>r.json()).then(d=>showMsg('out-msg',d.status==='success'?'success':'error',d.message)).finally(()=>{e.target.value="";}); }
+
+// ==========================================
+// 6. 무선 개통 (스캔 + 간편입고 + 저장)
+// ==========================================
 function handleOpenScan(e) { 
     if(e.key!=='Enter') return; 
     const v=e.target.value.trim(); 
@@ -271,7 +378,6 @@ function handleOpenScan(e) {
     fetch(GAS_URL,{method:"POST",body:JSON.stringify({ action:"get_stock_info_for_open", input:v })})
     .then(r=>r.json()).then(d=>{
         if(d.status==='success') {
-            // 정상 조회 시
             tempOpenStockData = d.data; 
             tempOpenStockData.inputCode = v; 
             document.getElementById('target_model').innerText = `${d.data.model} (${d.data.color})`; 
@@ -283,7 +389,6 @@ function handleOpenScan(e) {
             document.getElementById('open_step_2').style.display = 'block';
             document.getElementById('f_name').focus();
         } else {
-            // ★ [추가] 재고 없음 시 간편 입고 확인
             if (d.message === '재고 없음') {
                 if(confirm("입고되지 않은 단말기입니다. 간편입고 처리 하시겠습니까?")) {
                     showQuickInModal(v);
@@ -300,28 +405,17 @@ function handleOpenScan(e) {
     .finally(() => { document.getElementById('open_spinner').style.display = 'none'; });
 }
 
-// ★ 간편 입고 모달 열기
 function showQuickInModal(serial) {
     const modalEl = document.getElementById('modal-quick-in');
     const modal = new bootstrap.Modal(modalEl);
-    
-    // 거래처 리스트 채우기
     const supSel = document.getElementById('quick_supplier');
     supSel.innerHTML = "";
-    globalVendorList.forEach(v => {
-        const opt = document.createElement('option');
-        opt.value = v;
-        opt.innerText = v;
-        supSel.appendChild(opt);
-    });
-
+    globalVendorList.forEach(v => { const opt = document.createElement('option'); opt.value = v; opt.innerText = v; supSel.appendChild(opt); });
     document.getElementById('quick_model').value = "";
     document.getElementById('quick_serial').value = serial;
-    
     modal.show();
 }
 
-// ★ 간편 입고 제출
 function submitQuickIn() {
     const supplier = document.getElementById('quick_supplier').value;
     const branch = document.getElementById('quick_branch').value;
@@ -349,17 +443,14 @@ function submitQuickIn() {
     .then(d => {
         if (d.status === 'success') {
             alert("간편 입고가 완료되었습니다. 개통을 진행합니다.");
-            
-            // 모달 닫기
             const modalEl = document.getElementById('modal-quick-in');
             const modal = bootstrap.Modal.getInstance(modalEl);
             modal.hide();
 
-            // ★ 즉시 무선 개통 단계 진입 (데이터 세팅)
             tempOpenStockData = {
                 inputCode: serial,
                 model: model,
-                color: "-", // 간편입고는 색상 정보 없음
+                color: "-",
                 serial: serial,
                 branch: branch,
                 supplier: supplier
@@ -382,14 +473,12 @@ function submitQuickIn() {
     .finally(() => {
         btn.innerHTML = originalText;
         btn.disabled = false;
-        // 스캔창 초기화 (혹시 나중에 취소하고 나올 때 대비)
         const scanInput = document.getElementById('open_scan');
         scanInput.disabled = false; 
         scanInput.value = "";
     });
 }
 
-// ★ 무선 개통 저장 (ID로 버튼 제어)
 window.submitFullContract = function() {
     const btn = document.getElementById('btn-mobile-save');
     const originalText = '<i class="bi bi-save-fill"></i> 개통 및 저장 완료';
@@ -533,9 +622,7 @@ function submitWiredContract(event) {
     fetch(GAS_URL, { method: "POST", body: JSON.stringify(formData) }).then(r => r.json()).then(d => { if(d.status === 'success') { alert(d.message); resetWiredForm(); } else { alert("오류: " + d.message); } }).catch(e => alert("통신 오류")).finally(() => { btn.innerHTML = originalText; btn.disabled = false; });
 }
 
-// ==========================================
-// 8. 중고 개통
-// ==========================================
+// --- 중고 개통 ---
 function startUsedActivation() {
     const branch = document.getElementById('u_branch').value; const vendor = document.getElementById('u_pre_avalue').value; const type = document.getElementById('u_pre_act_type').value; const contract = document.getElementById('u_pre_cont_type').value;
     if(!branch || !vendor || !type || !contract) return alert("모든 항목을 선택해주세요.");
@@ -564,56 +651,6 @@ function submitUsedContract(event) {
     const btn = event.currentTarget; const originalText = btn.innerHTML; btn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> 저장 중...`; btn.disabled = true;
     fetch(GAS_URL, { method: "POST", body: JSON.stringify(formData) }).then(r => r.json()).then(d => { if(d.status === 'success') { alert(d.message); resetUsedForm(); } else { alert("오류: " + d.message); } }).catch(e => alert("통신 오류")).finally(() => { btn.innerHTML = originalText; btn.disabled = false; });
 }
-
-// ==========================================
-// 9. 재고 및 기타 기능
-// ==========================================
-function updateSearchUI() {
-    const criteria = document.getElementById('search_criteria').value;
-    const area = document.getElementById('search_input_area');
-    area.innerHTML = "";
-    if(criteria === 'supplier') {
-        const sel = document.createElement('select'); sel.className = "form-select"; sel.id = "search_value";
-        globalVendorList.forEach(v => { const opt = document.createElement('option'); opt.value=v; opt.innerText=v; sel.appendChild(opt); });
-        area.appendChild(sel);
-    } else if(criteria === 'branch') {
-        const sel = document.createElement('select'); sel.className = "form-select"; sel.id = "search_value";
-        ["장지 본점", "명일 직영점"].forEach(v => { const opt = document.createElement('option'); opt.value=v; opt.innerText=v; sel.appendChild(opt); });
-        area.appendChild(sel);
-    } else if(criteria === 'model') {
-        const sel = document.createElement('select'); sel.className = "form-select"; sel.id = "search_value";
-        globalModelList.forEach(v => { const opt = document.createElement('option'); opt.value=v; opt.innerText=v; sel.appendChild(opt); });
-        area.appendChild(sel);
-    } else {
-        const inp = document.createElement('input'); inp.className = "form-control"; inp.id = "search_value"; inp.placeholder = "입력하세요";
-        inp.onkeydown = function(e){ if(e.key==='Enter') searchStock(); };
-        area.appendChild(inp); inp.focus();
-    }
-}
-function searchStock() {
-    const crit = document.getElementById('search_criteria').value;
-    const val = document.getElementById('search_value').value;
-    const div = document.getElementById('stock_result');
-    div.innerHTML = `<div class="text-center py-4"><span class="spinner-border text-primary"></span></div>`;
-    fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "search_stock", criteria: crit, keyword: val }) })
-    .then(r => r.json()).then(d => {
-        if(!d.list || d.list.length === 0) { div.innerHTML = `<div class="text-center text-muted py-5">결과 없음</div>`; return; }
-        let html = `<div class="table-responsive"><table class="table table-hover stock-table"><thead><tr><th>입고일</th><th>모델</th><th>색상</th><th>일련번호</th><th>상태</th><th>위치</th></tr></thead><tbody>`;
-        d.list.forEach(item => {
-            let st = item.status === '보유' ? 'text-success' : 'text-danger';
-            html += `<tr><td>${item.date}</td><td class="fw-bold">${item.model}</td><td>${item.color}</td><td class="font-monospace">${item.serial}</td><td class="${st} fw-bold">${item.status}</td><td>${item.branch}</td></tr>`;
-        });
-        html += `</tbody></table></div><div class="text-end small text-muted">총 ${d.list.length}건</div>`;
-        div.innerHTML = html;
-    });
-}
-function searchHistory() { const k=document.getElementById('hist_keyword').value; fetch(GAS_URL,{method:"POST",body:JSON.stringify({action:"search_history",keyword:k})}).then(r=>r.json()).then(d=>{ let h=""; d.list.forEach(i=>h+=`<div class='glass-card p-2 mb-2'><span class='badge bg-secondary'>${i.type}</span> ${i.model} (${i.time})</div>`); document.getElementById('hist_result').innerHTML=h; }); }
-function handleInScan(e) { if(e.key!=='Enter')return; const v=e.target.value.trim(); if(inPendingList.some(i=>i.barcode===v)){showMsg('in-msg','error','이미 목록에 있음');e.target.value="";return;} fetch(GAS_URL,{method:"POST",body:JSON.stringify({action:document.getElementById('in_mode_toggle').checked?"scan_preview":"register_single",barcode:v,supplier:document.getElementById('in_supplier').value,branch:document.getElementById('in_branch').value,user:currentUser})}).then(r=>r.json()).then(d=>{if(d.status==='success'){if(document.getElementById('in_mode_toggle').checked){inPendingList.push({...d.data,supplier:document.getElementById('in_supplier').value});renderInList();showMsg('in-msg','success',`추가: ${d.data.model}`);}else showMsg('in-msg','success',`입고: ${d.data.model}`);}else showMsg('in-msg','error',d.message);}).finally(()=>{e.target.value="";e.target.focus();}); }
-function renderInList() { const t=document.getElementById('in_tbody'); t.innerHTML=""; inPendingList.forEach((i,x)=>t.innerHTML+=`<tr><td>${i.model}</td><td>${i.serial}</td><td><button onclick="inPendingList.splice(${x},1);renderInList()">X</button></td></tr>`); document.getElementById('in_count').innerText=inPendingList.length; }
-function clearInList() { inPendingList=[]; renderInList(); }
-function submitInBatch() { if(!inPendingList.length)return; if(!confirm("입고?"))return; fetch(GAS_URL,{method:"POST",body:JSON.stringify({action:"batch_register",items:inPendingList,branch:document.getElementById('in_branch').value,user:currentUser})}).then(r=>r.json()).then(d=>{if(d.status==='success'){alert(d.count+"대 입고완료");clearInList();}else alert(d.message);}); }
-function handleMoveScan(e) { if(e.key!=='Enter')return; const v=e.target.value.trim(); fetch(GAS_URL,{method:"POST",body:JSON.stringify({action:"transfer_stock",input:v,toBranch:document.getElementById('move_to_branch').value,user:currentUser})}).then(r=>r.json()).then(d=>showMsg('move-msg',d.status==='success'?'success':'error',d.message)).finally(()=>{e.target.value="";}); }
-function handleOutScan(e) { if(e.key!=='Enter')return; const v=e.target.value.trim(); if(!document.getElementById('out_note').value){alert("사유필수");return;} fetch(GAS_URL,{method:"POST",body:JSON.stringify({action:"return_stock",input:v,note:document.getElementById('out_note').value,user:currentUser})}).then(r=>r.json()).then(d=>showMsg('out-msg',d.status==='success'?'success':'error',d.message)).finally(()=>{e.target.value="";}); }
 
 // ==========================================
 // 10. 거래처 리스트
