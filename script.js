@@ -1,9 +1,8 @@
 // ==========================================
-// script.js (V54.0 - Final Full Version)
+// script.js (V53.0 - Final Integrated Logic)
 // ==========================================
 
-// ★ 배포 후 갱신된 웹 앱 URL인지 반드시 확인하세요!
-const GAS_URL = "https://script.google.com/macros/s/AKfycbxGpFXB1QH3zPmYafvNYSvwr6pDK323ecLhmzsdVG_oeKCEeYnDSI1GIlpnCMJ-TpeU/exec"; 
+const GAS_URL = "https://script.google.com/macros/s/AKfycbxGpFXB1QH3zPmYafvNYSvwr6pDK323ecLhmzsdVG_oeKCEeYnDSI1GIlpnCMJ-TpeU/exec"; // ★ URL 확인
 
 let currentUser = "";
 let inPendingList = [];
@@ -11,7 +10,7 @@ let globalVendorList = [];
 let globalModelList = [];
 let globalAddonList = []; 
 let globalIphoneData = {}; 
-let globalDropdownData = null; 
+let globalDropdownData = null; // 캐싱
 let currentOpenType = "";
 let logoutTimer;
 let tempOpenStockData = null;
@@ -37,8 +36,10 @@ window.handleCredentialResponse = function(response) {
             document.getElementById('login-view').style.display = 'none';
             document.getElementById('main-view').style.display = 'block';
             document.getElementById('user-name').innerText = currentUser;
+            
+            // 데이터 로드 시작
             loadInitData();
-            loadDropdownData(); 
+            loadDropdownData(); // 미리 로드
             setupAutoLogout();
             loadDashboard();
         } else {
@@ -59,8 +60,9 @@ window.onload = function() {
         document.getElementById('login-view').style.display = 'none';
         document.getElementById('main-view').style.display = 'block';
         document.getElementById('user-name').innerText = currentUser;
+        
         loadInitData();
-        loadDropdownData();
+        loadDropdownData(); // 미리 로드
         setupAutoLogout();
         loadDashboard();
     }
@@ -206,6 +208,7 @@ function loadInitData() {
     });
 }
 
+// 캐싱된 드롭다운 데이터 로드
 function loadDropdownData() {
     if (globalDropdownData) {
         applyDropdownData(globalDropdownData);
@@ -266,7 +269,7 @@ function refreshUsedAddons() { renderAddonCheckboxes(document.getElementById('u_
 function validateField(id, name) { const el = document.getElementById(id); if (!el.value) { alert(name + "을(를) 입력/선택해주세요."); el.focus(); return false; } return true; }
 
 // ==========================================
-// ★ 재고 입고 로직 (V54.0 - 무조건 프리뷰 적용)
+// ★ 재고 입고 로직 (V53.0 - 데이터 분리)
 // ==========================================
 function handleInScan(e) { 
     if(e.key!=='Enter') return; 
@@ -274,11 +277,11 @@ function handleInScan(e) {
     if(!v) return;
     if(inPendingList.some(i => i.barcode === v)) { showMsg('in-msg','error','이미 목록에 있음'); e.target.value=""; return; }
 
-    // ★ 무조건 프리뷰 요청 (아이폰/미등록 체크 및 데이터 파싱)
+    // ★ 무조건 서버 조회 (아이폰/미등록 체크 및 데이터 파싱)
     fetch(GAS_URL, {
         method: "POST",
         body: JSON.stringify({
-            action: "scan_preview", // ★ 항상 scan_preview 먼저 수행
+            action: document.getElementById('in_mode_toggle').checked ? "scan_preview" : "register_single",
             barcode: v,
             supplier: document.getElementById('in_supplier').value,
             branch: document.getElementById('in_branch').value,
@@ -288,43 +291,24 @@ function handleInScan(e) {
     .then(r => r.json())
     .then(d => {
         if(d.status === 'success') {
-            // 정상 단말기: 연속모드면 리스트 추가, 아니면 바로 저장
             if(document.getElementById('in_mode_toggle').checked){
-                inPendingList.push({...d.data, supplier: document.getElementById('in_supplier').value, branch: document.getElementById('in_branch').value});
+                inPendingList.push({...d.data, supplier: document.getElementById('in_supplier').value});
                 renderInList();
                 showMsg('in-msg','success',`추가: ${d.data.model}`);
             } else {
-                // 단건 바로 등록 (register_single 호출)
-                requestSingleRegister(v);
+                showMsg('in-msg','success',`입고: ${d.data.model}`);
             }
         } else if (d.status === 'iphone') {
+            // d.data 안에 barcode, serial이 분리되어 들어옴
             showStockRegisterModal('iphone', d.data);
         } else if (d.status === 'unregistered') {
+            // d.data 안에 barcode, serial이 분리되어 들어옴
             showStockRegisterModal('unregistered', d.data);
         } else {
             showMsg('in-msg','error', d.message);
         }
     })
     .finally(() => { e.target.value = ""; e.target.focus(); }); 
-}
-
-// 단건 바로 등록용 헬퍼 함수
-function requestSingleRegister(barcode) {
-    fetch(GAS_URL, {
-        method: "POST",
-        body: JSON.stringify({
-            action: "register_single",
-            barcode: barcode,
-            supplier: document.getElementById('in_supplier').value,
-            branch: document.getElementById('in_branch').value,
-            user: currentUser
-        })
-    })
-    .then(r => r.json())
-    .then(d => {
-        if(d.status === 'success') showMsg('in-msg','success',`입고: ${d.data.model}`);
-        else showMsg('in-msg','error', d.message);
-    });
 }
 
 // ★ 모달 열기 및 멘트/드롭다운 설정
@@ -335,9 +319,9 @@ function showStockRegisterModal(type, dataObj) {
     const areaManual = document.getElementById('area-manual');
     const msgText = document.getElementById('msg-manual-text'); 
     
-    // 서버에서 받은 파싱 데이터 적용
-    document.getElementById('reg_modal_barcode').value = dataObj.barcode; 
-    document.getElementById('reg_modal_serial').value = dataObj.serial;   
+    // ★ [핵심] 서버에서 받은 파싱 데이터 적용
+    document.getElementById('reg_modal_barcode').value = dataObj.barcode; // 원본
+    document.getElementById('reg_modal_serial').value = dataObj.serial;   // 파싱된 일련번호
     
     // 거래처 드롭다운 채우기
     const modalSup = document.getElementById('reg_modal_supplier');
@@ -356,8 +340,8 @@ function showStockRegisterModal(type, dataObj) {
 
     tempInStockData = { 
         type: type, 
-        barcode: dataObj.barcode, 
-        serial: dataObj.serial,   
+        barcode: dataObj.barcode, // 원본 유지
+        serial: dataObj.serial,   // 파싱된 일련번호 유지
         supplier: defaultSup,
         branch: defaultBranch
     };
@@ -424,9 +408,10 @@ function submitStockRegister() {
 
     tempInStockData.model = model;
     tempInStockData.color = color;
-    // tempInStockData.serial/barcode는 모달 열릴 때 이미 세팅됨
+    // tempInStockData.serial과 barcode는 showStockRegisterModal에서 이미 세팅됨 (파싱값 유지)
     tempInStockData.supplier = supplier; 
 
+    // 서버에 등록 요청
     const btn = event.currentTarget;
     btn.disabled = true; 
     btn.innerHTML = "처리 중...";
@@ -435,9 +420,9 @@ function submitStockRegister() {
         method: "POST",
         body: JSON.stringify({
             action: "register_quick",
-            type: type, 
-            barcode: tempInStockData.barcode,
-            serial: tempInStockData.serial,
+            type: type, // iphone / unregistered / simple_open
+            barcode: tempInStockData.barcode, // 원본
+            serial: tempInStockData.serial,   // 파싱값
             model: model,
             color: color,
             supplier: supplier, 
@@ -451,6 +436,7 @@ function submitStockRegister() {
             const modal = bootstrap.Modal.getInstance(document.getElementById('modal-stock-register'));
             modal.hide();
             
+            // ★ 분기 처리: 무선개통 간편입고 vs 일반 재고입고
             if (type === 'simple_open') {
                 alert("간편 입고 완료. 개통 정보를 입력하세요.");
                 
@@ -474,6 +460,7 @@ function submitStockRegister() {
                 document.getElementById('f_name').focus();
 
             } else {
+                // 일반 입고
                 if(document.getElementById('in_mode_toggle').checked) {
                     inPendingList.push(tempInStockData);
                     renderInList();
@@ -534,20 +521,23 @@ function handleOpenScan(e) {
         } else {
             if (d.message === '재고 없음') {
                 if(confirm("입고되지 않은 단말기입니다. 간편입고 처리 하시겠습니까?")) {
-                    // 간편입고를 위해 먼저 프리뷰(파싱) 데이터를 가져온다
+                    // 간편입고를 위해 먼저 프리뷰(파싱) 데이터를 가져온다 (중요!)
+                    // 바로 모달 띄우기 전에 서버에 물어봐서 파싱된 시리얼번호를 얻어야 함
                     fetch(GAS_URL, {
                         method: "POST",
                         body: JSON.stringify({
                             action: "scan_preview", // 파싱용 호출
                             barcode: v,
-                            supplier: "", 
+                            supplier: "", // 여기선 몰라도 됨
                             branch: "",
                             user: currentUser
                         })
                     })
                     .then(previewRes => previewRes.json())
                     .then(previewData => {
-                        let modalData = { barcode: v, serial: v }; 
+                        // 프리뷰 성공(파싱 성공)하면 그 데이터로 모달 띄움
+                        // 실패(유효성 등)하면 그냥 원본 v 사용
+                        let modalData = { barcode: v, serial: v }; // 기본값
                         if(previewData.status === 'iphone' || previewData.status === 'unregistered' || previewData.status === 'success') {
                             modalData = previewData.data;
                         }
