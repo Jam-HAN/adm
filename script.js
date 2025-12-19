@@ -1,9 +1,8 @@
 // ==========================================
-// script.js (V48.0 - Final Full Version)
+// script.js (V48.1 - Final Full Version)
 // ==========================================
 
-// ★ 배포 후 갱신된 웹 앱 URL인지 반드시 확인하세요!
-const GAS_URL = "https://script.google.com/macros/s/AKfycbx_VpC-PfmQCTGdxdc0kD0vexTPF3xIrBNwEnRkzl2Z2yQJxK9VHsWXvz1UjSt-8ITN/exec"; 
+const GAS_URL = "https://script.google.com/macros/s/AKfycbx_VpC-PfmQCTGdxdc0kD0vexTPF3xIrBNwEnRkzl2Z2yQJxK9VHsWXvz1UjSt-8ITN/exec"; // ★ URL 확인
 
 let currentUser = "";
 let inPendingList = [];
@@ -311,13 +310,25 @@ function showStockRegisterModal(type, barcode) {
     
     document.getElementById('reg_barcode').value = barcode;
     
-    let defaultSup = document.getElementById('in_supplier').value || "";
+    // ★ [추가] 모달 내 거래처 드롭다운 채우기
+    const modalSup = document.getElementById('reg_modal_supplier');
+    modalSup.innerHTML = "";
+    globalVendorList.forEach(v => {
+        const opt = document.createElement('option');
+        opt.value = v;
+        opt.innerText = v;
+        modalSup.appendChild(opt);
+    });
+
+    // 기본 거래처 설정 (입고 탭의 선택값 or 첫번째)
+    let defaultSup = document.getElementById('in_supplier').value || (modalSup.options.length > 0 ? modalSup.options[0].value : "");
+    modalSup.value = defaultSup;
+
     let defaultBranch = document.getElementById('in_branch').value || "장지 본점";
 
     tempInStockData = { 
         type: type, 
         barcode: barcode,
-        supplier: defaultSup,
         branch: defaultBranch
     };
 
@@ -333,11 +344,9 @@ function showStockRegisterModal(type, barcode) {
         });
         document.getElementById('reg_iphone_color').innerHTML = ""; 
     } else {
-        // unregistered OR simple_open
         areaIphone.style.display = 'none';
         areaManual.style.display = 'block';
         
-        // ★ [수정] 요청하신 멘트 반영
         if (type === 'simple_open') {
             title.innerHTML = '<i class="bi bi-lightning-fill"></i> 간편 입고 (개통용)';
             msgText.innerHTML = `<i class="bi bi-info-circle"></i> 입고되지 않은 단말기입니다.<br>정보를 입력하여 개통을 진행합니다.`;
@@ -367,9 +376,11 @@ function updateIphoneColors() {
     }
 }
 
-// ★ 입력 완료 처리
+// ★ [수정] 입력 완료 처리 (거래처 정보 포함)
 function submitStockRegister() {
     const type = tempInStockData.type;
+    // ★ 모달에서 선택한 거래처 가져오기
+    const supplier = document.getElementById('reg_modal_supplier').value;
     let model = "", color = "";
 
     if (type === 'iphone') {
@@ -385,6 +396,7 @@ function submitStockRegister() {
     tempInStockData.model = model;
     tempInStockData.color = color;
     tempInStockData.serial = tempInStockData.barcode; 
+    tempInStockData.supplier = supplier; // ★ 추가됨
 
     // 서버에 등록 요청
     const btn = event.currentTarget;
@@ -400,7 +412,7 @@ function submitStockRegister() {
             serial: tempInStockData.serial,
             model: model,
             color: color,
-            supplier: tempInStockData.supplier,
+            supplier: supplier, // ★ 전송
             branch: tempInStockData.branch,
             user: currentUser
         })
