@@ -416,7 +416,7 @@ function updateIphoneColors() {
     }
 }
 
-// ★ 입력 완료 처리
+// ★ 입력 완료 처리 (연속 스캔 시 서버 전송 방지)
 function submitStockRegister() {
     const type = tempInStockData.type;
     const supplier = document.getElementById('reg_modal_supplier').value;
@@ -432,12 +432,35 @@ function submitStockRegister() {
 
     if (!model || !color) { alert("모델명과 색상을 모두 입력해주세요."); return; }
 
+    // 데이터 객체 완성
     tempInStockData.model = model;
     tempInStockData.color = color;
-    // tempInStockData.serial과 barcode는 showStockRegisterModal에서 이미 세팅됨 (파싱값 유지)
-    tempInStockData.supplier = supplier; 
+    tempInStockData.supplier = supplier;
 
-    // 서버에 등록 요청
+    // ---------------------------------------------------------
+    // ★ [수정] 연속 스캔 모드라면? -> 서버 저장 없이 '대기 목록'에만 추가
+    // ---------------------------------------------------------
+    if (document.getElementById('in_mode_toggle').checked) {
+        
+        // 1. 대기 목록에 추가
+        inPendingList.push(tempInStockData);
+        renderInList();
+
+        // 2. 모달 닫기
+        const modal = bootstrap.Modal.getInstance(document.getElementById('modal-stock-register'));
+        modal.hide();
+
+        // 3. 메시지 표시 및 포커스 복구
+        showMsg('in-msg', 'success', `대기목록 추가: ${model}`);
+        document.getElementById('in_scan').focus();
+
+        // ★ 여기서 함수 강제 종료 (서버 통신 안 함)
+        return; 
+    }
+
+    // ---------------------------------------------------------
+    // 연속 모드가 아닐 때만 아래 실행 (기존 로직: 즉시 DB 저장)
+    // ---------------------------------------------------------
     const btn = event.currentTarget;
     btn.disabled = true; 
     btn.innerHTML = "처리 중...";
@@ -446,9 +469,9 @@ function submitStockRegister() {
         method: "POST",
         body: JSON.stringify({
             action: "register_quick",
-            type: type, // iphone / unregistered / simple_open
-            barcode: tempInStockData.barcode, // 원본
-            serial: tempInStockData.serial,   // 파싱값
+            type: type, 
+            barcode: tempInStockData.barcode, 
+            serial: tempInStockData.serial,   
             model: model,
             color: color,
             supplier: supplier, 
@@ -462,7 +485,6 @@ function submitStockRegister() {
             const modal = bootstrap.Modal.getInstance(document.getElementById('modal-stock-register'));
             modal.hide();
             
-            // ★ 분기 처리: 무선개통 간편입고 vs 일반 재고입고
             if (type === 'simple_open') {
                 alert("간편 입고 완료. 개통 정보를 입력하세요.");
                 
@@ -486,14 +508,8 @@ function submitStockRegister() {
                 document.getElementById('f_name').focus();
 
             } else {
-                // 일반 입고
-                if(document.getElementById('in_mode_toggle').checked) {
-                    inPendingList.push(tempInStockData);
-                    renderInList();
-                    showMsg('in-msg','success',`추가: ${model}`);
-                } else {
-                    showMsg('in-msg','success',`입고: ${model}`);
-                }
+                // 일반 단건 입고 (연속모드 아님)
+                showMsg('in-msg','success',`입고: ${model}`);
                 document.getElementById('in_scan').focus();
             }
         } else {
