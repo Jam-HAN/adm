@@ -1,8 +1,9 @@
 // ==========================================
-// script.js (V48.1 - Final Full Version)
+// script.js (V49.1 - Final Full Code)
 // ==========================================
 
-const GAS_URL = "https://script.google.com/macros/s/AKfycbx_VpC-PfmQCTGdxdc0kD0vexTPF3xIrBNwEnRkzl2Z2yQJxK9VHsWXvz1UjSt-8ITN/exec"; // ★ URL 확인
+// ★ [중요] 배포 후 갱신된 웹 앱 URL인지 반드시 확인하세요!
+const GAS_URL = "https://script.google.com/macros/s/AKfycbw1k159kDezV8JwcImu7GM4q-bTTcUrPv6CwIYC_q47mpT5GlIGRy7OC4BduwL1vG5G/exec"; 
 
 let currentUser = "";
 let inPendingList = [];
@@ -10,6 +11,7 @@ let globalVendorList = [];
 let globalModelList = [];
 let globalAddonList = []; 
 let globalIphoneData = {}; 
+let globalDropdownData = null; // 드롭다운 데이터 캐싱용
 let currentOpenType = "";
 let logoutTimer;
 let tempOpenStockData = null;
@@ -35,7 +37,10 @@ window.handleCredentialResponse = function(response) {
             document.getElementById('login-view').style.display = 'none';
             document.getElementById('main-view').style.display = 'block';
             document.getElementById('user-name').innerText = currentUser;
+            
+            // 데이터 로드 시작
             loadInitData();
+            loadDropdownData(); // 미리 로드 (속도 최적화)
             setupAutoLogout();
             loadDashboard();
         } else {
@@ -56,7 +61,9 @@ window.onload = function() {
         document.getElementById('login-view').style.display = 'none';
         document.getElementById('main-view').style.display = 'block';
         document.getElementById('user-name').innerText = currentUser;
+        
         loadInitData();
+        loadDropdownData(); // 미리 로드
         setupAutoLogout();
         loadDashboard();
     }
@@ -202,30 +209,39 @@ function loadInitData() {
     });
 }
 
+// 캐싱된 드롭다운 데이터 로드
 function loadDropdownData() {
+    if (globalDropdownData) {
+        applyDropdownData(globalDropdownData);
+        return;
+    }
     fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "get_dropdown_data" }) })
     .then(r => r.json())
     .then(d => {
-        if(d.status !== 'success') return;
-        const fill = (id, list) => {
-            const sel = document.getElementById(id);
-            if(sel) { sel.innerHTML = '<option value="" selected>선택</option>'; list.forEach(item => { sel.innerHTML += `<option value="${item}">${item}</option>`; }); }
-        };
-        fill('f_act_type', d.actListMobile); fill('f_cont_type', d.contListMobile); fill('f_review', d.reviewList); fill('f_usim', d.usimList);
-        fill('w_pre_act_type', d.actListWired); fill('w_pre_cont_type', d.contListWired); fill('w_review', d.reviewList);
-        fill('u_pre_act_type', d.actListUsed); fill('u_pre_cont_type', d.contListUsed); fill('u_review', d.reviewList); fill('u_usim', d.usimList);
-        if(d.wiredVendorList) { fill('w_pre_avalue', d.wiredVendorList); fill('u_pre_avalue', d.wiredVendorList); }
-        
-        const vList = d.visitList || []; const vOpts = '<option value="" selected>선택</option>' + vList.map(i=>`<option value="${i}">${i}</option>`).join('') + '<option value="기타">기타 (직접입력)</option>';
-        if(document.getElementById('f_visit')) document.getElementById('f_visit').innerHTML = vOpts;
-        if(document.getElementById('w_visit')) document.getElementById('w_visit').innerHTML = vOpts;
-        if(document.getElementById('u_visit')) document.getElementById('u_visit').innerHTML = vOpts;
-        
-        const pList = d.payMethodList || []; const cList = d.colMethodList || [];
-        ['f_pay1_m','f_pay2_m', 'w_pay1_m','w_pay2_m', 'u_pay1_m','u_pay2_m'].forEach(id => fill(id, pList));
-        ['f_inc4_m','f_inc4_2_m','f_inc5_m', 'w_inc5_m', 'u_inc5_m'].forEach(id => fill(id, cList));
-        globalAddonList = d.addonList || [];
+        if(d.status === 'success') {
+            globalDropdownData = d;
+            applyDropdownData(d);
+        }
     });
+}
+
+function applyDropdownData(d) {
+    const fill = (id, list) => {
+        const sel = document.getElementById(id);
+        if(sel) { sel.innerHTML = '<option value="" selected>선택</option>'; list.forEach(item => { sel.innerHTML += `<option value="${item}">${item}</option>`; }); }
+    };
+    fill('f_act_type', d.actListMobile); fill('f_cont_type', d.contListMobile); fill('f_review', d.reviewList); fill('f_usim', d.usimList);
+    fill('w_pre_act_type', d.actListWired); fill('w_pre_cont_type', d.contListWired); fill('w_review', d.reviewList);
+    fill('u_pre_act_type', d.actListUsed); fill('u_pre_cont_type', d.contListUsed); fill('u_review', d.reviewList); fill('u_usim', d.usimList);
+    if(d.wiredVendorList) { fill('w_pre_avalue', d.wiredVendorList); fill('u_pre_avalue', d.wiredVendorList); }
+    
+    const vList = d.visitList || []; const vOpts = '<option value="" selected>선택</option>' + vList.map(i=>`<option value="${i}">${i}</option>`).join('') + '<option value="기타">기타 (직접입력)</option>';
+    ['f_visit', 'w_visit', 'u_visit'].forEach(id => { if(document.getElementById(id)) document.getElementById(id).innerHTML = vOpts; });
+    
+    const pList = d.payMethodList || []; const cList = d.colMethodList || [];
+    ['f_pay1_m','f_pay2_m', 'w_pay1_m','w_pay2_m', 'u_pay1_m','u_pay2_m'].forEach(id => fill(id, pList));
+    ['f_inc4_m','f_inc4_2_m','f_inc5_m', 'w_inc5_m', 'u_inc5_m'].forEach(id => fill(id, cList));
+    globalAddonList = d.addonList || [];
 }
 
 // ==========================================
@@ -254,7 +270,7 @@ function refreshUsedAddons() { renderAddonCheckboxes(document.getElementById('u_
 function validateField(id, name) { const el = document.getElementById(id); if (!el.value) { alert(name + "을(를) 입력/선택해주세요."); el.focus(); return false; } return true; }
 
 // ==========================================
-// ★ [수정] 재고 입고 로직 (V48.0)
+// 6. 재고 입고 & 모달 로직 (통합됨)
 // ==========================================
 function handleInScan(e) { 
     if(e.key!=='Enter') return; 
@@ -300,7 +316,7 @@ function handleInScan(e) {
     .finally(() => { e.target.value = ""; e.target.focus(); }); 
 }
 
-// ★ [수정] 모달 열기 및 멘트 설정
+// ★ 모달 열기 및 멘트/드롭다운 설정
 function showStockRegisterModal(type, barcode) {
     const modal = new bootstrap.Modal(document.getElementById('modal-stock-register'));
     const title = document.getElementById('modal-register-title');
@@ -310,7 +326,7 @@ function showStockRegisterModal(type, barcode) {
     
     document.getElementById('reg_barcode').value = barcode;
     
-    // ★ [추가] 모달 내 거래처 드롭다운 채우기
+    // 거래처 드롭다운 채우기
     const modalSup = document.getElementById('reg_modal_supplier');
     modalSup.innerHTML = "";
     globalVendorList.forEach(v => {
@@ -320,7 +336,6 @@ function showStockRegisterModal(type, barcode) {
         modalSup.appendChild(opt);
     });
 
-    // 기본 거래처 설정 (입고 탭의 선택값 or 첫번째)
     let defaultSup = document.getElementById('in_supplier').value || (modalSup.options.length > 0 ? modalSup.options[0].value : "");
     modalSup.value = defaultSup;
 
@@ -376,10 +391,9 @@ function updateIphoneColors() {
     }
 }
 
-// ★ [수정] 입력 완료 처리 (거래처 정보 포함)
+// ★ 입력 완료 처리
 function submitStockRegister() {
     const type = tempInStockData.type;
-    // ★ 모달에서 선택한 거래처 가져오기
     const supplier = document.getElementById('reg_modal_supplier').value;
     let model = "", color = "";
 
@@ -396,7 +410,7 @@ function submitStockRegister() {
     tempInStockData.model = model;
     tempInStockData.color = color;
     tempInStockData.serial = tempInStockData.barcode; 
-    tempInStockData.supplier = supplier; // ★ 추가됨
+    tempInStockData.supplier = supplier; 
 
     // 서버에 등록 요청
     const btn = event.currentTarget;
@@ -412,7 +426,7 @@ function submitStockRegister() {
             serial: tempInStockData.serial,
             model: model,
             color: color,
-            supplier: supplier, // ★ 전송
+            supplier: supplier, 
             branch: tempInStockData.branch,
             user: currentUser
         })
@@ -433,13 +447,13 @@ function submitStockRegister() {
                     color: color,
                     serial: tempInStockData.serial,
                     branch: tempInStockData.branch,
-                    supplier: tempInStockData.supplier
+                    supplier: supplier // 선택한 거래처 반영
                 };
 
                 document.getElementById('target_model').innerText = `${model} (${color})`; 
                 document.getElementById('target_serial').innerText = tempInStockData.serial;
                 document.getElementById('target_branch').innerText = tempInStockData.branch; 
-                document.getElementById('f_avalue').value = tempInStockData.supplier; 
+                document.getElementById('f_avalue').value = supplier; 
                 refreshAddons(); 
 
                 document.getElementById('open_step_1').style.display = 'none';
@@ -473,7 +487,7 @@ function clearInList() { inPendingList=[]; renderInList(); }
 function submitInBatch() { if(!inPendingList.length)return; if(!confirm("입고?"))return; fetch(GAS_URL,{method:"POST",body:JSON.stringify({action:"batch_register",items:inPendingList,branch:document.getElementById('in_branch').value,user:currentUser})}).then(r=>r.json()).then(d=>{if(d.status==='success'){alert(d.count+"대 입고완료");clearInList();}else alert(d.message);}); }
 
 // ==========================================
-// 6. 무선 개통
+// 7. 무선 개통 (스캔 + 간편입고)
 // ==========================================
 function handleOpenScan(e) { 
     if(e.key!=='Enter') return; 
@@ -618,7 +632,7 @@ function resetOpenForm() {
 }
 
 // ==========================================
-// 7. 유선 개통
+// 8. 유선 개통
 // ==========================================
 function startWiredActivation() {
     const branch = document.getElementById('wired_branch').value; const vendor = document.getElementById('w_pre_avalue').value; const type = document.getElementById('w_pre_act_type').value; const contract = document.getElementById('w_pre_cont_type').value;
@@ -698,13 +712,52 @@ function loadVendorsToList() {
             const sales = v.salesName ? `👤${v.salesName}` : '';
             const phone = v.salesPhone ? ` 📞${v.salesPhone}` : '';
             const office = v.officePhone ? ` 🏢${v.officePhone}` : '';
-            div.innerHTML += `<div class="list-group-item p-3"><div class="d-flex justify-content-between align-items-center mb-1"><span class="fw-bold text-dark">${v.name}</span><button class="btn btn-sm btn-outline-danger py-0" onclick="deleteVendor('${v.name}')" style="font-size:0.8rem;">삭제</button></div><div class="small text-muted text-truncate">${sales}${phone}${office}</div></div>`; 
+            const badge = v.carrier ? `<span class="badge bg-info text-dark me-2">${v.carrier}</span>` : '';
+            div.innerHTML += `
+                <div class="list-group-item p-3">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <div>${badge}<span class="fw-bold text-dark">${v.name}</span></div>
+                        <button class="btn btn-sm btn-outline-danger py-0" onclick="deleteVendor('${v.name}')" style="font-size:0.8rem;">삭제</button>
+                    </div>
+                    <div class="small text-muted text-truncate">${sales}${phone}${office}</div>
+                </div>`; 
         }); 
     }); 
 }
 
-function addVendor() { const n=document.getElementById('v_name').value; if(!n)return; fetch(GAS_URL,{method:"POST",body:JSON.stringify({action:"add_vendor",name:n,salesName:document.getElementById('v_sales').value,salesPhone:document.getElementById('v_phone').value,officePhone:document.getElementById('v_office').value})}).then(r=>r.json()).then(d=>{alert(d.message);loadVendorsToList();}); }
+function addVendor() { 
+    const n = document.getElementById('v_name').value; 
+    const type = document.getElementById('v_type').value;
+
+    if(!n) return alert("거래처명을 입력하세요.");
+
+    fetch(GAS_URL, {
+        method: "POST",
+        body: JSON.stringify({
+            action: "add_vendor",
+            name: n,
+            salesName: document.getElementById('v_sales').value,
+            salesPhone: document.getElementById('v_phone').value,
+            officePhone: document.getElementById('v_office').value,
+            type: type
+        })
+    })
+    .then(r => r.json())
+    .then(d => {
+        alert(d.message);
+        loadVendorsToList(); 
+        document.getElementById('v_name').value = "";
+        document.getElementById('v_sales').value = "";
+        document.getElementById('v_phone').value = "";
+        document.getElementById('v_office').value = "";
+        document.getElementById('v_type').selectedIndex = 0;
+    }); 
+}
+
 function deleteVendor(n) { if(confirm("삭제?")) fetch(GAS_URL,{method:"POST",body:JSON.stringify({action:"delete_vendor",name:n})}).then(r=>r.json()).then(d=>{alert(d.message);loadVendorsToList();}); }
 function showMsg(id, type, text) { const el=document.getElementById(id); el.style.display='block'; el.className=`alert py-2 text-center small fw-bold rounded-3 alert-${type==='success'?'success':'danger'}`; el.innerText=text; setTimeout(()=>el.style.display='none',2000); }
 function handleMoveScan(e) { if(e.key!=='Enter')return; const v=e.target.value.trim(); fetch(GAS_URL,{method:"POST",body:JSON.stringify({action:"transfer_stock",input:v,toBranch:document.getElementById('move_to_branch').value,user:currentUser})}).then(r=>r.json()).then(d=>showMsg('move-msg',d.status==='success'?'success':'error',d.message)).finally(()=>{e.target.value="";}); }
 function handleOutScan(e) { if(e.key!=='Enter')return; const v=e.target.value.trim(); if(!document.getElementById('out_note').value){alert("사유필수");return;} fetch(GAS_URL,{method:"POST",body:JSON.stringify({action:"return_stock",input:v,note:document.getElementById('out_note').value,user:currentUser})}).then(r=>r.json()).then(d=>showMsg('out-msg',d.status==='success'?'success':'error',d.message)).finally(()=>{e.target.value="";}); }
+function searchStock() { const crit = document.getElementById('search_criteria').value; const val = document.getElementById('search_value').value; const div = document.getElementById('stock_result'); div.innerHTML = `<div class="text-center py-4"><span class="spinner-border text-primary"></span></div>`; fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "search_stock", criteria: crit, keyword: val }) }) .then(r => r.json()).then(d => { if(!d.list || d.list.length === 0) { div.innerHTML = `<div class="text-center text-muted py-5">결과 없음</div>`; return; } let html = `<div class="table-responsive"><table class="table table-hover stock-table"><thead><tr><th>입고일</th><th>모델</th><th>색상</th><th>일련번호</th><th>상태</th><th>위치</th></tr></thead><tbody>`; d.list.forEach(item => { let st = item.status === '보유' ? 'text-success' : 'text-danger'; html += `<tr><td>${item.date}</td><td class="fw-bold">${item.model}</td><td>${item.color}</td><td class="font-monospace">${item.serial}</td><td class="${st} fw-bold">${item.status}</td><td>${item.branch}</td></tr>`; }); html += `</tbody></table></div><div class="text-end small text-muted">총 ${d.list.length}건</div>`; div.innerHTML = html; }); }
+function searchHistory() { const k=document.getElementById('hist_keyword').value; fetch(GAS_URL,{method:"POST",body:JSON.stringify({action:"search_history",keyword:k})}).then(r=>r.json()).then(d=>{ let h=""; d.list.forEach(i=>h+=`<div class='glass-card p-2 mb-2'><span class='badge bg-secondary'>${i.type}</span> ${i.model} (${i.time})</div>`); document.getElementById('hist_result').innerHTML=h; }); }
+function updateSearchUI() { const criteria = document.getElementById('search_criteria').value; const area = document.getElementById('search_input_area'); area.innerHTML = ""; if(criteria === 'supplier') { const sel = document.createElement('select'); sel.className = "form-select"; sel.id = "search_value"; globalVendorList.forEach(v => { const opt = document.createElement('option'); opt.value=v; opt.innerText=v; sel.appendChild(opt); }); area.appendChild(sel); } else if(criteria === 'branch') { const sel = document.createElement('select'); sel.className = "form-select"; sel.id = "search_value"; ["장지 본점", "명일 직영점"].forEach(v => { const opt = document.createElement('option'); opt.value=v; opt.innerText=v; sel.appendChild(opt); }); area.appendChild(sel); } else if(criteria === 'model') { const sel = document.createElement('select'); sel.className = "form-select"; sel.id = "search_value"; globalModelList.forEach(v => { const opt = document.createElement('option'); opt.value=v; opt.innerText=v; sel.appendChild(opt); }); area.appendChild(sel); } else { const inp = document.createElement('input'); inp.className = "form-control"; inp.id = "search_value"; inp.placeholder = "입력하세요"; inp.onkeydown = function(e){ if(e.key==='Enter') searchStock(); }; area.appendChild(inp); inp.focus(); } }
