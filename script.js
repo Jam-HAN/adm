@@ -276,45 +276,96 @@ function validateField(id, name) { const el = document.getElementById(id); if (!
 // ==========================================
 // ★ 재고 입고 로직 (V55.0 - 강제 프리뷰 & 분리)
 // ==========================================
+// [수정] 스캔 즉시 입력창 비움 + 임시 리스트 추가 (속도 극대화)
 function handleInScan(e) { 
-    if(e.key!=='Enter') return; 
+    if(e.key !== 'Enter') return; 
     const v = e.target.value.trim(); 
     if(!v) return;
-    if(inPendingList.some(i => i.barcode === v)) { showMsg('in-msg','error','이미 목록에 있음'); e.target.value=""; return; }
 
-    // ★ 무조건 서버 조회 (아이폰/미등록 체크 및 데이터 파싱)
+    // 1. 중복 체크
+    if(inPendingList.some(i => i.barcode === v)) { 
+        showMsg('in-msg','error','이미 목록에 있음'); 
+        e.target.value=""; 
+        return; 
+    }
+
+    // ★ 2. 입력창 즉시 비우고 포커스 유지 (기다릴 필요 없음)
+    e.target.value = "";
+    e.target.focus();
+
+    const isContinuous = document.getElementById('in_mode_toggle').checked;
+    const tempId = Date.now(); // 임시 ID 생성
+    const currentSupplier = document.getElementById('in_supplier').value;
+    const currentBranch = document.getElementById('in_branch').value;
+
+    // ★ 3. 연속 모드라면 '조회 중...' 상태로 리스트에 먼저 추가
+    if(isContinuous) {
+        inPendingList.push({
+            tempId: tempId,      // 나중에 찾아서 업데이트할 ID
+            model: "조회 중...", // 임시 멘트
+            supplier: currentSupplier,
+            branch: currentBranch,
+            serial: v,
+            color: "",
+            isLoading: true      // 로딩 상태 표시 플래그
+        });
+        renderInList();
+    }
+
+    // 4. 서버 요청 (백그라운드 실행)
     fetch(GAS_URL, {
         method: "POST",
         body: JSON.stringify({
             action: "scan_preview", 
             barcode: v,
-            supplier: document.getElementById('in_supplier').value,
-            branch: document.getElementById('in_branch').value,
+            supplier: currentSupplier,
+            branch: currentBranch,
             user: currentUser
         })
     })
     .then(r => r.json())
     .then(d => {
-        if(d.status === 'success') {
-            if(document.getElementById('in_mode_toggle').checked){
-                // 연속 모드: 리스트에 추가 (d.data에 파싱된 serial, barcode가 들어있음)
-                inPendingList.push({...d.data, supplier: document.getElementById('in_supplier').value, branch: document.getElementById('in_branch').value});
+        if(isContinuous) {
+            // 아까 추가한 임시 항목 찾기
+            const idx = inPendingList.findIndex(i => i.tempId === tempId);
+            if(idx === -1) return; // 사용자가 그새 삭제했으면 무시
+
+            if(d.status === 'success') {
+                // ★ 성공 시 진짜 데이터로 교체
+                inPendingList[idx] = {
+                    ...d.data, // model, color, serial(파싱됨)
+                    supplier: currentSupplier,
+                    branch: currentBranch
+                };
+                renderInList(); // 리스트 갱신
+            } 
+            else if (d.status === 'iphone' || d.status === 'unregistered') {
+                // 모달 필요 시: 리스트에서 임시항목 삭제 후 모달 띄움
+                inPendingList.splice(idx, 1);
                 renderInList();
-            } else {
-                // 단건 바로 등록
-                requestSingleRegister(v);
+                showStockRegisterModal(d.status === 'iphone' ? 'iphone' : 'unregistered', d.data);
+            } 
+            else {
+                // 에러 시: 리스트에서 삭제하고 메시지
+                inPendingList.splice(idx, 1);
+                renderInList();
+                showMsg('in-msg','error', d.message);
             }
-        } else if (d.status === 'iphone') {
-            // d.data 안에 barcode, serial이 분리되어 들어옴
-            showStockRegisterModal('iphone', d.data);
-        } else if (d.status === 'unregistered') {
-            // d.data 안에 barcode, serial이 분리되어 들어옴
-            showStockRegisterModal('unregistered', d.data);
         } else {
-            showMsg('in-msg','error', d.message);
+            // 단건 모드는 기존 로직 유지
+            if(d.status === 'success') requestSingleRegister(v);
+            else if(d.status === 'iphone' || d.status === 'unregistered') showStockRegisterModal(d.status==='iphone'?'iphone':'unregistered', d.data);
+            else showMsg('in-msg','error', d.message);
         }
     })
-    .finally(() => { e.target.value = ""; e.target.focus(); }); 
+    .catch(() => {
+        // 통신 오류 시 임시 항목 삭제
+        if(isContinuous) {
+            const idx = inPendingList.findIndex(i => i.tempId === tempId);
+            if(idx !== -1) { inPendingList.splice(idx, 1); renderInList(); }
+        }
+        alert("통신 오류");
+    }); 
 }
 
 // 단건 바로 등록용 헬퍼 함수
@@ -521,16 +572,21 @@ function submitStockRegister() {
     });
 }
 
+// [수정] 로딩 스피너 지원 및 디자인 개선
 function renderInList() { 
     const t = document.getElementById('in_tbody'); 
     t.innerHTML = ""; 
     
     inPendingList.forEach((i, x) => {
-        // [수정] 헤더와 너비(% 비율)를 맞춰서 정렬
+        // 로딩 중이면 스피너, 아니면 모델명 표시
+        let modelHtml = i.isLoading 
+            ? `<span class="spinner-border spinner-border-sm text-primary align-middle"></span>` 
+            : i.model;
+            
         t.innerHTML += `
         <div class="glass-card p-2 mb-2 d-flex align-items-center text-center small">
             <div class="text-truncate text-muted" style="width: 25%;" title="${i.supplier}">${i.supplier}</div>
-            <div class="text-truncate fw-bold text-primary" style="width: 25%;" title="${i.model}">${i.model}</div>
+            <div class="text-truncate fw-bold text-primary" style="width: 25%;" title="${i.model}">${modelHtml}</div>
             <div class="text-truncate" style="width: 15%;">${i.color || '-'}</div>
             <div class="text-truncate font-monospace" style="width: 25%;" title="${i.serial}">${i.serial}</div>
             <div style="width: 10%;">
