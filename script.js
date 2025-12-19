@@ -157,8 +157,12 @@ function renderDashboard(data) {
     else {
         data.todayList.forEach(item => {
             const marginStr = Math.floor(Number(item.margin)).toLocaleString();
-            const badgeClass = item.isWired ? "bg-success" : "bg-primary";
-            listBody.innerHTML += `<tr><td><span class="badge bg-secondary">${item.branch}</span></td><td><span class="badge ${badgeClass} text-white">${item.type}</span></td><td class="fw-bold">${item.name}님</td><td class="text-muted small">${item.user}님</td><td class="text-danger fw-bold">${marginStr}</td></tr>`;
+                
+            // ★ 서버에서 정해준 색상(badgeColor)을 그대로 사용합니다.
+            // (기존 코드의 text-white는 지워야 '노란색 바탕에 검은 글씨'가 제대로 나옵니다)
+            const colorClass = item.badgeColor ? `bg-${item.badgeColor}` : "bg-secondary";
+
+            listBody.innerHTML += `<tr><td><span class="badge bg-secondary">${item.branch}</span></td><td><span class="badge ${colorClass}">${item.type}</span></td><td class="fw-bold">${item.name}님</td><td class="text-muted small">${item.user}님</td><td class="text-danger fw-bold">${marginStr}</td></tr>`;
         });
     }
     
