@@ -482,7 +482,7 @@ function submitStockRegister() {
     });
 }
 
-function renderInList() { const t=document.getElementById('in_tbody'); t.innerHTML=""; inPendingList.forEach((i,x)=>t.innerHTML+=`<tr><td>${i.model}</td><td>${i.serial}</td><td><button onclick="inPendingList.splice(${x},1);renderInList()">X</button></td></tr>`); document.getElementById('in_count').innerText=inPendingList.length; }
+function renderInList() { const t=document.getElementById('in_tbody'); t.innerHTML=""; inPendingList.forEach((i,x)=>t.innerHTML+=`<tr><td>${i.model}</td><td>${i.serial}</td><td><button onclick="inPendingList.splice(${x},1);renderInList()">X</button></td></tr>`); document.getElementById('in_count').innerText=inPendingList.length; document.getElementById('in_batch_area').style.display = inPendingList.length > 0 ? 'block' : 'none'; }
 function clearInList() { inPendingList=[]; renderInList(); }
 function submitInBatch() { if(!inPendingList.length)return; if(!confirm("입고?"))return; fetch(GAS_URL,{method:"POST",body:JSON.stringify({action:"batch_register",items:inPendingList,branch:document.getElementById('in_branch').value,user:currentUser})}).then(r=>r.json()).then(d=>{if(d.status==='success'){alert(d.count+"대 입고완료");clearInList();}else alert(d.message);}); }
 
