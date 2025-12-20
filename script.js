@@ -372,18 +372,16 @@ function requestSingleRegister(barcode) {
 }
 
 // [수정] 모달창 표시 로직: 간편입고 시 거래처 표시 & 바코드 숨김
+// [수정] 아이폰일 때는 안내 문구(msg-manual-text)를 숨기도록 로직 추가
 function showStockRegisterModal(type, dataObj) {
     const modal = new bootstrap.Modal(document.getElementById('modal-stock-register'));
     const title = document.getElementById('modal-register-title');
     
-    // UI 요소
+    // UI 요소 가져오기
     const areaIphone = document.getElementById('area-iphone');
     const areaManual = document.getElementById('area-manual');
-    
-    // ★ [추가] HTML에서 새로 만든 ID들을 가져옵니다.
     const areaSupplier = document.getElementById('area-modal-supplier'); 
     const areaBarcode = document.getElementById('area-modal-barcode'); 
-    
     const msgText = document.getElementById('msg-manual-text'); 
     
     // 값 세팅
@@ -402,34 +400,33 @@ function showStockRegisterModal(type, dataObj) {
         branch: defaultBranch
     };
 
-    // ★ [핵심] 간편입고 vs 일반입고 분기 처리
+    // ★ [핵심] 간편입고 vs 일반입고 UI 설정
     if (type === 'simple_open') {
         // --- 1. 간편입고 ---
         if (title) title.innerHTML = '<i class="bi bi-lightning-fill"></i> 간편 입고 (개통용)';
         
-        // UI 조정: 바코드 숨김, 거래처 선택 표시
-        if (areaBarcode) areaBarcode.style.display = 'none';
+        if (areaBarcode) areaBarcode.style.display = 'none'; // 바코드 숨김
         if (areaSupplier) {
-            areaSupplier.style.display = 'block';
-            // 메인 화면의 거래처 목록 복사
+            areaSupplier.style.display = 'block'; // 거래처 보임
             const mainSupOpts = document.getElementById('in_supplier').innerHTML;
             const modalSupSel = document.getElementById('reg_modal_supplier');
             if(modalSupSel) {
                 modalSupSel.innerHTML = mainSupOpts;
-                modalSupSel.value = ""; // 필수로 선택하도록 초기화
+                modalSupSel.value = ""; 
             }
         }
 
+        // 경고 문구 보임
         if (msgText) {
-            msgText.innerHTML = `<i class="bi bi-info-circle"></i> 재고에 없는 단말기입니다.<br>거래처와 정보를 입력하여 입고 후 개통합니다.`;
+            msgText.style.display = 'block'; 
+            msgText.innerHTML = `<i class="bi bi-info-circle"></i> 정보를 입력하면 입고와 동시에 개통됩니다.`;
             msgText.className = "alert alert-primary small fw-bold mb-3";
         }
 
-        // 간편입고는 무조건 Manual 입력창(공통) 사용 (아이폰/갤럭시 구분 없음)
         if (areaIphone) areaIphone.style.display = 'none';
         if (areaManual) areaManual.style.display = 'block';
 
-        // 용량 드롭다운 채우기 (기타단말기 시트 데이터 사용)
+        // 용량 드롭다운 채우기
         const manualStorage = document.getElementById('reg_manual_storage');
         manualStorage.innerHTML = '<option value="">선택</option>';
         if (globalDropdownData && globalDropdownData.otherCapacityList) {
@@ -438,20 +435,22 @@ function showStockRegisterModal(type, dataObj) {
             });
         }
         
-        // 입력창 초기화
         document.getElementById('reg_manual_model').value = "";
         manualStorage.value = "";
         document.getElementById('reg_manual_color').value = "";
 
     } else {
-        // --- 2. 일반입고 (바코드 스캔됨) ---
-        // 바코드 보임, 거래처 숨김 (이미 선택됨)
+        // --- 2. 일반입고 (바코드 인식됨) ---
         if (areaBarcode) areaBarcode.style.display = 'block'; 
         if (areaSupplier) areaSupplier.style.display = 'none'; 
 
         if (type === 'iphone') {
-            // 아이폰
+            // [아이폰]
             if (title) title.innerHTML = '<i class="bi bi-apple"></i> 아이폰 정보 입력';
+            
+            // ★ [수정] 아이폰은 안내 문구 숨김
+            if (msgText) msgText.style.display = 'none';
+
             if (areaIphone) areaIphone.style.display = 'block';
             if (areaManual) areaManual.style.display = 'none';
             
@@ -464,17 +463,19 @@ function showStockRegisterModal(type, dataObj) {
             document.getElementById('reg_iphone_color').innerHTML = '<option value="">선택</option>';
 
         } else {
-            // 미등록 단말기
+            // [미등록 단말기]
             if (title) title.innerHTML = '<i class="bi bi-question-circle"></i> 미등록 단말기 입력';
+            
+            // 경고 문구 보임
             if (msgText) {
-                msgText.innerHTML = `<i class="bi bi-exclamation-triangle"></i> 등록되지 않은 단말기입니다.<br>정보를 입력하면 다음부터는 자동 등록됩니다.`;
+                msgText.style.display = 'block';
+                msgText.innerHTML = `<i class="bi bi-exclamation-triangle"></i> 등록되지 않은 단말기입니다.<br>정보를 입력하면 '맵데이터'에 자동 등록됩니다.`;
                 msgText.className = "alert alert-warning small fw-bold mb-3";
             }
             
             if (areaIphone) areaIphone.style.display = 'none';
             if (areaManual) areaManual.style.display = 'block';
 
-            // 용량 드롭다운 채우기
             const manualStorage = document.getElementById('reg_manual_storage');
             manualStorage.innerHTML = '<option value="">선택</option>';
             if (globalDropdownData && globalDropdownData.otherCapacityList) {
