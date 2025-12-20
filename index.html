@@ -507,16 +507,24 @@
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body p-4">
-                    <div class="mb-3">
+                    
+                    <div class="mb-3" id="area-modal-barcode">
                         <label class="form-label small fw-bold text-muted">바코드</label>
                         <input type="text" class="form-control bg-light" id="reg_modal_barcode" readonly>
                     </div>
+                    
                     <div class="mb-3">
                         <label class="form-label small fw-bold text-muted">일련번호</label>
                         <input type="text" class="form-control bg-light" id="reg_modal_serial" readonly>
                     </div>
 
                     <div id="area-iphone" style="display:none;">
+                        <div class="mb-3" id="area-modal-supplier" style="display:none;">
+                            <label class="form-label small fw-bold text-primary">거래처 선택</label>
+                            <select class="form-select fw-bold border-primary" id="reg_modal_supplier">
+                                </select>
+                        </div>
+                        
                         <div class="mb-3">
                             <label class="form-label small fw-bold text-muted">모델명 선택</label>
                             <select class="form-select fw-bold" id="reg_iphone_model" onchange="updateIphoneColors()">
