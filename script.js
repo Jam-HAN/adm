@@ -455,14 +455,36 @@ function showStockRegisterModal(type, dataObj) {
     modal.show();
 }
 
+// [수정] 바뀐 데이터 구조(용량+색상)를 화면에 뿌려주는 함수
 function updateIphoneColors() {
     const model = document.getElementById('reg_iphone_model').value;
     const colorSel = document.getElementById('reg_iphone_color');
-    colorSel.innerHTML = "";
-    if(model && globalIphoneData[model]) {
-        globalIphoneData[model].forEach(c => {
-            colorSel.innerHTML += `<option value="${c}">${c}</option>`;
-        });
+    const storageSel = document.getElementById('reg_iphone_storage');
+    
+    // 1. 기존 내용 초기화 (비우기)
+    colorSel.innerHTML = '<option value="">선택</option>';
+    storageSel.innerHTML = '<option value="">선택</option>';
+
+    if (!model) return; // 모델 선택 안 했으면 종료
+
+    // globalIphoneData에서 해당 모델 데이터 가져오기
+    // 데이터 예시: { storage: ["128","256"], colors: ["블랙","화이트"] }
+    const data = globalIphoneData[model];
+
+    if (data) {
+        // 2. 용량 채우기
+        if (data.storage && Array.isArray(data.storage)) {
+            data.storage.forEach(s => {
+                storageSel.innerHTML += `<option value="${s}">${s}</option>`;
+            });
+        }
+
+        // 3. 색상 채우기
+        if (data.colors && Array.isArray(data.colors)) {
+            data.colors.forEach(c => {
+                colorSel.innerHTML += `<option value="${c}">${c}</option>`;
+            });
+        }
     }
 }
 
