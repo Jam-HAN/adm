@@ -469,7 +469,7 @@ function showStockRegisterModal(type, dataObj) {
             // 경고 문구 보임
             if (msgText) {
                 msgText.style.display = 'block';
-                msgText.innerHTML = `<i class="bi bi-exclamation-triangle"></i> 등록되지 않은 단말기입니다.<br>정보를 입력하면 '맵데이터'에 자동 등록됩니다.`;
+                msgText.innerHTML = `<i class="bi bi-exclamation-triangle"></i> 등록되지 않은 단말기입니다.<br>정보를 입력하면 다음 입고부터는 자동 등록됩니다.`;
                 msgText.className = "alert alert-warning small fw-bold mb-3";
             }
             
