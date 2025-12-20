@@ -663,7 +663,32 @@ function renderInList() {
 }
 
 function clearInList() { inPendingList=[]; renderInList(); }
-function submitInBatch() { if(!inPendingList.length)return; if(!confirm(`${count}대 입고하시겠습니까?`))return; fetch(GAS_URL,{method:"POST",body:JSON.stringify({action:"batch_register",items:inPendingList,branch:document.getElementById('in_branch').value,user:currentUser})}).then(r=>r.json()).then(d=>{if(d.status==='success'){alert(d.count+"대 입고완료");clearInList();}else alert(d.message);}); }
+// [수정] 입고 확인 메시지를 구체적으로 변경 ("N대 입고하시겠습니까?")
+function submitInBatch() { 
+    const count = inPendingList.length;
+    if (count === 0) return; 
+    
+    if (!confirm(`${count}대 입고하시겠습니까?`)) return; 
+    
+    fetch(GAS_URL, {
+        method: "POST",
+        body: JSON.stringify({
+            action: "batch_register",
+            items: inPendingList,
+            branch: document.getElementById('in_branch').value,
+            user: currentUser
+        })
+    })
+    .then(r => r.json())
+    .then(d => {
+        if(d.status === 'success') {
+            alert(d.count + "대 입고완료");
+            clearInList();
+        } else {
+            alert(d.message);
+        }
+    }); 
+}
 
 // ==========================================
 // 6. 무선 개통
