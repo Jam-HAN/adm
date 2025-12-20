@@ -1,5 +1,5 @@
 // ==========================================
-// script.js (V55.0 - Final Version)
+// script.js (V55.1 - Final Fixed)
 // ==========================================
 
 // ★ 배포 후 갱신된 웹 앱 URL인지 반드시 확인하세요!
@@ -157,11 +157,7 @@ function renderDashboard(data) {
     else {
         data.todayList.forEach(item => {
             const marginStr = Math.floor(Number(item.margin)).toLocaleString();
-                
-            // ★ 서버에서 정해준 색상(badgeColor)을 그대로 사용합니다.
-            // (기존 코드의 text-white는 지워야 '노란색 바탕에 검은 글씨'가 제대로 나옵니다)
             const colorClass = item.badgeColor ? `bg-${item.badgeColor}` : "bg-secondary";
-
             listBody.innerHTML += `<tr><td><span class="badge bg-secondary">${item.branch}</span></td><td><span class="badge ${colorClass}">${item.type}</span></td><td class="fw-bold">${item.name}님</td><td class="text-muted small">${item.user}님</td><td class="text-danger fw-bold">${marginStr}</td></tr>`;
         });
     }
@@ -274,45 +270,40 @@ function refreshUsedAddons() { renderAddonCheckboxes(document.getElementById('u_
 function validateField(id, name) { const el = document.getElementById(id); if (!el.value) { alert(name + "을(를) 입력/선택해주세요."); el.focus(); return false; } return true; }
 
 // ==========================================
-// ★ 재고 입고 로직 (V55.0 - 강제 프리뷰 & 분리)
+// ★ 재고 입고 로직
 // ==========================================
-// [수정] 스캔 즉시 입력창 비움 + 임시 리스트 추가 (속도 극대화)
 function handleInScan(e) { 
     if(e.key !== 'Enter') return; 
     const v = e.target.value.trim(); 
     if(!v) return;
 
-    // 1. 중복 체크
     if(inPendingList.some(i => i.barcode === v)) { 
         showMsg('in-msg','error','이미 목록에 있음'); 
         e.target.value=""; 
         return; 
     }
 
-    // ★ 2. 입력창 즉시 비우고 포커스 유지 (기다릴 필요 없음)
     e.target.value = "";
     e.target.focus();
 
     const isContinuous = document.getElementById('in_mode_toggle').checked;
-    const tempId = Date.now(); // 임시 ID 생성
+    const tempId = Date.now();
     const currentSupplier = document.getElementById('in_supplier').value;
     const currentBranch = document.getElementById('in_branch').value;
 
-    // ★ 3. 연속 모드라면 '조회 중...' 상태로 리스트에 먼저 추가
     if(isContinuous) {
         inPendingList.push({
-            tempId: tempId,      // 나중에 찾아서 업데이트할 ID
-            model: "조회 중...", // 임시 멘트
+            tempId: tempId,
+            model: "조회 중...",
             supplier: currentSupplier,
             branch: currentBranch,
             serial: v,
             color: "",
-            isLoading: true      // 로딩 상태 표시 플래그
+            isLoading: true
         });
         renderInList();
     }
 
-    // 4. 서버 요청 (백그라운드 실행)
     fetch(GAS_URL, {
         method: "POST",
         body: JSON.stringify({
@@ -326,40 +317,34 @@ function handleInScan(e) {
     .then(r => r.json())
     .then(d => {
         if(isContinuous) {
-            // 아까 추가한 임시 항목 찾기
             const idx = inPendingList.findIndex(i => i.tempId === tempId);
-            if(idx === -1) return; // 사용자가 그새 삭제했으면 무시
+            if(idx === -1) return;
 
             if(d.status === 'success') {
-                // ★ 성공 시 진짜 데이터로 교체
                 inPendingList[idx] = {
-                    ...d.data, // model, color, serial(파싱됨)
+                    ...d.data, 
                     supplier: currentSupplier,
                     branch: currentBranch
                 };
-                renderInList(); // 리스트 갱신
+                renderInList(); 
             } 
             else if (d.status === 'iphone' || d.status === 'unregistered') {
-                // 모달 필요 시: 리스트에서 임시항목 삭제 후 모달 띄움
                 inPendingList.splice(idx, 1);
                 renderInList();
                 showStockRegisterModal(d.status === 'iphone' ? 'iphone' : 'unregistered', d.data);
             } 
             else {
-                // 에러 시: 리스트에서 삭제하고 메시지
                 inPendingList.splice(idx, 1);
                 renderInList();
                 showMsg('in-msg','error', d.message);
             }
         } else {
-            // 단건 모드는 기존 로직 유지
             if(d.status === 'success') requestSingleRegister(v);
             else if(d.status === 'iphone' || d.status === 'unregistered') showStockRegisterModal(d.status==='iphone'?'iphone':'unregistered', d.data);
             else showMsg('in-msg','error', d.message);
         }
     })
     .catch(() => {
-        // 통신 오류 시 임시 항목 삭제
         if(isContinuous) {
             const idx = inPendingList.findIndex(i => i.tempId === tempId);
             if(idx !== -1) { inPendingList.splice(idx, 1); renderInList(); }
@@ -368,7 +353,6 @@ function handleInScan(e) {
     }); 
 }
 
-// 단건 바로 등록용 헬퍼 함수
 function requestSingleRegister(barcode) {
     fetch(GAS_URL, {
         method: "POST",
@@ -387,7 +371,7 @@ function requestSingleRegister(barcode) {
     });
 }
 
-// [수정] 간편입고 시 바코드 숨김 & 거래처 드롭다운 노출
+// [수정] 모달창 표시 로직: 간편입고 시 거래처 표시 & 바코드 숨김
 function showStockRegisterModal(type, dataObj) {
     const modal = new bootstrap.Modal(document.getElementById('modal-stock-register'));
     const title = document.getElementById('modal-register-title');
@@ -395,8 +379,11 @@ function showStockRegisterModal(type, dataObj) {
     // UI 요소
     const areaIphone = document.getElementById('area-iphone');
     const areaManual = document.getElementById('area-manual');
+    
+    // ★ [추가] HTML에서 새로 만든 ID들을 가져옵니다.
     const areaSupplier = document.getElementById('area-modal-supplier'); 
     const areaBarcode = document.getElementById('area-modal-barcode'); 
+    
     const msgText = document.getElementById('msg-manual-text'); 
     
     // 값 세팅
@@ -415,33 +402,34 @@ function showStockRegisterModal(type, dataObj) {
         branch: defaultBranch
     };
 
-    // ★ [간편입고] vs [일반입고] UI 설정
+    // ★ [핵심] 간편입고 vs 일반입고 분기 처리
     if (type === 'simple_open') {
-        // 1. 간편입고 UI 세팅
+        // --- 1. 간편입고 ---
         if (title) title.innerHTML = '<i class="bi bi-lightning-fill"></i> 간편 입고 (개통용)';
         
-        // 바코드 숨김, 거래처 보임
+        // UI 조정: 바코드 숨김, 거래처 선택 표시
         if (areaBarcode) areaBarcode.style.display = 'none';
         if (areaSupplier) {
             areaSupplier.style.display = 'block';
-            // 거래처 목록 복사
+            // 메인 화면의 거래처 목록 복사
             const mainSupOpts = document.getElementById('in_supplier').innerHTML;
             const modalSupSel = document.getElementById('reg_modal_supplier');
-            modalSupSel.innerHTML = mainSupOpts;
-            modalSupSel.value = ""; 
+            if(modalSupSel) {
+                modalSupSel.innerHTML = mainSupOpts;
+                modalSupSel.value = ""; // 필수로 선택하도록 초기화
+            }
         }
 
-        // 문구 설정
         if (msgText) {
-            msgText.innerHTML = `<i class="bi bi-info-circle"></i> 정보를 입력하면 입고와 동시에 개통됩니다.`;
+            msgText.innerHTML = `<i class="bi bi-info-circle"></i> 재고에 없는 단말기입니다.<br>거래처와 정보를 입력하여 입고 후 개통합니다.`;
             msgText.className = "alert alert-primary small fw-bold mb-3";
         }
 
-        // ★ 간편입고는 무조건 'Manual(수동)' 입력창 사용 (아이폰/갤럭시 구분 없음)
+        // 간편입고는 무조건 Manual 입력창(공통) 사용 (아이폰/갤럭시 구분 없음)
         if (areaIphone) areaIphone.style.display = 'none';
         if (areaManual) areaManual.style.display = 'block';
 
-        // 용량 드롭다운 채우기 (기타단말기 시트 데이터)
+        // 용량 드롭다운 채우기 (기타단말기 시트 데이터 사용)
         const manualStorage = document.getElementById('reg_manual_storage');
         manualStorage.innerHTML = '<option value="">선택</option>';
         if (globalDropdownData && globalDropdownData.otherCapacityList) {
@@ -456,12 +444,13 @@ function showStockRegisterModal(type, dataObj) {
         document.getElementById('reg_manual_color').value = "";
 
     } else {
-        // 2. 일반입고 (바코드로 인식된 경우)
-        if (areaBarcode) areaBarcode.style.display = 'block'; // 바코드 보임
-        if (areaSupplier) areaSupplier.style.display = 'none'; // 거래처 숨김 (이미 선택됨)
+        // --- 2. 일반입고 (바코드 스캔됨) ---
+        // 바코드 보임, 거래처 숨김 (이미 선택됨)
+        if (areaBarcode) areaBarcode.style.display = 'block'; 
+        if (areaSupplier) areaSupplier.style.display = 'none'; 
 
         if (type === 'iphone') {
-            // 아이폰으로 인식된 경우
+            // 아이폰
             if (title) title.innerHTML = '<i class="bi bi-apple"></i> 아이폰 정보 입력';
             if (areaIphone) areaIphone.style.display = 'block';
             if (areaManual) areaManual.style.display = 'none';
@@ -475,7 +464,7 @@ function showStockRegisterModal(type, dataObj) {
             document.getElementById('reg_iphone_color').innerHTML = '<option value="">선택</option>';
 
         } else {
-            // 미등록 단말기로 인식된 경우
+            // 미등록 단말기
             if (title) title.innerHTML = '<i class="bi bi-question-circle"></i> 미등록 단말기 입력';
             if (msgText) {
                 msgText.innerHTML = `<i class="bi bi-exclamation-triangle"></i> 등록되지 않은 단말기입니다.<br>정보를 입력하면 '맵데이터'에 자동 등록됩니다.`;
@@ -497,37 +486,34 @@ function showStockRegisterModal(type, dataObj) {
             document.getElementById('reg_manual_model').value = "";
             manualStorage.value = "";
             document.getElementById('reg_manual_color').value = "";
+            setTimeout(() => {
+                const el = document.getElementById('reg_manual_model');
+                if(el) el.focus();
+            }, 300);
         }
     }
     
     modal.show();
 }
 
-// [수정] 바뀐 데이터 구조(용량+색상)를 화면에 뿌려주는 함수
 function updateIphoneColors() {
     const model = document.getElementById('reg_iphone_model').value;
     const colorSel = document.getElementById('reg_iphone_color');
     const storageSel = document.getElementById('reg_iphone_storage');
     
-    // 1. 기존 내용 초기화 (비우기)
     colorSel.innerHTML = '<option value="">선택</option>';
     storageSel.innerHTML = '<option value="">선택</option>';
 
-    if (!model) return; // 모델 선택 안 했으면 종료
+    if (!model) return;
 
-    // globalIphoneData에서 해당 모델 데이터 가져오기
-    // 데이터 예시: { storage: ["128","256"], colors: ["블랙","화이트"] }
     const data = globalIphoneData[model];
 
     if (data) {
-        // 2. 용량 채우기
         if (data.storage && Array.isArray(data.storage)) {
             data.storage.forEach(s => {
                 storageSel.innerHTML += `<option value="${s}">${s}</option>`;
             });
         }
-
-        // 3. 색상 채우기
         if (data.colors && Array.isArray(data.colors)) {
             data.colors.forEach(c => {
                 colorSel.innerHTML += `<option value="${c}">${c}</option>`;
@@ -536,12 +522,21 @@ function updateIphoneColors() {
     }
 }
 
-// ★ 입력 완료 처리 (연속 스캔 시 서버 전송 방지)
-// [수정] 아이폰 저장 포맷 변경 (모델명_용량)
-// [수정] 기타 단말기도 '모델명_용량' 형태로 저장
+// [수정] 간편입고 시 거래처 값을 모달창에서 가져오도록 로직 추가
 function submitStockRegister() {
     const type = tempInStockData.type;
-    const supplier = tempInStockData.supplier; 
+    let supplier = tempInStockData.supplier; // 기본값
+
+    // ★ [수정] 간편입고라면 모달창에서 선택한 거래처 값을 사용
+    if (type === 'simple_open') {
+        const selectedSup = document.getElementById('reg_modal_supplier').value;
+        if (!selectedSup) {
+            alert("거래처를 선택해주세요!"); // 필수 선택 알림
+            document.getElementById('reg_modal_supplier').focus();
+            return;
+        }
+        supplier = selectedSup;
+    }
 
     let model = "", color = "";
 
@@ -556,14 +551,12 @@ function submitStockRegister() {
         color = document.getElementById('reg_iphone_color').value;
         
     } else {
-        // --- 기타 단말기 (미등록) ---
         const rawModel = document.getElementById('reg_manual_model').value.trim();
         const storage = document.getElementById('reg_manual_storage').value;
         
         if (!rawModel) { alert("모델명을 입력해주세요."); return; }
         if (!storage) { alert("용량을 선택해주세요."); return; }
         
-        // ★ [수정] 모델명_용량 형식으로 결합
         model = `${rawModel}_${storage}`;
         color = document.getElementById('reg_manual_color').value.trim();
     }
@@ -572,11 +565,9 @@ function submitStockRegister() {
 
     tempInStockData.model = model;
     tempInStockData.color = color;
+    // ★ 변경된 supplier 값 저장 (서버로 보낼 때 사용됨)
     tempInStockData.supplier = supplier;
 
-    // ... (이하 연속 스캔 모드 체크 및 서버 전송 로직은 기존과 동일) ...
-    // (아까 작성해드린 연속 스캔 처리 로직 그대로 두시면 됩니다)
-    
     if (document.getElementById('in_mode_toggle').checked) {
         inPendingList.push(tempInStockData);
         renderInList();
@@ -599,7 +590,7 @@ function submitStockRegister() {
             serial: tempInStockData.serial,   
             model: model,
             color: color,
-            supplier: supplier, 
+            supplier: supplier, // ★ 확인: 여기서 수정된 supplier가 전송됨
             branch: tempInStockData.branch,
             user: currentUser
         })
@@ -643,13 +634,11 @@ function submitStockRegister() {
     });
 }
 
-// [수정] 로딩 스피너 지원 및 디자인 개선
 function renderInList() { 
     const t = document.getElementById('in_tbody'); 
     t.innerHTML = ""; 
     
     inPendingList.forEach((i, x) => {
-        // 로딩 중이면 스피너, 아니면 모델명 표시
         let modelHtml = i.isLoading 
             ? `<span class="spinner-border spinner-border-sm text-primary align-middle"></span>` 
             : i.model;
@@ -702,11 +691,10 @@ function handleOpenScan(e) {
         } else {
             if (d.message === '재고 없음') {
                 if(confirm("입고되지 않은 단말기입니다. 간편입고 처리 하시겠습니까?")) {
-                    // 간편입고를 위해 먼저 프리뷰(파싱) 데이터를 가져온다 (중요!)
                     fetch(GAS_URL, {
                         method: "POST",
                         body: JSON.stringify({
-                            action: "scan_preview", // 파싱용 호출
+                            action: "scan_preview", 
                             barcode: v,
                             supplier: "", 
                             branch: "",
