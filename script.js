@@ -395,21 +395,19 @@ function showStockRegisterModal(type, dataObj) {
     const areaManual = document.getElementById('area-manual');
     const msgText = document.getElementById('msg-manual-text'); 
     
-    // 1. 기본 데이터 세팅
+    // 기본 데이터 세팅
     document.getElementById('reg_modal_barcode').value = dataObj.barcode;
     document.getElementById('reg_modal_serial').value = dataObj.serial;
 
-    // ★ [수정] 메인 화면에서 선택된 거래처 값을 가져와서 저장해둡니다.
-    // (화면에 그리는 코드는 삭제했습니다)
+    // 거래처 값 유지
     let defaultSup = document.getElementById('in_supplier').value || "지점미상";
     let defaultBranch = document.getElementById('in_branch').value || "장지 본점";
 
-    // 임시 데이터에 저장 (나중에 저장 버튼 누를 때 사용)
     tempInStockData = { 
         type: type, 
         barcode: dataObj.barcode, 
         serial: dataObj.serial,   
-        supplier: defaultSup, // ★ 여기서 저장된 값을 씁니다
+        supplier: defaultSup, 
         branch: defaultBranch
     };
 
@@ -423,28 +421,38 @@ function showStockRegisterModal(type, dataObj) {
         Object.keys(globalIphoneData).forEach(m => {
             modelSel.innerHTML += `<option value="${m}">${m}</option>`;
         });
-        
-        // 초기화
         document.getElementById('reg_iphone_storage').innerHTML = '<option value="">선택</option>';
         document.getElementById('reg_iphone_color').innerHTML = '<option value="">선택</option>';
 
     } else {
-        // ... (이하 기존 미등록 단말기 로직 동일) ...
+        // --- 미등록/간편입고 (기타 단말기) ---
         areaIphone.style.display = 'none';
         areaManual.style.display = 'block';
         
+        // ★ [추가] 기타 단말기 용량 드롭다운 채우기
+        const manualStorage = document.getElementById('reg_manual_storage');
+        manualStorage.innerHTML = '<option value="">선택</option>';
+        if (globalDropdownData && globalDropdownData.otherCapacityList) {
+            globalDropdownData.otherCapacityList.forEach(c => {
+                manualStorage.innerHTML += `<option value="${c}">${c}</option>`;
+            });
+        }
+
         if (type === 'simple_open') {
             title.innerHTML = '<i class="bi bi-lightning-fill"></i> 간편 입고 (개통용)';
             msgText.innerHTML = `<i class="bi bi-info-circle"></i> 입고되지 않은 단말기입니다.<br>정보를 입력하여 개통을 진행합니다.`;
             msgText.className = "alert alert-primary small fw-bold mb-3";
         } else {
             title.innerHTML = '<i class="bi bi-question-circle"></i> 미등록 단말기 입력';
-            msgText.innerHTML = `<i class="bi bi-exclamation-triangle"></i> 등록되지 않은 단말기입니다.<br>정보를 입력하면 '맵데이터'에 자동 등록됩니다.`;
+            msgText.innerHTML = `<i class="bi bi-exclamation-triangle"></i> 등록되지 않은 단말기입니다.<br>정보를 입력하면 다음부터는 자동 등록됩니다.`;
             msgText.className = "alert alert-warning small fw-bold mb-3";
         }
 
         document.getElementById('reg_manual_model').value = "";
+        // 용량 선택값 초기화
+        manualStorage.value = "";
         document.getElementById('reg_manual_color').value = "";
+        
         setTimeout(() => document.getElementById('reg_manual_model').focus(), 300);
     }
     
@@ -486,10 +494,9 @@ function updateIphoneColors() {
 
 // ★ 입력 완료 처리 (연속 스캔 시 서버 전송 방지)
 // [수정] 아이폰 저장 포맷 변경 (모델명_용량)
+// [수정] 기타 단말기도 '모델명_용량' 형태로 저장
 function submitStockRegister() {
     const type = tempInStockData.type;
-    
-    // ★ [수정] 화면에서 읽지 않고, 아까 저장해둔 값을 그대로 사용
     const supplier = tempInStockData.supplier; 
 
     let model = "", color = "";
@@ -501,21 +508,26 @@ function submitStockRegister() {
         if (!rawModel) { alert("모델명을 선택해주세요."); return; }
         if (!storage) { alert("용량을 선택해주세요."); return; }
         
-        // 모델명_용량
         model = `${rawModel}_${storage}`;
         color = document.getElementById('reg_iphone_color').value;
         
     } else {
-        model = document.getElementById('reg_manual_model').value;
-        color = document.getElementById('reg_manual_color').value;
+        // --- 기타 단말기 (미등록) ---
+        const rawModel = document.getElementById('reg_manual_model').value.trim();
+        const storage = document.getElementById('reg_manual_storage').value;
+        
+        if (!rawModel) { alert("모델명을 입력해주세요."); return; }
+        if (!storage) { alert("용량을 선택해주세요."); return; }
+        
+        // ★ [수정] 모델명_용량 형식으로 결합
+        model = `${rawModel}_${storage}`;
+        color = document.getElementById('reg_manual_color').value.trim();
     }
 
-    if (!model || !color) { alert("모델명과 색상을 모두 입력해주세요."); return; }
+    if (!color) { alert("색상을 입력해주세요."); return; }
 
-    // 데이터 갱신
     tempInStockData.model = model;
     tempInStockData.color = color;
-    // supplier는 이미 들어있으므로 다시 넣을 필요 없지만 확실히 하기 위해 유지해도 됨
     tempInStockData.supplier = supplier;
 
     // ... (이하 연속 스캔 모드 체크 및 서버 전송 로직은 기존과 동일) ...
