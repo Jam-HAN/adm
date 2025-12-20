@@ -433,7 +433,7 @@
 
             <div id="section-stock" class="section-view">
                 <div class="glass-card p-4">
-                    <h5 class="fw-bold mb-3"><i class="bi bi-search"></i> 재고 조회 (보유분)</h5>
+                    <h5 class="fw-bold mb-3"><i class="bi bi-search"></i> 보유 재고 조회</h5>
                     <div class="row g-2 align-items-center mb-3">
                         <div class="col-4"><select class="form-select fw-bold" id="search_criteria" onchange="updateSearchUI()"><option value="supplier">거래처별</option><option value="branch">지점별</option><option value="model">모델별</option><option value="serial">일련번호/바코드</option></select></div>
                         <div class="col-8" id="search_input_area"><select class="form-select" id="search_value_supplier"></select></div>
@@ -445,7 +445,7 @@
 
             <div id="section-history" class="section-view">
                 <div class="glass-card p-4">
-                    <h5 class="fw-bold mb-3"><i class="bi bi-clock-history"></i> 이력 조회 (로그)</h5>
+                    <h5 class="fw-bold mb-3"><i class="bi bi-clock-history"></i> 단말기 이력 조회</h5>
                     <div class="input-group mb-3"><input type="text" class="form-control" id="hist_keyword" placeholder="일련번호 또는 바코드 (정확히 입력)" onkeydown="if(event.key==='Enter') searchHistory()"><button class="btn btn-outline-secondary" onclick="searchHistory()">검색</button></div>
                     <div id="hist_result"></div>
                 </div>
@@ -542,7 +542,7 @@
                     <div id="area-manual" style="display:none;">
                         <div class="alert alert-warning small fw-bold mb-3" id="msg-manual-text">
                             <i class="bi bi-exclamation-triangle"></i> 등록되지 않은 단말기입니다.<br>
-                            정보를 입력하면 '맵데이터'에 자동 등록됩니다.
+                            정보를 입력하면 다음부터는 자동 등록됩니다.
                         </div>
                         <div class="mb-3">
                             <label class="form-label small fw-bold text-muted">모델명 (필수)</label>
