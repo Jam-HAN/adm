@@ -507,31 +507,36 @@
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body p-4">
-                    
+    
                     <div class="mb-3" id="area-modal-barcode">
                         <label class="form-label small fw-bold text-muted">바코드</label>
                         <input type="text" class="form-control bg-light" id="reg_modal_barcode" readonly>
                     </div>
-                    
+
                     <div class="mb-3">
                         <label class="form-label small fw-bold text-muted">일련번호</label>
                         <input type="text" class="form-control bg-light" id="reg_modal_serial" readonly>
                     </div>
 
+                    <div class="alert alert-warning small fw-bold mb-3" id="msg-manual-text">
+                        <i class="bi bi-exclamation-triangle"></i> 등록되지 않은 단말기입니다.<br>
+                        정보를 입력하면 다음부터는 자동 등록됩니다.
+                    </div>
+
+                    <div class="mb-3" id="area-modal-supplier" style="display:none;">
+                        <label class="form-label small fw-bold text-primary">거래처 선택</label>
+                        <select class="form-select fw-bold border-primary" id="reg_modal_supplier">
+                            </select>
+                    </div>
+
                     <div id="area-iphone" style="display:none;">
-                        <div class="mb-3" id="area-modal-supplier" style="display:none;">
-                            <label class="form-label small fw-bold text-primary">거래처 선택</label>
-                            <select class="form-select fw-bold border-primary" id="reg_modal_supplier">
-                                </select>
-                        </div>
-                        
                         <div class="mb-3">
                             <label class="form-label small fw-bold text-muted">모델명 선택</label>
                             <select class="form-select fw-bold" id="reg_iphone_model" onchange="updateIphoneColors()">
                                 <option value="">선택</option>
                             </select>
                         </div>
-                        
+        
                         <div class="mb-3">
                             <label class="form-label small fw-bold text-muted">용량 선택</label>
                             <select class="form-select fw-bold" id="reg_iphone_storage">
@@ -548,10 +553,6 @@
                     </div>
 
                     <div id="area-manual" style="display:none;">
-                        <div class="alert alert-warning small fw-bold mb-3" id="msg-manual-text">
-                            <i class="bi bi-exclamation-triangle"></i> 등록되지 않은 단말기입니다.<br>
-                            정보를 입력하면 다음부터는 자동 등록됩니다.
-                        </div>
                         <div class="mb-3">
                             <label class="form-label small fw-bold text-muted">모델명 선택</label>
                             <input type="text" class="form-control fw-bold" id="reg_manual_model" placeholder="예: SM-S931">
@@ -563,7 +564,7 @@
                                 <option value="">선택</option>
                             </select>
                         </div>
-                        
+        
                         <div class="mb-3">
                             <label class="form-label small fw-bold text-muted">색상 선택</label>
                             <input type="text" class="form-control fw-bold" id="reg_manual_color" placeholder="예: 오닉스블랙">
