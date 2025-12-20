@@ -420,7 +420,7 @@ function showStockRegisterModal(type, dataObj) {
         
         const modelSel = document.getElementById('reg_iphone_model');
         modelSel.innerHTML = '<option value="">선택</option>';
-        Object.keys(globalIphoneData).sort().forEach(m => {
+        Object.keys(globalIphoneData).forEach(m => {
             modelSel.innerHTML += `<option value="${m}">${m}</option>`;
         });
         
