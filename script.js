@@ -395,30 +395,21 @@ function showStockRegisterModal(type, dataObj) {
     const areaManual = document.getElementById('area-manual');
     const msgText = document.getElementById('msg-manual-text'); 
     
-    // ★ [핵심] 서버에서 받은 파싱 데이터 적용
-    document.getElementById('reg_modal_barcode').value = dataObj.barcode; // 원본
-    document.getElementById('reg_modal_serial').value = dataObj.serial;   // 파싱된 일련번호
-    
-    // 거래처 드롭다운 채우기
-    const modalSup = document.getElementById('reg_modal_supplier');
-    modalSup.innerHTML = "";
-    globalVendorList.forEach(v => {
-        const opt = document.createElement('option');
-        opt.value = v;
-        opt.innerText = v;
-        modalSup.appendChild(opt);
-    });
+    // 1. 기본 데이터 세팅
+    document.getElementById('reg_modal_barcode').value = dataObj.barcode;
+    document.getElementById('reg_modal_serial').value = dataObj.serial;
 
-    let defaultSup = document.getElementById('in_supplier').value || (modalSup.options.length > 0 ? modalSup.options[0].value : "");
-    modalSup.value = defaultSup;
-
+    // ★ [수정] 메인 화면에서 선택된 거래처 값을 가져와서 저장해둡니다.
+    // (화면에 그리는 코드는 삭제했습니다)
+    let defaultSup = document.getElementById('in_supplier').value || "지점미상";
     let defaultBranch = document.getElementById('in_branch').value || "장지 본점";
 
+    // 임시 데이터에 저장 (나중에 저장 버튼 누를 때 사용)
     tempInStockData = { 
         type: type, 
-        barcode: dataObj.barcode, // 원본 유지
-        serial: dataObj.serial,   // 파싱된 일련번호 유지
-        supplier: defaultSup,
+        barcode: dataObj.barcode, 
+        serial: dataObj.serial,   
+        supplier: defaultSup, // ★ 여기서 저장된 값을 씁니다
         branch: defaultBranch
     };
 
@@ -428,12 +419,17 @@ function showStockRegisterModal(type, dataObj) {
         areaManual.style.display = 'none';
         
         const modelSel = document.getElementById('reg_iphone_model');
-        modelSel.innerHTML = '<option value="">선택하세요</option>';
+        modelSel.innerHTML = '<option value="">선택</option>';
         Object.keys(globalIphoneData).sort().forEach(m => {
             modelSel.innerHTML += `<option value="${m}">${m}</option>`;
         });
-        document.getElementById('reg_iphone_color').innerHTML = ""; 
+        
+        // 초기화
+        document.getElementById('reg_iphone_storage').innerHTML = '<option value="">선택</option>';
+        document.getElementById('reg_iphone_color').innerHTML = '<option value="">선택</option>';
+
     } else {
+        // ... (이하 기존 미등록 단말기 로직 동일) ...
         areaIphone.style.display = 'none';
         areaManual.style.display = 'block';
         
@@ -492,7 +488,10 @@ function updateIphoneColors() {
 // [수정] 아이폰 저장 포맷 변경 (모델명_용량)
 function submitStockRegister() {
     const type = tempInStockData.type;
-    const supplier = document.getElementById('reg_modal_supplier').value;
+    
+    // ★ [수정] 화면에서 읽지 않고, 아까 저장해둔 값을 그대로 사용
+    const supplier = tempInStockData.supplier; 
+
     let model = "", color = "";
 
     if (type === 'iphone') {
@@ -502,10 +501,8 @@ function submitStockRegister() {
         if (!rawModel) { alert("모델명을 선택해주세요."); return; }
         if (!storage) { alert("용량을 선택해주세요."); return; }
         
-        // ★ [수정] 모델명과 용량을 언더바(_)로 연결
-        // 예: 아이폰15_128GB
+        // 모델명_용량
         model = `${rawModel}_${storage}`;
-        
         color = document.getElementById('reg_iphone_color').value;
         
     } else {
@@ -515,34 +512,24 @@ function submitStockRegister() {
 
     if (!model || !color) { alert("모델명과 색상을 모두 입력해주세요."); return; }
 
-    // 데이터 객체 완성
+    // 데이터 갱신
     tempInStockData.model = model;
     tempInStockData.color = color;
+    // supplier는 이미 들어있으므로 다시 넣을 필요 없지만 확실히 하기 위해 유지해도 됨
     tempInStockData.supplier = supplier;
 
-    // ---------------------------------------------------------
-    // ★ [수정] 연속 스캔 모드라면? -> 서버 저장 없이 '대기 목록'에만 추가
-    // ---------------------------------------------------------
+    // ... (이하 연속 스캔 모드 체크 및 서버 전송 로직은 기존과 동일) ...
+    // (아까 작성해드린 연속 스캔 처리 로직 그대로 두시면 됩니다)
+    
     if (document.getElementById('in_mode_toggle').checked) {
-        
-        // 1. 대기 목록에 추가
         inPendingList.push(tempInStockData);
         renderInList();
-
-        // 2. 모달 닫기
         const modal = bootstrap.Modal.getInstance(document.getElementById('modal-stock-register'));
         modal.hide();
-
-        // 3. 메시지 표시 및 포커스 복구
         document.getElementById('in_scan').focus();
-
-        // ★ 여기서 함수 강제 종료 (서버 통신 안 함)
         return; 
     }
 
-    // ---------------------------------------------------------
-    // 연속 모드가 아닐 때만 아래 실행 (기존 로직: 즉시 DB 저장)
-    // ---------------------------------------------------------
     const btn = event.currentTarget;
     btn.disabled = true; 
     btn.innerHTML = "처리 중...";
@@ -569,7 +556,6 @@ function submitStockRegister() {
             
             if (type === 'simple_open') {
                 alert("간편 입고 완료. 개통 정보를 입력하세요.");
-                
                 tempOpenStockData = {
                     inputCode: tempInStockData.serial,
                     model: model,
@@ -578,19 +564,15 @@ function submitStockRegister() {
                     branch: tempInStockData.branch,
                     supplier: supplier 
                 };
-
                 document.getElementById('target_model').innerText = `${model} (${color})`; 
                 document.getElementById('target_serial').innerText = tempInStockData.serial;
                 document.getElementById('target_branch').innerText = tempInStockData.branch; 
                 document.getElementById('f_avalue').value = supplier; 
                 refreshAddons(); 
-
                 document.getElementById('open_step_1').style.display = 'none';
                 document.getElementById('open_step_2').style.display = 'block';
                 document.getElementById('f_name').focus();
-
             } else {
-                // 일반 단건 입고 (연속모드 아님)
                 showMsg('in-msg','success',`입고: ${model}`);
                 document.getElementById('in_scan').focus();
             }
