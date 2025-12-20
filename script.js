@@ -387,21 +387,39 @@ function requestSingleRegister(barcode) {
     });
 }
 
-// ★ 모달 열기 및 멘트/드롭다운 설정
+// [수정] 간편입고 시 바코드 숨김 & 거래처 드롭다운 노출
 function showStockRegisterModal(type, dataObj) {
     const modal = new bootstrap.Modal(document.getElementById('modal-stock-register'));
     const title = document.getElementById('modal-register-title');
+    
+    // UI 요소들
     const areaIphone = document.getElementById('area-iphone');
     const areaManual = document.getElementById('area-manual');
+    const areaSupplier = document.getElementById('area-modal-supplier'); 
+    const areaBarcode = document.getElementById('area-modal-barcode'); // ★ 바코드 영역 ID
     const msgText = document.getElementById('msg-manual-text'); 
     
-    // 기본 데이터 세팅
+    // 값 세팅
     document.getElementById('reg_modal_barcode').value = dataObj.barcode;
     document.getElementById('reg_modal_serial').value = dataObj.serial;
 
-    // 거래처 값 유지
     let defaultSup = document.getElementById('in_supplier').value || "지점미상";
     let defaultBranch = document.getElementById('in_branch').value || "장지 본점";
+
+    // ★ [핵심] 간편입고 vs 일반입고 UI 분기
+    if (type === 'simple_open') {
+        areaSupplier.style.display = 'block'; // 거래처 보이기
+        areaBarcode.style.display = 'none';   // 바코드 숨기기 (요청사항)
+        
+        // 메인 거래처 목록 복사
+        const mainSupOpts = document.getElementById('in_supplier').innerHTML;
+        const modalSupSel = document.getElementById('reg_modal_supplier');
+        modalSupSel.innerHTML = mainSupOpts;
+        modalSupSel.value = ""; 
+    } else {
+        areaSupplier.style.display = 'none';  // 거래처 숨기기
+        areaBarcode.style.display = 'block';  // 바코드 보이기
+    }
 
     tempInStockData = { 
         type: type, 
@@ -425,11 +443,10 @@ function showStockRegisterModal(type, dataObj) {
         document.getElementById('reg_iphone_color').innerHTML = '<option value="">선택</option>';
 
     } else {
-        // --- 미등록/간편입고 (기타 단말기) ---
+        // 미등록 & 간편입고
         areaIphone.style.display = 'none';
         areaManual.style.display = 'block';
         
-        // ★ [추가] 기타 단말기 용량 드롭다운 채우기
         const manualStorage = document.getElementById('reg_manual_storage');
         manualStorage.innerHTML = '<option value="">선택</option>';
         if (globalDropdownData && globalDropdownData.otherCapacityList) {
@@ -440,19 +457,17 @@ function showStockRegisterModal(type, dataObj) {
 
         if (type === 'simple_open') {
             title.innerHTML = '<i class="bi bi-lightning-fill"></i> 간편 입고 (개통용)';
-            msgText.innerHTML = `<i class="bi bi-info-circle"></i> 입고되지 않은 단말기입니다.<br>정보를 입력하여 개통을 진행합니다.`;
+            msgText.innerHTML = `<i class="bi bi-info-circle"></i> 재고에 없는 단말기입니다.<br>거래처와 정보를 입력하여 입고 후 개통합니다.`;
             msgText.className = "alert alert-primary small fw-bold mb-3";
         } else {
             title.innerHTML = '<i class="bi bi-question-circle"></i> 미등록 단말기 입력';
-            msgText.innerHTML = `<i class="bi bi-exclamation-triangle"></i> 등록되지 않은 단말기입니다.<br>정보를 입력하면 다음부터는 자동 등록됩니다.`;
+            msgText.innerHTML = `<i class="bi bi-exclamation-triangle"></i> 등록되지 않은 단말기입니다.<br>정보를 입력하면 '맵데이터'에 자동 등록됩니다.`;
             msgText.className = "alert alert-warning small fw-bold mb-3";
         }
 
         document.getElementById('reg_manual_model').value = "";
-        // 용량 선택값 초기화
         manualStorage.value = "";
         document.getElementById('reg_manual_color').value = "";
-        
         setTimeout(() => document.getElementById('reg_manual_model').focus(), 300);
     }
     
