@@ -929,3 +929,156 @@ function toggleFabMenu() {
         if(fabIcon) { fabIcon.classList.remove('bi-x-lg'); fabIcon.classList.add('bi-plus-lg'); }
     }
 }
+
+// ==========================================
+// [추가] 통합 개통 이력 관리 로직
+// ==========================================
+
+// 1. 날짜 기본값 세팅 (이번달 1일 ~ 오늘)
+function initHistoryDates() {
+    const today = new Date();
+    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+    
+    // 날짜 포맷팅 함수 (YYYY-MM-DD)
+    const fmt = d => d.toISOString().split('T')[0];
+    
+    if(document.getElementById('hist_start_date')) document.getElementById('hist_start_date').value = fmt(firstDay);
+    if(document.getElementById('hist_end_date')) document.getElementById('hist_end_date').value = fmt(today);
+}
+
+// 2. 통합 검색 실행
+function searchAllHistory() {
+    const start = document.getElementById('hist_start_date').value;
+    const end = document.getElementById('hist_end_date').value;
+    const keyword = document.getElementById('hist_all_keyword').value;
+    const resArea = document.getElementById('hist_all_result');
+    
+    resArea.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary"></div></div>';
+    
+    fetch(GAS_URL, { 
+        method: "POST", 
+        body: JSON.stringify({ action: "get_all_history", start, end, keyword }) 
+    })
+    .then(r => r.json())
+    .then(d => {
+        if (d.status === 'success' && d.data.length > 0) {
+            let html = '';
+            d.data.forEach(item => {
+                // 아이템 JSON 문자열로 변환 (따옴표 처리)
+                const jsonItem = JSON.stringify(item).replace(/"/g, '&quot;');
+                
+                // 뱃지 색상 결정
+                let badgeClass = 'bg-secondary';
+                if(item.sheetName === '무선개통') badgeClass = 'bg-primary';
+                else if(item.sheetName === '유선개통') badgeClass = 'bg-success';
+                else if(item.sheetName === '중고개통') badgeClass = 'bg-warning text-dark';
+                
+                html += `
+                <div class="list-group-item list-group-item-action py-3" onclick="openEditModal(${jsonItem})">
+                    <div class="d-flex w-100 justify-content-between align-items-center mb-1">
+                        <span class="badge ${badgeClass}">${item.sheetName}</span>
+                        <small class="text-muted">${item['접수일'] || item['개통일']}</small>
+                    </div>
+                    <h6 class="mb-1 fw-bold">${item['고객명']} <span class="fw-normal text-muted">(${item['통신사'] || item['개통유형'] || '-'})</span></h6>
+                    <p class="mb-1 small text-secondary">
+                        ${item['모델명'] || '상품'} / ${item['요금제'] || '-'}
+                    </p>
+                    <small class="text-muted"><i class="bi bi-person"></i> 담당: ${item['담당자']}</small>
+                </div>`;
+            });
+            resArea.innerHTML = html;
+        } else {
+            resArea.innerHTML = '<div class="text-center py-5 text-muted">조회 결과가 없습니다.</div>';
+        }
+    });
+}
+
+// 3. 수정 모달 열기 (동적 폼 생성)
+function openEditModal(item) {
+    document.getElementById('edit_sheet_name').value = item.sheetName;
+    document.getElementById('edit_row_index').value = item.rowIndex;
+    
+    const container = document.getElementById('edit_form_container');
+    container.innerHTML = ''; // 초기화
+    
+    // 수정 가능한 필드 목록 정의 (여기에 없는 건 안 보여줌)
+    const editableFields = [
+        '고객명', '연락처', '생년월일', '요금제', '변경요금제', 
+        '개통처', '정책차수', '정책금액(액면)', '추가정책', '부가정책', 
+        '차감정책', '프리할인', '유심비', '대납1', '대납2', 
+        '현금지급', '페이백', '요금수납', '메모', '특이사항', '리뷰작성'
+    ];
+    
+    // 보여주기만 할 필드 (수정 불가)
+    const readonlyFields = ['접수일', '지점', '담당자', '통신사', '모델명', '일련번호', '개통유형', '약정유형'];
+
+    // 1. 읽기 전용 정보 표시 (상단)
+    let infoHtml = '<div class="col-12 bg-light p-3 rounded mb-2 border">';
+    readonlyFields.forEach(key => {
+        if(item[key]) {
+            infoHtml += `<span class="me-3 small text-muted"><b>${key}:</b> ${item[key]}</span>`;
+        }
+    });
+    infoHtml += '<div class="mt-2 text-danger small fw-bold">* 모델명/일련번호 수정은 삭제 후 재개통 하세요.</div></div>';
+    container.innerHTML += infoHtml;
+
+    // 2. 수정 가능 필드 생성 (Input)
+    editableFields.forEach(key => {
+        // 데이터에 해당 키가 있는 경우만 생성
+        if (item.hasOwnProperty(key)) {
+            container.innerHTML += `
+                <div class="col-6 col-md-4">
+                    <label class="form-label-sm text-secondary">${key}</label>
+                    <input type="text" class="form-control form-control-sm edit-input" data-key="${key}" value="${item[key]}">
+                </div>
+            `;
+        }
+    });
+    
+    const modal = new bootstrap.Modal(document.getElementById('modal-edit-history'));
+    modal.show();
+}
+
+// 4. 수정사항 저장
+function submitEditHistory() {
+    const sheetName = document.getElementById('edit_sheet_name').value;
+    const rowIndex = document.getElementById('edit_row_index').value;
+    
+    // 변경된 값 수집
+    let updates = {};
+    document.querySelectorAll('.edit-input').forEach(input => {
+        updates[input.dataset.key] = input.value; // 키: 값
+    });
+
+    if(!confirm("수정사항을 저장하시겠습니까?")) return;
+
+    fetch(GAS_URL, { 
+        method: "POST", 
+        body: JSON.stringify({ action: "update_history", sheetName, rowIndex, updates }) 
+    })
+    .then(r => r.json())
+    .then(d => {
+        alert(d.message);
+        bootstrap.Modal.getInstance(document.getElementById('modal-edit-history')).hide();
+        searchAllHistory(); // 목록 갱신
+    });
+}
+
+// 5. 삭제 기능
+function deleteHistoryItem() {
+    const sheetName = document.getElementById('edit_sheet_name').value;
+    const rowIndex = document.getElementById('edit_row_index').value;
+    
+    if(!confirm("정말로 이 개통 내역을 삭제하시겠습니까?\n(재고는 자동으로 복구되지 않으니 재고조정/재개통이 필요합니다.)")) return;
+    
+    fetch(GAS_URL, { 
+        method: "POST", 
+        body: JSON.stringify({ action: "delete_history", sheetName, rowIndex }) 
+    })
+    .then(r => r.json())
+    .then(d => {
+        alert(d.message);
+        bootstrap.Modal.getInstance(document.getElementById('modal-edit-history')).hide();
+        searchAllHistory(); // 목록 갱신
+    });
+}
