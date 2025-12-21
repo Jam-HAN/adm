@@ -53,7 +53,7 @@
                                 <li><a class="dropdown-item" href="#" onclick="showSection('section-move')">재고 이동</a></li>
                                 <li><a class="dropdown-item text-danger" href="#" onclick="showSection('section-out')">반품 처리</a></li>
                                 <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="#" onclick="showSection('section-stock')">🔍 보유 재고 조회</a></li>
+                                <li><a class="dropdown-item" href="#" onclick="showSection('section-stock')">🔍 재고 조회</a></li>
                                 <li><a class="dropdown-item" href="#" onclick="showSection('section-history')">📜 이력 조회</a></li>
                             </ul>
                         </li>
@@ -63,6 +63,16 @@
                                 <li><a class="dropdown-item" href="#" onclick="showOpenSection('무선개통')"><i class="bi bi-phone text-primary"></i> 무선 개통</a></li>
                                 <li><a class="dropdown-item" href="#" onclick="showWiredSection()"><i class="bi bi-router text-success"></i> 유선 개통</a></li>
                                 <li><a class="dropdown-item" href="#" onclick="showUsedSection()"><i class="bi bi-recycle text-warning"></i> 중고 개통</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">📂 개통 관리</a>
+                            <ul class="dropdown-menu shadow-sm border-0">
+                                <li>
+                                    <a class="dropdown-item" href="#" onclick="showSection('section-search-all'); initHistoryDates();">
+                                        <i class="bi bi-card-list"></i> 개통 조회
+                                    </a>
+                                </li>
                             </ul>
                         </li>
                         <li class="nav-item"><a class="nav-link" onclick="showSection('section-vendor')">🏢 거래처</a></li>
@@ -511,7 +521,7 @@
 
             <div id="section-search-all" class="section-view">
                 <div class="glass-card p-4">
-                    <h5 class="fw-bold mb-4"><i class="bi bi-card-list"></i> 개통 이력 조회</h5>
+                    <h5 class="fw-bold mb-4"><i class="bi bi-card-list"></i> 이력 조회</h5>
                     
                     <div class="row g-2 mb-3">
                         <div class="col-6"><input type="date" class="form-control form-control-sm" id="hist_start_date"></div>
