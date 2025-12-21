@@ -930,6 +930,45 @@ function toggleFabMenu() {
     }
 }
 
+// [추가] 모바일 조회 메뉴 토글 함수
+function toggleSearchMenu() {
+    const overlay = document.getElementById('fab-menu-overlay');
+    const menu = document.getElementById('search-menu-container');
+    
+    // 더하기 메뉴가 열려있으면 닫기 (겹침 방지)
+    const fabMenu = document.getElementById('fab-menu-container');
+    if (!fabMenu.classList.contains('d-none')) toggleFabMenu();
+
+    if (menu.classList.contains('d-none')) {
+        // 열기
+        menu.classList.remove('d-none');
+        menu.classList.add('d-flex');
+        overlay.classList.remove('d-none');
+        // 오버레이 클릭 시 이 함수가 호출되도록 설정 변경 필요 없음 (공용 오버레이 사용)
+    } else {
+        // 닫기
+        menu.classList.add('d-none');
+        menu.classList.remove('d-flex');
+        overlay.classList.add('d-none');
+    }
+}
+
+// 모든 모바일 팝업 메뉴 닫기
+function closeAllMobileMenus() {
+    const overlay = document.getElementById('fab-menu-overlay');
+    document.getElementById('fab-menu-container').classList.add('d-none');
+    document.getElementById('fab-menu-container').classList.remove('d-flex');
+    
+    document.getElementById('search-menu-container').classList.add('d-none');
+    document.getElementById('search-menu-container').classList.remove('d-flex');
+    
+    overlay.classList.add('d-none');
+    
+    // 더하기 아이콘 원상복구
+    const fabIcon = document.querySelector('.center-fab .bi');
+    if(fabIcon) { fabIcon.classList.remove('bi-x-lg'); fabIcon.classList.add('bi-plus-lg'); }
+}
+
 // ==========================================
 // [추가] 통합 개통 이력 관리 로직
 // ==========================================
