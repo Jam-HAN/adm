@@ -835,7 +835,6 @@ function addVendor() {
         // [추가] 캐시 즉시 업데이트 (드롭다운 반영용)
         if (n && !globalVendorList.includes(n)) {
             globalVendorList.push(n);
-            globalVendorList.sort(); // 가나다순 정렬
         }
 
         loadVendorsToList(); 
