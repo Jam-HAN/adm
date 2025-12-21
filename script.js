@@ -53,7 +53,42 @@ window.handleCredentialResponse = function(response) {
     .catch(error => alert("서버 통신 오류. URL을 확인해주세요."));
 };
 
+// script.js (V56.1 Final) - window.onload 전체 교체
+
 window.onload = function() {
+
+    // 1. [UI] 브라우저 기본 alert를 예쁜 SweetAlert2로 교체 (Toast 방식)
+    window.alert = function(msg) {
+        Swal.fire({
+            text: msg,
+            icon: 'info',
+            confirmButtonColor: '#4361ee',
+            confirmButtonText: '확인'
+        });
+    };
+    
+    // 2. [UI] showMsg 함수도 Toast로 업그레이드
+    window.showMsg = function(id, type, text) {
+        const iconType = type === 'success' ? 'success' : 'error';
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top', // 상단 중앙
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer)
+                toast.addEventListener('mouseleave', Swal.resumeTimer)
+            }
+        });
+        
+        Toast.fire({
+            icon: iconType,
+            title: text
+        });
+    };
+    
+    // 3. [로직] 세션 확인 및 데이터 로드
     const saved = sessionStorage.getItem('dbphone_user');
     if(saved) {
         const u = JSON.parse(saved);
@@ -61,15 +96,19 @@ window.onload = function() {
         document.getElementById('login-view').style.display = 'none';
         document.getElementById('main-view').style.display = 'block';
         document.getElementById('user-name').innerText = currentUser;
+        
         loadInitData();
         loadDropdownData();
         setupAutoLogout();
         loadDashboard();
     }
+
+    // 4. [로직] 엔터키 이벤트 연결 (거래처 등록 등)
     document.querySelectorAll('.enter-trigger').forEach(input => {
         input.addEventListener('keydown', function(e) { if(e.key === 'Enter') addVendor(); });
     });
-    // [추가] 모달 '입력 완료' 버튼 이벤트 연결 (안전한 방식)
+
+    // 5. [로직] 모달 '입력 완료' 버튼 이벤트 연결 (안전한 방식)
     const stockSubmitBtn = document.getElementById('btn-stock-submit');
     if (stockSubmitBtn) {
         // 중복 방지를 위해 기존 요소를 복제하여 교체
@@ -77,6 +116,28 @@ window.onload = function() {
         stockSubmitBtn.parentNode.replaceChild(newBtn, stockSubmitBtn);
         newBtn.addEventListener('click', submitStockRegister);
         console.log("버튼 이벤트 리스너 연결됨");
+    }
+
+    // 6. [UX] 모달이 닫힐 때 입력 필드 초기화 (★누락된 부분 추가됨★)
+    const stockModalEl = document.getElementById('modal-stock-register');
+    if (stockModalEl) {
+        stockModalEl.addEventListener('hidden.bs.modal', function () {
+            // 수동 입력 필드 초기화
+            document.getElementById('reg_manual_model').value = "";
+            document.getElementById('reg_manual_storage').value = "";
+            document.getElementById('reg_manual_color').value = "";
+            
+            // 아이폰 입력 필드 초기화
+            document.getElementById('reg_iphone_model').value = "";
+            document.getElementById('reg_iphone_storage').innerHTML = '<option value="">선택</option>';
+            document.getElementById('reg_iphone_color').innerHTML = '<option value="">선택</option>';
+            
+            // 간편입고용 거래처 필드 초기화
+            const supEl = document.getElementById('reg_modal_supplier');
+            if(supEl) supEl.value = "";
+            
+            console.log("모달 닫힘: 입력창 초기화 완료");
+        });
     }
 };
 
