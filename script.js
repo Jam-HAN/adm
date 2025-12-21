@@ -69,6 +69,15 @@ window.onload = function() {
     document.querySelectorAll('.enter-trigger').forEach(input => {
         input.addEventListener('keydown', function(e) { if(e.key === 'Enter') addVendor(); });
     });
+    // [추가] 모달 '입력 완료' 버튼 이벤트 연결 (안전한 방식)
+    const stockSubmitBtn = document.getElementById('btn-stock-submit');
+    if (stockSubmitBtn) {
+        // 중복 방지를 위해 기존 요소를 복제하여 교체
+        const newBtn = stockSubmitBtn.cloneNode(true);
+        stockSubmitBtn.parentNode.replaceChild(newBtn, stockSubmitBtn);
+        newBtn.addEventListener('click', submitStockRegister);
+        console.log("버튼 이벤트 리스너 연결됨");
+    }
 };
 
 function logout() { sessionStorage.removeItem('dbphone_user'); location.reload(); }
@@ -374,64 +383,143 @@ function updateIphoneColors() {
     }
 }
 
+// [최종 수정] 입력 완료 버튼 로직 (포커스 해제 및 모달 안전 처리)
 function submitStockRegister() {
+    console.log("▶ 입력 완료 버튼 클릭됨");
+
+    // 1. 버튼 포커스 해제 (크롬 aria-hidden 에러 방지)
+    const btn = document.getElementById('btn-stock-submit');
+    if (btn) btn.blur(); 
+
+    // 2. 데이터 검증
+    if (!tempInStockData) {
+        alert("데이터가 유실되었습니다. 다시 스캔해주세요.");
+        return;
+    }
+
     const type = tempInStockData.type;
     let supplier = tempInStockData.supplier;
+    let model = "";
+    let color = "";
+
+    // 3. 화면에 보이는 요소(아이폰 vs 수동) 확인
+    const isIphoneMode = document.getElementById('area-iphone').style.display !== 'none';
+    
+    // 간편 입고 시 거래처 확인
     if (type === 'simple_open') {
-        const selectedSup = document.getElementById('reg_modal_supplier').value;
-        if (!selectedSup) { alert("거래처를 선택해주세요!"); document.getElementById('reg_modal_supplier').focus(); return; }
-        supplier = selectedSup;
+        const supEl = document.getElementById('reg_modal_supplier');
+        // 거래처 선택창이 존재하고 화면에 보일 때만 체크
+        if (supEl && supEl.offsetParent !== null) { 
+            if (!supEl.value) { alert("거래처를 선택해주세요!"); supEl.focus(); return; }
+            supplier = supEl.value;
+        }
     }
-    let model = "", color = "";
-    if (type === 'iphone') {
-        const rawModel = document.getElementById('reg_iphone_model').value;
-        const storage = document.getElementById('reg_iphone_storage').value;
-        if (!rawModel) { alert("모델명을 선택해주세요."); return; }
-        if (!storage) { alert("용량을 선택해주세요."); return; }
-        model = `${rawModel}_${storage}`;
-        color = document.getElementById('reg_iphone_color').value;
+
+    // 값 추출
+    if (isIphoneMode) {
+        const iModel = document.getElementById('reg_iphone_model').value;
+        const iStorage = document.getElementById('reg_iphone_storage').value;
+        const iColor = document.getElementById('reg_iphone_color').value;
+        if (!iModel || !iStorage || !iColor) { alert("아이폰 정보를 모두 선택해주세요."); return; }
+        model = `${iModel}_${iStorage}`;
+        color = iColor;
     } else {
-        const rawModel = document.getElementById('reg_manual_model').value.trim();
-        const storage = document.getElementById('reg_manual_storage').value;
-        if (!rawModel) { alert("모델명을 입력해주세요."); return; }
-        if (!storage) { alert("용량을 선택해주세요."); return; }
-        model = `${rawModel}_${storage}`;
-        color = document.getElementById('reg_manual_color').value.trim();
+        const mModel = document.getElementById('reg_manual_model').value.trim();
+        const mStorage = document.getElementById('reg_manual_storage').value;
+        const mColor = document.getElementById('reg_manual_color').value.trim();
+        
+        if (!mModel) { alert("모델명을 입력해주세요."); document.getElementById('reg_manual_model').focus(); return; }
+        // 용량 필수 체크
+        if (!mStorage) { alert("용량을 선택해주세요."); document.getElementById('reg_manual_storage').focus(); return; }
+        if (!mColor) { alert("색상을 입력해주세요."); document.getElementById('reg_manual_color').focus(); return; }
+        
+        model = `${mModel}_${mStorage}`;
+        color = mColor;
     }
-    if (!color) { alert("색상을 입력해주세요."); return; }
 
-    tempInStockData.model = model; tempInStockData.color = color; tempInStockData.supplier = supplier;
+    // 4. 데이터 갱신
+    tempInStockData.model = model;
+    tempInStockData.color = color;
+    tempInStockData.supplier = supplier;
 
-    if (document.getElementById('in_mode_toggle').checked) {
+    // 5. 모달 닫기 (안전한 방식)
+    const modalEl = document.getElementById('modal-stock-register');
+    const modalInstance = bootstrap.Modal.getOrCreateInstance(modalEl);
+    
+    // 연속 스캔 모드인 경우
+    const toggleEl = document.getElementById('in_mode_toggle');
+    if (toggleEl && toggleEl.checked) {
         inPendingList.push(tempInStockData);
         renderInList();
-        bootstrap.Modal.getInstance(document.getElementById('modal-stock-register')).hide();
+        modalInstance.hide();
         document.getElementById('in_scan').focus();
         return; 
     }
 
-    const btn = event.currentTarget; btn.disabled = true; btn.innerHTML = "처리 중...";
-    fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "register_quick", type, barcode: tempInStockData.barcode, serial: tempInStockData.serial, model, color, supplier, branch: tempInStockData.branch, user: currentUser }) })
+    // 6. 서버 전송
+    if(btn) {
+        btn.disabled = true;
+        btn.innerText = "처리 중...";
+    }
+
+    fetch(GAS_URL, {
+        method: "POST",
+        body: JSON.stringify({
+            action: "register_quick",
+            type: type,
+            barcode: tempInStockData.barcode,
+            serial: tempInStockData.serial,
+            model: model,
+            color: color,
+            supplier: supplier,
+            branch: tempInStockData.branch,
+            user: currentUser
+        })
+    })
     .then(r => r.json())
     .then(d => {
+        modalInstance.hide(); // 결과와 상관없이 모달 닫기
+
         if(d.status === 'success') {
-            bootstrap.Modal.getInstance(document.getElementById('modal-stock-register')).hide();
             if (type === 'simple_open') {
-                alert("간편 입고 완료. 개통 정보를 입력하세요.");
-                tempOpenStockData = { inputCode: tempInStockData.serial, model, color, serial: tempInStockData.serial, branch: tempInStockData.branch, supplier };
+                alert("간편 입고 완료! 개통 정보를 입력합니다.");
+                // 개통 화면 데이터 전달
+                tempOpenStockData = {
+                    inputCode: tempInStockData.serial,
+                    model: model,
+                    color: color,
+                    serial: tempInStockData.serial,
+                    branch: tempInStockData.branch,
+                    supplier: supplier
+                };
+                // UI 갱신
                 document.getElementById('target_model').innerText = `${model} (${color})`; 
                 document.getElementById('target_serial').innerText = tempInStockData.serial;
                 document.getElementById('target_branch').innerText = tempInStockData.branch; 
                 document.getElementById('f_avalue').value = supplier; 
                 refreshAddons(); 
-                document.getElementById('open_step_1').style.display = 'none'; document.getElementById('open_step_2').style.display = 'block';
-                document.getElementById('f_name').focus();
+                
+                // 화면 전환
+                document.getElementById('open_step_1').style.display = 'none';
+                document.getElementById('open_step_2').style.display = 'block';
+                setTimeout(() => document.getElementById('f_name').focus(), 300);
             } else {
-                showMsg('in-msg','success',`입고: ${model}`);
+                showMsg('in-msg','success',`입고 완료: ${model}`);
                 document.getElementById('in_scan').focus();
             }
-        } else { alert("오류: " + d.message); }
-    }).catch(() => alert("통신 오류")).finally(() => { btn.disabled = false; btn.innerHTML = "입력 완료"; });
+        } else {
+            alert("오류: " + d.message);
+        }
+    })
+    .catch(err => {
+        alert("통신 오류 발생: " + err);
+    })
+    .finally(() => {
+        if(btn) {
+            btn.disabled = false;
+            btn.innerText = "입력 완료";
+        }
+    });
 }
 
 // [3단계] 리스트 렌더링 최적화
