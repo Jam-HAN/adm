@@ -720,10 +720,41 @@ function loadVendorsToList() {
 }
 
 function addVendor() { 
-    const n = document.getElementById('v_name').value; const type = document.getElementById('v_type').value;
+    const n = document.getElementById('v_name').value; 
+    const type = document.getElementById('v_type').value;
+    
     if(!n) return alert("거래처명을 입력하세요.");
-    fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "add_vendor", name: n, salesName: document.getElementById('v_sales').value, salesPhone: document.getElementById('v_phone').value, officePhone: document.getElementById('v_office').value, type: type }) })
-    .then(r => r.json()).then(d => { alert(d.message); loadVendorsToList(); document.getElementById('v_name').value = ""; document.getElementById('v_sales').value = ""; document.getElementById('v_phone').value = ""; document.getElementById('v_office').value = ""; document.getElementById('v_type').selectedIndex = 0; }); 
+    
+    fetch(GAS_URL, { 
+        method: "POST", 
+        body: JSON.stringify({ 
+            action: "add_vendor", 
+            name: n, 
+            salesName: document.getElementById('v_sales').value, 
+            salesPhone: document.getElementById('v_phone').value, 
+            officePhone: document.getElementById('v_office').value, 
+            type: type 
+        }) 
+    })
+    .then(r => r.json())
+    .then(d => { 
+        alert(d.message); 
+        
+        // [추가] 캐시 즉시 업데이트 (드롭다운 반영용)
+        if (n && !globalVendorList.includes(n)) {
+            globalVendorList.push(n);
+            globalVendorList.sort(); // 가나다순 정렬
+        }
+
+        loadVendorsToList(); 
+        
+        // 입력창 초기화
+        document.getElementById('v_name').value = ""; 
+        document.getElementById('v_sales').value = ""; 
+        document.getElementById('v_phone').value = ""; 
+        document.getElementById('v_office').value = ""; 
+        document.getElementById('v_type').selectedIndex = 0; 
+    }); 
 }
 
 function deleteVendor(n) { if(confirm("정말 삭제하시겠습니까?")) fetch(GAS_URL,{method:"POST",body:JSON.stringify({action:"delete_vendor",name:n})}).then(r=>r.json()).then(d=>{alert(d.message);loadVendorsToList();}); }
