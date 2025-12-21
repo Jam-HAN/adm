@@ -1073,6 +1073,7 @@ function searchAllHistory() {
 function openEditModal(item) {
     document.getElementById('edit_sheet_name').value = item.sheetName;
     document.getElementById('edit_row_index').value = item.rowIndex;
+    document.getElementById('edit_branch_name').value = item.branch || item['지점'];
     
     const container = document.getElementById('edit_form_container');
     container.innerHTML = ''; // 초기화
@@ -1119,6 +1120,7 @@ function openEditModal(item) {
 function submitEditHistory() {
     const sheetName = document.getElementById('edit_sheet_name').value;
     const rowIndex = document.getElementById('edit_row_index').value;
+    const branchName = document.getElementById('edit_branch_name').value;
     
     // 변경된 값 수집
     let updates = {};
@@ -1130,7 +1132,7 @@ function submitEditHistory() {
 
     fetch(GAS_URL, { 
         method: "POST", 
-        body: JSON.stringify({ action: "update_history", sheetName, rowIndex, updates }) 
+        body: JSON.stringify({ action: "update_history", sheetName, rowIndex, updates, branchName }) 
     })
     .then(r => r.json())
     .then(d => {
@@ -1144,12 +1146,13 @@ function submitEditHistory() {
 function deleteHistoryItem() {
     const sheetName = document.getElementById('edit_sheet_name').value;
     const rowIndex = document.getElementById('edit_row_index').value;
+    const branchName = document.getElementById('edit_branch_name').value;
     
     if(!confirm("정말로 이 개통 내역을 삭제하시겠습니까?\n(재고는 자동으로 복구되지 않으니 재고조정/재개통이 필요합니다.)")) return;
     
     fetch(GAS_URL, { 
         method: "POST", 
-        body: JSON.stringify({ action: "delete_history", sheetName, rowIndex }) 
+        body: JSON.stringify({ action: "delete_history", sheetName, rowIndex, branchName }) 
     })
     .then(r => r.json())
     .then(d => {
