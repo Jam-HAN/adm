@@ -1015,37 +1015,41 @@ function initHistoryDates() {
     if(document.getElementById('hist_end_date')) document.getElementById('hist_end_date').value = fmt(today);
 }
 
-// 2. 통합 검색 실행
+// [수정] 통합 검색 실행 (지점 필터 추가)
 function searchAllHistory() {
     const start = document.getElementById('hist_start_date').value;
     const end = document.getElementById('hist_end_date').value;
     const keyword = document.getElementById('hist_all_keyword').value;
+    const branch = document.getElementById('hist_branch_filter').value; // [추가] 지점 값 읽기
     const resArea = document.getElementById('hist_all_result');
     
-    resArea.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary"></div></div>';
+    resArea.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary"></div><div class="mt-2 small text-muted">데이터 조회 중...</div></div>';
     
+    // 서버로 branch 정보도 함께 전송
     fetch(GAS_URL, { 
         method: "POST", 
-        body: JSON.stringify({ action: "get_all_history", start, end, keyword }) 
+        body: JSON.stringify({ action: "get_all_history", start, end, keyword, branch }) 
     })
     .then(r => r.json())
     .then(d => {
         if (d.status === 'success' && d.data.length > 0) {
             let html = '';
             d.data.forEach(item => {
-                // 아이템 JSON 문자열로 변환 (따옴표 처리)
                 const jsonItem = JSON.stringify(item).replace(/"/g, '&quot;');
                 
-                // 뱃지 색상 결정
                 let badgeClass = 'bg-secondary';
                 if(item.sheetName === '무선개통') badgeClass = 'bg-primary';
                 else if(item.sheetName === '유선개통') badgeClass = 'bg-success';
                 else if(item.sheetName === '중고개통') badgeClass = 'bg-warning text-dark';
                 
+                // 날짜와 지점 표시 강화
                 html += `
                 <div class="list-group-item list-group-item-action py-3" onclick="openEditModal(${jsonItem})">
                     <div class="d-flex w-100 justify-content-between align-items-center mb-1">
-                        <span class="badge ${badgeClass}">${item.sheetName}</span>
+                        <div>
+                            <span class="badge ${badgeClass} me-1">${item.sheetName}</span>
+                            <span class="badge bg-light text-dark border">${item['지점'] || '-'}</span>
+                        </div>
                         <small class="text-muted">${item['접수일'] || item['개통일']}</small>
                     </div>
                     <h6 class="mb-1 fw-bold">${item['고객명']} <span class="fw-normal text-muted">(${item['통신사'] || item['개통유형'] || '-'})</span></h6>
@@ -1057,8 +1061,11 @@ function searchAllHistory() {
             });
             resArea.innerHTML = html;
         } else {
-            resArea.innerHTML = '<div class="text-center py-5 text-muted">조회 결과가 없습니다.</div>';
+            resArea.innerHTML = '<div class="text-center py-5 text-muted">조건에 맞는 결과가 없습니다.</div>';
         }
+    })
+    .catch(err => {
+        resArea.innerHTML = '<div class="text-center py-5 text-danger">통신 오류가 발생했습니다.</div>';
     });
 }
 
