@@ -909,65 +909,61 @@ function searchHistory() {
 
 function updateSearchUI() { const criteria = document.getElementById('search_criteria').value; const area = document.getElementById('search_input_area'); area.innerHTML = ""; if(criteria === 'supplier') { const sel = document.createElement('select'); sel.className = "form-select"; sel.id = "search_value"; globalVendorList.forEach(v => { const opt = document.createElement('option'); opt.value=v; opt.innerText=v; sel.appendChild(opt); }); area.appendChild(sel); } else if(criteria === 'branch') { const sel = document.createElement('select'); sel.className = "form-select"; sel.id = "search_value"; ["장지 본점", "명일 직영점"].forEach(v => { const opt = document.createElement('option'); opt.value=v; opt.innerText=v; sel.appendChild(opt); }); area.appendChild(sel); } else if(criteria === 'model') { const sel = document.createElement('select'); sel.className = "form-select"; sel.id = "search_value"; globalModelList.forEach(v => { const opt = document.createElement('option'); opt.value=v; opt.innerText=v; sel.appendChild(opt); }); area.appendChild(sel); } else { const inp = document.createElement('input'); inp.className = "form-control"; inp.id = "search_value"; inp.placeholder = "입력하세요"; inp.onkeydown = function(e){ if(e.key==='Enter') searchStock(); }; area.appendChild(inp); inp.focus(); } }
 
-// [추가] 모바일 FAB 메뉴 토글 함수
-function toggleFabMenu() {
+// [추가 1] 모든 모바일 메뉴 닫기 (배경 클릭 시 실행됨)
+function closeAllMobileMenus() {
     const overlay = document.getElementById('fab-menu-overlay');
-    const menu = document.getElementById('fab-menu-container');
-    const fabIcon = document.querySelector('.center-fab .bi');
     
-    if (menu.classList.contains('d-none')) {
-        // 메뉴 열기
-        menu.classList.remove('d-none');
-        menu.classList.add('d-flex');
-        overlay.classList.remove('d-none');
-        // 아이콘 회전 효과 (선택사항)
-        if(fabIcon) { fabIcon.classList.remove('bi-plus-lg'); fabIcon.classList.add('bi-x-lg'); }
-    } else {
-        // 메뉴 닫기
-        menu.classList.add('d-none');
-        menu.classList.remove('d-flex');
-        overlay.classList.add('d-none');
-        if(fabIcon) { fabIcon.classList.remove('bi-x-lg'); fabIcon.classList.add('bi-plus-lg'); }
+    // 1. 더하기 메뉴 닫기
+    const fabMenu = document.getElementById('fab-menu-container');
+    if (fabMenu) {
+        fabMenu.classList.add('d-none');
+        fabMenu.classList.remove('d-flex');
+    }
+
+    // 2. 조회 메뉴 닫기
+    const searchMenu = document.getElementById('search-menu-container');
+    if (searchMenu) {
+        searchMenu.classList.add('d-none');
+        searchMenu.classList.remove('d-flex');
+    }
+    
+    // 3. 오버레이(배경) 숨기기
+    if (overlay) overlay.classList.add('d-none');
+    
+    // 4. 더하기 아이콘 원상복구 (X -> +)
+    const fabIcon = document.querySelector('.center-fab .bi');
+    if(fabIcon) { 
+        fabIcon.classList.remove('bi-x-lg'); 
+        fabIcon.classList.add('bi-plus-lg'); 
     }
 }
 
-// [추가] 모바일 조회 메뉴 토글 함수
+// [추가 2] 조회 메뉴 토글 (돋보기 아이콘 클릭 시)
 function toggleSearchMenu() {
     const overlay = document.getElementById('fab-menu-overlay');
     const menu = document.getElementById('search-menu-container');
     
-    // 더하기 메뉴가 열려있으면 닫기 (겹침 방지)
+    // 만약 더하기 메뉴가 열려있으면 닫아버림 (겹침 방지)
     const fabMenu = document.getElementById('fab-menu-container');
-    if (!fabMenu.classList.contains('d-none')) toggleFabMenu();
+    if (fabMenu && !fabMenu.classList.contains('d-none')) {
+        fabMenu.classList.add('d-none');
+        fabMenu.classList.remove('d-flex');
+        // 아이콘 복구
+        const fabIcon = document.querySelector('.center-fab .bi');
+        if(fabIcon) { fabIcon.classList.remove('bi-x-lg'); fabIcon.classList.add('bi-plus-lg'); }
+    }
 
     if (menu.classList.contains('d-none')) {
-        // 열기
+        // 메뉴 열기
         menu.classList.remove('d-none');
         menu.classList.add('d-flex');
-        overlay.classList.remove('d-none');
-        // 오버레이 클릭 시 이 함수가 호출되도록 설정 변경 필요 없음 (공용 오버레이 사용)
+        overlay.classList.remove('d-none'); // 배경 켜기
     } else {
-        // 닫기
+        // 메뉴 닫기
         menu.classList.add('d-none');
         menu.classList.remove('d-flex');
-        overlay.classList.add('d-none');
+        overlay.classList.add('d-none'); // 배경 끄기
     }
-}
-
-// 모든 모바일 팝업 메뉴 닫기
-function closeAllMobileMenus() {
-    const overlay = document.getElementById('fab-menu-overlay');
-    document.getElementById('fab-menu-container').classList.add('d-none');
-    document.getElementById('fab-menu-container').classList.remove('d-flex');
-    
-    document.getElementById('search-menu-container').classList.add('d-none');
-    document.getElementById('search-menu-container').classList.remove('d-flex');
-    
-    overlay.classList.add('d-none');
-    
-    // 더하기 아이콘 원상복구
-    const fabIcon = document.querySelector('.center-fab .bi');
-    if(fabIcon) { fabIcon.classList.remove('bi-x-lg'); fabIcon.classList.add('bi-plus-lg'); }
 }
 
 // ==========================================
