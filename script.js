@@ -2,7 +2,7 @@
 // script.js (V56.0 - Optimized UI Rendering)
 // ==========================================
 
-const GAS_URL = "https://script.google.com/macros/s/AKfycbwngi16Uq7rujpxWOy8W0Z362eJluWdG1K9CyT1E6Wk2MwnBFtvDrnufjRn63TLsrO_/exec"; 
+const GAS_URL = "https://script.google.com/macros/s/AKfycbzOIJy6E1X5YQvcyL_GYE8hIqUXkIUpZRH1mtRL1SCqYc6mbgx01HUErtLwxaIPHhdC/exec"; 
 
 let currentUser = "";
 let inPendingList = [];
