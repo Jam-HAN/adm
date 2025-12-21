@@ -54,7 +54,7 @@
                                 <li><a class="dropdown-item text-danger" href="#" onclick="showSection('section-out')">반품 처리</a></li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li><a class="dropdown-item" href="#" onclick="showSection('section-stock')">🔍 보유 재고 조회</a></li>
-                                <li><a class="dropdown-item" href="#" onclick="showSection('section-history')">📜 단말기 이력 조회</a></li>
+                                <li><a class="dropdown-item" href="#" onclick="showSection('section-history')">📜 이력 조회</a></li>
                             </ul>
                         </li>
                         <li class="nav-item dropdown">
@@ -72,6 +72,17 @@
                         <button onclick="logout()" class="btn btn-sm btn-outline-secondary rounded-pill"><i class="bi bi-box-arrow-right"></i> 로그아웃</button>
                     </div>
                 </div>
+            </div>
+        </nav>
+
+        <nav class="navbar sticky-top px-3 d-lg-none glass-header">
+            <div class="container-fluid px-0 d-flex justify-content-between align-items-center">
+                <a class="navbar-brand fw-bold text-primary fs-5" onclick="showSection('section-dashboard')">
+                    <i class="bi bi-grid-fill"></i> 대박통신
+                </a>
+                <button onclick="logout()" class="btn btn-sm btn-light border-0 rounded-circle text-secondary">
+                    <i class="bi bi-box-arrow-right fs-5"></i>
+                </button>
             </div>
         </nav>
 
