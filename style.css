@@ -132,17 +132,3 @@ body {
 /* 대시보드 테이블 */
 .dash-table th { background: transparent; color: #6c757d; font-size: 0.75rem; border-bottom: 1px solid #eee; }
 .dash-table td { padding: 12px 4px; font-size: 0.9rem; }
-
-/* [추가] 대시보드 랭킹 리스트 줄바꿈 방지 */
-#dash_user_rank .d-flex {
-    white-space: nowrap; /* 줄바꿈 금지 */
-    align-items: center; /* 수직 중앙 정렬 */
-}
-#dash_user_rank .d-flex div {
-    flex-shrink: 0; /* 공간 좁아도 찌그러지지 않게 */
-}
-/* 합계 숫자 강조 */
-#dash_user_rank .fw-bold.text-primary {
-    min-width: 60px; /* 합계 공간 확보 */
-    text-align: right;
-}
