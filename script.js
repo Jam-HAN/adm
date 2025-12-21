@@ -88,7 +88,17 @@ function resetLogoutTimer() {
 // ==========================================
 // 2. 화면 전환 (네비게이션)
 // ==========================================
+// [수정] 화면 전환 시 모바일 메뉴 자동 닫기 기능 추가
 function showSection(id) {
+    // 1. 모바일 메뉴가 열려있다면 닫기
+    const nav = document.getElementById('navbarNav');
+    if (nav && nav.classList.contains('show')) {
+        // 부트스트랩 기능을 이용해 메뉴를 부드럽게 닫습니다.
+        const bsCollapse = bootstrap.Collapse.getInstance(nav) || new bootstrap.Collapse(nav, {toggle: false});
+        bsCollapse.hide();
+    }
+
+    // 2. 기존 화면 전환 로직
     document.querySelectorAll('.section-view').forEach(el => el.classList.remove('active-section', 'fade-in'));
     document.getElementById(id).classList.add('active-section', 'fade-in');
     if(id === 'section-in') loadInitData();
