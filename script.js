@@ -203,16 +203,46 @@ function renderDashboard(data) {
     }
 }
 
-// 4. 데이터 로드
+// [최종 수정] 초기 데이터 로드 (loadDropdownData와 일관성 유지: 캐싱 적용)
 function loadInitData() {
-    fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "get_vendors" }) }).then(r => r.json()).then(d => {
-        globalVendorList = d.list.map(v => v.name);
-        const sel = document.getElementById('in_supplier'); sel.innerHTML = "";
-        globalVendorList.forEach(v => { const opt = document.createElement('option'); opt.value=v; opt.innerText=v; sel.appendChild(opt); });
-        if(document.getElementById('search_criteria').value === 'supplier') updateSearchUI();
-    });
-    fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "get_models" }) }).then(r => r.json()).then(d => globalModelList = d.list);
-    fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "get_iphone_data" }) }).then(r => r.json()).then(d => globalIphoneData = d.data);
+    // 1. 거래처 데이터: 캐싱 확인
+    if (globalVendorList && globalVendorList.length > 0) {
+        renderVendorDropdown(); // 이미 있으면 바로 그림
+        // 검색창이 '거래처'로 설정된 경우 검색창 옵션도 갱신
+        if (document.getElementById('search_criteria').value === 'supplier') updateSearchUI();
+    } else {
+        // 없으면 서버 요청
+        fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "get_vendors" }) })
+        .then(r => r.json())
+        .then(d => {
+            globalVendorList = d.list.map(v => v.name);
+            renderVendorDropdown();
+            if (document.getElementById('search_criteria').value === 'supplier') updateSearchUI();
+        });
+    }
+
+    // 2. 모델 데이터: 캐싱 확인
+    if (globalModelList && globalModelList.length > 0) {
+        // 모델 데이터는 현재 검색창(updateSearchUI)에서만 쓰임
+        if (document.getElementById('search_criteria').value === 'model') updateSearchUI();
+    } else {
+        fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "get_models" }) })
+        .then(r => r.json())
+        .then(d => {
+            globalModelList = d.list;
+            // 로드 완료 후 검색창이 모델이면 갱신
+            if (document.getElementById('search_criteria').value === 'model') updateSearchUI();
+        });
+    }
+
+    // 3. 아이폰 데이터: 캐싱 확인
+    if (Object.keys(globalIphoneData).length === 0) {
+        fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "get_iphone_data" }) })
+        .then(r => r.json())
+        .then(d => {
+            globalIphoneData = d.data;
+        });
+    }
 }
 
 function loadDropdownData() {
