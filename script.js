@@ -156,20 +156,35 @@ function resetLogoutTimer() {
 
 // 2. 화면 전환
 function showSection(id) {
+    // 1. 모바일 메뉴 닫기 (기존 코드 유지)
     const nav = document.getElementById('navbarNav');
     if (nav && nav.classList.contains('show')) {
         const bsCollapse = bootstrap.Collapse.getInstance(nav) || new bootstrap.Collapse(nav, {toggle: false});
         bsCollapse.hide();
     }
+    
+    // 2. 섹션 전환 (기존 코드 유지)
     document.querySelectorAll('.section-view').forEach(el => el.classList.remove('active-section', 'fade-in'));
     document.getElementById(id).classList.add('active-section', 'fade-in');
     
+    // 3. [핵심 수정] 입고 화면(section-in) 진입 시 로직 개선
     if(id === 'section-in') {
-        loadInitData();
-        loadDropdownData();
+        // ★ 캐싱 로직: 이미 받아둔 거래처 목록이 있으면 바로 그린다 (서버 호출 X)
+        if (typeof globalVendorList !== 'undefined' && globalVendorList.length > 0) {
+            renderVendorDropdown(); 
+        } else {
+            // 없으면 서버에서 가져온다
+            loadInitData(); 
+        }
+        
+        loadDropdownData(); // 다른 드롭다운 로드
     }
+    
+    // 4. 기타 섹션 로직
     if(id === 'section-vendor') loadVendorsToList();
     if(id === 'section-stock') updateSearchUI();
+    
+    // 5. 입력창 포커스
     const input = document.querySelector(`#${id} input`);
     if(input) input.focus();
 }
@@ -304,6 +319,22 @@ function loadInitData() {
             globalIphoneData = d.data;
         });
     }
+}
+
+// [캐싱 적용] 저장된 리스트를 화면에 그려주는 함수
+function renderVendorDropdown() {
+    const sel = document.getElementById('in_supplier');
+    if (!sel) return;
+
+    // 1. 기본 옵션
+    let html = '<option value="" selected>선택하세요</option>';
+
+    // 2. 캐시된 데이터(globalVendorList)가 있으면 그걸로 목록 생성
+    if (globalVendorList && globalVendorList.length > 0) {
+        html += globalVendorList.map(v => `<option value="${v}">${v}</option>`).join('');
+    }
+
+    sel.innerHTML = html;
 }
 
 function loadDropdownData() {
