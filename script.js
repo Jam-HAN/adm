@@ -938,6 +938,39 @@ function closeAllMobileMenus() {
     }
 }
 
+// [누락된 함수 추가] 더하기(+) 메뉴 토글 함수
+function toggleFabMenu() {
+    const overlay = document.getElementById('fab-menu-overlay');
+    const menu = document.getElementById('fab-menu-container');
+    const fabIcon = document.querySelector('.center-fab .bi');
+    
+    // 만약 조회 메뉴가 열려있으면 닫아버림 (겹침 방지)
+    const searchMenu = document.getElementById('search-menu-container');
+    if (searchMenu && !searchMenu.classList.contains('d-none')) {
+        // toggleSearchMenu()를 부르면 서로 닫으려다가 무한루프 돌 수 있으니 직접 닫음
+        searchMenu.classList.add('d-none');
+        searchMenu.classList.remove('d-flex');
+    }
+
+    if (menu.classList.contains('d-none')) {
+        // 메뉴 열기
+        menu.classList.remove('d-none');
+        menu.classList.add('d-flex');
+        overlay.classList.remove('d-none'); // 배경 켜기
+        
+        // 아이콘 회전 효과 (+ -> X)
+        if(fabIcon) { fabIcon.classList.remove('bi-plus-lg'); fabIcon.classList.add('bi-x-lg'); }
+    } else {
+        // 메뉴 닫기
+        menu.classList.add('d-none');
+        menu.classList.remove('d-flex');
+        overlay.classList.add('d-none'); // 배경 끄기
+        
+        // 아이콘 복구 (X -> +)
+        if(fabIcon) { fabIcon.classList.remove('bi-x-lg'); fabIcon.classList.add('bi-plus-lg'); }
+    }
+}
+
 // [추가 2] 조회 메뉴 토글 (돋보기 아이콘 클릭 시)
 function toggleSearchMenu() {
     const overlay = document.getElementById('fab-menu-overlay');
