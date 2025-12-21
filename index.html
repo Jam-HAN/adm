@@ -509,6 +509,27 @@
                 </div>
             </div>
 
+            <div id="section-search-all" class="section-view">
+                <div class="glass-card p-4">
+                    <h5 class="fw-bold mb-4"><i class="bi bi-card-list"></i> 개통 이력 조회</h5>
+                    
+                    <div class="row g-2 mb-3">
+                        <div class="col-6"><input type="date" class="form-control form-control-sm" id="hist_start_date"></div>
+                        <div class="col-6"><input type="date" class="form-control form-control-sm" id="hist_end_date"></div>
+                        <div class="col-12">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="hist_all_keyword" placeholder="고객명, 연락처, 모델명">
+                                <button class="btn btn-primary" onclick="searchAllHistory()">검색</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="hist_all_result" class="list-group list-group-flush mt-3" style="max-height: 60vh; overflow-y: auto;">
+                        <div class="text-center text-muted py-5 small">조회 조건을 입력하고 검색하세요.</div>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 
@@ -585,6 +606,30 @@
                     </div>
 
                     <button type="button" id="btn-stock-submit" class="btn btn-primary w-100 fw-bold py-2 mt-3">입력 완료</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modal-edit-history" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title fw-bold">✏️ 개통 정보 수정</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <input type="hidden" id="edit_sheet_name">
+                    <input type="hidden" id="edit_row_index">
+                    
+                    <div id="edit_form_container" class="row g-3"></div>
+                </div>
+                <div class="modal-footer bg-light border-0 justify-content-between">
+                    <button type="button" class="btn btn-outline-danger btn-sm" onclick="deleteHistoryItem()">🗑️ 이 내역 삭제</button>
+                    <div>
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">닫기</button>
+                        <button type="button" class="btn btn-primary fw-bold" onclick="submitEditHistory()">수정사항 저장</button>
+                    </div>
                 </div>
             </div>
         </div>
