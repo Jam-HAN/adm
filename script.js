@@ -199,14 +199,16 @@ function showOpenSection(type) {
 function showWiredSection() { resetWiredForm(); loadDropdownData(); showSection('section-wired'); }
 function showUsedSection() { resetUsedForm(); loadDropdownData(); showSection('section-used'); }
 
-// 3. 대시보드 (렌더링 최적화 적용)
+// [수정] 대시보드 데이터 로드
 function loadDashboard() {
     const dashList = document.getElementById('dash_today_list');
     const dashUser = document.getElementById('dash_user_rank');
     if(!dashList || !dashUser) return;
 
+    // 로딩바 표시
     dashList.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted"><div class="spinner-border spinner-border-sm text-primary"></div> 로딩 중...</td></tr>';
-    dashUser.innerHTML = '<div class="text-center py-4"><div class="spinner-border spinner-border-sm text-success"></div></div>';
+    // [수정] 높이 확보 및 중앙 정렬
+    dashUser.innerHTML = '<div class="d-flex justify-content-center align-items-center" style="height:200px;"><div class="spinner-border text-success"></div></div>';
 
     fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "get_dashboard_data" }) })
     .then(r => r.json())
@@ -216,15 +218,17 @@ function loadDashboard() {
     })
     .catch(() => {
          dashList.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">데이터 없음</td></tr>';
-         dashUser.innerHTML = '<div class="text-center text-muted">데이터 없음</div>';
+         dashUser.innerHTML = '<div class="text-center py-5 text-muted">데이터 연결 실패</div>';
     });
 }
 
+// [수정] 대시보드 그리기 (실적 랭킹 테이블 디자인 적용)
 function renderDashboard(data) {
+    // 1. 상단 숫자판
     document.getElementById('dash_today_mobile').innerText = data.today.mobile;
     document.getElementById('dash_today_wired').innerText = data.today.wired;
     
-    // 월간 누적
+    // 2. 월간 누적 (지점별)
     renderHtmlList('dash_month_stats', Object.keys(data.month), b => `
         <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
             <span class="fw-bold small">${b}</span>
@@ -235,7 +239,7 @@ function renderDashboard(data) {
         </div>
     `, '데이터 없음');
     
-    // 오늘 리스트
+    // 3. 오늘 실시간 개통 리스트
     renderHtmlList('dash_today_list', data.todayList, item => {
         const marginStr = Math.floor(Number(item.margin)).toLocaleString();
         const colorClass = item.badgeColor ? `bg-${item.badgeColor}` : "bg-secondary";
@@ -248,34 +252,50 @@ function renderDashboard(data) {
         </tr>`;
     }, '<tr><td colspan="5" class="text-center py-4 text-muted">오늘 개통 내역이 없습니다.</td></tr>');
     
-    // 직원 랭킹
+    // 4. [디자인 변경] 이달의 실적 (랭킹 테이블 & 메달)
+    const rankArea = document.getElementById('dash_user_rank');
     if (!data.userRank || data.userRank.length === 0) {
-        document.getElementById('dash_user_rank').innerHTML = '<div class="text-center text-muted">이달의 실적이 없습니다.</div>';
+        rankArea.innerHTML = '<div class="text-center py-5 text-muted small">이달의 실적이 없습니다.</div>';
     } else {
-        const max = data.userRank[0].total; 
-        renderHtmlList('dash_user_rank', data.userRank, u => {
-            const mobilePct = max > 0 ? (u.mobile / max) * 100 : 0;
-            const wiredPct = max > 0 ? (u.wired / max) * 100 : 0;
-            return `
-            <div class="user-rank-item py-2 border-bottom">
-                <div class="user-rank-name">${u.name}</div>
-                <div class="flex-grow-1 mx-2">
-                    <div class="d-flex align-items-center mb-1">
-                        <div class="progress w-100" style="height: 6px; margin:0; background-color:#eaecf4;">
-                            <div class="progress-bar bg-primary" style="width: ${mobilePct}%"></div>
-                        </div>
-                        <span class="ms-2 text-primary fw-bold" style="font-size:0.75rem; width:25px; text-align:right;">${u.mobile}</span>
-                    </div>
-                    <div class="d-flex align-items-center">
-                        <div class="progress w-100" style="height: 6px; margin:0; background-color:#eaecf4;">
-                            <div class="progress-bar bg-success" style="width: ${wiredPct}%"></div>
-                        </div>
-                        <span class="ms-2 text-success fw-bold" style="font-size:0.75rem; width:25px; text-align:right;">${u.wired}</span>
-                    </div>
-                </div>
-                <div class="user-rank-count ms-1">${u.total}건</div>
-            </div>`;
+        // 테이블 헤더 생성
+        let html = `
+            <table class="table table-hover align-middle mb-0 text-center" style="font-size: 0.9rem;">
+                <thead class="bg-light text-secondary small fw-bold sticky-top">
+                    <tr>
+                        <th style="width:15%">순위</th>
+                        <th style="width:25%">매니저</th>
+                        <th style="width:20%">📱무선</th>
+                        <th style="width:20%">📺유선</th>
+                        <th style="width:20%">합계</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+
+        // 데이터 반복
+        data.userRank.forEach((u, index) => {
+            // 메달 아이콘 처리
+            let rankBadge = `<span class="fw-bold text-secondary" style="font-size:0.9rem;">${index + 1}</span>`;
+            if (index === 0) rankBadge = `<span style="font-size:1.2rem;">🥇</span>`;
+            else if (index === 1) rankBadge = `<span style="font-size:1.2rem;">🥈</span>`;
+            else if (index === 2) rankBadge = `<span style="font-size:1.2rem;">🥉</span>`;
+
+            // 본인(currentUser) 강조
+            const isMe = (typeof currentUser !== 'undefined' && u.name === currentUser) ? "bg-primary bg-opacity-10 border-start border-4 border-primary" : "";
+
+            html += `
+                <tr class="${isMe}">
+                    <td>${rankBadge}</td>
+                    <td class="fw-bold text-dark">${u.name}</td>
+                    <td class="text-muted">${u.mobile}</td>
+                    <td class="text-muted">${u.wired}</td>
+                    <td class="fw-bold text-primary fs-6">${u.total}건</td>
+                </tr>
+            `;
         });
+
+        html += `</tbody></table>`;
+        rankArea.innerHTML = html;
     }
 }
 
