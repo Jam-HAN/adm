@@ -418,14 +418,22 @@ function showStockRegisterModal(type, dataObj) {
         if (areaBarcode) areaBarcode.style.display = 'none'; // 바코드 숨김
         if (areaSupplier) {
             areaSupplier.style.display = 'block'; // 거래처 보임
-            const mainSupOpts = document.getElementById('in_supplier').innerHTML;
+            
             const modalSupSel = document.getElementById('reg_modal_supplier');
             if(modalSupSel) {
-                modalSupSel.innerHTML = mainSupOpts;
+                // [수정] 메인화면 복사 대신 데이터(globalVendorList) 직접 사용
+                modalSupSel.innerHTML = '<option value="">선택</option>';
+                
+                if (globalVendorList && globalVendorList.length > 0) {
+                    globalVendorList.forEach(v => {
+                        modalSupSel.innerHTML += `<option value="${v}">${v}</option>`;
+                    });
+                } else {
+                    modalSupSel.innerHTML += `<option value="" disabled>로딩 중...</option>`;
+                }
                 modalSupSel.value = ""; 
             }
         }
-
         // 경고 문구 보임
         if (msgText) {
             msgText.style.display = 'block'; 
