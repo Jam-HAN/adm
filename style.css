@@ -1,95 +1,134 @@
-:root { 
-    --primary-color: #4e73df;
-    --success-color: #1cc88a;
-    --warning-color: #f6c23e;
-    --info-color: #36b9cc;
-    --secondary-color: #858796;
-    --bg-color: #f8f9fc;
-    --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-}
-body { 
-    background-color: var(--bg-color); 
-    font-family: 'Noto Sans KR', sans-serif; 
-    color: #5a5c69; 
-    font-size: 0.95rem; 
+:root {
+    /* [수정] 세련된 브랜드 컬러 (딥 블루 & 그라데이션) */
+    --primary-color: #4361ee;
+    --primary-gradient: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%);
+    --success-color: #2ec4b6;
+    --warning-color: #ff9f1c;
+    --danger-color: #e71d36;
+    --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    --glass-bg: rgba(255, 255, 255, 0.75);
+    --glass-border: rgba(255, 255, 255, 0.6);
+    --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
 }
 
-/* 카드 디자인 */
-.glass-card { 
-    background: #ffffff; 
-    border-radius: 12px; 
-    box-shadow: var(--card-shadow); 
-    border: none; 
-    overflow: hidden; 
-    margin-bottom: 20px; 
-    transition: transform 0.2s ease-in-out;
+body {
+    background: var(--bg-gradient);
+    background-attachment: fixed; /* 배경 고정 */
+    font-family: 'Noto Sans KR', sans-serif;
+    color: #2b2d42;
+    font-size: 0.95rem;
+    padding-bottom: 80px; /* 하단 탭바 공간 확보 */
 }
 
-/* 섹션 전환 애니메이션 */
+/* 1. 리얼 글래스모피즘 카드 */
+.glass-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px); /* 핵심: 뒤가 흐릿하게 보임 */
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    box-shadow: var(--glass-shadow);
+    margin-bottom: 20px;
+    overflow: hidden;
+}
+
+/* 헤더도 유리 효과 */
+.glass-header {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+/* 2. 섹션 전환 애니메이션 */
 .section-view { display: none; }
-.active-section { display: block; animation: fadeIn 0.3s ease-out; }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+.active-section { display: block; animation: slideUp 0.3s ease-out; }
+@keyframes slideUp { 
+    from { opacity: 0; transform: translateY(10px); } 
+    to { opacity: 1; transform: translateY(0); } 
+}
 
-/* 폼 요소 스타일 */
-.form-label-sm { font-size: 0.8rem; font-weight: 700; color: #858796; margin-bottom: 4px; }
-.form-control-sm, .form-select-sm { 
-    border-radius: 6px; padding: 0.5rem 0.75rem; font-size: 0.9rem; border: 1px solid #d1d3e2;
+/* 3. 폼 요소 디자인 개선 (터치 영역 확대) */
+.form-label-sm { font-size: 0.8rem; font-weight: 700; color: #6c757d; margin-bottom: 6px; }
+.form-control, .form-select {
+    border-radius: 10px;
+    border: 1px solid #e0e0e0;
+    padding: 0.6rem 0.8rem; /* 높이 키움 */
+    font-size: 0.95rem;
+    background-color: rgba(255, 255, 255, 0.9);
 }
 .form-control:focus, .form-select:focus {
-    border-color: #bac8f3; box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15);
 }
 
-/* 구분선 및 헤더 */
-.divider { border-top: 1px solid #e3e6f0; margin: 1.5rem 0 1rem 0; }
-.section-header { 
-    font-size: 0.95rem; font-weight: 800; color: var(--primary-color); 
-    margin-bottom: 12px; display: flex; align-items: center; text-transform: uppercase; letter-spacing: 0.05em;
+/* 4. 버튼 디자인 (그라데이션 적용) */
+.btn-primary {
+    background: var(--primary-gradient);
+    border: none;
+    border-radius: 10px;
+    padding: 10px 0;
+    transition: transform 0.1s;
 }
-.section-header i { margin-right: 8px; font-size: 1.1rem; }
+.btn-primary:active { transform: scale(0.98); }
 
-/* 강조 텍스트 */
-.required-star { color: #e74a3b; font-weight: bold; margin-left: 2px; }
-.text-danger-custom { color: #e74a3b !important; font-weight: bold; }
-.border-danger-custom { border-color: #e74a3b !important; color: #e74a3b !important; font-weight: bold; }
+/* 5. 모바일 하단 탭바 (핵심 UI) */
+.mobile-bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 65px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-top: 1px solid rgba(0,0,0,0.05);
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    z-index: 1000;
+    box-shadow: 0 -5px 20px rgba(0,0,0,0.03);
+}
 
-/* 대시보드 카드 */
-.stat-card { border-left: 0.25rem solid var(--primary-color); }
-.stat-card.month { border-left-color: var(--success-color); }
-
-/* ★ [수정] 대시보드 테이블: 줄바꿈 방지 및 균등 분할 */
-.dash-table { table-layout: fixed; width: 100%; }
-.dash-table th { 
-    background-color: #f8f9fc; 
-    color: #4e73df; 
-    font-weight: 800; 
-    font-size: 0.8rem; 
-    text-transform: uppercase; 
-    text-align: center;
+.mobile-bottom-nav .nav-item {
+    text-decoration: none;
+    color: #9ca3af;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-size: 0.7rem;
+    font-weight: 500;
     width: 20%;
 }
-.dash-table td { 
-    vertical-align: middle; 
-    font-size: 0.9rem; 
-    text-align: center;
-    padding: 8px 4px;
-    white-space: nowrap !important; /* 줄바꿈 강제 방지 */
-    overflow: hidden;
-    text-overflow: ellipsis;
+
+.mobile-bottom-nav .nav-item i {
+    font-size: 1.4rem;
+    margin-bottom: 2px;
+    transition: all 0.2s;
 }
 
-/* 직원 랭킹 */
-.user-rank-item { display: flex; align-items: center; margin-bottom: 10px; }
-.user-rank-name { width: 80px; font-weight: bold; font-size: 0.9rem; color: #5a5c69; }
-.progress { height: 12px; border-radius: 6px; flex-grow: 1; margin: 0 10px; background-color: #eaecf4; }
-.user-rank-count { width: 40px; text-align: right; font-weight: 800; color: var(--primary-color); }
+.mobile-bottom-nav .nav-item.active { color: var(--primary-color); }
+.mobile-bottom-nav .nav-item.active i { transform: translateY(-2px); }
 
-/* 네비게이션 및 기타 */
-.navbar { background-color: #ffffff !important; box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15) !important; }
-.navbar-brand { font-weight: 800; color: var(--primary-color) !important; font-size: 1.2rem; cursor: pointer; }
-.nav-link { font-weight: 600; color: #5a5c69 !important; font-size: 0.95rem; cursor: pointer; }
-.nav-link:hover { color: var(--primary-color) !important; }
-.dropdown-item { cursor: pointer; }
+/* 중앙 플로팅 버튼 (개통) */
+.center-fab .fab-btn {
+    width: 50px;
+    height: 50px;
+    background: var(--primary-gradient);
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    box-shadow: 0 4px 15px rgba(67, 97, 238, 0.4);
+    transform: translateY(-15px);
+}
+.center-fab .fab-btn i { margin: 0; font-size: 1.8rem; }
 
-/* 거래처 리스트 스타일 */
-#vendor_list_ui .list-group-item { display: block; }
-#vendor_list_ui .small { display: block !important; color: #6c757d !important; font-size: 0.85em; margin-top: 4px; }
+/* 유틸리티 */
+.divider { border-top: 1px dashed #e0e0e0; margin: 1.5rem 0; }
+.section-header { font-size: 1rem; font-weight: 800; color: var(--primary-color); margin-bottom: 15px; display: flex; align-items: center; }
+.text-danger-custom { color: var(--danger-color) !important; font-weight: bold; }
+.border-danger-custom { border-color: var(--danger-color) !important; }
+
+/* 대시보드 테이블 */
+.dash-table th { background: transparent; color: #6c757d; font-size: 0.75rem; border-bottom: 1px solid #eee; }
+.dash-table td { padding: 12px 4px; font-size: 0.9rem; }
