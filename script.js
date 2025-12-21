@@ -857,3 +857,25 @@ function searchHistory() {
 }
 
 function updateSearchUI() { const criteria = document.getElementById('search_criteria').value; const area = document.getElementById('search_input_area'); area.innerHTML = ""; if(criteria === 'supplier') { const sel = document.createElement('select'); sel.className = "form-select"; sel.id = "search_value"; globalVendorList.forEach(v => { const opt = document.createElement('option'); opt.value=v; opt.innerText=v; sel.appendChild(opt); }); area.appendChild(sel); } else if(criteria === 'branch') { const sel = document.createElement('select'); sel.className = "form-select"; sel.id = "search_value"; ["장지 본점", "명일 직영점"].forEach(v => { const opt = document.createElement('option'); opt.value=v; opt.innerText=v; sel.appendChild(opt); }); area.appendChild(sel); } else if(criteria === 'model') { const sel = document.createElement('select'); sel.className = "form-select"; sel.id = "search_value"; globalModelList.forEach(v => { const opt = document.createElement('option'); opt.value=v; opt.innerText=v; sel.appendChild(opt); }); area.appendChild(sel); } else { const inp = document.createElement('input'); inp.className = "form-control"; inp.id = "search_value"; inp.placeholder = "입력하세요"; inp.onkeydown = function(e){ if(e.key==='Enter') searchStock(); }; area.appendChild(inp); inp.focus(); } }
+
+// [추가] 모바일 FAB 메뉴 토글 함수
+function toggleFabMenu() {
+    const overlay = document.getElementById('fab-menu-overlay');
+    const menu = document.getElementById('fab-menu-container');
+    const fabIcon = document.querySelector('.center-fab .bi');
+    
+    if (menu.classList.contains('d-none')) {
+        // 메뉴 열기
+        menu.classList.remove('d-none');
+        menu.classList.add('d-flex');
+        overlay.classList.remove('d-none');
+        // 아이콘 회전 효과 (선택사항)
+        if(fabIcon) { fabIcon.classList.remove('bi-plus-lg'); fabIcon.classList.add('bi-x-lg'); }
+    } else {
+        // 메뉴 닫기
+        menu.classList.add('d-none');
+        menu.classList.remove('d-flex');
+        overlay.classList.add('d-none');
+        if(fabIcon) { fabIcon.classList.remove('bi-x-lg'); fabIcon.classList.add('bi-plus-lg'); }
+    }
+}
