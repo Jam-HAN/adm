@@ -429,7 +429,7 @@ function showStockRegisterModal(type, dataObj) {
         // 경고 문구 보임
         if (msgText) {
             msgText.style.display = 'block'; 
-            msgText.innerHTML = `<i class="bi bi-info-circle"></i>재고에 없는 단말기입니다.<br>거래처와 정보를 입력하여 입고 후 개통합니다.`;
+            msgText.innerHTML = `<i class="bi bi-info-circle"></i> 재고에 없는 단말기입니다.<br>거래처와 정보를 입력하여 입고 후 개통합니다.`;
             msgText.className = "alert alert-primary small fw-bold mb-3";
         }
 
