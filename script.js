@@ -94,7 +94,10 @@ function showSection(id) {
     document.querySelectorAll('.section-view').forEach(el => el.classList.remove('active-section', 'fade-in'));
     document.getElementById(id).classList.add('active-section', 'fade-in');
     
-    if(id === 'section-in') loadInitData();
+    if(id === 'section-in') {
+        loadInitData();
+        loadDropdownData();
+    }
     if(id === 'section-vendor') loadVendorsToList();
     if(id === 'section-stock') updateSearchUI();
     const input = document.querySelector(`#${id} input`);
