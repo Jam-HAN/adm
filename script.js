@@ -101,6 +101,7 @@ window.onload = function() {
         loadDropdownData();
         setupAutoLogout();
         loadDashboard();
+        initHistoryDates();
     }
 
     // 4. [로직] 엔터키 이벤트 연결 (거래처 등록 등)
