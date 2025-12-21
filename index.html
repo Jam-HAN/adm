@@ -24,6 +24,8 @@
         #vendor_list_ui .list-group-item { display: block; }
         #vendor_list_ui .small { display: block !important; color: #6c757d !important; font-size: 0.85em; margin-top: 4px; }
     </style>
+    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
 
@@ -37,7 +39,7 @@
     </div>
 
     <div id="main-view" style="display:none;">
-        <nav class="navbar navbar-expand-lg sticky-top px-3 bg-white shadow-sm">
+        <nav class="navbar navbar-expand-lg sticky-top px-3 bg-white shadow-sm d-none d-lg-block">
             <div class="container-fluid px-0">
                 <a class="navbar-brand fw-bold text-primary" onclick="showSection('section-dashboard')" style="cursor:pointer;"><i class="bi bi-grid-fill"></i> 대박통신</a>
                 <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"><span class="navbar-toggler-icon"></span></button>
@@ -581,5 +583,35 @@
     <script src="script.js"></script>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <nav class="mobile-bottom-nav d-lg-none">
+        <a href="#" class="nav-item active" onclick="showSection('section-dashboard'); activeNav(this)">
+            <i class="bi bi-speedometer2"></i>
+            <span>홈</span>
+        </a>
+        <a href="#" class="nav-item" onclick="showSection('section-in'); activeNav(this)">
+            <i class="bi bi-box-seam"></i>
+            <span>입고</span>
+        </a>
+        <a href="#" class="nav-item center-fab" onclick="showOpenSection('무선개통'); activeNav(this)">
+            <div class="fab-btn"><i class="bi bi-plus-lg"></i></div>
+        </a>
+        <a href="#" class="nav-item" onclick="showSection('section-stock'); activeNav(this)">
+            <i class="bi bi-search"></i>
+            <span>조회</span>
+        </a>
+        <a href="#" class="nav-item" onclick="showSection('section-vendor'); activeNav(this)">
+            <i class="bi bi-shop"></i>
+            <span>거래처</span>
+        </a>
+    </nav>
+
+    <script>
+        // 하단 탭 활성화 효과 (script.js에 넣어도 되지만 UI 전용이라 여기에 둠)
+        function activeNav(el) {
+            document.querySelectorAll('.mobile-bottom-nav .nav-item').forEach(i => i.classList.remove('active'));
+            el.classList.add('active');
+        }
+    </script>
 </body>
 </html>
