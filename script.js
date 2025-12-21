@@ -253,12 +253,12 @@ function loadDropdownData() {
 }
 
 function applyDropdownData(d) {
-    const fill = (id, list) => { const sel = document.getElementById(id); if(sel) { sel.innerHTML = '<option value="" selected>선택</option>' + list.map(i => `<option value="${i}">${i}</option>`).join(''); } };
+    const fill = (id, list) => { const sel = document.getElementById(id); if(sel) { sel.innerHTML = '<option value="" selected>선택하세요</option>' + list.map(i => `<option value="${i}">${i}</option>`).join(''); } };
     fill('f_act_type', d.actListMobile); fill('f_cont_type', d.contListMobile); fill('f_review', d.reviewList); fill('f_usim', d.usimList);
     fill('w_pre_act_type', d.actListWired); fill('w_pre_cont_type', d.contListWired); fill('w_review', d.reviewList);
     fill('u_pre_act_type', d.actListUsed); fill('u_pre_cont_type', d.contListUsed); fill('u_review', d.reviewList); fill('u_usim', d.usimList);
     if(d.wiredVendorList) { fill('w_pre_avalue', d.wiredVendorList); fill('u_pre_avalue', d.wiredVendorList); }
-    const vOpts = '<option value="" selected>선택</option>' + (d.visitList || []).map(i=>`<option value="${i}">${i}</option>`).join('') + '<option value="기타">기타 (직접입력)</option>';
+    const vOpts = '<option value="" selected>선택하세요</option>' + (d.visitList || []).map(i=>`<option value="${i}">${i}</option>`).join('') + '<option value="기타">기타 (직접입력)</option>';
     ['f_visit', 'w_visit', 'u_visit'].forEach(id => { if(document.getElementById(id)) document.getElementById(id).innerHTML = vOpts; });
     const pList = d.payMethodList || []; const cList = d.colMethodList || [];
     ['f_pay1_m','f_pay2_m', 'w_pay1_m','w_pay2_m', 'u_pay1_m','u_pay2_m'].forEach(id => fill(id, pList));
@@ -359,7 +359,7 @@ function showStockRegisterModal(type, dataObj) {
             areaSupplier.style.display = 'block'; 
             const modalSupSel = document.getElementById('reg_modal_supplier');
             if(modalSupSel) {
-                modalSupSel.innerHTML = '<option value="">선택</option>';
+                modalSupSel.innerHTML = '<option value="">선택하세요</option>';
                 if (globalVendorList.length > 0) globalVendorList.forEach(v => modalSupSel.innerHTML += `<option value="${v}">${v}</option>`);
                 else modalSupSel.innerHTML += `<option value="" disabled>로딩 중...</option>`;
                 modalSupSel.value = ""; 
@@ -369,7 +369,7 @@ function showStockRegisterModal(type, dataObj) {
         if (areaIphone) areaIphone.style.display = 'none';
         if (areaManual) areaManual.style.display = 'block';
         const manualStorage = document.getElementById('reg_manual_storage');
-        manualStorage.innerHTML = '<option value="">선택</option>';
+        manualStorage.innerHTML = '<option value="">선택하세요</option>';
         if (globalDropdownData && globalDropdownData.otherCapacityList) globalDropdownData.otherCapacityList.forEach(c => manualStorage.innerHTML += `<option value="${c}">${c}</option>`);
         document.getElementById('reg_manual_model').value = ""; manualStorage.value = ""; document.getElementById('reg_manual_color').value = "";
     } else {
@@ -381,17 +381,17 @@ function showStockRegisterModal(type, dataObj) {
             if (areaIphone) areaIphone.style.display = 'block';
             if (areaManual) areaManual.style.display = 'none';
             const modelSel = document.getElementById('reg_iphone_model');
-            modelSel.innerHTML = '<option value="">선택</option>';
+            modelSel.innerHTML = '<option value="">선택하세요</option>';
             Object.keys(globalIphoneData).forEach(m => modelSel.innerHTML += `<option value="${m}">${m}</option>`);
-            document.getElementById('reg_iphone_storage').innerHTML = '<option value="">선택</option>';
-            document.getElementById('reg_iphone_color').innerHTML = '<option value="">선택</option>';
+            document.getElementById('reg_iphone_storage').innerHTML = '<option value="">선택하세요</option>';
+            document.getElementById('reg_iphone_color').innerHTML = '<option value="">선택하세요</option>';
         } else {
             if (title) title.innerHTML = '<i class="bi bi-question-circle"></i> 미등록 단말기 입력';
             if (msgText) { msgText.style.display = 'block'; msgText.innerHTML = `<i class="bi bi-exclamation-triangle"></i> 등록되지 않은 단말기입니다.<br>정보를 입력하면 다음 입고부터는 자동 등록됩니다.`; msgText.className = "alert alert-warning small fw-bold mb-3"; }
             if (areaIphone) areaIphone.style.display = 'none';
             if (areaManual) areaManual.style.display = 'block';
             const manualStorage = document.getElementById('reg_manual_storage');
-            manualStorage.innerHTML = '<option value="">선택</option>';
+            manualStorage.innerHTML = '<option value="">선택하세요</option>';
             if (globalDropdownData && globalDropdownData.otherCapacityList) globalDropdownData.otherCapacityList.forEach(c => manualStorage.innerHTML += `<option value="${c}">${c}</option>`);
             document.getElementById('reg_manual_model').value = ""; manualStorage.value = ""; document.getElementById('reg_manual_color').value = "";
             setTimeout(() => { const el = document.getElementById('reg_manual_model'); if(el) el.focus(); }, 300);
@@ -404,7 +404,7 @@ function updateIphoneColors() {
     const model = document.getElementById('reg_iphone_model').value;
     const colorSel = document.getElementById('reg_iphone_color');
     const storageSel = document.getElementById('reg_iphone_storage');
-    colorSel.innerHTML = '<option value="">선택</option>'; storageSel.innerHTML = '<option value="">선택</option>';
+    colorSel.innerHTML = '<option value="">선택하세요</option>'; storageSel.innerHTML = '<option value="">선택하세요</option>';
     if (!model) return;
     const data = globalIphoneData[model];
     if (data) {
