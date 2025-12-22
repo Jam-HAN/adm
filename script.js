@@ -1243,23 +1243,28 @@ function openEditModal(item) {
     container.innerHTML += sectionCollect;
 
     // ==========================================
-    // 6. [하단 버튼] (UI 통일감 및 명칭 변경)
+    // 6. [하단 버튼] (안전하고 효율적인 3버튼 배치)
     // ==========================================
-    // 기존 모달 footer를 숨기고, Body 안에 버튼을 넣어서 디자인을 통일시킵니다.
-    // modal-footer 부분은 CSS로 숨기거나, 여기서 제어합니다.
-    
-    // 모달 하단 버튼 영역 재구성 (기존 footer는 안보이게 처리하거나 내용을 비움)
+    // 기존 footer 숨김 처리
     const footer = document.querySelector('#modal-edit-history .modal-footer');
-    if(footer) footer.style.display = 'none'; // 기존 footer 숨김
+    if(footer) footer.style.display = 'none';
 
     let buttonSection = `
-        <div class="mt-4 pt-3 border-top d-flex gap-2">
-            <button type="button" class="btn btn-outline-danger flex-grow-1 py-3 fw-bold shadow-sm" onclick="deleteHistoryItem()">
-                <i class="bi bi-trash3-fill"></i> 개통 취소
+        <div class="mt-4 pt-3 border-top d-flex justify-content-between align-items-center gap-2">
+            
+            <button type="button" class="btn btn-outline-danger py-2 px-3 fw-bold" onclick="deleteHistoryItem()">
+                <i class="bi bi-trash3"></i> 개통 취소
             </button>
-            <button type="button" class="btn btn-primary flex-grow-1 py-3 fw-bold shadow-sm" onclick="submitEditHistory()" style="flex-grow: 2;">
-                <i class="bi bi-check-lg"></i> 수정사항 저장
-            </button>
+
+            <div class="d-flex gap-2 flex-grow-1 justify-content-end">
+                <button type="button" class="btn btn-light border py-2 px-3 fw-bold text-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-lg"></i> 수정 취소
+                </button>
+                
+                <button type="button" class="btn btn-primary py-2 px-4 fw-bold shadow-sm flex-grow-1" onclick="submitEditHistory()" style="max-width: 250px;">
+                    <i class="bi bi-check-lg"></i> 수정사항 저장
+                </button>
+            </div>
         </div>
     `;
     container.innerHTML += buttonSection;
