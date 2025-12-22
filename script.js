@@ -1077,48 +1077,124 @@ function searchAllHistory() {
 }
 
 // 3. 수정 모달 열기 (동적 폼 생성)
+// [디자인 개선] 개통 정보 수정 모달 (섹션 구분 및 UI 강화)
 function openEditModal(item) {
+    // 1. 숨겨진 식별자 값 세팅
     document.getElementById('edit_sheet_name').value = item.sheetName;
     document.getElementById('edit_row_index').value = item.rowIndex;
     document.getElementById('edit_branch_name').value = item.branch || item['지점'];
     
     const container = document.getElementById('edit_form_container');
     container.innerHTML = ''; // 초기화
-    
-    // 수정 가능한 필드 목록 정의 (여기에 없는 건 안 보여줌)
-    const editableFields = [
-        '고객명', '연락처', '생년월일', '요금제', '변경요금제', 
-        '개통처', '정책차수', '정책금액(액면)', '추가정책', '부가정책', 
-        '차감정책', '프리할인', '유심비', '대납1', '대납2', 
-        '현금지급', '페이백', '요금수납', '메모', '특이사항', '리뷰작성'
-    ];
-    
-    // 보여주기만 할 필드 (수정 불가)
-    const readonlyFields = ['접수일', '지점', '담당자', '통신사', '모델명', '일련번호', '개통유형', '약정유형'];
 
-    // 1. 읽기 전용 정보 표시 (상단)
-    let infoHtml = '<div class="col-12 bg-light p-3 rounded mb-2 border">';
-    readonlyFields.forEach(key => {
-        if(item[key]) {
-            infoHtml += `<span class="me-3 small text-muted"><b>${key}:</b> ${item[key]}</span>`;
-        }
-    });
-    infoHtml += '<div class="mt-2 text-danger small fw-bold">* 모델명/일련번호 수정은 삭제 후 재개통 하세요.</div></div>';
-    container.innerHTML += infoHtml;
+    // --- 헬퍼 함수: 입력 필드 생성기 (반복 코드 줄이기) ---
+    const makeInput = (label, key, width = 'col-6', type = 'text') => {
+        const val = item[key] || '';
+        return `
+            <div class="${width}">
+                <label class="form-label-sm text-secondary fw-bold small">${label}</label>
+                <input type="${type}" class="form-control form-control-sm edit-input" 
+                       data-key="${key}" value="${val}">
+            </div>`;
+    };
 
-    // 2. 수정 가능 필드 생성 (Input)
-    editableFields.forEach(key => {
-        // 데이터에 해당 키가 있는 경우만 생성
-        if (item.hasOwnProperty(key)) {
-            container.innerHTML += `
-                <div class="col-6 col-md-4">
-                    <label class="form-label-sm text-secondary">${key}</label>
-                    <input type="text" class="form-control form-control-sm edit-input" data-key="${key}" value="${item[key]}">
+    const makeSelect = (label, key, options, width = 'col-6') => {
+        const val = item[key] || '';
+        let optsHtml = options.map(opt => 
+            `<option value="${opt}" ${val === opt ? 'selected' : ''}>${opt}</option>`
+        ).join('');
+        
+        return `
+            <div class="${width}">
+                <label class="form-label-sm text-secondary fw-bold small">${label}</label>
+                <select class="form-select form-select-sm edit-input fw-bold text-primary" data-key="${key}">
+                    ${optsHtml}
+                </select>
+            </div>`;
+    };
+
+    // ==========================================
+    // 1. [상단] 읽기 전용 요약 정보 (카드 스타일)
+    // ==========================================
+    let headerHtml = `
+        <div class="col-12 mb-3">
+            <div class="card bg-light border-0 shadow-sm">
+                <div class="card-body p-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2 border-bottom pb-2">
+                        <span class="badge bg-primary">${item.sheetName}</span>
+                        <span class="fw-bold text-dark">${item['개통일']}</span>
+                    </div>
+                    <div class="row g-2 small text-muted">
+                        <div class="col-6"><b>지점:</b> ${item['지점'] || '-'}</div>
+                        <div class="col-6"><b>담당:</b> ${item['담당자'] || '-'}</div>
+                        <div class="col-6"><b>통신사:</b> ${item['통신사'] || '-'}</div>
+                        <div class="col-6"><b>유형:</b> ${item['개통유형'] || '-'}</div>
+                        <div class="col-12 text-truncate"><b>모델:</b> ${item['모델명']} (${item['일련번호']})</div>
+                    </div>
+                    <div class="mt-2 text-danger x-small fw-bold text-end">
+                        * 모델명/일련번호 수정은 삭제 후 재입력 필요
+                    </div>
                 </div>
-            `;
-        }
-    });
+            </div>
+        </div>
+    `;
+    container.innerHTML += headerHtml;
+
+    // ==========================================
+    // 2. [입력] 탭별/섹션별 그룹화
+    // ==========================================
     
+    // --- A. 고객 및 요금제 정보 ---
+    let sectionA = `
+        <div class="col-12 mb-2"><h6 class="text-primary fw-bold border-start border-4 border-primary ps-2">👤 고객 및 요금 정보</h6></div>
+        ${makeInput('고객명', '고객명', 'col-4')}
+        ${makeInput('연락처', '연락처', 'col-4')}
+        ${makeInput('생년월일', '생년월일', 'col-4')}
+        ${makeInput('요금제', '요금제', 'col-6')}
+        ${makeInput('변경요금제', '변경요금제', 'col-6')}
+        ${makeInput('제휴카드', '제휴카드', 'col-12')} <div class="col-12 my-3 border-bottom"></div>
+    `;
+    container.innerHTML += sectionA;
+
+    // --- B. 정책 및 정산 (가장 중요) ---
+    let sectionB = `
+        <div class="col-12 mb-2"><h6 class="text-success fw-bold border-start border-4 border-success ps-2">💰 정책 및 정산</h6></div>
+        ${makeInput('개통처', '개통처', 'col-6')}
+        ${makeInput('정책차수', '정책차수', 'col-6')}
+        
+        ${makeInput('정책금액(액면)', '정책금액(액면)', 'col-4')}
+        ${makeInput('추가정책', '추가정책', 'col-4')}
+        ${makeInput('부가정책', '부가정책', 'col-4')}
+        
+        ${makeInput('차감정책', '차감정책', 'col-4', 'number')}
+        ${makeInput('프리할인', '프리할인', 'col-4', 'number')}
+        ${makeInput('유심비', '유심비', 'col-4', 'number')}
+        <div class="col-12 my-3 border-bottom"></div>
+    `;
+    container.innerHTML += sectionB;
+
+    // --- C. 수납 및 대납 ---
+    let sectionC = `
+        <div class="col-12 mb-2"><h6 class="text-warning text-dark fw-bold border-start border-4 border-warning ps-2">💳 수납 및 지원</h6></div>
+        ${makeInput('대납1', '대납1', 'col-6', 'number')}
+        ${makeInput('대납2', '대납2', 'col-6', 'number')}
+        ${makeInput('현금지급', '현금지급', 'col-4', 'number')}
+        ${makeInput('페이백', '페이백', 'col-4', 'number')}
+        ${makeInput('요금수납', '요금수납', 'col-4', 'number')}
+        <div class="col-12 my-3 border-bottom"></div>
+    `;
+    container.innerHTML += sectionC;
+
+    // --- D. 기타 메모 ---
+    let sectionD = `
+        <div class="col-12 mb-2"><h6 class="text-secondary fw-bold border-start border-4 border-secondary ps-2">📝 기타 메모</h6></div>
+        ${makeSelect('리뷰작성', '리뷰작성', ['작성', '미작성'], 'col-12')}
+        ${makeInput('메모 (정책관련)', '메모', 'col-12')}
+        ${makeInput('특이사항', '특이사항', 'col-12')}
+    `;
+    container.innerHTML += sectionD;
+
+    // 모달 띄우기
     const modal = new bootstrap.Modal(document.getElementById('modal-edit-history'));
     modal.show();
 }
