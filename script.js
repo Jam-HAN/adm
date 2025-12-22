@@ -1077,9 +1077,9 @@ function searchAllHistory() {
 }
 
 // 3. 수정 모달 열기 (동적 폼 생성)
-// [디자인 개선] 개통 정보 수정 모달 (섹션 구분 및 UI 강화)
+// [디자인 개선] 개통 정보 수정 모달 (무선 개통 폼 UI 완벽 적용)
 function openEditModal(item) {
-    // 1. 숨겨진 식별자 값 세팅
+    // 1. 식별자 값 세팅
     document.getElementById('edit_sheet_name').value = item.sheetName;
     document.getElementById('edit_row_index').value = item.rowIndex;
     document.getElementById('edit_branch_name').value = item.branch || item['지점'];
@@ -1087,14 +1087,17 @@ function openEditModal(item) {
     const container = document.getElementById('edit_form_container');
     container.innerHTML = ''; // 초기화
 
-    // --- 헬퍼 함수: 입력 필드 생성기 (반복 코드 줄이기) ---
-    const makeInput = (label, key, width = 'col-6', type = 'text') => {
+    // --- 헬퍼 함수: 입력 필드 생성기 (스타일 적용) ---
+    // isDanger가 true면 라벨과 테두리에 빨간색 강조 (차감, 대납 등)
+    const makeInput = (label, key, width = 'col-6', type = 'text', isDanger = false) => {
         const val = item[key] || '';
+        const labelClass = isDanger ? "form-label-sm text-danger-custom" : "form-label-sm";
+        const inputClass = isDanger ? "form-control form-control-sm edit-input border-danger-custom" : "form-control form-control-sm edit-input";
+        
         return `
             <div class="${width}">
-                <label class="form-label-sm text-secondary fw-bold small">${label}</label>
-                <input type="${type}" class="form-control form-control-sm edit-input" 
-                       data-key="${key}" value="${val}">
+                <label class="${labelClass}">${label}</label>
+                <input type="${type}" class="${inputClass}" data-key="${key}" value="${val}">
             </div>`;
     };
 
@@ -1106,7 +1109,7 @@ function openEditModal(item) {
         
         return `
             <div class="${width}">
-                <label class="form-label-sm text-secondary fw-bold small">${label}</label>
+                <label class="form-label-sm">${label}</label>
                 <select class="form-select form-select-sm edit-input fw-bold text-primary" data-key="${key}">
                     ${optsHtml}
                 </select>
@@ -1114,10 +1117,10 @@ function openEditModal(item) {
     };
 
     // ==========================================
-    // 1. [상단] 읽기 전용 요약 정보 (카드 스타일)
+    // 1. [상단] 요약 정보 (카드 스타일 유지)
     // ==========================================
     let headerHtml = `
-        <div class="col-12 mb-3">
+        <div class="col-12 mb-2">
             <div class="card bg-light border-0 shadow-sm">
                 <div class="card-body p-3">
                     <div class="d-flex justify-content-between align-items-center mb-2 border-bottom pb-2">
@@ -1127,12 +1130,7 @@ function openEditModal(item) {
                     <div class="row g-2 small text-muted">
                         <div class="col-6"><b>지점:</b> ${item['지점'] || '-'}</div>
                         <div class="col-6"><b>담당:</b> ${item['담당자'] || '-'}</div>
-                        <div class="col-6"><b>통신사:</b> ${item['통신사'] || '-'}</div>
-                        <div class="col-6"><b>유형:</b> ${item['개통유형'] || '-'}</div>
                         <div class="col-12 text-truncate"><b>모델:</b> ${item['모델명']} (${item['일련번호']})</div>
-                    </div>
-                    <div class="mt-2 text-danger x-small fw-bold text-end">
-                        * 모델명/일련번호 수정은 삭제 후 재입력 필요
                     </div>
                 </div>
             </div>
@@ -1141,58 +1139,104 @@ function openEditModal(item) {
     container.innerHTML += headerHtml;
 
     // ==========================================
-    // 2. [입력] 탭별/섹션별 그룹화
+    // 2. [기본 정보] (무선개통 step_2 구조 참조)
     // ==========================================
-    
-    // --- A. 고객 및 요금제 정보 ---
-    let sectionA = `
-        <div class="col-12 mb-2"><h6 class="text-primary fw-bold border-start border-4 border-primary ps-2">👤 고객 및 요금 정보</h6></div>
-        ${makeInput('고객명', '고객명', 'col-4')}
-        ${makeInput('연락처', '연락처', 'col-4')}
-        ${makeInput('생년월일', '생년월일', 'col-4')}
-        ${makeInput('요금제', '요금제', 'col-6')}
-        ${makeInput('변경요금제', '변경요금제', 'col-6')}
-        ${makeInput('제휴카드', '제휴카드', 'col-12')} <div class="col-12 my-3 border-bottom"></div>
+    let sectionBasic = `
+        <div class="divider"></div>
+        <div class="section-header"><i class="bi bi-person-badge"></i> 기본 정보</div>
+        <div class="row g-2">
+            ${makeInput('고객명', '고객명', 'col-4')}
+            ${makeInput('생년월일', '생년월일', 'col-4')}
+            ${makeInput('연락처', '연락처', 'col-4')}
+            
+            ${makeInput('통신사(유형)', '통신사', 'col-4')}
+            ${makeInput('개통유형', '개통유형', 'col-4')}
+            ${makeInput('약정유형', '약정유형', 'col-4')}
+            
+            ${makeInput('요금제', '요금제', 'col-6')}
+            ${makeInput('변경요금제', '변경요금제', 'col-6')}
+            
+            ${makeInput('부가서비스', '부가서비스', 'col-12')}
+            ${makeInput('제휴카드', '제휴카드', 'col-8')}
+            ${makeSelect('리뷰', '리뷰작성', ['작성', '미작성'], 'col-4')}
+        </div>
     `;
-    container.innerHTML += sectionA;
+    container.innerHTML += sectionBasic;
 
-    // --- B. 정책 및 정산 (가장 중요) ---
-    let sectionB = `
-        <div class="col-12 mb-2"><h6 class="text-success fw-bold border-start border-4 border-success ps-2">💰 정책 및 정산</h6></div>
-        ${makeInput('개통처', '개통처', 'col-6')}
-        ${makeInput('정책차수', '정책차수', 'col-6')}
-        
-        ${makeInput('정책금액(액면)', '정책금액(액면)', 'col-4')}
-        ${makeInput('추가정책', '추가정책', 'col-4')}
-        ${makeInput('부가정책', '부가정책', 'col-4')}
-        
-        ${makeInput('차감정책', '차감정책', 'col-4', 'number')}
-        ${makeInput('프리할인', '프리할인', 'col-4', 'number')}
-        ${makeInput('유심비', '유심비', 'col-4', 'number')}
-        <div class="col-12 my-3 border-bottom"></div>
+    // ==========================================
+    // 3. [정책 및 정산] (아이콘, 배치, 빨간색 강조 동일하게)
+    // ==========================================
+    let sectionPolicy = `
+        <div class="divider"></div>
+        <div class="section-header"><i class="bi bi-calculator"></i> 정책 및 정산</div>
+        <div class="row g-2">
+            ${makeInput('개통처', '개통처', 'col-6')}
+            ${makeInput('정책차수', '정책차수', 'col-6')}
+            
+            ${makeInput('액면/히든', '정책금액(액면)', 'col-6', 'number')}
+            ${makeInput('메모', '메모(액면)', 'col-6')}
+            
+            ${makeInput('추가정책', '추가정책', 'col-6', 'number')}
+            ${makeInput('메모', '메모(추가)', 'col-6')}
+            
+            ${makeInput('부가정책', '부가정책', 'col-6', 'number')}
+            ${makeInput('메모', '메모(부가)', 'col-6')}
+            
+            ${makeInput('차감정책', '차감정책', 'col-6', 'number', true)} ${makeInput('메모', '메모(차감)', 'col-6')}
+            
+            ${makeInput('프리할인', '프리할인', 'col-6', 'number', true)} ${makeInput('유심비', '유심비', 'col-6')}
+        </div>
     `;
-    container.innerHTML += sectionB;
+    container.innerHTML += sectionPolicy;
 
-    // --- C. 수납 및 대납 ---
-    let sectionC = `
-        <div class="col-12 mb-2"><h6 class="text-warning text-dark fw-bold border-start border-4 border-warning ps-2">💳 수납 및 지원</h6></div>
-        ${makeInput('대납1', '대납1', 'col-6', 'number')}
-        ${makeInput('대납2', '대납2', 'col-6', 'number')}
-        ${makeInput('현금지급', '현금지급', 'col-4', 'number')}
-        ${makeInput('페이백', '페이백', 'col-4', 'number')}
-        ${makeInput('요금수납', '요금수납', 'col-4', 'number')}
-        <div class="col-12 my-3 border-bottom"></div>
+    // ==========================================
+    // 4. [대납 및 지원] (아이콘, 배치 동일)
+    // ==========================================
+    let sectionSupport = `
+        <div class="divider"></div>
+        <div class="section-header"><i class="bi bi-credit-card"></i> 대납 및 지원</div>
+        <div class="row g-2">
+            ${makeInput('대납1', '대납1', 'col-4', 'number', true)}
+            ${makeInput('방법', '대납1방법', 'col-4')}
+            ${makeInput('처리일', '대납1요청일', 'col-4')}
+            
+            ${makeInput('대납2', '대납2', 'col-4', 'number', true)}
+            ${makeInput('방법', '대납2방법', 'col-4')}
+            ${makeInput('처리일', '대납2요청일', 'col-4')}
+            
+            ${makeInput('현금지급', '현금지급', 'col-6', 'number', true)}
+            ${makeInput('페이백', '페이백', 'col-6', 'number', true)}
+            
+            ${makeInput('은행명', '은행명', 'col-4')}
+            ${makeInput('계좌번호', '계좌번호', 'col-4')}
+            ${makeInput('예금주', '예금주', 'col-4')}
+        </div>
     `;
-    container.innerHTML += sectionC;
+    container.innerHTML += sectionSupport;
 
-    // --- D. 기타 메모 ---
-    let sectionD = `
-        <div class="col-12 mb-2"><h6 class="text-secondary fw-bold border-start border-4 border-secondary ps-2">📝 기타 메모</h6></div>
-        ${makeSelect('리뷰작성', '리뷰작성', ['작성', '미작성'], 'col-12')}
-        ${makeInput('메모 (정책관련)', '메모', 'col-12')}
-        ${makeInput('특이사항', '특이사항', 'col-12')}
+    // ==========================================
+    // 5. [수납 상세] (아이콘, 배치 동일)
+    // ==========================================
+    let sectionCollect = `
+        <div class="divider"></div>
+        <div class="section-header"><i class="bi bi-wallet2"></i> 수납 상세</div>
+        <div class="row g-2">
+            ${makeInput('단말기수납1', '단말기수납1', 'col-6', 'number')}
+            ${makeInput('방법', '단말기수납1방법', 'col-6')}
+
+            ${makeInput('단말기수납2', '단말기수납2', 'col-6', 'number')}
+            ${makeInput('방법', '단말기수납2방법', 'col-6')}
+            
+            ${makeInput('요금수납', '요금수납', 'col-6', 'number')}
+            ${makeInput('방법', '요금수납방법', 'col-6')}
+            
+            ${makeInput('중고폰/기타', '중고폰반납', 'col-6', 'number')}
+            ${makeInput('메모', '중고폰메모', 'col-6')}
+            
+            ${makeInput('기타 특이사항', '특이사항', 'col-12')}
+        </div>
     `;
-    container.innerHTML += sectionD;
+    container.innerHTML += sectionCollect;
 
     // 모달 띄우기
     const modal = new bootstrap.Modal(document.getElementById('modal-edit-history'));
