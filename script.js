@@ -1077,7 +1077,7 @@ function searchAllHistory() {
 }
 
 // 3. 수정 모달 열기 (동적 폼 생성)
-// [디자인 개선] 개통 정보 수정 모달 (무선 개통 폼 UI 완벽 적용)
+// [디자인 개선] 개통 정보 수정 모달 (요청하신 순서 및 UI 반영 완료)
 function openEditModal(item) {
     // 1. 식별자 값 세팅
     document.getElementById('edit_sheet_name').value = item.sheetName;
@@ -1087,37 +1087,24 @@ function openEditModal(item) {
     const container = document.getElementById('edit_form_container');
     container.innerHTML = ''; // 초기화
 
-    // --- 헬퍼 함수: 입력 필드 생성기 (스타일 적용) ---
-    // isDanger가 true면 라벨과 테두리에 빨간색 강조 (차감, 대납 등)
+    // --- 헬퍼 함수 ---
     const makeInput = (label, key, width = 'col-6', type = 'text', isDanger = false) => {
         const val = item[key] || '';
         const labelClass = isDanger ? "form-label-sm text-danger-custom" : "form-label-sm";
         const inputClass = isDanger ? "form-control form-control-sm edit-input border-danger-custom" : "form-control form-control-sm edit-input";
-        
-        return `
-            <div class="${width}">
-                <label class="${labelClass}">${label}</label>
-                <input type="${type}" class="${inputClass}" data-key="${key}" value="${val}">
-            </div>`;
+        return `<div class="${width}"><label class="${labelClass}">${label}</label><input type="${type}" class="${inputClass}" data-key="${key}" value="${val}"></div>`;
     };
 
     const makeSelect = (label, key, options, width = 'col-6') => {
         const val = item[key] || '';
-        let optsHtml = options.map(opt => 
-            `<option value="${opt}" ${val === opt ? 'selected' : ''}>${opt}</option>`
-        ).join('');
-        
-        return `
-            <div class="${width}">
-                <label class="form-label-sm">${label}</label>
-                <select class="form-select form-select-sm edit-input fw-bold text-primary" data-key="${key}">
-                    ${optsHtml}
-                </select>
-            </div>`;
+        // 옵션이 없을 경우를 대비한 방어 코드
+        const safeOptions = options || [];
+        let optsHtml = safeOptions.map(opt => `<option value="${opt}" ${val === opt ? 'selected' : ''}>${opt}</option>`).join('');
+        return `<div class="${width}"><label class="form-label-sm">${label}</label><select class="form-select form-select-sm edit-input fw-bold text-primary" data-key="${key}"><option value="">선택</option>${optsHtml}</select></div>`;
     };
 
     // ==========================================
-    // 1. [상단] 요약 정보 (카드 스타일 유지)
+    // 1. [상단] 요약 정보 ('통신사(유형)' 삭제 / '담당매니저'로 변경)
     // ==========================================
     let headerHtml = `
         <div class="col-12 mb-2">
@@ -1129,8 +1116,12 @@ function openEditModal(item) {
                     </div>
                     <div class="row g-2 small text-muted">
                         <div class="col-6"><b>지점:</b> ${item['지점'] || '-'}</div>
-                        <div class="col-6"><b>담당:</b> ${item['담당자'] || '-'}</div>
-                        <div class="col-12 text-truncate"><b>모델:</b> ${item['모델명']} (${item['일련번호']})</div>
+                        <div class="col-6"><b>담당매니저:</b> ${item['담당자'] || '-'}</div>
+                        
+                        <div class="col-12">
+                            <b>모델:</b> <span class="text-dark fw-bold">${item['모델명']}</span>
+                            <span class="text-secondary ms-1">(${item['일련번호']})</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1139,33 +1130,44 @@ function openEditModal(item) {
     container.innerHTML += headerHtml;
 
     // ==========================================
-    // 2. [기본 정보] (무선개통 step_2 구조 참조)
+    // 2. [기본 정보] (순서 재배치 완료)
     // ==========================================
+    
+    // 방문경로 옵션 가져오기 (전역변수 활용)
+    const visitOpts = (globalDropdownData && globalDropdownData.visitList) ? globalDropdownData.visitList : ['내방', '지인', '당근', '기타'];
+
     let sectionBasic = `
         <div class="divider"></div>
         <div class="section-header"><i class="bi bi-person-badge"></i> 기본 정보</div>
         <div class="row g-2">
+            ${makeInput('개통유형', '개통유형', 'col-4')}
+            ${makeInput('약정유형', '약정유형', 'col-4')}
+            ${makeSelect('방문경로', '방문경로', visitOpts, 'col-4')}
+
             ${makeInput('고객명', '고객명', 'col-4')}
             ${makeInput('생년월일', '생년월일', 'col-4')}
             ${makeInput('연락처', '연락처', 'col-4')}
-            
-            ${makeInput('통신사(유형)', '통신사', 'col-4')}
-            ${makeInput('개통유형', '개통유형', 'col-4')}
-            ${makeInput('약정유형', '약정유형', 'col-4')}
-            
-            ${makeInput('요금제', '요금제', 'col-6')}
-            ${makeInput('변경요금제', '변경요금제', 'col-6')}
-            
-            ${makeInput('부가서비스', '부가서비스', 'col-12')}
-            ${makeInput('제휴카드', '제휴카드', 'col-8')}
-            ${makeSelect('리뷰', '리뷰작성', ['작성', '미작성'], 'col-4')}
+
+            ${makeInput('요금제', '요금제', 'col-4')}
+            ${makeInput('변경요금제', '변경요금제', 'col-4')}
+            ${makeInput('요금제변경일', '요금제변경일', 'col-4', 'date')}
+
+            ${makeInput('부가서비스', '부가서비스', 'col-8')}
+            ${makeInput('부가서비스해지일', '부가서비스해지일', 'col-4', 'date')}
+
+            ${makeInput('제휴카드', '제휴카드', 'col-6')}
+            ${makeSelect('리뷰작성', '리뷰작성', ['작성', '미작성'], 'col-6')}
         </div>
     `;
     container.innerHTML += sectionBasic;
 
     // ==========================================
-    // 3. [정책 및 정산] (아이콘, 배치, 빨간색 강조 동일하게)
+    // 3. [정책 및 정산] (유심 -> 드롭다운 변경)
     // ==========================================
+    
+    // 유심 리스트 가져오기
+    const usimOpts = (globalDropdownData && globalDropdownData.usimList) ? globalDropdownData.usimList : ['선납', '후납', '재사용', '무료'];
+
     let sectionPolicy = `
         <div class="divider"></div>
         <div class="section-header"><i class="bi bi-calculator"></i> 정책 및 정산</div>
@@ -1182,15 +1184,17 @@ function openEditModal(item) {
             ${makeInput('부가정책', '부가정책', 'col-6', 'number')}
             ${makeInput('메모', '메모(부가)', 'col-6')}
             
-            ${makeInput('차감정책', '차감정책', 'col-6', 'number', true)} ${makeInput('메모', '메모(차감)', 'col-6')}
+            ${makeInput('차감정책', '차감정책', 'col-6', 'number', true)}
+            ${makeInput('메모', '메모(차감)', 'col-6')}
             
-            ${makeInput('프리할인', '프리할인', 'col-6', 'number', true)} ${makeInput('유심비', '유심비', 'col-6')}
+            ${makeInput('프리할인', '프리할인', 'col-6', 'number', true)}
+            ${makeSelect('유심', '유심비', usimOpts, 'col-6')}
         </div>
     `;
     container.innerHTML += sectionPolicy;
 
     // ==========================================
-    // 4. [대납 및 지원] (아이콘, 배치 동일)
+    // 4. [대납 및 지원] (요청 순서 적용)
     // ==========================================
     let sectionSupport = `
         <div class="divider"></div>
@@ -1198,11 +1202,11 @@ function openEditModal(item) {
         <div class="row g-2">
             ${makeInput('대납1', '대납1', 'col-4', 'number', true)}
             ${makeInput('방법', '대납1방법', 'col-4')}
-            ${makeInput('처리일', '대납1요청일', 'col-4')}
+            ${makeInput('처리일', '대납1요청일', 'col-4', 'date')}
             
             ${makeInput('대납2', '대납2', 'col-4', 'number', true)}
             ${makeInput('방법', '대납2방법', 'col-4')}
-            ${makeInput('처리일', '대납2요청일', 'col-4')}
+            ${makeInput('처리일', '대납2요청일', 'col-4', 'date')}
             
             ${makeInput('현금지급', '현금지급', 'col-6', 'number', true)}
             ${makeInput('페이백', '페이백', 'col-6', 'number', true)}
@@ -1215,7 +1219,7 @@ function openEditModal(item) {
     container.innerHTML += sectionSupport;
 
     // ==========================================
-    // 5. [수납 상세] (아이콘, 배치 동일)
+    // 5. [수납 상세] (요청 순서 적용)
     // ==========================================
     let sectionCollect = `
         <div class="divider"></div>
@@ -1238,9 +1242,52 @@ function openEditModal(item) {
     `;
     container.innerHTML += sectionCollect;
 
+    // ==========================================
+    // 6. [하단 버튼] (UI 통일감 및 명칭 변경)
+    // ==========================================
+    // 기존 모달 footer를 숨기고, Body 안에 버튼을 넣어서 디자인을 통일시킵니다.
+    // modal-footer 부분은 CSS로 숨기거나, 여기서 제어합니다.
+    
+    // 모달 하단 버튼 영역 재구성 (기존 footer는 안보이게 처리하거나 내용을 비움)
+    const footer = document.querySelector('#modal-edit-history .modal-footer');
+    if(footer) footer.style.display = 'none'; // 기존 footer 숨김
+
+    let buttonSection = `
+        <div class="mt-4 pt-3 border-top d-flex gap-2">
+            <button type="button" class="btn btn-outline-danger flex-grow-1 py-3 fw-bold shadow-sm" onclick="deleteHistoryItem()">
+                <i class="bi bi-trash3-fill"></i> 개통 취소
+            </button>
+            <button type="button" class="btn btn-primary flex-grow-1 py-3 fw-bold shadow-sm" onclick="submitEditHistory()" style="flex-grow: 2;">
+                <i class="bi bi-check-lg"></i> 수정사항 저장
+            </button>
+        </div>
+    `;
+    container.innerHTML += buttonSection;
+
     // 모달 띄우기
     const modal = new bootstrap.Modal(document.getElementById('modal-edit-history'));
     modal.show();
+}
+
+// [추가 수정] 개통 취소(삭제) 확인 메시지 변경
+function deleteHistoryItem() {
+    const sheetName = document.getElementById('edit_sheet_name').value;
+    const rowIndex = document.getElementById('edit_row_index').value;
+    const branchName = document.getElementById('edit_branch_name').value;
+    
+    // 메시지 변경: '이 내역 삭제' -> '개통 취소'
+    if(!confirm("정말 [개통 취소] 처리 하시겠습니까?\n\n(주의: 재고는 자동으로 복구되지 않으므로 재고 조정이 필요할 수 있습니다.)")) return;
+    
+    fetch(GAS_URL, { 
+        method: "POST", 
+        body: JSON.stringify({ action: "delete_history", sheetName, rowIndex, branchName }) 
+    })
+    .then(r => r.json())
+    .then(d => {
+        alert(d.message);
+        bootstrap.Modal.getInstance(document.getElementById('modal-edit-history')).hide();
+        searchAllHistory(); // 목록 갱신
+    });
 }
 
 // 4. 수정사항 저장
