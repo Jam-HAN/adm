@@ -1006,11 +1006,18 @@ function toggleSearchMenu() {
 // 1. 날짜 기본값 세팅 (이번달 1일 ~ 오늘)
 function initHistoryDates() {
     const today = new Date();
+    // 이번 달 1일 생성
     const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
     
-    // 날짜 포맷팅 함수 (YYYY-MM-DD)
-    const fmt = d => d.toISOString().split('T')[0];
+    // [핵심 수정] UTC 변환 없이, 현재 PC 시간 그대로 'YYYY-MM-DD' 문자열 만들기
+    const fmt = d => {
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0'); // 월은 0부터 시작하므로 +1
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    };
     
+    // 시작일(1일)과 종료일(오늘) 입력
     if(document.getElementById('hist_start_date')) document.getElementById('hist_start_date').value = fmt(firstDay);
     if(document.getElementById('hist_end_date')) document.getElementById('hist_end_date').value = fmt(today);
 }
