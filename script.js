@@ -1015,7 +1015,7 @@ function initHistoryDates() {
     if(document.getElementById('hist_end_date')) document.getElementById('hist_end_date').value = fmt(today);
 }
 
-// [최종 수정] 통합 검색 결과 렌더링 (요청하신 항목 순서 반영)
+// [최종 수정] 통합 검색 결과 렌더링 (날짜 하단에 담당매니저 배치)
 function searchAllHistory() {
     const start = document.getElementById('hist_start_date').value;
     const end = document.getElementById('hist_end_date').value;
@@ -1041,13 +1041,14 @@ function searchAllHistory() {
                 // 뱃지 색상 설정
                 let badgeClass = 'bg-primary';
                 if(item.sheetName === '유선개통') badgeClass = 'bg-success';
-                else if(item.sheetName === '중고개통') badgeClass = 'bg-warning text-white'; // 흰글씨 적용
+                else if(item.sheetName === '중고개통') badgeClass = 'bg-warning text-white'; 
                 
                 // 데이터 없을 때 '-' 처리
                 const contact = item['연락처'] || '-';
-                const carrier = item['통신사'] || '-'; // 개통처
+                const carrier = item['개통처'] || item['통신사'] || '-'; 
                 const type = item['개통유형'] || '-';
                 const contract = item['약정유형'] || '-';
+                const manager = item['담당자'] || '미지정';
                 
                 const model = item['모델명'] || '-';
                 const serial = item['일련번호'] || '';
@@ -1058,12 +1059,19 @@ function searchAllHistory() {
                 // [카드 구성]
                 html += `
                 <div class="glass-card p-3 mb-3 w-100 d-block" onclick="openEditModal(${jsonItem})" style="cursor:pointer; transition: transform 0.2s;">
-                    <div class="d-flex w-100 justify-content-between align-items-center mb-2 border-bottom pb-2">
+                    
+                    <div class="d-flex w-100 justify-content-between align-items-start mb-2 border-bottom pb-2">
                         <div>
                             <span class="badge ${badgeClass} me-1">${item.sheetName}</span>
                             <span class="badge bg-white text-secondary border">${item['지점'] || '-'}</span>
                         </div>
-                        <small class="fw-bold text-dark">${item['개통일']}</small>
+                        
+                        <div class="d-flex flex-column align-items-end">
+                            <small class="fw-bold text-dark mb-1">${item['개통일']}</small>
+                            <span class="badge bg-white text-primary border rounded-pill px-2 shadow-sm">
+                                <i class="bi bi-person-circle me-1"></i>${manager}
+                            </span>
+                        </div>
                     </div>
                     
                     <div class="mb-2 text-truncate">
