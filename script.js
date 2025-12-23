@@ -1089,8 +1089,40 @@ function searchAllHistory() {
 }
 
 // 3. 수정 모달 열기 (동적 폼 생성)
-// [최종 수정] 개통 정보 수정 모달 (텍스트 잘림 해결, 뱃지 색상 적용)
+// [최종 수정] 개통 정보 수정 모달 (데이터 로딩 안전장치 추가)
 function openEditModal(item) {
+    // [안전장치] 드롭다운 데이터가 없으면 서버에서 불러온 뒤 다시 실행
+    if (!globalDropdownData || !globalDropdownData.visitList || globalDropdownData.visitList.length === 0) {
+        // 로딩 표시 (잠시 기다려달라는 알림)
+        Swal.fire({
+            title: '데이터 로딩 중...',
+            text: '필수 목록 데이터를 불러오고 있습니다. 잠시만 기다려주세요.',
+            allowOutsideClick: false,
+            didOpen: () => { Swal.showLoading(); }
+        });
+
+        // 데이터 강제 요청
+        fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "get_dropdown_data" }) })
+        .then(r => r.json())
+        .then(d => {
+            Swal.close(); // 로딩창 닫기
+            if(d.status === 'success') {
+                globalDropdownData = d; // 데이터 전역 변수에 저장
+                applyDropdownData(d);   // (선택사항) 다른 폼에도 적용
+                openEditModal(item);    // ★ 다시 모달 열기 실행 (재귀 호출)
+            } else {
+                alert("데이터 로드 실패: " + d.message);
+            }
+        })
+        .catch(e => {
+            Swal.close();
+            alert("서버 통신 오류. 새로고침 후 다시 시도해주세요.");
+        });
+        return; // 데이터 없을 땐 여기서 함수 종료 (비동기 처리 후 다시 실행됨)
+    }
+
+    // --- 여기부터는 데이터가 있을 때 정상 실행 ---
+
     // 1. 식별자 값 세팅
     document.getElementById('edit_sheet_name').value = item.sheetName;
     document.getElementById('edit_row_index').value = item.rowIndex;
@@ -1102,12 +1134,7 @@ function openEditModal(item) {
     // --- 헬퍼 함수 ---
     const makeInput = (label, key, width = 'col-6', type = 'text', isDanger = false, isReadOnly = false) => {
         let val = item[key] || '';
-        
-        // [수정 1] "2025-01-01T..." 형식의 진짜 날짜만 T 뒤를 자르도록 정규식 사용
-        // (기존에는 요금제 이름에 'T'가 들어가면 잘리는 버그가 있었음)
-        if (typeof val === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(val)) {
-            val = val.split('T')[0];
-        }
+        if (typeof val === 'string' && val.includes('T')) { val = val.split('T')[0]; }
 
         const labelClass = isDanger ? "form-label-sm text-danger-custom" : "form-label-sm";
         let inputClass = isDanger ? "form-control form-control-sm edit-input border-danger-custom" : "form-control form-control-sm edit-input";
@@ -1131,6 +1158,7 @@ function openEditModal(item) {
         
         let optsHtml = safeOptions.map(opt => `<option value="${opt}" ${val === opt ? 'selected' : ''}>${opt}</option>`).join('');
         
+        // 기존값이 목록에 없을 경우 추가 표시
         if(val && !safeOptions.includes(val)) {
             optsHtml += `<option value="${val}" selected>${val} (기존값)</option>`;
         }
@@ -1138,7 +1166,7 @@ function openEditModal(item) {
         return `<div class="${width}"><label class="form-label-sm">${label}</label><select class="form-select form-select-sm edit-input" data-key="${key}"><option value="">선택</option>${optsHtml}</select></div>`;
     };
 
-    // 설정 데이터 로드
+    // [설정] 데이터 로드 (이제 안전함)
     const dd = globalDropdownData || {}; 
     const visitList = dd.visitList || [];
     const usimList = dd.usimList || [];
@@ -1146,26 +1174,24 @@ function openEditModal(item) {
     const payMethodList = dd.payMethodList || [];
     const colMethodList = dd.colMethodList || [];
 
-    // 개통 유형별 목록 분기
     let actList = [], contList = [];
-    // [수정 2] 뱃지 색상 결정 로직 추가
-    let badgeClass = 'bg-primary'; // 기본: 무선 (파랑)
+    let badgeClass = 'bg-primary';
 
     if (item.sheetName === '유선개통') {
         actList = dd.actListWired || [];
         contList = dd.contListWired || [];
-        badgeClass = 'bg-success'; // 유선: 초록
+        badgeClass = 'bg-success';
     } else if (item.sheetName === '중고개통') {
         actList = dd.actListUsed || [];
         contList = dd.contListUsed || [];
-        badgeClass = 'bg-warning text-dark'; // 중고: 노랑
+        badgeClass = 'bg-warning text-dark';
     } else {
         actList = dd.actListMobile || [];
         contList = dd.contListMobile || [];
     }
 
     // ==========================================
-    // 1. [상단] 요약 정보 (뱃지 색상 적용됨)
+    // 1. [상단] 요약 정보
     // ==========================================
     let headerHtml = `
         <div class="col-12 mb-2">
