@@ -1022,17 +1022,17 @@ function initHistoryDates() {
     if(document.getElementById('hist_end_date')) document.getElementById('hist_end_date').value = fmt(today);
 }
 
-// [수정] 통합 검색 실행 (지점 필터 추가)
+// [디자인 개선] 통합 검색 결과 렌더링 (Glass Card 스타일 적용)
 function searchAllHistory() {
     const start = document.getElementById('hist_start_date').value;
     const end = document.getElementById('hist_end_date').value;
     const keyword = document.getElementById('hist_all_keyword').value;
-    const branch = document.getElementById('hist_branch_filter').value; // [추가] 지점 값 읽기
+    const branch = document.getElementById('hist_branch_filter').value;
     const resArea = document.getElementById('hist_all_result');
     
+    // 로딩 표시
     resArea.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary"></div><div class="mt-2 small text-muted">데이터 조회 중...</div></div>';
     
-    // 서버로 branch 정보도 함께 전송
     fetch(GAS_URL, { 
         method: "POST", 
         body: JSON.stringify({ action: "get_all_history", start, end, keyword, branch }) 
@@ -1042,28 +1042,39 @@ function searchAllHistory() {
         if (d.status === 'success' && d.data.length > 0) {
             let html = '';
             d.data.forEach(item => {
+                // 따옴표 처리 (HTML 속성에 넣기 위해)
                 const jsonItem = JSON.stringify(item).replace(/"/g, '&quot;');
                 
-                let badgeClass = 'bg-secondary';
-                if(item.sheetName === '무선개통') badgeClass = 'bg-primary';
-                else if(item.sheetName === '유선개통') badgeClass = 'bg-success';
+                // 뱃지 색상 일관성 유지 (목록과 모달 통일)
+                let badgeClass = 'bg-primary';
+                if(item.sheetName === '유선개통') badgeClass = 'bg-success';
                 else if(item.sheetName === '중고개통') badgeClass = 'bg-warning text-dark';
                 
-                // 날짜와 지점 표시 강화
+                // [Glass Card 디자인] 카드 클릭 시 openEditModal 실행
                 html += `
-                <div class="list-group-item list-group-item-action py-3" onclick="openEditModal(${jsonItem})">
-                    <div class="d-flex w-100 justify-content-between align-items-center mb-1">
+                <div class="glass-card p-3 mb-3" onclick="openEditModal(${jsonItem})" style="cursor:pointer; transition: transform 0.2s;">
+                    <div class="d-flex w-100 justify-content-between align-items-center mb-2 border-bottom pb-2">
                         <div>
                             <span class="badge ${badgeClass} me-1">${item.sheetName}</span>
-                            <span class="badge bg-light text-dark border">${item['지점'] || '-'}</span>
+                            <span class="badge bg-white text-secondary border">${item['지점'] || '-'}</span>
                         </div>
-                        <small class="text-muted">${item['접수일'] || item['개통일']}</small>
+                        <small class="fw-bold text-dark">${item['개통일']}</small>
                     </div>
-                    <h6 class="mb-1 fw-bold">${item['고객명']} <span class="fw-normal text-muted">(${item['통신사'] || item['개통유형'] || '-'})</span></h6>
-                    <p class="mb-1 small text-secondary">
-                        ${item['모델명'] || '상품'} / ${item['요금제'] || '-'}
-                    </p>
-                    <small class="text-muted"><i class="bi bi-person"></i> 담당: ${item['담당자']}</small>
+                    
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <h6 class="mb-0 fw-bold text-primary">
+                            ${item['고객명']} <span class="text-dark small fw-normal">(${item['통신사'] || item['개통유형'] || '-'})</span>
+                        </h6>
+                        <span class="badge bg-light text-dark border rounded-pill px-2">
+                            ${item['담당자'] || '담당미정'}
+                        </span>
+                    </div>
+
+                    <div class="text-muted small text-truncate mt-1">
+                        <i class="bi bi-phone"></i> ${item['모델명'] || '상품'} 
+                        <span class="mx-1">|</span> 
+                        ${item['요금제'] || '-'}
+                    </div>
                 </div>`;
             });
             resArea.innerHTML = html;
@@ -1072,6 +1083,7 @@ function searchAllHistory() {
         }
     })
     .catch(err => {
+        console.error(err);
         resArea.innerHTML = '<div class="text-center py-5 text-danger">통신 오류가 발생했습니다.</div>';
     });
 }
