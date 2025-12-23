@@ -276,7 +276,7 @@ function renderDashboard(data) {
             if (index === 0) rankBadge = `🥇`; else if (index === 1) rankBadge = `🥈`; else if (index === 2) rankBadge = `🥉`;
             
             const isMe = (typeof currentUser !== 'undefined' && u.name === currentUser) ? "bg-primary bg-opacity-10 border-start border-4 border-primary" : "";
-            const marginStr = Number(u.margin).toLocaleString(); // 쉼표 포맷팅
+            const marginStr = Math.floor(Number(u.margin)).toLocaleString(); // 쉼표 포맷팅
 
             html += `
                 <tr class="${isMe}">
