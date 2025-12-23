@@ -1077,7 +1077,7 @@ function searchAllHistory() {
 }
 
 // 3. 수정 모달 열기 (동적 폼 생성)
-// [디자인 개선] 개통 정보 수정 모달 (날짜 필드 읽기 전용 텍스트 처리)
+// [최종 수정] 개통 정보 수정 모달 (Ref 시트 데이터 완벽 연동)
 function openEditModal(item) {
     // 1. 식별자 값 세팅
     document.getElementById('edit_sheet_name').value = item.sheetName;
@@ -1088,18 +1088,18 @@ function openEditModal(item) {
     container.innerHTML = ''; // 초기화
 
     // --- 헬퍼 함수 ---
-    // [수정] isReadOnly 매개변수 추가 (기본값 false)
     const makeInput = (label, key, width = 'col-6', type = 'text', isDanger = false, isReadOnly = false) => {
-        const val = item[key] || '';
+        let val = item[key] || '';
+        // 날짜 형식(ISO) 처리
+        if (typeof val === 'string' && val.includes('T')) { val = val.split('T')[0]; }
+
         const labelClass = isDanger ? "form-label-sm text-danger-custom" : "form-label-sm";
-        
-        // 읽기 전용일 때 스타일: 배경색 회색(#e9ecef), 클릭 방지
         let inputClass = isDanger ? "form-control form-control-sm edit-input border-danger-custom" : "form-control form-control-sm edit-input";
         let readOnlyAttr = "";
         
         if (isReadOnly) {
-            inputClass += " bg-light text-muted"; // 회색 배경, 흐린 글씨
-            readOnlyAttr = "readonly tabindex='-1'"; // 수정 불가, 탭 포커스 건너뛰기
+            inputClass += " bg-light text-muted"; 
+            readOnlyAttr = "readonly tabindex='-1'";
         }
 
         return `
@@ -1112,19 +1112,46 @@ function openEditModal(item) {
     const makeSelect = (label, key, options, width = 'col-6') => {
         const val = item[key] || '';
         const safeOptions = options || [];
+        
         let optsHtml = safeOptions.map(opt => `<option value="${opt}" ${val === opt ? 'selected' : ''}>${opt}</option>`).join('');
+        
         if(val && !safeOptions.includes(val)) {
             optsHtml += `<option value="${val}" selected>${val} (기존값)</option>`;
         }
-        return `<div class="${width}"><label class="form-label-sm">${label}</label><select class="form-select form-select-sm edit-input fw-bold text-primary" data-key="${key}"><option value="">선택</option>${optsHtml}</select></div>`;
+
+        // 일반 입력창과 동일한 색상 (fw-bold 제거)
+        return `<div class="${width}"><label class="form-label-sm">${label}</label><select class="form-select form-select-sm edit-input" data-key="${key}"><option value="">선택</option>${optsHtml}</select></div>`;
     };
 
+    // ==========================================
+    // [설정] Ref 시트 데이터(globalDropdownData) 참조 로직
+    // ==========================================
     const dd = globalDropdownData || {}; 
+    
+    // 공통 항목
     const visitList = dd.visitList || [];
     const usimList = dd.usimList || [];
     const reviewList = dd.reviewList || [];
     const payMethodList = dd.payMethodList || [];
     const colMethodList = dd.colMethodList || [];
+
+    // [핵심] 현재 조회된 내역이 '어떤 개통'인지에 따라 Ref 시트의 다른 열을 참조
+    let targetActList = [];
+    let targetContList = [];
+
+    if (item.sheetName === '유선개통') {
+        // 유선 개통일 때 -> Ref 시트의 유선 관련 열 참조
+        targetActList = dd.actListWired || [];
+        targetContList = dd.contListWired || [];
+    } else if (item.sheetName === '중고개통') {
+        // 중고 개통일 때 -> Ref 시트의 중고 관련 열 참조
+        targetActList = dd.actListUsed || [];
+        targetContList = dd.contListUsed || [];
+    } else {
+        // 무선 개통(기본)일 때 -> Ref 시트의 무선 관련 열 참조
+        targetActList = dd.actListMobile || [];
+        targetContList = dd.contListMobile || [];
+    }
 
     // ==========================================
     // 1. [상단] 요약 정보
@@ -1152,15 +1179,13 @@ function openEditModal(item) {
     container.innerHTML += headerHtml;
 
     // ==========================================
-    // 2. [기본 정보] (날짜 필드 -> 텍스트 + 읽기전용 변경)
+    // 2. [기본 정보] (Ref 시트 값 적용된 변수 사용)
     // ==========================================
     let sectionBasic = `
         <div class="divider"></div>
         <div class="section-header"><i class="bi bi-person-badge"></i> 기본 정보</div>
         <div class="row g-2">
-            ${makeInput('개통유형', '개통유형', 'col-4')}
-            ${makeInput('약정유형', '약정유형', 'col-4')}
-            ${makeSelect('방문경로', '방문경로', visitList, 'col-4')}
+            ${makeSelect('개통유형', '개통유형', targetActList, 'col-4')} ${makeSelect('약정유형', '약정유형', targetContList, 'col-4')} ${makeSelect('방문경로', '방문경로', visitList, 'col-4')}
 
             ${makeInput('고객명', '고객명', 'col-4')}
             ${makeInput('생년월일', '생년월일', 'col-4')}
@@ -1168,7 +1193,6 @@ function openEditModal(item) {
 
             ${makeInput('요금제', '요금제', 'col-4')}
             ${makeInput('변경요금제', '변경요금제', 'col-4')}
-            
             ${makeInput('요금제변경일', '요금제변경일', 'col-4', 'text', false, true)}
 
             ${makeInput('부가서비스', '부가서비스', 'col-8')}
@@ -1209,7 +1233,7 @@ function openEditModal(item) {
     container.innerHTML += sectionPolicy;
 
     // ==========================================
-    // 4. [대납 및 지원] (처리일 -> 텍스트 + 읽기전용)
+    // 4. [대납 및 지원]
     // ==========================================
     let sectionSupport = `
         <div class="divider"></div>
@@ -1249,7 +1273,7 @@ function openEditModal(item) {
             ${makeInput('요금수납', '요금수납', 'col-6', 'number')}
             ${makeSelect('방법', '요금수납방법', colMethodList, 'col-6')}
             
-            ${makeInput('중고폰/기타', '중고폰반납', 'col-6', 'number')}
+            ${makeInput('중고폰', '중고폰반납', 'col-6', 'number')}
             ${makeInput('메모', '중고폰메모', 'col-6')}
             
             ${makeInput('기타 특이사항', '특이사항', 'col-12')}
