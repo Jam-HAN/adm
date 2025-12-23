@@ -1133,10 +1133,16 @@ function openEditModal(item) {
 
     // --- 헬퍼 함수 ---
     const makeInput = (label, key, width = 'col-6', type = 'text', isDanger = false, isReadOnly = false) => {
-        // [수정] 복잡한 날짜 확인 로직 싹 다 제거!
-        // 그냥 서버에서 온 값 그대로 보여줍니다. (T우주든 뭐든 그대로 출력)
-        const val = item[key] || '';
+        let val = item[key] || '';
         
+        // [해결책] "날짜 관련 항목"들만 딱 지정해서 T 뒷부분을 자릅니다.
+        // 이렇게 하면 'T우주' 같은 요금제 이름은 건드리지 않고, 날짜만 깔끔해집니다.
+        const dateKeys = ['요금제변경일', '부가서비스해지일', '대납1요청일', '대납2요청일', '처리일', '개통일'];
+        
+        if (dateKeys.includes(key) && typeof val === 'string' && val.includes('T')) {
+            val = val.split('T')[0];
+        }
+
         const labelClass = isDanger ? "form-label-sm text-danger-custom" : "form-label-sm";
         let inputClass = isDanger ? "form-control form-control-sm edit-input border-danger-custom" : "form-control form-control-sm edit-input";
         let readOnlyAttr = "";
