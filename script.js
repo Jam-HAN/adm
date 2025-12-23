@@ -1077,7 +1077,7 @@ function searchAllHistory() {
 }
 
 // 3. 수정 모달 열기 (동적 폼 생성)
-// [디자인 개선] 개통 정보 수정 모달 (시트 데이터 연동 완료)
+// [디자인 개선] 개통 정보 수정 모달 (날짜 필드 읽기 전용 텍스트 처리)
 function openEditModal(item) {
     // 1. 식별자 값 세팅
     document.getElementById('edit_sheet_name').value = item.sheetName;
@@ -1088,39 +1088,43 @@ function openEditModal(item) {
     container.innerHTML = ''; // 초기화
 
     // --- 헬퍼 함수 ---
-    const makeInput = (label, key, width = 'col-6', type = 'text', isDanger = false) => {
+    // [수정] isReadOnly 매개변수 추가 (기본값 false)
+    const makeInput = (label, key, width = 'col-6', type = 'text', isDanger = false, isReadOnly = false) => {
         const val = item[key] || '';
         const labelClass = isDanger ? "form-label-sm text-danger-custom" : "form-label-sm";
-        const inputClass = isDanger ? "form-control form-control-sm edit-input border-danger-custom" : "form-control form-control-sm edit-input";
-        return `<div class="${width}"><label class="${labelClass}">${label}</label><input type="${type}" class="${inputClass}" data-key="${key}" value="${val}"></div>`;
+        
+        // 읽기 전용일 때 스타일: 배경색 회색(#e9ecef), 클릭 방지
+        let inputClass = isDanger ? "form-control form-control-sm edit-input border-danger-custom" : "form-control form-control-sm edit-input";
+        let readOnlyAttr = "";
+        
+        if (isReadOnly) {
+            inputClass += " bg-light text-muted"; // 회색 배경, 흐린 글씨
+            readOnlyAttr = "readonly tabindex='-1'"; // 수정 불가, 탭 포커스 건너뛰기
+        }
+
+        return `
+            <div class="${width}">
+                <label class="${labelClass}">${label}</label>
+                <input type="${type}" class="${inputClass}" data-key="${key}" value="${val}" ${readOnlyAttr}>
+            </div>`;
     };
 
     const makeSelect = (label, key, options, width = 'col-6') => {
         const val = item[key] || '';
-        // 데이터가 로드되지 않았을 경우를 대비해 빈 배열 처리
         const safeOptions = options || [];
-        
         let optsHtml = safeOptions.map(opt => `<option value="${opt}" ${val === opt ? 'selected' : ''}>${opt}</option>`).join('');
-        
-        // [중요] 시트 목록에 없는 값(예: 과거 데이터, 직접 입력값)이 있다면, 선택된 상태로 목록에 임시 추가
         if(val && !safeOptions.includes(val)) {
-            optsHtml += `<option value="${val}" selected>${val} (목록 외)</option>`;
+            optsHtml += `<option value="${val}" selected>${val} (기존값)</option>`;
         }
-
         return `<div class="${width}"><label class="form-label-sm">${label}</label><select class="form-select form-select-sm edit-input fw-bold text-primary" data-key="${key}"><option value="">선택</option>${optsHtml}</select></div>`;
     };
 
-    // ==========================================
-    // [설정] 서버에서 불러온 시트 데이터(globalDropdownData) 연결
-    // ==========================================
     const dd = globalDropdownData || {}; 
-    
-    // 개통 화면과 동일한 소스 사용
-    const visitList = dd.visitList || [];        // 방문경로
-    const usimList = dd.usimList || [];          // 유심 종류
-    const reviewList = dd.reviewList || [];      // 리뷰 항목
-    const payMethodList = dd.payMethodList || []; // 대납/지급 방법 (Ref 시트 P열 등)
-    const colMethodList = dd.colMethodList || []; // 수납 방법 (Ref 시트 R열 등)
+    const visitList = dd.visitList || [];
+    const usimList = dd.usimList || [];
+    const reviewList = dd.reviewList || [];
+    const payMethodList = dd.payMethodList || [];
+    const colMethodList = dd.colMethodList || [];
 
     // ==========================================
     // 1. [상단] 요약 정보
@@ -1148,7 +1152,7 @@ function openEditModal(item) {
     container.innerHTML += headerHtml;
 
     // ==========================================
-    // 2. [기본 정보] (방문경로, 리뷰작성 시트 연동)
+    // 2. [기본 정보] (날짜 필드 -> 텍스트 + 읽기전용 변경)
     // ==========================================
     let sectionBasic = `
         <div class="divider"></div>
@@ -1156,24 +1160,28 @@ function openEditModal(item) {
         <div class="row g-2">
             ${makeInput('개통유형', '개통유형', 'col-4')}
             ${makeInput('약정유형', '약정유형', 'col-4')}
-            ${makeSelect('방문경로', '방문경로', visitList, 'col-4')} ${makeInput('고객명', '고객명', 'col-4')}
+            ${makeSelect('방문경로', '방문경로', visitList, 'col-4')}
+
+            ${makeInput('고객명', '고객명', 'col-4')}
             ${makeInput('생년월일', '생년월일', 'col-4')}
             ${makeInput('연락처', '연락처', 'col-4')}
 
             ${makeInput('요금제', '요금제', 'col-4')}
             ${makeInput('변경요금제', '변경요금제', 'col-4')}
-            ${makeInput('요금제변경일', '요금제변경일', 'col-4', 'date')}
+            
+            ${makeInput('요금제변경일', '요금제변경일', 'col-4', 'text', false, true)}
 
             ${makeInput('부가서비스', '부가서비스', 'col-8')}
-            ${makeInput('부가서비스해지일', '부가서비스해지일', 'col-4', 'date')}
+            ${makeInput('부가서비스해지일', '부가서비스해지일', 'col-4', 'text', false, true)}
 
             ${makeInput('제휴카드', '제휴카드', 'col-6')}
-            ${makeSelect('리뷰작성', '리뷰작성', reviewList, 'col-6')} </div>
+            ${makeSelect('리뷰작성', '리뷰작성', reviewList, 'col-6')}
+        </div>
     `;
     container.innerHTML += sectionBasic;
 
     // ==========================================
-    // 3. [정책 및 정산] (유심 시트 연동)
+    // 3. [정책 및 정산]
     // ==========================================
     let sectionPolicy = `
         <div class="divider"></div>
@@ -1195,22 +1203,25 @@ function openEditModal(item) {
             ${makeInput('메모', '메모(차감)', 'col-6')}
             
             ${makeInput('프리할인', '프리할인', 'col-6', 'number', true)}
-            ${makeSelect('유심', '유심비', usimList, 'col-6')} </div>
+            ${makeSelect('유심', '유심비', usimList, 'col-6')}
+        </div>
     `;
     container.innerHTML += sectionPolicy;
 
     // ==========================================
-    // 4. [대납 및 지원] (대납 방법 시트 연동)
+    // 4. [대납 및 지원] (처리일 -> 텍스트 + 읽기전용)
     // ==========================================
     let sectionSupport = `
         <div class="divider"></div>
         <div class="section-header"><i class="bi bi-credit-card"></i> 대납 및 지원</div>
         <div class="row g-2">
             ${makeInput('대납1', '대납1', 'col-4', 'number', true)}
-            ${makeSelect('방법', '대납1방법', payMethodList, 'col-4')} ${makeInput('처리일', '대납1요청일', 'col-4', 'date')}
+            ${makeSelect('방법', '대납1방법', payMethodList, 'col-4')}
+            ${makeInput('처리일', '대납1요청일', 'col-4', 'text', false, true)}
             
             ${makeInput('대납2', '대납2', 'col-4', 'number', true)}
-            ${makeSelect('방법', '대납2방법', payMethodList, 'col-4')} ${makeInput('처리일', '대납2요청일', 'col-4', 'date')}
+            ${makeSelect('방법', '대납2방법', payMethodList, 'col-4')}
+            ${makeInput('처리일', '대납2요청일', 'col-4', 'text', false, true)}
             
             ${makeInput('현금지급', '현금지급', 'col-6', 'number', true)}
             ${makeInput('페이백', '페이백', 'col-6', 'number', true)}
@@ -1223,16 +1234,22 @@ function openEditModal(item) {
     container.innerHTML += sectionSupport;
 
     // ==========================================
-    // 5. [수납 상세] (수납 방법 시트 연동)
+    // 5. [수납 상세]
     // ==========================================
     let sectionCollect = `
         <div class="divider"></div>
         <div class="section-header"><i class="bi bi-wallet2"></i> 수납 상세</div>
         <div class="row g-2">
             ${makeInput('단말기수납1', '단말기수납1', 'col-6', 'number')}
-            ${makeSelect('방법', '단말기수납1방법', colMethodList, 'col-6')} ${makeInput('단말기수납2', '단말기수납2', 'col-6', 'number')}
-            ${makeSelect('방법', '단말기수납2방법', colMethodList, 'col-6')} ${makeInput('요금수납', '요금수납', 'col-6', 'number')}
-            ${makeSelect('방법', '요금수납방법', colMethodList, 'col-6')} ${makeInput('중고폰/기타', '중고폰반납', 'col-6', 'number')}
+            ${makeSelect('방법', '단말기수납1방법', colMethodList, 'col-6')}
+
+            ${makeInput('단말기수납2', '단말기수납2', 'col-6', 'number')}
+            ${makeSelect('방법', '단말기수납2방법', colMethodList, 'col-6')}
+            
+            ${makeInput('요금수납', '요금수납', 'col-6', 'number')}
+            ${makeSelect('방법', '요금수납방법', colMethodList, 'col-6')}
+            
+            ${makeInput('중고폰/기타', '중고폰반납', 'col-6', 'number')}
             ${makeInput('메모', '중고폰메모', 'col-6')}
             
             ${makeInput('기타 특이사항', '특이사항', 'col-12')}
