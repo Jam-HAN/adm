@@ -1022,13 +1022,17 @@ function initHistoryDates() {
     if(document.getElementById('hist_end_date')) document.getElementById('hist_end_date').value = fmt(today);
 }
 
-// [디자인 개선] 통합 검색 결과 렌더링 (Glass Card 스타일 적용)
+// [디자인 수정] 조회 결과 UI 일체감 확보 (배경 잘림 현상 해결)
 function searchAllHistory() {
     const start = document.getElementById('hist_start_date').value;
     const end = document.getElementById('hist_end_date').value;
     const keyword = document.getElementById('hist_all_keyword').value;
     const branch = document.getElementById('hist_branch_filter').value;
     const resArea = document.getElementById('hist_all_result');
+    
+    // [핵심 수정 1] 기존의 list-group 클래스 제거 (카드 디자인 깨짐 방지)
+    // 이 클래스들이 있으면 카드의 그림자가 잘리거나 폭이 좁아집니다.
+    resArea.classList.remove('list-group', 'list-group-flush');
     
     // 로딩 표시
     resArea.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary"></div><div class="mt-2 small text-muted">데이터 조회 중...</div></div>';
@@ -1042,17 +1046,17 @@ function searchAllHistory() {
         if (d.status === 'success' && d.data.length > 0) {
             let html = '';
             d.data.forEach(item => {
-                // 따옴표 처리 (HTML 속성에 넣기 위해)
                 const jsonItem = JSON.stringify(item).replace(/"/g, '&quot;');
                 
-                // 뱃지 색상 일관성 유지 (목록과 모달 통일)
+                // 뱃지 색상 일관성 유지
                 let badgeClass = 'bg-primary';
                 if(item.sheetName === '유선개통') badgeClass = 'bg-success';
                 else if(item.sheetName === '중고개통') badgeClass = 'bg-warning text-dark';
                 
-                // [Glass Card 디자인] 카드 클릭 시 openEditModal 실행
+                // [핵심 수정 2] w-100 클래스 추가 (가로 폭 꽉 채우기)
+                // d-block 추가 (블록 요소로 강제)
                 html += `
-                <div class="glass-card p-3 mb-3" onclick="openEditModal(${jsonItem})" style="cursor:pointer; transition: transform 0.2s;">
+                <div class="glass-card p-3 mb-3 w-100 d-block" onclick="openEditModal(${jsonItem})" style="cursor:pointer; transition: transform 0.2s;">
                     <div class="d-flex w-100 justify-content-between align-items-center mb-2 border-bottom pb-2">
                         <div>
                             <span class="badge ${badgeClass} me-1">${item.sheetName}</span>
