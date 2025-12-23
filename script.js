@@ -1097,8 +1097,10 @@ function searchAllHistory() {
     });
 }
 
-// 3. 수정 모달 열기 (동적 폼 생성)
-// [최종 수정] 개통 정보 수정 모달 (상단 디자인 개편 & 중요 항목 수정 잠금)
+// [최종 완성] 개통 정보 수정 모달
+// 1. 상단: 조회 결과 카드 디자인 적용 + 우측 담당매니저 표시
+// 2. 본문: 개통처, 개통유형, 약정유형 수정 불가(Read-Only)
+// 3. 기능: 날짜 항목만 자동 자르기 (요금제 텍스트 보호)
 function openEditModal(item) {
     // [안전장치] 데이터 로딩 체크
     if (!globalDropdownData || !globalDropdownData.visitList || globalDropdownData.visitList.length === 0) {
@@ -1115,7 +1117,7 @@ function openEditModal(item) {
         return;
     }
 
-    // 값 세팅
+    // 식별자 값 세팅
     document.getElementById('edit_sheet_name').value = item.sheetName;
     document.getElementById('edit_row_index').value = item.rowIndex;
     document.getElementById('edit_branch_name').value = item.branch || item['지점'];
@@ -1123,11 +1125,11 @@ function openEditModal(item) {
     const container = document.getElementById('edit_form_container');
     container.innerHTML = ''; 
 
-    // --- 헬퍼 함수 (날짜 자동 자르기 기능 포함) ---
+    // --- 헬퍼 함수 ---
     const makeInput = (label, key, width = 'col-6', type = 'text', isDanger = false, isReadOnly = false) => {
         let val = item[key] || '';
         
-        // 날짜 필드만 T 뒷부분 자르기 (요금제 이름 등은 보호)
+        // [기능 유지] 날짜 관련 항목만 T 뒷부분 자르기
         const dateKeys = ['요금제변경일', '부가서비스해지일', '대납1요청일', '대납2요청일', '처리일', '개통일'];
         if (dateKeys.includes(key) && typeof val === 'string' && val.includes('T')) {
             val = val.split('T')[0];
@@ -1157,7 +1159,7 @@ function openEditModal(item) {
         return `<div class="${width}"><label class="form-label-sm">${label}</label><select class="form-select form-select-sm edit-input" data-key="${key}"><option value="">선택</option>${optsHtml}</select></div>`;
     };
 
-    // 설정 데이터
+    // 설정 데이터 및 뱃지 색상
     const dd = globalDropdownData || {}; 
     const visitList = dd.visitList || [];
     const usimList = dd.usimList || [];
@@ -1165,38 +1167,47 @@ function openEditModal(item) {
     const payMethodList = dd.payMethodList || [];
     const colMethodList = dd.colMethodList || [];
 
-    // 뱃지 색상 설정
     let badgeClass = 'bg-primary';
     if (item.sheetName === '유선개통') badgeClass = 'bg-success';
-    else if (item.sheetName === '중고개통') badgeClass = 'bg-warning text-white'; // 흰글씨
+    else if (item.sheetName === '중고개통') badgeClass = 'bg-warning text-white';
 
     // ==========================================
-    // 1. [상단] 요약 정보 (디자인 변경)
+    // 1. [상단] 조회 결과 카드 디자인 적용
     // ==========================================
-    // 요청: 개통처 개통유형 약정유형 담당매니저 / 모델 : 일련번호
     let headerHtml = `
         <div class="col-12 mb-2">
-            <div class="card bg-light border-0 shadow-sm">
-                <div class="card-body p-3">
-                    <div class="d-flex justify-content-between align-items-center mb-2 border-bottom pb-2">
-                        <span class="badge ${badgeClass}">${item.sheetName}</span>
-                        <span class="fw-bold text-dark">${item['개통일']}</span>
-                    </div>
+            <div class="card border-0 shadow-sm bg-light"> <div class="card-body p-3">
                     
-                    <div class="mb-2 text-truncate text-dark small">
-                         <span class="fw-bold text-primary">${item['개통처'] || '-'}</span> 
-                         <span class="mx-1 text-muted">|</span> 
-                         ${item['개통유형'] || '-'} 
-                         <span class="mx-1 text-muted">|</span> 
-                         ${item['약정유형'] || '-'}
-                         <span class="mx-1 text-muted">|</span> 
-                         <span class="fw-bold">${item['담당자'] || '-'} 매니저</span>
+                    <div class="d-flex w-100 justify-content-between align-items-center mb-2 border-bottom pb-2">
+                        <div>
+                            <span class="badge ${badgeClass} me-1">${item.sheetName}</span>
+                            <span class="badge bg-white text-secondary border">${item['지점'] || '-'}</span>
+                            <small class="fw-bold text-dark ms-2">${item['개통일']}</small>
+                        </div>
+                        <span class="badge bg-white text-primary border rounded-pill px-2 shadow-sm">
+                            <i class="bi bi-person-circle me-1"></i>${item['담당자'] || '미지정'}
+                        </span>
                     </div>
 
-                    <div class="text-muted small">
-                        <b>모델:</b> <span class="text-dark fw-bold">${item['모델명']}</span>
-                        ${item['일련번호'] ? ` : ${item['일련번호']}` : ''}
+                    <div class="mb-2 text-truncate">
+                        <span class="fw-bold text-primary fs-5 me-2">${item['고객명']}</span>
+                        <span class="small text-dark">
+                            ${item['연락처'] || '-'} <span class="text-muted mx-1">|</span>
+                            ${item['개통처'] || '-'} <span class="text-muted mx-1">|</span>
+                            ${item['개통유형'] || '-'} <span class="text-muted mx-1">|</span>
+                            ${item['약정유형'] || '-'}
+                        </span>
                     </div>
+
+                    <div class="text-muted small text-truncate bg-white p-2 rounded border">
+                        <span class="fw-bold text-dark">${item['모델명'] || '-'}</span> 
+                        ${item['일련번호'] ? ` : ${item['일련번호']}` : ''}
+                        <span class="mx-2 text-secondary">|</span> 
+                        ${item['요금제'] || '-'}
+                        ${item['부가서비스'] ? ` <span class="mx-2 text-secondary">|</span> ${item['부가서비스']}` : ''}
+                        ${item['제휴카드'] ? ` <span class="mx-2 text-secondary">|</span> ${item['제휴카드']}` : ''}
+                    </div>
+
                 </div>
             </div>
         </div>
@@ -1212,7 +1223,6 @@ function openEditModal(item) {
         <div class="row g-2">
             ${makeInput('개통유형', '개통유형', 'col-4', 'text', false, true)}
             ${makeInput('약정유형', '약정유형', 'col-4', 'text', false, true)}
-            
             ${makeSelect('방문경로', '방문경로', visitList, 'col-4')}
 
             ${makeInput('고객명', '고객명', 'col-4')}
@@ -1221,8 +1231,12 @@ function openEditModal(item) {
 
             ${makeInput('요금제', '요금제', 'col-4')}
             ${makeInput('변경요금제', '변경요금제', 'col-4')}
-            ${makeInput('요금제변경일', '요금제변경일', 'col-4', 'text', false, true)} ${makeInput('부가서비스', '부가서비스', 'col-8')}
-            ${makeInput('부가서비스해지일', '부가서비스해지일', 'col-4', 'text', false, true)} ${makeInput('제휴카드', '제휴카드', 'col-6')}
+            ${makeInput('요금제변경일', '요금제변경일', 'col-4', 'text', false, true)}
+
+            ${makeInput('부가서비스', '부가서비스', 'col-8')}
+            ${makeInput('부가서비스해지일', '부가서비스해지일', 'col-4', 'text', false, true)}
+
+            ${makeInput('제휴카드', '제휴카드', 'col-6')}
             ${makeSelect('리뷰작성', '리뷰작성', reviewList, 'col-6')}
         </div>
     `;
@@ -1257,7 +1271,7 @@ function openEditModal(item) {
     container.innerHTML += sectionPolicy;
 
     // ==========================================
-    // 4. [대납 및 지원] (기존 유지)
+    // 4. [대납 및 지원]
     // ==========================================
     let sectionSupport = `
         <div class="divider"></div>
@@ -1282,7 +1296,7 @@ function openEditModal(item) {
     container.innerHTML += sectionSupport;
 
     // ==========================================
-    // 5. [수납 상세] (기존 유지)
+    // 5. [수납 상세]
     // ==========================================
     let sectionCollect = `
         <div class="divider"></div>
@@ -1305,7 +1319,7 @@ function openEditModal(item) {
     `;
     container.innerHTML += sectionCollect;
 
-    // [하단 버튼] (기존 유지)
+    // [하단 버튼]
     const footer = document.querySelector('#modal-edit-history .modal-footer');
     if(footer) footer.style.display = 'none';
 
