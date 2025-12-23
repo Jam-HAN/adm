@@ -1022,7 +1022,7 @@ function initHistoryDates() {
     if(document.getElementById('hist_end_date')) document.getElementById('hist_end_date').value = fmt(today);
 }
 
-// [디자인 수정] 조회 결과 UI 일체감 확보 (배경 잘림 현상 해결)
+// [디자인 최종 수정] 조회 결과 디자인 개선 (그림자 잘림 해결, 가독성 강화)
 function searchAllHistory() {
     const start = document.getElementById('hist_start_date').value;
     const end = document.getElementById('hist_end_date').value;
@@ -1030,9 +1030,9 @@ function searchAllHistory() {
     const branch = document.getElementById('hist_branch_filter').value;
     const resArea = document.getElementById('hist_all_result');
     
-    // [핵심 수정 1] 기존의 list-group 클래스 제거 (카드 디자인 깨짐 방지)
-    // 이 클래스들이 있으면 카드의 그림자가 잘리거나 폭이 좁아집니다.
-    resArea.classList.remove('list-group', 'list-group-flush');
+    // [핵심 해결 1] 부모 컨테이너 스타일 초기화
+    // list-group 클래스를 날리고, 그림자가 잘리지 않도록 패딩(p-2)을 줍니다.
+    resArea.className = "mt-3 p-2"; 
     
     // 로딩 표시
     resArea.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary"></div><div class="mt-2 small text-muted">데이터 조회 중...</div></div>';
@@ -1048,36 +1048,39 @@ function searchAllHistory() {
             d.data.forEach(item => {
                 const jsonItem = JSON.stringify(item).replace(/"/g, '&quot;');
                 
-                // 뱃지 색상 일관성 유지
+                // 뱃지 색상
                 let badgeClass = 'bg-primary';
                 if(item.sheetName === '유선개통') badgeClass = 'bg-success';
                 else if(item.sheetName === '중고개통') badgeClass = 'bg-warning text-dark';
                 
-                // [핵심 수정 2] w-100 클래스 추가 (가로 폭 꽉 채우기)
-                // d-block 추가 (블록 요소로 강제)
+                // [핵심 해결 2] 디자인 변경: 'glass-card' 대신 'bg-white' 사용
+                // 반투명한 배경 위에 또 반투명을 올리면 탁해지므로, 깔끔한 흰색 카드로 변경합니다.
+                // border-0 shadow-sm: 부드러운 그림자
                 html += `
-                <div class="glass-card p-3 mb-3 w-100 d-block" onclick="openEditModal(${jsonItem})" style="cursor:pointer; transition: transform 0.2s;">
-                    <div class="d-flex w-100 justify-content-between align-items-center mb-2 border-bottom pb-2">
-                        <div>
-                            <span class="badge ${badgeClass} me-1">${item.sheetName}</span>
-                            <span class="badge bg-white text-secondary border">${item['지점'] || '-'}</span>
+                <div class="card border-0 shadow-sm mb-3 w-100" onclick="openEditModal(${jsonItem})" style="cursor:pointer; transition: transform 0.2s; background-color: #fff;">
+                    <div class="card-body p-3">
+                        <div class="d-flex w-100 justify-content-between align-items-center mb-2 border-bottom pb-2">
+                            <div>
+                                <span class="badge ${badgeClass} me-1">${item.sheetName}</span>
+                                <span class="badge bg-light text-secondary border">${item['지점'] || '-'}</span>
+                            </div>
+                            <small class="fw-bold text-secondary">${item['개통일']}</small>
                         </div>
-                        <small class="fw-bold text-dark">${item['개통일']}</small>
-                    </div>
-                    
-                    <div class="d-flex justify-content-between align-items-center mb-1">
-                        <h6 class="mb-0 fw-bold text-primary">
-                            ${item['고객명']} <span class="text-dark small fw-normal">(${item['통신사'] || item['개통유형'] || '-'})</span>
-                        </h6>
-                        <span class="badge bg-light text-dark border rounded-pill px-2">
-                            ${item['담당자'] || '담당미정'}
-                        </span>
-                    </div>
+                        
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <h6 class="mb-0 fw-bold text-dark">
+                                ${item['고객명']} <span class="text-muted small fw-normal">(${item['통신사'] || item['개통유형'] || '-'})</span>
+                            </h6>
+                            <span class="badge bg-light text-dark border rounded-pill px-2">
+                                ${item['담당자'] || '담당미정'}
+                            </span>
+                        </div>
 
-                    <div class="text-muted small text-truncate mt-1">
-                        <i class="bi bi-phone"></i> ${item['모델명'] || '상품'} 
-                        <span class="mx-1">|</span> 
-                        ${item['요금제'] || '-'}
+                        <div class="text-secondary small text-truncate mt-2 bg-light p-2 rounded">
+                            <i class="bi bi-phone"></i> <span class="fw-bold">${item['모델명'] || '상품'}</span> 
+                            <span class="mx-1 text-muted">|</span> 
+                            ${item['요금제'] || '-'}
+                        </div>
                     </div>
                 </div>`;
             });
