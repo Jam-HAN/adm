@@ -1077,7 +1077,7 @@ function searchAllHistory() {
 }
 
 // 3. 수정 모달 열기 (동적 폼 생성)
-// [최종 수정] 개통 정보 수정 모달 (Ref 시트 데이터 완벽 연동)
+// [최종 수정] 개통 정보 수정 모달 (텍스트 잘림 해결, 뱃지 색상 적용)
 function openEditModal(item) {
     // 1. 식별자 값 세팅
     document.getElementById('edit_sheet_name').value = item.sheetName;
@@ -1090,8 +1090,12 @@ function openEditModal(item) {
     // --- 헬퍼 함수 ---
     const makeInput = (label, key, width = 'col-6', type = 'text', isDanger = false, isReadOnly = false) => {
         let val = item[key] || '';
-        // 날짜 형식(ISO) 처리
-        if (typeof val === 'string' && val.includes('T')) { val = val.split('T')[0]; }
+        
+        // [수정 1] "2025-01-01T..." 형식의 진짜 날짜만 T 뒤를 자르도록 정규식 사용
+        // (기존에는 요금제 이름에 'T'가 들어가면 잘리는 버그가 있었음)
+        if (typeof val === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(val)) {
+            val = val.split('T')[0];
+        }
 
         const labelClass = isDanger ? "form-label-sm text-danger-custom" : "form-label-sm";
         let inputClass = isDanger ? "form-control form-control-sm edit-input border-danger-custom" : "form-control form-control-sm edit-input";
@@ -1119,49 +1123,44 @@ function openEditModal(item) {
             optsHtml += `<option value="${val}" selected>${val} (기존값)</option>`;
         }
 
-        // 일반 입력창과 동일한 색상 (fw-bold 제거)
         return `<div class="${width}"><label class="form-label-sm">${label}</label><select class="form-select form-select-sm edit-input" data-key="${key}"><option value="">선택</option>${optsHtml}</select></div>`;
     };
 
-    // ==========================================
-    // [설정] Ref 시트 데이터(globalDropdownData) 참조 로직
-    // ==========================================
+    // 설정 데이터 로드
     const dd = globalDropdownData || {}; 
-    
-    // 공통 항목
     const visitList = dd.visitList || [];
     const usimList = dd.usimList || [];
     const reviewList = dd.reviewList || [];
     const payMethodList = dd.payMethodList || [];
     const colMethodList = dd.colMethodList || [];
 
-    // [핵심] 현재 조회된 내역이 '어떤 개통'인지에 따라 Ref 시트의 다른 열을 참조
-    let targetActList = [];
-    let targetContList = [];
+    // 개통 유형별 목록 분기
+    let actList = [], contList = [];
+    // [수정 2] 뱃지 색상 결정 로직 추가
+    let badgeClass = 'bg-primary'; // 기본: 무선 (파랑)
 
     if (item.sheetName === '유선개통') {
-        // 유선 개통일 때 -> Ref 시트의 유선 관련 열 참조
-        targetActList = dd.actListWired || [];
-        targetContList = dd.contListWired || [];
+        actList = dd.actListWired || [];
+        contList = dd.contListWired || [];
+        badgeClass = 'bg-success'; // 유선: 초록
     } else if (item.sheetName === '중고개통') {
-        // 중고 개통일 때 -> Ref 시트의 중고 관련 열 참조
-        targetActList = dd.actListUsed || [];
-        targetContList = dd.contListUsed || [];
+        actList = dd.actListUsed || [];
+        contList = dd.contListUsed || [];
+        badgeClass = 'bg-warning text-dark'; // 중고: 노랑
     } else {
-        // 무선 개통(기본)일 때 -> Ref 시트의 무선 관련 열 참조
-        targetActList = dd.actListMobile || [];
-        targetContList = dd.contListMobile || [];
+        actList = dd.actListMobile || [];
+        contList = dd.contListMobile || [];
     }
 
     // ==========================================
-    // 1. [상단] 요약 정보
+    // 1. [상단] 요약 정보 (뱃지 색상 적용됨)
     // ==========================================
     let headerHtml = `
         <div class="col-12 mb-2">
             <div class="card bg-light border-0 shadow-sm">
                 <div class="card-body p-3">
                     <div class="d-flex justify-content-between align-items-center mb-2 border-bottom pb-2">
-                        <span class="badge bg-primary">${item.sheetName}</span>
+                        <span class="badge ${badgeClass}">${item.sheetName}</span>
                         <span class="fw-bold text-dark">${item['개통일']}</span>
                     </div>
                     <div class="row g-2 small text-muted">
@@ -1179,13 +1178,15 @@ function openEditModal(item) {
     container.innerHTML += headerHtml;
 
     // ==========================================
-    // 2. [기본 정보] (Ref 시트 값 적용된 변수 사용)
+    // 2. [기본 정보]
     // ==========================================
     let sectionBasic = `
         <div class="divider"></div>
         <div class="section-header"><i class="bi bi-person-badge"></i> 기본 정보</div>
         <div class="row g-2">
-            ${makeSelect('개통유형', '개통유형', targetActList, 'col-4')} ${makeSelect('약정유형', '약정유형', targetContList, 'col-4')} ${makeSelect('방문경로', '방문경로', visitList, 'col-4')}
+            ${makeSelect('개통유형', '개통유형', actList, 'col-4')}
+            ${makeSelect('약정유형', '약정유형', contList, 'col-4')}
+            ${makeSelect('방문경로', '방문경로', visitList, 'col-4')}
 
             ${makeInput('고객명', '고객명', 'col-4')}
             ${makeInput('생년월일', '생년월일', 'col-4')}
