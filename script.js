@@ -1133,9 +1133,10 @@ function openEditModal(item) {
 
     // --- 헬퍼 함수 ---
     const makeInput = (label, key, width = 'col-6', type = 'text', isDanger = false, isReadOnly = false) => {
-        let val = item[key] || '';
-        if (typeof val === 'string' && val.includes('T')) { val = val.split('T')[0]; }
-
+        // [수정] 복잡한 날짜 확인 로직 싹 다 제거!
+        // 그냥 서버에서 온 값 그대로 보여줍니다. (T우주든 뭐든 그대로 출력)
+        const val = item[key] || '';
+        
         const labelClass = isDanger ? "form-label-sm text-danger-custom" : "form-label-sm";
         let inputClass = isDanger ? "form-control form-control-sm edit-input border-danger-custom" : "form-control form-control-sm edit-input";
         let readOnlyAttr = "";
