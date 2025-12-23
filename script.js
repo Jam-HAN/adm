@@ -1097,10 +1097,7 @@ function searchAllHistory() {
     });
 }
 
-// [최종 완성] 개통 정보 수정 모달
-// 1. 상단: 조회 결과 카드 디자인 적용 + 우측 담당매니저 표시
-// 2. 본문: 개통처, 개통유형, 약정유형 수정 불가(Read-Only)
-// 3. 기능: 날짜 항목만 자동 자르기 (요금제 텍스트 보호)
+// [최종 수정] 개통 정보 수정 모달 (상단 레이아웃 변경: 개통일 우측 / 매니저 하단 배치)
 function openEditModal(item) {
     // [안전장치] 데이터 로딩 체크
     if (!globalDropdownData || !globalDropdownData.visitList || globalDropdownData.visitList.length === 0) {
@@ -1159,7 +1156,7 @@ function openEditModal(item) {
         return `<div class="${width}"><label class="form-label-sm">${label}</label><select class="form-select form-select-sm edit-input" data-key="${key}"><option value="">선택</option>${optsHtml}</select></div>`;
     };
 
-    // 설정 데이터 및 뱃지 색상
+    // 설정 데이터
     const dd = globalDropdownData || {}; 
     const visitList = dd.visitList || [];
     const usimList = dd.usimList || [];
@@ -1172,30 +1169,33 @@ function openEditModal(item) {
     else if (item.sheetName === '중고개통') badgeClass = 'bg-warning text-white';
 
     // ==========================================
-    // 1. [상단] 조회 결과 카드 디자인 적용
+    // 1. [상단] 요약 정보 (레이아웃 변경됨)
     // ==========================================
     let headerHtml = `
         <div class="col-12 mb-2">
-            <div class="card border-0 shadow-sm bg-light"> <div class="card-body p-3">
+            <div class="card border-0 shadow-sm bg-light">
+                <div class="card-body p-3">
                     
                     <div class="d-flex w-100 justify-content-between align-items-center mb-2 border-bottom pb-2">
                         <div>
                             <span class="badge ${badgeClass} me-1">${item.sheetName}</span>
                             <span class="badge bg-white text-secondary border">${item['지점'] || '-'}</span>
-                            <small class="fw-bold text-dark ms-2">${item['개통일']}</small>
                         </div>
-                        <span class="badge bg-white text-primary border rounded-pill px-2 shadow-sm">
-                            <i class="bi bi-person-circle me-1"></i>${item['담당자'] || '미지정'}
-                        </span>
+                        <small class="fw-bold text-dark">${item['개통일']}</small>
                     </div>
 
-                    <div class="mb-2 text-truncate">
-                        <span class="fw-bold text-primary fs-5 me-2">${item['고객명']}</span>
-                        <span class="small text-dark">
-                            ${item['연락처'] || '-'} <span class="text-muted mx-1">|</span>
-                            ${item['개통처'] || '-'} <span class="text-muted mx-1">|</span>
-                            ${item['개통유형'] || '-'} <span class="text-muted mx-1">|</span>
-                            ${item['약정유형'] || '-'}
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div class="text-truncate me-2">
+                            <span class="fw-bold text-primary fs-5 me-2">${item['고객명']}</span>
+                            <span class="small text-dark">
+                                ${item['연락처'] || '-'} <span class="text-muted mx-1">|</span>
+                                ${item['개통처'] || '-'} <span class="text-muted mx-1">|</span>
+                                ${item['개통유형'] || '-'} <span class="text-muted mx-1">|</span>
+                                ${item['약정유형'] || '-'}
+                            </span>
+                        </div>
+                        <span class="badge bg-white text-primary border rounded-pill px-2 shadow-sm text-nowrap">
+                            <i class="bi bi-person-circle me-1"></i>${item['담당자'] || '미지정'}
                         </span>
                     </div>
 
