@@ -223,13 +223,13 @@ function loadDashboard() {
     });
 }
 
-// [수정] 대시보드 그리기 (실적 랭킹 테이블 디자인 적용)
+// [script.js] 대시보드 렌더링 (마진 컬럼 추가됨)
 function renderDashboard(data) {
     // 1. 상단 숫자판
     document.getElementById('dash_today_mobile').innerText = data.today.mobile;
     document.getElementById('dash_today_wired').innerText = data.today.wired;
     
-    // 2. 월간 누적 (지점별)
+    // 2. 월간 누적
     renderHtmlList('dash_month_stats', Object.keys(data.month), b => `
         <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
             <span class="fw-bold small">${b}</span>
@@ -240,7 +240,7 @@ function renderDashboard(data) {
         </div>
     `, '데이터 없음');
     
-    // 3. 오늘 실시간 개통 리스트
+    // 3. 오늘 실시간 개통 리스트 (기존 테이블 유지 - 의도하신 대로)
     renderHtmlList('dash_today_list', data.todayList, item => {
         const marginStr = Math.floor(Number(item.margin)).toLocaleString();
         const colorClass = item.badgeColor ? `bg-${item.badgeColor}` : "bg-secondary";
@@ -249,40 +249,34 @@ function renderDashboard(data) {
             <td><span class="badge ${colorClass}">${item.type}</span></td>
             <td class="fw-bold">${item.name}님</td>
             <td class="text-muted small">${item.user}님</td>
-            <td class="text-danger fw-bold">${marginStr}</td>
+            <td class="text-danger fw-bold text-end pe-3">${marginStr}</td>
         </tr>`;
     }, '<tr><td colspan="5" class="text-center py-4 text-muted">오늘 개통 내역이 없습니다.</td></tr>');
     
-    // 4. [디자인 변경] 이달의 실적 (랭킹 테이블 & 메달)
+    // 4. [변경] 이달의 실적 (마진 컬럼 추가)
     const rankArea = document.getElementById('dash_user_rank');
     if (!data.userRank || data.userRank.length === 0) {
         rankArea.innerHTML = '<div class="text-center py-5 text-muted small">이달의 실적이 없습니다.</div>';
     } else {
-        // 테이블 헤더 생성
         let html = `
             <table class="table table-hover align-middle mb-0 text-center" style="font-size: 0.9rem;">
                 <thead class="bg-light text-secondary small fw-bold sticky-top">
                     <tr>
-                        <th style="width:15%">순위</th>
-                        <th style="width:25%">매니저</th>
-                        <th style="width:20%">📱무선</th>
-                        <th style="width:20%">📺유선</th>
-                        <th style="width:20%">합계</th>
-                    </tr>
+                        <th style="width:10%">순위</th>
+                        <th style="width:20%">매니저</th>
+                        <th style="width:15%">📱</th>
+                        <th style="width:15%">📺</th>
+                        <th style="width:15%">합계</th>
+                        <th style="width:25%">💰 마진</th> </tr>
                 </thead>
                 <tbody>
         `;
-
-        // 데이터 반복
         data.userRank.forEach((u, index) => {
-            // 메달 아이콘 처리
-            let rankBadge = `<span class="fw-bold text-secondary" style="font-size:0.9rem;">${index + 1}</span>`;
-            if (index === 0) rankBadge = `<span style="font-size:1.2rem;">🥇</span>`;
-            else if (index === 1) rankBadge = `<span style="font-size:1.2rem;">🥈</span>`;
-            else if (index === 2) rankBadge = `<span style="font-size:1.2rem;">🥉</span>`;
-
-            // 본인(currentUser) 강조
+            let rankBadge = `<span class="fw-bold text-secondary">${index + 1}</span>`;
+            if (index === 0) rankBadge = `🥇`; else if (index === 1) rankBadge = `🥈`; else if (index === 2) rankBadge = `🥉`;
+            
             const isMe = (typeof currentUser !== 'undefined' && u.name === currentUser) ? "bg-primary bg-opacity-10 border-start border-4 border-primary" : "";
+            const marginStr = Number(u.margin).toLocaleString(); // 쉼표 포맷팅
 
             html += `
                 <tr class="${isMe}">
@@ -290,11 +284,10 @@ function renderDashboard(data) {
                     <td class="fw-bold text-dark">${u.name}</td>
                     <td class="text-muted">${u.mobile}</td>
                     <td class="text-muted">${u.wired}</td>
-                    <td class="fw-bold text-primary fs-6">${u.total}건</td>
-                </tr>
+                    <td class="fw-bold fs-6">${u.total}</td>
+                    <td class="fw-bold text-danger">${marginStr}</td> </tr>
             `;
         });
-
         html += `</tbody></table>`;
         rankArea.innerHTML = html;
     }
