@@ -1097,7 +1097,7 @@ function searchAllHistory() {
     });
 }
 
-// [최종 수정] 개통 정보 수정 모달 (상단 레이아웃 변경: 개통일 우측 / 매니저 하단 배치)
+// [최종 수정] 개통 정보 수정 모달 (상단 모델/요금제 정보 삭제로 심플화)
 function openEditModal(item) {
     // [안전장치] 데이터 로딩 체크
     if (!globalDropdownData || !globalDropdownData.visitList || globalDropdownData.visitList.length === 0) {
@@ -1125,8 +1125,6 @@ function openEditModal(item) {
     // --- 헬퍼 함수 ---
     const makeInput = (label, key, width = 'col-6', type = 'text', isDanger = false, isReadOnly = false) => {
         let val = item[key] || '';
-        
-        // [기능 유지] 날짜 관련 항목만 T 뒷부분 자르기
         const dateKeys = ['요금제변경일', '부가서비스해지일', '대납1요청일', '대납2요청일', '처리일', '개통일'];
         if (dateKeys.includes(key) && typeof val === 'string' && val.includes('T')) {
             val = val.split('T')[0];
@@ -1169,7 +1167,7 @@ function openEditModal(item) {
     else if (item.sheetName === '중고개통') badgeClass = 'bg-warning text-white';
 
     // ==========================================
-    // 1. [상단] 요약 정보 (레이아웃 변경됨)
+    // 1. [상단] 요약 정보 (심플 버전)
     // ==========================================
     let headerHtml = `
         <div class="col-12 mb-2">
@@ -1184,7 +1182,7 @@ function openEditModal(item) {
                         <small class="fw-bold text-dark">${item['개통일']}</small>
                     </div>
 
-                    <div class="d-flex justify-content-between align-items-center mb-2">
+                    <div class="d-flex justify-content-between align-items-center">
                         <div class="text-truncate me-2">
                             <span class="fw-bold text-primary fs-5 me-2">${item['고객명']}</span>
                             <span class="small text-dark">
@@ -1199,16 +1197,7 @@ function openEditModal(item) {
                         </span>
                     </div>
 
-                    <div class="text-muted small text-truncate bg-white p-2 rounded border">
-                        <span class="fw-bold text-dark">${item['모델명'] || '-'}</span> 
-                        ${item['일련번호'] ? ` : ${item['일련번호']}` : ''}
-                        <span class="mx-2 text-secondary">|</span> 
-                        ${item['요금제'] || '-'}
-                        ${item['부가서비스'] ? ` <span class="mx-2 text-secondary">|</span> ${item['부가서비스']}` : ''}
-                        ${item['제휴카드'] ? ` <span class="mx-2 text-secondary">|</span> ${item['제휴카드']}` : ''}
                     </div>
-
-                </div>
             </div>
         </div>
     `;
