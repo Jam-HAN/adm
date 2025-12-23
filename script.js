@@ -1077,7 +1077,7 @@ function searchAllHistory() {
 }
 
 // 3. 수정 모달 열기 (동적 폼 생성)
-// [디자인 개선] 개통 정보 수정 모달 (모든 방법 항목 드롭다운 적용)
+// [디자인 개선] 개통 정보 수정 모달 (시트 데이터 연동 완료)
 function openEditModal(item) {
     // 1. 식별자 값 세팅
     document.getElementById('edit_sheet_name').value = item.sheetName;
@@ -1097,26 +1097,30 @@ function openEditModal(item) {
 
     const makeSelect = (label, key, options, width = 'col-6') => {
         const val = item[key] || '';
+        // 데이터가 로드되지 않았을 경우를 대비해 빈 배열 처리
         const safeOptions = options || [];
-        // [수정] 값이 옵션 목록에 없더라도(예: 직접입력한 과거 데이터) 선택된 상태로 보여주기 위해 확인
+        
         let optsHtml = safeOptions.map(opt => `<option value="${opt}" ${val === opt ? 'selected' : ''}>${opt}</option>`).join('');
         
-        // 만약 현재 값이 옵션 리스트에 없다면(예: '기타'), 임시로 옵션 추가해서 보여줌
+        // [중요] 시트 목록에 없는 값(예: 과거 데이터, 직접 입력값)이 있다면, 선택된 상태로 목록에 임시 추가
         if(val && !safeOptions.includes(val)) {
-            optsHtml += `<option value="${val}" selected>${val} (기존값)</option>`;
+            optsHtml += `<option value="${val}" selected>${val} (목록 외)</option>`;
         }
 
         return `<div class="${width}"><label class="form-label-sm">${label}</label><select class="form-select form-select-sm edit-input fw-bold text-primary" data-key="${key}"><option value="">선택</option>${optsHtml}</select></div>`;
     };
 
     // ==========================================
-    // [설정] 드롭다운 옵션 데이터 가져오기
+    // [설정] 서버에서 불러온 시트 데이터(globalDropdownData) 연결
     // ==========================================
-    const dd = globalDropdownData || {}; // 데이터 없으면 빈 객체
-    const visitOpts = dd.visitList || ['내방', '지인', '기타'];
-    const usimOpts = dd.usimList || ['선납', '후납', '무료'];
-    const payOpts = dd.payMethodList || ['이체', '현금', '카드']; // 대납/지급 방법
-    const colOpts = dd.colMethodList || ['이체', '현금', '카드']; // 수납 방법
+    const dd = globalDropdownData || {}; 
+    
+    // 개통 화면과 동일한 소스 사용
+    const visitList = dd.visitList || [];        // 방문경로
+    const usimList = dd.usimList || [];          // 유심 종류
+    const reviewList = dd.reviewList || [];      // 리뷰 항목
+    const payMethodList = dd.payMethodList || []; // 대납/지급 방법 (Ref 시트 P열 등)
+    const colMethodList = dd.colMethodList || []; // 수납 방법 (Ref 시트 R열 등)
 
     // ==========================================
     // 1. [상단] 요약 정보
@@ -1144,7 +1148,7 @@ function openEditModal(item) {
     container.innerHTML += headerHtml;
 
     // ==========================================
-    // 2. [기본 정보] (방문경로, 리뷰작성 드롭다운 적용)
+    // 2. [기본 정보] (방문경로, 리뷰작성 시트 연동)
     // ==========================================
     let sectionBasic = `
         <div class="divider"></div>
@@ -1152,7 +1156,7 @@ function openEditModal(item) {
         <div class="row g-2">
             ${makeInput('개통유형', '개통유형', 'col-4')}
             ${makeInput('약정유형', '약정유형', 'col-4')}
-            ${makeSelect('방문경로', '방문경로', visitOpts, 'col-4')} ${makeInput('고객명', '고객명', 'col-4')}
+            ${makeSelect('방문경로', '방문경로', visitList, 'col-4')} ${makeInput('고객명', '고객명', 'col-4')}
             ${makeInput('생년월일', '생년월일', 'col-4')}
             ${makeInput('연락처', '연락처', 'col-4')}
 
@@ -1164,12 +1168,12 @@ function openEditModal(item) {
             ${makeInput('부가서비스해지일', '부가서비스해지일', 'col-4', 'date')}
 
             ${makeInput('제휴카드', '제휴카드', 'col-6')}
-            ${makeSelect('리뷰작성', '리뷰작성', ['작성', '미작성'], 'col-6')} </div>
+            ${makeSelect('리뷰작성', '리뷰작성', reviewList, 'col-6')} </div>
     `;
     container.innerHTML += sectionBasic;
 
     // ==========================================
-    // 3. [정책 및 정산] (유심 드롭다운 적용)
+    // 3. [정책 및 정산] (유심 시트 연동)
     // ==========================================
     let sectionPolicy = `
         <div class="divider"></div>
@@ -1191,22 +1195,22 @@ function openEditModal(item) {
             ${makeInput('메모', '메모(차감)', 'col-6')}
             
             ${makeInput('프리할인', '프리할인', 'col-6', 'number', true)}
-            ${makeSelect('유심', '유심비', usimOpts, 'col-6')} </div>
+            ${makeSelect('유심', '유심비', usimList, 'col-6')} </div>
     `;
     container.innerHTML += sectionPolicy;
 
     // ==========================================
-    // 4. [대납 및 지원] (방법 항목들 드롭다운 적용)
+    // 4. [대납 및 지원] (대납 방법 시트 연동)
     // ==========================================
     let sectionSupport = `
         <div class="divider"></div>
         <div class="section-header"><i class="bi bi-credit-card"></i> 대납 및 지원</div>
         <div class="row g-2">
             ${makeInput('대납1', '대납1', 'col-4', 'number', true)}
-            ${makeSelect('방법', '대납1방법', payOpts, 'col-4')} ${makeInput('처리일', '대납1요청일', 'col-4', 'date')}
+            ${makeSelect('방법', '대납1방법', payMethodList, 'col-4')} ${makeInput('처리일', '대납1요청일', 'col-4', 'date')}
             
             ${makeInput('대납2', '대납2', 'col-4', 'number', true)}
-            ${makeSelect('방법', '대납2방법', payOpts, 'col-4')} ${makeInput('처리일', '대납2요청일', 'col-4', 'date')}
+            ${makeSelect('방법', '대납2방법', payMethodList, 'col-4')} ${makeInput('처리일', '대납2요청일', 'col-4', 'date')}
             
             ${makeInput('현금지급', '현금지급', 'col-6', 'number', true)}
             ${makeInput('페이백', '페이백', 'col-6', 'number', true)}
@@ -1219,16 +1223,16 @@ function openEditModal(item) {
     container.innerHTML += sectionSupport;
 
     // ==========================================
-    // 5. [수납 상세] (방법 항목들 드롭다운 적용)
+    // 5. [수납 상세] (수납 방법 시트 연동)
     // ==========================================
     let sectionCollect = `
         <div class="divider"></div>
         <div class="section-header"><i class="bi bi-wallet2"></i> 수납 상세</div>
         <div class="row g-2">
             ${makeInput('단말기수납1', '단말기수납1', 'col-6', 'number')}
-            ${makeSelect('방법', '단말기수납1방법', colOpts, 'col-6')} ${makeInput('단말기수납2', '단말기수납2', 'col-6', 'number')}
-            ${makeSelect('방법', '단말기수납2방법', colOpts, 'col-6')} ${makeInput('요금수납', '요금수납', 'col-6', 'number')}
-            ${makeSelect('방법', '요금수납방법', colOpts, 'col-6')} ${makeInput('중고폰/기타', '중고폰반납', 'col-6', 'number')}
+            ${makeSelect('방법', '단말기수납1방법', colMethodList, 'col-6')} ${makeInput('단말기수납2', '단말기수납2', 'col-6', 'number')}
+            ${makeSelect('방법', '단말기수납2방법', colMethodList, 'col-6')} ${makeInput('요금수납', '요금수납', 'col-6', 'number')}
+            ${makeSelect('방법', '요금수납방법', colMethodList, 'col-6')} ${makeInput('중고폰/기타', '중고폰반납', 'col-6', 'number')}
             ${makeInput('메모', '중고폰메모', 'col-6')}
             
             ${makeInput('기타 특이사항', '특이사항', 'col-12')}
