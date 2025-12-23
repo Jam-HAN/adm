@@ -1098,56 +1098,37 @@ function searchAllHistory() {
 }
 
 // 3. 수정 모달 열기 (동적 폼 생성)
-// [최종 수정] 개통 정보 수정 모달 (데이터 로딩 안전장치 추가)
+// [최종 수정] 개통 정보 수정 모달 (상단 디자인 개편 & 중요 항목 수정 잠금)
 function openEditModal(item) {
-    // [안전장치] 드롭다운 데이터가 없으면 서버에서 불러온 뒤 다시 실행
+    // [안전장치] 데이터 로딩 체크
     if (!globalDropdownData || !globalDropdownData.visitList || globalDropdownData.visitList.length === 0) {
-        // 로딩 표시 (잠시 기다려달라는 알림)
         Swal.fire({
-            title: '데이터 로딩 중...',
-            text: '필수 목록 데이터를 불러오고 있습니다. 잠시만 기다려주세요.',
-            allowOutsideClick: false,
-            didOpen: () => { Swal.showLoading(); }
+            title: '데이터 로딩 중...', text: '필수 목록 데이터를 불러오고 있습니다. 잠시만 기다려주세요.',
+            allowOutsideClick: false, didOpen: () => { Swal.showLoading(); }
         });
-
-        // 데이터 강제 요청
         fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "get_dropdown_data" }) })
-        .then(r => r.json())
-        .then(d => {
-            Swal.close(); // 로딩창 닫기
-            if(d.status === 'success') {
-                globalDropdownData = d; // 데이터 전역 변수에 저장
-                applyDropdownData(d);   // (선택사항) 다른 폼에도 적용
-                openEditModal(item);    // ★ 다시 모달 열기 실행 (재귀 호출)
-            } else {
-                alert("데이터 로드 실패: " + d.message);
-            }
-        })
-        .catch(e => {
+        .then(r => r.json()).then(d => {
             Swal.close();
-            alert("서버 통신 오류. 새로고침 후 다시 시도해주세요.");
-        });
-        return; // 데이터 없을 땐 여기서 함수 종료 (비동기 처리 후 다시 실행됨)
+            if(d.status === 'success') { globalDropdownData = d; applyDropdownData(d); openEditModal(item); }
+            else { alert("데이터 로드 실패: " + d.message); }
+        }).catch(e => { Swal.close(); alert("서버 통신 오류"); });
+        return;
     }
 
-    // --- 여기부터는 데이터가 있을 때 정상 실행 ---
-
-    // 1. 식별자 값 세팅
+    // 값 세팅
     document.getElementById('edit_sheet_name').value = item.sheetName;
     document.getElementById('edit_row_index').value = item.rowIndex;
     document.getElementById('edit_branch_name').value = item.branch || item['지점'];
     
     const container = document.getElementById('edit_form_container');
-    container.innerHTML = ''; // 초기화
+    container.innerHTML = ''; 
 
-    // --- 헬퍼 함수 ---
+    // --- 헬퍼 함수 (날짜 자동 자르기 기능 포함) ---
     const makeInput = (label, key, width = 'col-6', type = 'text', isDanger = false, isReadOnly = false) => {
         let val = item[key] || '';
         
-        // [해결책] "날짜 관련 항목"들만 딱 지정해서 T 뒷부분을 자릅니다.
-        // 이렇게 하면 'T우주' 같은 요금제 이름은 건드리지 않고, 날짜만 깔끔해집니다.
+        // 날짜 필드만 T 뒷부분 자르기 (요금제 이름 등은 보호)
         const dateKeys = ['요금제변경일', '부가서비스해지일', '대납1요청일', '대납2요청일', '처리일', '개통일'];
-        
         if (dateKeys.includes(key) && typeof val === 'string' && val.includes('T')) {
             val = val.split('T')[0];
         }
@@ -1171,18 +1152,12 @@ function openEditModal(item) {
     const makeSelect = (label, key, options, width = 'col-6') => {
         const val = item[key] || '';
         const safeOptions = options || [];
-        
         let optsHtml = safeOptions.map(opt => `<option value="${opt}" ${val === opt ? 'selected' : ''}>${opt}</option>`).join('');
-        
-        // 기존값이 목록에 없을 경우 추가 표시
-        if(val && !safeOptions.includes(val)) {
-            optsHtml += `<option value="${val}" selected>${val} (기존값)</option>`;
-        }
-
+        if(val && !safeOptions.includes(val)) optsHtml += `<option value="${val}" selected>${val} (기존값)</option>`;
         return `<div class="${width}"><label class="form-label-sm">${label}</label><select class="form-select form-select-sm edit-input" data-key="${key}"><option value="">선택</option>${optsHtml}</select></div>`;
     };
 
-    // [설정] 데이터 로드 (이제 안전함)
+    // 설정 데이터
     const dd = globalDropdownData || {}; 
     const visitList = dd.visitList || [];
     const usimList = dd.usimList || [];
@@ -1190,25 +1165,15 @@ function openEditModal(item) {
     const payMethodList = dd.payMethodList || [];
     const colMethodList = dd.colMethodList || [];
 
-    let actList = [], contList = [];
+    // 뱃지 색상 설정
     let badgeClass = 'bg-primary';
-
-    if (item.sheetName === '유선개통') {
-        actList = dd.actListWired || [];
-        contList = dd.contListWired || [];
-        badgeClass = 'bg-success';
-    } else if (item.sheetName === '중고개통') {
-        actList = dd.actListUsed || [];
-        contList = dd.contListUsed || [];
-        badgeClass = 'bg-warning text-dark';
-    } else {
-        actList = dd.actListMobile || [];
-        contList = dd.contListMobile || [];
-    }
+    if (item.sheetName === '유선개통') badgeClass = 'bg-success';
+    else if (item.sheetName === '중고개통') badgeClass = 'bg-warning text-white'; // 흰글씨
 
     // ==========================================
-    // 1. [상단] 요약 정보
+    // 1. [상단] 요약 정보 (디자인 변경)
     // ==========================================
+    // 요청: 개통처 개통유형 약정유형 담당매니저 / 모델 : 일련번호
     let headerHtml = `
         <div class="col-12 mb-2">
             <div class="card bg-light border-0 shadow-sm">
@@ -1217,13 +1182,20 @@ function openEditModal(item) {
                         <span class="badge ${badgeClass}">${item.sheetName}</span>
                         <span class="fw-bold text-dark">${item['개통일']}</span>
                     </div>
-                    <div class="row g-2 small text-muted">
-                        <div class="col-6"><b>지점:</b> ${item['지점'] || '-'}</div>
-                        <div class="col-6"><b>담당매니저:</b> ${item['담당자'] || '-'}</div>
-                        <div class="col-12">
-                            <b>모델:</b> <span class="text-dark fw-bold">${item['모델명']}</span>
-                            <span class="text-secondary ms-1">(${item['일련번호']})</span>
-                        </div>
+                    
+                    <div class="mb-2 text-truncate text-dark small">
+                         <span class="fw-bold text-primary">${item['개통처'] || '-'}</span> 
+                         <span class="mx-1 text-muted">|</span> 
+                         ${item['개통유형'] || '-'} 
+                         <span class="mx-1 text-muted">|</span> 
+                         ${item['약정유형'] || '-'}
+                         <span class="mx-1 text-muted">|</span> 
+                         <span class="fw-bold">${item['담당자'] || '-'} 매니저</span>
+                    </div>
+
+                    <div class="text-muted small">
+                        <b>모델:</b> <span class="text-dark fw-bold">${item['모델명']}</span>
+                        ${item['일련번호'] ? ` : ${item['일련번호']}` : ''}
                     </div>
                 </div>
             </div>
@@ -1238,8 +1210,9 @@ function openEditModal(item) {
         <div class="divider"></div>
         <div class="section-header"><i class="bi bi-person-badge"></i> 기본 정보</div>
         <div class="row g-2">
-            ${makeSelect('개통유형', '개통유형', actList, 'col-4')}
-            ${makeSelect('약정유형', '약정유형', contList, 'col-4')}
+            ${makeInput('개통유형', '개통유형', 'col-4', 'text', false, true)}
+            ${makeInput('약정유형', '약정유형', 'col-4', 'text', false, true)}
+            
             ${makeSelect('방문경로', '방문경로', visitList, 'col-4')}
 
             ${makeInput('고객명', '고객명', 'col-4')}
@@ -1248,12 +1221,8 @@ function openEditModal(item) {
 
             ${makeInput('요금제', '요금제', 'col-4')}
             ${makeInput('변경요금제', '변경요금제', 'col-4')}
-            ${makeInput('요금제변경일', '요금제변경일', 'col-4', 'text', false, true)}
-
-            ${makeInput('부가서비스', '부가서비스', 'col-8')}
-            ${makeInput('부가서비스해지일', '부가서비스해지일', 'col-4', 'text', false, true)}
-
-            ${makeInput('제휴카드', '제휴카드', 'col-6')}
+            ${makeInput('요금제변경일', '요금제변경일', 'col-4', 'text', false, true)} ${makeInput('부가서비스', '부가서비스', 'col-8')}
+            ${makeInput('부가서비스해지일', '부가서비스해지일', 'col-4', 'text', false, true)} ${makeInput('제휴카드', '제휴카드', 'col-6')}
             ${makeSelect('리뷰작성', '리뷰작성', reviewList, 'col-6')}
         </div>
     `;
@@ -1266,7 +1235,7 @@ function openEditModal(item) {
         <div class="divider"></div>
         <div class="section-header"><i class="bi bi-calculator"></i> 정책 및 정산</div>
         <div class="row g-2">
-            ${makeInput('개통처', '개통처', 'col-6')}
+            ${makeInput('개통처', '개통처', 'col-6', 'text', false, true)}
             ${makeInput('정책차수', '정책차수', 'col-6')}
             
             ${makeInput('액면/히든', '정책금액(액면)', 'col-6', 'number')}
@@ -1288,7 +1257,7 @@ function openEditModal(item) {
     container.innerHTML += sectionPolicy;
 
     // ==========================================
-    // 4. [대납 및 지원]
+    // 4. [대납 및 지원] (기존 유지)
     // ==========================================
     let sectionSupport = `
         <div class="divider"></div>
@@ -1313,7 +1282,7 @@ function openEditModal(item) {
     container.innerHTML += sectionSupport;
 
     // ==========================================
-    // 5. [수납 상세]
+    // 5. [수납 상세] (기존 유지)
     // ==========================================
     let sectionCollect = `
         <div class="divider"></div>
@@ -1336,9 +1305,7 @@ function openEditModal(item) {
     `;
     container.innerHTML += sectionCollect;
 
-    // ==========================================
-    // 6. [하단 버튼]
-    // ==========================================
+    // [하단 버튼] (기존 유지)
     const footer = document.querySelector('#modal-edit-history .modal-footer');
     if(footer) footer.style.display = 'none';
 
