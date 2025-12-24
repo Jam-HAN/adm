@@ -1480,7 +1480,7 @@ function initSpecialDates(type) {
     }
 }
 
-// 1. 통합 조회 함수 (상품권 필터링 조건 강화)
+// 1. 통합 조회 함수 (렌더링 방식 개선: += 제거)
 function searchSpecialList(type) {
     let branch, keyword, containerId, start, end;
     
@@ -1489,7 +1489,7 @@ function searchSpecialList(type) {
         keyword = document.getElementById('search_return_keyword').value;
         start = document.getElementById('search_return_start').value;
         end = document.getElementById('search_return_end').value;
-        containerId = 'return-usedphone-list';
+        containerId = 'return-usedphone-list'; // HTML ID 꼭 확인하세요!
     } else {
         branch = document.getElementById('search_gift_branch').value;
         keyword = document.getElementById('search_gift_keyword').value;
@@ -1505,6 +1505,8 @@ function searchSpecialList(type) {
     }
 
     const container = document.getElementById(containerId);
+    if (!container) return; // 안전장치
+
     container.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary"></div></div>';
 
     fetch(GAS_URL, {
@@ -1513,34 +1515,32 @@ function searchSpecialList(type) {
     })
     .then(r => r.json())
     .then(data => {
-        container.innerHTML = '';
         if (data.status === 'success' && data.data.length > 0) {
             const filtered = data.data.filter(item => {
                 if (type === 'usedphone') {
-                    // 중고폰: 유선개통이 아닌 것
                     return item.sheetName !== '유선개통';
                 } else {
-                    // [요청 3] 상품권: 유선개통이면서 + 특정 유형만
                     const targetTypes = ['유선동판', '유선단품', '약정갱신'];
                     return item.sheetName === '유선개통' && targetTypes.includes(item['개통유형']);
                 }
             });
 
             if (filtered.length === 0) {
-                container.innerHTML = '<div class="col-12 text-center text-muted py-5">조건에 맞는 대상이 없습니다.</div>';
+                container.innerHTML = '<div class="text-center text-muted py-5 small">조건에 맞는 대상이 없습니다.</div>';
                 return;
             }
 
-            filtered.forEach(item => {
-                container.innerHTML += renderSpecialCard(item, type);
-            });
+            // ★ [개선] HTML을 한 번에 모아서 집어넣기 (속도 향상 & 깨짐 방지)
+            const htmlString = filtered.map(item => renderSpecialCard(item, type)).join('');
+            container.innerHTML = htmlString;
 
         } else {
-            container.innerHTML = '<div class="col-12 text-center text-muted py-5">검색 결과가 없습니다.</div>';
+            container.innerHTML = '<div class="text-center text-muted py-5 small">검색 결과가 없습니다.</div>';
         }
     })
     .catch(err => {
-        container.innerHTML = '<div class="col-12 text-center text-danger py-5">오류 발생</div>';
+        console.error(err);
+        container.innerHTML = '<div class="text-center text-danger py-5 small">오류 발생</div>';
     });
 }
 
