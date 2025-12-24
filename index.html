@@ -558,6 +558,101 @@
                 </div>
             </div>
 
+            <div id="section-return-phone" class="section-view" style="display:none;">
+                <h4 class="mb-4 fw-bold"><i class="bi bi-phone"></i> 중고폰 반납 등록</h4>
+    
+                <div class="card p-3 mb-4 shadow-sm border-0 bg-light">
+                    <div class="row g-2 align-items-end">
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold small">지점</label>
+                            <select id="search_return_branch" class="form-select">
+                                <option value="전체">전체</option>
+                                <option value="장지 본점">장지 본점</option>
+                                <option value="명일 직영점">명일 직영점</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold small">검색어 (이름/번호)</label>
+                            <input type="text" id="search_return_keyword" class="form-control" placeholder="고객명 또는 뒷번호">
+                        </div>
+                        <div class="col-md-2">
+                            <button class="btn btn-primary w-100 fw-bold" onclick="searchSpecialList('phone')">
+                                <i class="bi bi-search"></i> 조회
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div id="return-phone-list" class="row g-3"></div>
+            </div>
+            
+            <div id="section-receive-gift" class="section-view" style="display:none;">
+                <h4 class="mb-4 fw-bold"><i class="bi bi-gift"></i> 상품권 수령 등록</h4>
+                
+                <div class="card p-3 mb-4 shadow-sm border-0 bg-light">
+                    <div class="row g-2 align-items-end">
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold small">지점</label>
+                            <select id="search_gift_branch" class="form-select">
+                                <option value="전체">전체</option>
+                                <option value="장지 본점">장지 본점</option>
+                                <option value="명일 직영점">명일 직영점</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold small">검색어 (이름/번호)</label>
+                            <input type="text" id="search_gift_keyword" class="form-control" placeholder="고객명 또는 뒷번호">
+                        </div>
+                        <div class="col-md-2">
+                            <button class="btn btn-primary w-100 fw-bold" onclick="searchSpecialList('gift')">
+                                <i class="bi bi-search"></i> 조회
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div id="receive-gift-list" class="row g-3"></div>
+            </div>
+            
+            <div class="modal fade" id="modal-special-update" tabindex="-1">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content border-0 shadow">
+                        <div class="modal-header bg-primary text-white">
+                            <h5 class="modal-title fw-bold" id="special-modal-title">등록</h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body p-4">
+                            <input type="hidden" id="sp_sheetName">
+                            <input type="hidden" id="sp_rowIndex">
+                            <input type="hidden" id="sp_branch">
+                            <input type="hidden" id="sp_type"> <div class="alert alert-light border mb-3">
+                                <h5 class="fw-bold mb-1" id="sp_customer_name">홍길동</h5>
+                                <small class="text-muted" id="sp_customer_info">010-1234-5678 | SKT</small>
+                            </div>
+            
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">정산 금액 (반납가/상품권액)</label>
+                                <input type="text" class="form-control form-control-lg fw-bold text-primary" id="sp_amount" placeholder="금액 입력" onkeyup="formatCurrency(this)">
+                            </div>
+            
+                            <div class="mb-3">
+                                <label class="form-label fw-bold" id="sp_date_label">반납일/수령일</label>
+                                <input type="date" class="form-control" id="sp_date">
+                            </div>
+            
+                            <div class="mb-3" id="sp_model_group">
+                                <label class="form-label fw-bold">반납 모델명</label>
+                                <input type="text" class="form-control" id="sp_model_name" placeholder="예: 아이폰13 미니">
+                            </div>
+            
+                            <div class="d-grid mt-4">
+                                <button type="button" class="btn btn-primary btn-lg fw-bold" onclick="submitSpecialUpdate()">
+                                    <i class="bi bi-check-circle"></i> 저장하기
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 
