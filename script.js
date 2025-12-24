@@ -1480,7 +1480,7 @@ function initSpecialDates(type) {
     }
 }
 
-// 1. 통합 조회 함수 (기간 검색 추가)
+// 1. 통합 조회 함수 (상품권 필터링 조건 강화)
 function searchSpecialList(type) {
     let branch, keyword, containerId, start, end;
     
@@ -1498,9 +1498,7 @@ function searchSpecialList(type) {
         containerId = 'receive-gift-list';
     }
 
-    // 날짜 유효성 체크
     if (!start || !end) {
-        // 날짜가 없으면 강제로 초기화
         initSpecialDates(type);
         start = (type==='phone') ? document.getElementById('search_return_start').value : document.getElementById('search_gift_start').value;
         end = (type==='phone') ? document.getElementById('search_return_end').value : document.getElementById('search_gift_end').value;
@@ -1511,25 +1509,25 @@ function searchSpecialList(type) {
 
     fetch(GAS_URL, {
         method: "POST",
-        body: JSON.stringify({
-            action: "get_all_history",
-            start: start,
-            end: end,
-            keyword: keyword,
-            branch: branch
-        })
+        body: JSON.stringify({ action: "get_all_history", start, end, keyword, branch })
     })
     .then(r => r.json())
     .then(data => {
         container.innerHTML = '';
         if (data.status === 'success' && data.data.length > 0) {
             const filtered = data.data.filter(item => {
-                if (type === 'phone') return item.sheetName !== '유선개통';
-                else return item.sheetName === '유선개통';
+                if (type === 'phone') {
+                    // 중고폰: 유선개통이 아닌 것
+                    return item.sheetName !== '유선개통';
+                } else {
+                    // [요청 3] 상품권: 유선개통이면서 + 특정 유형만
+                    const targetTypes = ['유선동판', '유선단품', '약정갱신'];
+                    return item.sheetName === '유선개통' && targetTypes.includes(item['개통유형']);
+                }
             });
 
             if (filtered.length === 0) {
-                container.innerHTML = '<div class="col-12 text-center text-muted py-5">해당 기간/조건의 대상이 없습니다.</div>';
+                container.innerHTML = '<div class="col-12 text-center text-muted py-5">조건에 맞는 대상이 없습니다.</div>';
                 return;
             }
 
@@ -1602,7 +1600,7 @@ function renderSpecialCard(item, type) {
     </div>`;
 }
 
-// 3. 모달 열기 (기존 값 파싱 기능 추가)
+// 3. 모달 열기 (라벨 텍스트 동적 변경)
 function openSpecialModal(item, type) {
     document.getElementById('sp_sheetName').value = item.sheetName;
     document.getElementById('sp_rowIndex').value = item.rowIndex;
@@ -1612,54 +1610,42 @@ function openSpecialModal(item, type) {
     document.getElementById('sp_customer_name').innerText = item['고객명'];
     document.getElementById('sp_customer_info').innerText = `${item['연락처']} | ${item['개통일']}`;
 
-    // 1) 금액 채우기
-    const existingAmount = item['중고폰반납'] || ''; // DB의 금액 컬럼
+    // 1) [요청 1] 라벨 텍스트 변경
+    const amtLabel = document.getElementById('sp_amt_label');
+    const dateLabel = document.getElementById('sp_date_label');
+    const modalTitle = document.getElementById('special-modal-title');
+    const modelGroup = document.getElementById('sp_model_group');
+
+    if (type === 'phone') {
+        modalTitle.innerText = "중고폰 반납 등록";
+        amtLabel.innerText = "정산 금액 (반납 금액)";
+        dateLabel.innerText = "반납일";
+        modelGroup.style.display = 'block'; 
+    } else {
+        modalTitle.innerText = "상품권 수령 등록";
+        amtLabel.innerText = "정산 금액 (수령 금액)";
+        dateLabel.innerText = "수령일";
+        modelGroup.style.display = 'none'; 
+    }
+
+    // 2) 기존 값 채우기
+    const existingAmount = item['중고폰반납'] || ''; 
     document.getElementById('sp_amount').value = existingAmount ? Number(String(existingAmount).replace(/,/g,'')).toLocaleString() : '';
     
-    // 2) [요청 3] 날짜 및 모델명 파싱 (메모에서 추출)
-    // 저장 형식: "YYYY-MM-DD / 모델명 반납" 또는 "YYYY-MM-DD 수령"
     const memo = item['중고폰메모'] || ''; 
     let savedDate = '';
     let savedModel = '';
 
     if (memo) {
-        // 날짜 추출 (앞 10자리)
-        if (memo.length >= 10 && memo.includes('-')) {
-            savedDate = memo.substring(0, 10);
-        }
-        
-        // 모델명 추출 (중고폰인 경우 '/' 뒤의 내용 파싱)
+        if (memo.length >= 10 && memo.includes('-')) savedDate = memo.substring(0, 10);
         if (type === 'phone' && memo.includes('/')) {
-            // "2024-05-01 / 아이폰12 반납" -> " 아이폰12 반납" -> "아이폰12"
             let parts = memo.split('/');
-            if (parts.length > 1) {
-                let temp = parts[1].trim(); 
-                savedModel = temp.replace(' 반납', '').trim();
-            }
+            if (parts.length > 1) savedModel = parts[1].replace(' 반납', '').trim();
         }
     }
 
-    // 날짜 값 설정 (저장된 값 없으면 오늘)
     document.getElementById('sp_date').value = savedDate || new Date().toISOString().split('T')[0];
-    
-    // 모델명 값 설정
     document.getElementById('sp_model_name').value = savedModel;
-
-
-    // UI 설정
-    const modalTitle = document.getElementById('special-modal-title');
-    const dateLabel = document.getElementById('sp_date_label');
-    const modelGroup = document.getElementById('sp_model_group');
-
-    if (type === 'phone') {
-        modalTitle.innerText = "중고폰 반납 등록";
-        dateLabel.innerText = "반납일";
-        modelGroup.style.display = 'block'; 
-    } else {
-        modalTitle.innerText = "상품권 수령 등록";
-        dateLabel.innerText = "수령일";
-        modelGroup.style.display = 'none'; 
-    }
 
     new bootstrap.Modal(document.getElementById('modal-special-update')).show();
 }
