@@ -167,6 +167,13 @@ function showSection(id) {
     // 2. 섹션 전환 (기존 코드 유지)
     document.querySelectorAll('.section-view').forEach(el => el.classList.remove('active-section', 'fade-in'));
     document.getElementById(id).classList.add('active-section', 'fade-in');
+
+    // ---------------------------------------------------------
+    // ★ [추가된 부분] 화면 진입 시 날짜 자동 세팅 트리거
+    // ---------------------------------------------------------
+    if (id === 'section-return-phone') initSpecialDates('phone');
+    if (id === 'section-receive-gift') initSpecialDates('gift');
+    // ---------------------------------------------------------
     
     // 3. [핵심 수정] 입고 화면(section-in) 진입 시 로직 개선
     if(id === 'section-in') {
