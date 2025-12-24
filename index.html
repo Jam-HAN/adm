@@ -559,73 +559,71 @@
             </div>
 
             <div id="section-return-phone" class="section-view">
-                <h4 class="mb-4 fw-bold"><i class="bi bi-phone"></i> 중고폰 반납 등록</h4>
-                
-                <div class="card p-3 mb-4 shadow-sm border-0 bg-light">
-                    <div class="row g-2 align-items-end">
-                        <div class="col-md-2">
-                            <label class="form-label fw-bold small">지점</label>
-                            <select id="search_return_branch" class="form-select">
-                                <option value="전체">전체</option>
+                <div class="glass-card p-4">
+                    <h5 class="fw-bold mb-4"><i class="bi bi-phone"></i> 중고폰 반납 등록</h5>
+                    
+                    <div class="row g-2 mb-3">
+                        <div class="col-12">
+                            <select id="search_return_branch" class="form-select form-select-sm fw-bold text-primary">
+                                <option value="전체">🏢 전체 지점 보기</option>
                                 <option value="장지 본점">장지 본점</option>
                                 <option value="명일 직영점">명일 직영점</option>
                             </select>
                         </div>
-                        <div class="col-md-2">
-                            <label class="form-label fw-bold small">시작일</label>
-                            <input type="date" id="search_return_start" class="form-control">
+                        
+                        <div class="col-6">
+                            <input type="date" class="form-control form-control-sm" id="search_return_start">
                         </div>
-                        <div class="col-md-2">
-                            <label class="form-label fw-bold small">종료일</label>
-                            <input type="date" id="search_return_end" class="form-control">
+                        <div class="col-6">
+                            <input type="date" class="form-control form-control-sm" id="search_return_end">
                         </div>
-                        <div class="col-md-3">
-                            <label class="form-label fw-bold small">검색어 (이름/번호)</label>
-                            <input type="text" id="search_return_keyword" class="form-control" placeholder="고객명 또는 뒷번호" onkeydown="if(event.key==='Enter') searchSpecialList('phone')">
-                        </div>
-                        <div class="col-md-2">
-                            <button class="btn btn-primary w-100 fw-bold" onclick="searchSpecialList('phone')">
-                                <i class="bi bi-search"></i> 조회
-                            </button>
+                        
+                        <div class="col-12">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="search_return_keyword" placeholder="고객명, 연락처" onkeydown="if(event.key==='Enter') searchSpecialList('phone')">
+                                <button class="btn btn-outline-secondary" onclick="searchSpecialList('phone')">검색</button>
+                            </div>
                         </div>
                     </div>
+                    
+                    <div id="return-phone-list" class="list-group list-group-flush mt-3" style="max-height: 60vh; overflow-y: auto;">
+                        <div class="text-center text-muted py-5 small">조회 조건을 입력하고 검색하세요.</div>
+                    </div>
                 </div>
-                <div id="return-phone-list" class="row g-3"></div>
             </div>
             
             <div id="section-receive-gift" class="section-view">
-                <h4 class="mb-4 fw-bold"><i class="bi bi-gift"></i> 상품권 수령 등록</h4>
-                
-                <div class="card p-3 mb-4 shadow-sm border-0 bg-light">
-                    <div class="row g-2 align-items-end">
-                        <div class="col-md-2">
-                            <label class="form-label fw-bold small">지점</label>
-                            <select id="search_gift_branch" class="form-select">
-                                <option value="전체">전체</option>
+                <div class="glass-card p-4">
+                    <h5 class="fw-bold mb-4"><i class="bi bi-gift"></i> 상품권 수령 등록</h5>
+                    
+                    <div class="row g-2 mb-3">
+                        <div class="col-12">
+                            <select id="search_gift_branch" class="form-select form-select-sm fw-bold text-primary">
+                                <option value="전체">🏢 전체 지점 보기</option>
                                 <option value="장지 본점">장지 본점</option>
                                 <option value="명일 직영점">명일 직영점</option>
                             </select>
                         </div>
-                        <div class="col-md-2">
-                            <label class="form-label fw-bold small">시작일</label>
-                            <input type="date" id="search_gift_start" class="form-control">
+                        
+                        <div class="col-6">
+                            <input type="date" class="form-control form-control-sm" id="search_gift_start">
                         </div>
-                        <div class="col-md-2">
-                            <label class="form-label fw-bold small">종료일</label>
-                            <input type="date" id="search_gift_end" class="form-control">
+                        <div class="col-6">
+                            <input type="date" class="form-control form-control-sm" id="search_gift_end">
                         </div>
-                        <div class="col-md-3">
-                            <label class="form-label fw-bold small">검색어 (이름/번호)</label>
-                            <input type="text" id="search_gift_keyword" class="form-control" placeholder="고객명 또는 뒷번호" onkeydown="if(event.key==='Enter') searchSpecialList('gift')">
-                        </div>
-                        <div class="col-md-2">
-                            <button class="btn btn-primary w-100 fw-bold" onclick="searchSpecialList('gift')">
-                                <i class="bi bi-search"></i> 조회
-                            </button>
+                        
+                        <div class="col-12">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="search_gift_keyword" placeholder="고객명, 연락처" onkeydown="if(event.key==='Enter') searchSpecialList('gift')">
+                                <button class="btn btn-outline-secondary" onclick="searchSpecialList('gift')">검색</button>
+                            </div>
                         </div>
                     </div>
+                    
+                    <div id="receive-gift-list" class="list-group list-group-flush mt-3" style="max-height: 60vh; overflow-y: auto;">
+                        <div class="text-center text-muted py-5 small">조회 조건을 입력하고 검색하세요.</div>
+                    </div>
                 </div>
-                <div id="receive-gift-list" class="row g-3"></div>
             </div>
             
             <div class="modal fade" id="modal-special-update" tabindex="-1">
