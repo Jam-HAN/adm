@@ -1471,7 +1471,7 @@ function initSpecialDates(type) {
         return `${y}-${m}-${day}`;
     };
 
-    if (type === 'phone') {
+    if (type === 'usedphone') {
         if(!document.getElementById('search_return_start').value) document.getElementById('search_return_start').value = fmt(firstDay);
         if(!document.getElementById('search_return_end').value) document.getElementById('search_return_end').value = fmt(today);
     } else {
@@ -1484,12 +1484,12 @@ function initSpecialDates(type) {
 function searchSpecialList(type) {
     let branch, keyword, containerId, start, end;
     
-    if (type === 'phone') {
+    if (type === 'usedphone') {
         branch = document.getElementById('search_return_branch').value;
         keyword = document.getElementById('search_return_keyword').value;
         start = document.getElementById('search_return_start').value;
         end = document.getElementById('search_return_end').value;
-        containerId = 'return-phone-list';
+        containerId = 'return-usedphone-list';
     } else {
         branch = document.getElementById('search_gift_branch').value;
         keyword = document.getElementById('search_gift_keyword').value;
@@ -1500,8 +1500,8 @@ function searchSpecialList(type) {
 
     if (!start || !end) {
         initSpecialDates(type);
-        start = (type==='phone') ? document.getElementById('search_return_start').value : document.getElementById('search_gift_start').value;
-        end = (type==='phone') ? document.getElementById('search_return_end').value : document.getElementById('search_gift_end').value;
+        start = (type==='usedphone') ? document.getElementById('search_return_start').value : document.getElementById('search_gift_start').value;
+        end = (type==='usedphone') ? document.getElementById('search_return_end').value : document.getElementById('search_gift_end').value;
     }
 
     const container = document.getElementById(containerId);
@@ -1516,7 +1516,7 @@ function searchSpecialList(type) {
         container.innerHTML = '';
         if (data.status === 'success' && data.data.length > 0) {
             const filtered = data.data.filter(item => {
-                if (type === 'phone') {
+                if (type === 'usedphone') {
                     // 중고폰: 유선개통이 아닌 것
                     return item.sheetName !== '유선개통';
                 } else {
@@ -1551,7 +1551,7 @@ function renderSpecialCard(item, type) {
     // 1. 상태 뱃지 스타일 설정 (크기: py-2, px-4, fs-6 적용)
     let statusBadge = '';
     if (amount > 0) {
-        const label = (type === 'phone') ? '반납완료' : '수령완료';
+        const label = (type === 'usedphone') ? '반납완료' : '수령완료';
         // 초록색 (성공)
         statusBadge = `<span class="badge bg-success rounded-pill px-4 py-2 fs-6 shadow-sm"><i class="bi bi-check-lg me-1"></i>${label}</span>`;
     } else {
@@ -1616,7 +1616,7 @@ function openSpecialModal(item, type) {
     const modalTitle = document.getElementById('special-modal-title');
     const modelGroup = document.getElementById('sp_model_group');
 
-    if (type === 'phone') {
+    if (type === 'usedphone') {
         modalTitle.innerText = "중고폰 반납 등록";
         amtLabel.innerText = "정산 금액 (반납 금액)";
         dateLabel.innerText = "반납일";
@@ -1658,7 +1658,7 @@ function submitSpecialUpdate() {
     const modelVal = document.getElementById('sp_model_name').value;
     
     let memoText = "";
-    if (type === 'phone') {
+    if (type === 'usedphone') {
         const model = modelVal.trim() || "모델미지정";
         memoText = `${dateVal} / ${model} 반납`;
     } else {
