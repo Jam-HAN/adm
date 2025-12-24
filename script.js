@@ -1345,34 +1345,50 @@ function openEditModal(item) {
     modal.show();
 }
 
-// [최종 수정] 수정사항 저장 요청 (서버의 switch case 'update_history'와 매칭)
+// [최종 수정] 변경된 값만 전송하는 로직 적용
 function submitEditHistory() {
     const sheetName = document.getElementById('edit_sheet_name').value;
     const rowIndex = document.getElementById('edit_row_index').value;
     const branch = document.getElementById('edit_branch_name').value;
 
     if (!sheetName || !rowIndex || !branch) {
-        alert("필수 데이터(시트명, 행번호)가 누락되었습니다.");
+        alert("필수 데이터 오류");
         return;
     }
 
+    // 기본 식별 정보는 무조건 보냄
     const formData = {
         sheetName: sheetName,
         rowIndex: rowIndex,
         branch: branch,
-        // [중요] Code.gs의 case 'update_history'와 글자가 똑같아야 합니다.
         action: "update_history" 
     };
 
     const inputs = document.querySelectorAll('.edit-input');
+    let changeCount = 0; // 변경된 갯수 체크
+
     inputs.forEach(input => {
         const key = input.getAttribute('data-key');
-        let value = input.value;
-        formData[key] = value;
+        const currentVal = input.value;
+        // 저장해둔 초기값 가져오기 (없으면 빈 문자열 취급)
+        const originalVal = input.getAttribute('data-original') || '';
+
+        // [비교] 값이 달라졌을 때만 formData에 추가
+        // 주의: 숫자형 문자열 비교 등을 위해 둘 다 String으로 변환 후 비교
+        if (String(currentVal) !== String(originalVal)) {
+            formData[key] = currentVal;
+            changeCount++;
+        }
     });
 
+    // 변경된 게 하나도 없으면 전송 안 함 (불필요한 서버 호출 방지)
+    if (changeCount === 0) {
+        Swal.fire({ icon: 'info', title: '변경사항 없음', text: '수정된 내용이 없습니다.' });
+        return;
+    }
+
     Swal.fire({
-        title: '저장 중...', text: '데이터를 수정하고 있습니다.',
+        title: '저장 중...', text: `${changeCount}건의 변경사항을 저장합니다.`,
         allowOutsideClick: false, didOpen: () => { Swal.showLoading(); }
     });
 
