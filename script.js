@@ -1361,29 +1361,77 @@ function deleteHistoryItem() {
     });
 }
 
-// 4. 수정사항 저장
+// [최종 수정] 수정사항 저장 요청 (데이터 수집 및 서버 전송)
 function submitEditHistory() {
+    // 1. 필수 식별 정보 가져오기
     const sheetName = document.getElementById('edit_sheet_name').value;
     const rowIndex = document.getElementById('edit_row_index').value;
-    const branchName = document.getElementById('edit_branch_name').value;
-    
-    // 변경된 값 수집
-    let updates = {};
-    document.querySelectorAll('.edit-input').forEach(input => {
-        updates[input.dataset.key] = input.value; // 키: 값
+    const branch = document.getElementById('edit_branch_name').value;
+
+    if (!sheetName || !rowIndex || !branch) {
+        alert("필수 데이터(시트명, 행번호)가 누락되었습니다.");
+        return;
+    }
+
+    // 2. 폼 데이터 수집
+    const formData = {
+        sheetName: sheetName,
+        rowIndex: rowIndex,
+        branch: branch,
+        action: "edit_history_item" // 서버 함수 호출용
+    };
+
+    // .edit-input 클래스를 가진 모든 입력 필드 값을 담습니다.
+    const inputs = document.querySelectorAll('.edit-input');
+    inputs.forEach(input => {
+        const key = input.getAttribute('data-key');
+        let value = input.value;
+        
+        // 날짜 필드가 비어있지 않다면 포맷 확인 (YYYY-MM-DD)
+        // (화면에서 잘려보이더라도 저장할 때는 텍스트 그대로 보냄)
+        
+        formData[key] = value;
     });
 
-    if(!confirm("수정사항을 저장하시겠습니까?")) return;
+    // 3. 로딩 및 전송
+    Swal.fire({
+        title: '저장 중...',
+        text: '데이터를 수정하고 있습니다.',
+        allowOutsideClick: false,
+        didOpen: () => { Swal.showLoading(); }
+    });
 
-    fetch(GAS_URL, { 
-        method: "POST", 
-        body: JSON.stringify({ action: "update_history", sheetName, rowIndex, updates, branchName }) 
+    fetch(GAS_URL, {
+        method: "POST",
+        body: JSON.stringify(formData)
     })
     .then(r => r.json())
-    .then(d => {
-        alert(d.message);
-        bootstrap.Modal.getInstance(document.getElementById('modal-edit-history')).hide();
-        searchAllHistory(); // 목록 갱신
+    .then(data => {
+        Swal.close();
+        if (data.status === 'success') {
+            Swal.fire({ icon: 'success', title: '저장 완료', text: '수정사항이 반영되었습니다.', timer: 1500 });
+            
+            // 모달 닫기
+            const modalEl = document.getElementById('modal-edit-history');
+            const modal = bootstrap.Modal.getInstance(modalEl);
+            if (modal) modal.hide();
+
+            // 리스트 새로고침 (어디서 열었느냐에 따라 다름)
+            // 현재 화면이 조회화면이면 조회 실행, 대시보드면 대시보드 실행
+            const activeSection = document.querySelector('.section-view.active-section');
+            if (activeSection && activeSection.id === 'section-history-all') {
+                searchAllHistory(); // 조회 화면 새로고침
+            } else {
+                loadDashboard(); // 대시보드 새로고침
+            }
+        } else {
+            Swal.fire({ icon: 'error', title: '저장 실패', text: data.message });
+        }
+    })
+    .catch(err => {
+        Swal.close();
+        console.error(err);
+        Swal.fire({ icon: 'error', title: '통신 오류', text: '서버와 연결할 수 없습니다.' });
     });
 }
 
