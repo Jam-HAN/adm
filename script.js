@@ -1446,3 +1446,205 @@ function deleteHistoryItem() {
     });
 }
 
+// =========================================================
+// [신규] 중고폰 반납 / 상품권 수령 관리 로직
+// =========================================================
+
+// 1. 통합 조회 함수
+function searchSpecialList(type) {
+    let branch, keyword, containerId;
+    
+    if (type === 'phone') {
+        branch = document.getElementById('search_return_branch').value;
+        keyword = document.getElementById('search_return_keyword').value;
+        containerId = 'return-phone-list';
+    } else {
+        branch = document.getElementById('search_gift_branch').value;
+        keyword = document.getElementById('search_gift_keyword').value;
+        containerId = 'receive-gift-list';
+    }
+
+    if (!keyword || keyword.trim().length < 2) {
+        Swal.fire({ icon: 'warning', title: '검색어 입력', text: '이름이나 번호를 2글자 이상 입력하세요.' });
+        return;
+    }
+
+    const container = document.getElementById(containerId);
+    container.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary"></div></div>';
+
+    // 기존 get_all_history API 재사용 (기간은 넉넉하게, 검색어 기반)
+    // *최근 6개월 데이터 조회 (필요시 기간 조절)*
+    const end = new Date();
+    const start = new Date();
+    start.setMonth(start.getMonth() - 6);
+    
+    const sStr = start.toISOString().split('T')[0];
+    const eStr = end.toISOString().split('T')[0];
+
+    fetch(GAS_URL, {
+        method: "POST",
+        body: JSON.stringify({
+            action: "get_all_history",
+            start: sStr,
+            end: eStr,
+            keyword: keyword,
+            branch: branch
+        })
+    })
+    .then(r => r.json())
+    .then(data => {
+        container.innerHTML = '';
+        if (data.status === 'success' && data.data.length > 0) {
+            // [필터링 핵심]
+            // 중고폰(phone) -> '유선개통'이 아닌 것 (무선, 중고)
+            // 상품권(gift) -> '유선개통'인 것
+            const filtered = data.data.filter(item => {
+                if (type === 'phone') return item.sheetName !== '유선개통';
+                else return item.sheetName === '유선개통';
+            });
+
+            if (filtered.length === 0) {
+                container.innerHTML = '<div class="col-12 text-center text-muted py-5">해당 조건의 대상이 없습니다.</div>';
+                return;
+            }
+
+            filtered.forEach(item => {
+                container.innerHTML += renderSpecialCard(item, type);
+            });
+
+        } else {
+            container.innerHTML = '<div class="col-12 text-center text-muted py-5">검색 결과가 없습니다.</div>';
+        }
+    })
+    .catch(err => {
+        container.innerHTML = '<div class="col-12 text-center text-danger py-5">오류 발생</div>';
+    });
+}
+
+// 2. 카드 렌더링 (디자인 일관성 유지 + 하단 상태표시 변경)
+function renderSpecialCard(item, type) {
+    // 금액 확인 (중고폰반납 or 상품권 액수)
+    // item['중고폰반납']에는 DB의 해당 컬럼 값이 들어있음 (유선이면 상품권, 무선이면 중고폰값)
+    const amount = Number(String(item['중고폰반납'] || 0).replace(/,/g, ''));
+    
+    let statusBadge = '';
+    if (amount > 0) {
+        const amtStr = amount.toLocaleString();
+        statusBadge = `<span class="badge bg-success rounded-pill px-3 py-2"><i class="bi bi-check-lg me-1"></i>${amtStr}원 지급완료</span>`;
+    } else {
+        const label = (type === 'phone') ? '미반납' : '미수령';
+        statusBadge = `<span class="badge bg-danger rounded-pill px-3 py-2 animate__animated animate__pulse animate__infinite">${label}</span>`;
+    }
+
+    // 아이템 JSON을 문자열로 변환 (따옴표 처리)
+    const itemStr = JSON.stringify(item).replace(/"/g, '&quot;');
+
+    return `
+    <div class="col-md-6 col-lg-4">
+        <div class="card shadow-sm h-100 border-0 hover-effect" onclick="openSpecialModal(${itemStr}, '${type}')" style="cursor:pointer;">
+            <div class="card-body">
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="badge bg-light text-secondary border">${item['개통일']}</span>
+                    <span class="badge bg-white text-dark border">${item['지점']}</span>
+                </div>
+                <h5 class="card-title fw-bold text-primary mb-1">${item['고객명']}</h5>
+                <p class="card-text text-muted small mb-3">${item['연락처']} | ${item['통신사']}</p>
+                
+                <div class="d-flex justify-content-center border-top pt-3 mt-2 bg-light rounded-bottom">
+                    ${statusBadge}
+                </div>
+            </div>
+        </div>
+    </div>
+    `;
+}
+
+// 3. 모달 열기
+function openSpecialModal(item, type) {
+    // 값 세팅
+    document.getElementById('sp_sheetName').value = item.sheetName;
+    document.getElementById('sp_rowIndex').value = item.rowIndex;
+    document.getElementById('sp_branch').value = item.branch;
+    document.getElementById('sp_type').value = type;
+
+    // UI 세팅
+    document.getElementById('sp_customer_name').innerText = item['고객명'];
+    document.getElementById('sp_customer_info').innerText = `${item['연락처']} | ${item['개통일']}`;
+
+    // 기존 값 채우기 (이미 입력된 경우)
+    const existingAmount = item['중고폰반납'] || '';
+    document.getElementById('sp_amount').value = existingAmount ? Number(existingAmount).toLocaleString() : '';
+    
+    // 날짜는 오늘 날짜 기본 세팅
+    document.getElementById('sp_date').value = new Date().toISOString().split('T')[0];
+    document.getElementById('sp_model_name').value = ''; // 모델명 초기화
+
+    // 타입별 UI 변경
+    const modalTitle = document.getElementById('special-modal-title');
+    const dateLabel = document.getElementById('sp_date_label');
+    const modelGroup = document.getElementById('sp_model_group');
+
+    if (type === 'phone') {
+        modalTitle.innerText = "중고폰 반납 등록";
+        dateLabel.innerText = "반납일";
+        modelGroup.style.display = 'block'; // 모델명 입력 보이기
+    } else {
+        modalTitle.innerText = "상품권 수령 등록";
+        dateLabel.innerText = "수령일";
+        modelGroup.style.display = 'none'; // 모델명 입력 숨기기
+    }
+
+    new bootstrap.Modal(document.getElementById('modal-special-update')).show();
+}
+
+// 4. 저장하기 (메모 조합 로직)
+function submitSpecialUpdate() {
+    const type = document.getElementById('sp_type').value;
+    const amountStr = document.getElementById('sp_amount').value;
+    const dateVal = document.getElementById('sp_date').value;
+    const modelVal = document.getElementById('sp_model_name').value;
+    
+    // 메모 조합
+    let memoText = "";
+    if (type === 'phone') {
+        // 중고폰: "2024-12-25 / 아이폰13 반납" 형식
+        const model = modelVal.trim() || "모델미지정";
+        memoText = `${dateVal} / ${model} 반납`;
+    } else {
+        // 상품권: "2024-12-25 수령" 형식
+        memoText = `${dateVal} 수령`;
+    }
+
+    // 서버 전송 데이터 구성
+    const formData = {
+        action: "update_history",
+        sheetName: document.getElementById('sp_sheetName').value,
+        rowIndex: document.getElementById('sp_rowIndex').value,
+        branch: document.getElementById('sp_branch').value,
+        
+        // ★ 핵심: Backend는 '중고폰반납', '중고폰메모' 키값을 공통으로 사용함
+        // (Wired 시트면 알아서 상품권 칸에 들어감)
+        '중고폰반납': amountStr, 
+        '중고폰메모': memoText
+    };
+
+    // 저장 요청
+    Swal.fire({ title: '저장 중...', didOpen: () => Swal.showLoading() });
+
+    fetch(GAS_URL, {
+        method: "POST",
+        body: JSON.stringify(formData)
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.status === 'success') {
+            Swal.fire({ icon: 'success', title: '처리 완료', timer: 1000, showConfirmButton: false });
+            bootstrap.Modal.getInstance(document.getElementById('modal-special-update')).hide();
+            
+            // 리스트 새로고침
+            searchSpecialList(type);
+        } else {
+            Swal.fire({ icon: 'error', title: '실패', text: data.message });
+        }
+    });
+}
