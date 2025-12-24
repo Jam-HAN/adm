@@ -1538,34 +1538,34 @@ function searchSpecialList(type) {
     });
 }
 
-// 2. 카드 렌더링 (개통 정보 조회와 100% 동일한 UI + 상태 뱃지)
+// 2. 카드 렌더링 (구분선 제거 + 뱃지 중앙 정렬 + 크기 확대)
 function renderSpecialCard(item, type) {
     const amount = Number(String(item['중고폰반납'] || 0).replace(/,/g, ''));
     
-    // 1. 상태 뱃지 및 문구 설정
+    // 1. 상태 뱃지 스타일 설정 (크기: py-2, px-4, fs-6 적용)
     let statusBadge = '';
     if (amount > 0) {
         const label = (type === 'phone') ? '반납완료' : '수령완료';
-        // 초록색(성공) 뱃지 - 우측 정렬용
-        statusBadge = `<span class="badge bg-success rounded-pill px-3"><i class="bi bi-check-lg me-1"></i>${label}</span>`;
+        // 초록색 (성공)
+        statusBadge = `<span class="badge bg-success rounded-pill px-4 py-2 fs-6 shadow-sm"><i class="bi bi-check-lg me-1"></i>${label}</span>`;
     } else {
         const label = (type === 'phone') ? '미반납' : '미수령';
-        // 빨간색(경고) 뱃지 - 애니메이션 효과
-        statusBadge = `<span class="badge bg-danger bg-opacity-75 rounded-pill px-3 animate__animated animate__pulse animate__infinite">${label}</span>`;
+        // 빨간색 (강조 애니메이션)
+        statusBadge = `<span class="badge bg-danger bg-opacity-75 rounded-pill px-4 py-2 fs-6 shadow-sm animate__animated animate__pulse animate__infinite">${label}</span>`;
     }
 
-    // 2. 개통유형별 뱃지 색상 (개통조회와 동일)
+    // 2. 개통유형별 상단 뱃지 색상
     let typeBadgeClass = 'bg-primary';
     if(item.sheetName === '유선개통') typeBadgeClass = 'bg-success';
     else if(item.sheetName === '중고개통') typeBadgeClass = 'bg-warning text-dark';
 
     const itemStr = JSON.stringify(item).replace(/"/g, '&quot;');
 
-    // 3. UI 렌더링 (개통조회 카드 스타일 그대로 적용)
+    // 3. UI 렌더링
     return `
     <div class="glass-card p-3 mb-3 w-100 d-block" onclick="openSpecialModal(${itemStr}, '${type}')" style="cursor:pointer; transition: transform 0.2s;">
         
-        <div class="d-flex w-100 justify-content-between align-items-center mb-2 border-bottom pb-2">
+        <div class="d-flex w-100 justify-content-between align-items-center mb-3 border-bottom pb-2">
             <div>
                 <span class="badge ${typeBadgeClass} me-1">${item.sheetName}</span>
                 <span class="badge bg-white text-secondary border">${item['지점'] || '-'}</span>
@@ -1573,7 +1573,7 @@ function renderSpecialCard(item, type) {
             <small class="fw-bold text-dark">${item['개통일']}</small>
         </div>
         
-        <div class="d-flex justify-content-between align-items-center mb-2">
+        <div class="d-flex justify-content-between align-items-center mb-4">
             <div class="text-truncate me-2">
                 <span class="fw-bold text-primary fs-5 me-2">${item['고객명']}</span>
                 <span class="small text-dark">
@@ -1588,7 +1588,7 @@ function renderSpecialCard(item, type) {
             </span>
         </div>
 
-        <div class="d-flex justify-content-end mt-2 pt-2 border-top">
+        <div class="d-flex justify-content-center mt-2">
             ${statusBadge}
         </div>
     </div>`;
