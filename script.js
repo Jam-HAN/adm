@@ -1544,11 +1544,11 @@ function searchSpecialList(type) {
     });
 }
 
-// 2. 카드 렌더링 (디자인 수정: 상세 정보 박스 추가로 높이 확보)
+// 2. 카드 렌더링 (원상 복구: 깔끔한 디자인 + 중앙 뱃지)
 function renderSpecialCard(item, type) {
     const amount = Number(String(item['중고폰반납'] || 0).replace(/,/g, ''));
     
-    // 1. 상태 뱃지 설정
+    // 1. 상태 뱃지 설정 (크고 잘 보이게 유지)
     let statusBadge = '';
     if (amount > 0) {
         const label = (type === 'usedphone') ? '반납완료' : '수령완료';
@@ -1565,11 +1565,11 @@ function renderSpecialCard(item, type) {
 
     const itemStr = JSON.stringify(item).replace(/"/g, '&quot;');
 
-    // 3. UI 렌더링 (개통 정보 조회와 동일한 구성 + 하단 상태뱃지)
+    // 3. UI 렌더링
     return `
     <div class="glass-card p-3 mb-3 w-100 d-block" onclick="openSpecialModal(${itemStr}, '${type}')" style="cursor:pointer; transition: transform 0.2s;">
         
-        <div class="d-flex w-100 justify-content-between align-items-center mb-2 border-bottom pb-2">
+        <div class="d-flex w-100 justify-content-between align-items-center mb-3 border-bottom pb-2">
             <div>
                 <span class="badge ${typeBadgeClass} me-1">${item.sheetName}</span>
                 <span class="badge bg-white text-secondary border">${item['지점'] || '-'}</span>
@@ -1577,7 +1577,7 @@ function renderSpecialCard(item, type) {
             <small class="fw-bold text-dark">${item['개통일']}</small>
         </div>
         
-        <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="d-flex justify-content-between align-items-center mb-4">
             <div class="text-truncate me-2">
                 <span class="fw-bold text-primary fs-5 me-2">${item['고객명']}</span>
                 <span class="small text-dark">
@@ -1590,15 +1590,6 @@ function renderSpecialCard(item, type) {
             <span class="badge bg-white text-primary border rounded-pill px-2 shadow-sm text-nowrap">
                 <i class="bi bi-person-circle me-1"></i>${item['담당자'] || '미지정'}
             </span>
-        </div>
-
-        <div class="text-muted small bg-light p-2 rounded mb-3" style="word-break: break-all; line-height: 1.4;">
-            <span class="fw-bold text-dark">${item['모델명'] || '-'}</span> 
-            ${item['일련번호'] ? ` : ${item['일련번호']}` : ''}
-            <span class="mx-2 text-secondary">|</span> 
-            ${item['요금제'] || '-'}
-            ${item['부가서비스'] ? ` <span class="mx-2 text-secondary">|</span> ${item['부가서비스']}` : ''}
-            ${item['제휴카드'] ? ` <span class="mx-2 text-secondary">|</span> ${item['제휴카드']}` : ''}
         </div>
 
         <div class="d-flex justify-content-center mt-1">
