@@ -1129,9 +1129,11 @@ function openEditModal(item) {
     const container = document.getElementById('edit_form_container');
     container.innerHTML = ''; 
 
-    // --- 헬퍼 함수 ---
+    // --- 헬퍼 함수 (data-original 속성 추가됨) ---
     const makeInput = (label, key, width = 'col-6', type = 'text', isDanger = false, isReadOnly = false) => {
         let val = item[key] || '';
+        
+        // 날짜 자르기 로직
         const dateKeys = ['요금제변경일', '부가서비스해지일', '대납1요청일', '대납2요청일', '처리일', '개통일'];
         if (dateKeys.includes(key) && typeof val === 'string' && val.includes('T')) {
             val = val.split('T')[0];
@@ -1146,10 +1148,11 @@ function openEditModal(item) {
             readOnlyAttr = "readonly tabindex='-1'";
         }
 
+        // [핵심] data-original="${val}" 추가 -> 나중에 변경 비교용
         return `
             <div class="${width}">
                 <label class="${labelClass}">${label}</label>
-                <input type="${type}" class="${inputClass}" data-key="${key}" value="${val}" ${readOnlyAttr}>
+                <input type="${type}" class="${inputClass}" data-key="${key}" value="${val}" data-original="${val}" ${readOnlyAttr}>
             </div>`;
     };
 
@@ -1158,7 +1161,9 @@ function openEditModal(item) {
         const safeOptions = options || [];
         let optsHtml = safeOptions.map(opt => `<option value="${opt}" ${val === opt ? 'selected' : ''}>${opt}</option>`).join('');
         if(val && !safeOptions.includes(val)) optsHtml += `<option value="${val}" selected>${val} (기존값)</option>`;
-        return `<div class="${width}"><label class="form-label-sm">${label}</label><select class="form-select form-select-sm edit-input" data-key="${key}"><option value="">선택</option>${optsHtml}</select></div>`;
+        
+        // [핵심] data-original="${val}" 추가
+        return `<div class="${width}"><label class="form-label-sm">${label}</label><select class="form-select form-select-sm edit-input" data-key="${key}" data-original="${val}"><option value="">선택</option>${optsHtml}</select></div>`;
     };
 
     // 설정 데이터
