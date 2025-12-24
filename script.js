@@ -171,6 +171,7 @@ function showSection(id) {
     // ---------------------------------------------------------
     // ★ [추가된 부분] 화면 진입 시 날짜 자동 세팅 트리거
     // ---------------------------------------------------------
+    if (id === 'section-search-all') initHistoryDates();
     if (id === 'section-return-phone') initSpecialDates('phone');
     if (id === 'section-receive-gift') initSpecialDates('gift');
     // ---------------------------------------------------------
