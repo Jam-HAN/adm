@@ -1544,13 +1544,14 @@ function searchSpecialList(type) {
     });
 }
 
-// 2. 카드 렌더링 (원상 복구: 깔끔한 디자인 + 중앙 뱃지)
+// 2. 카드 렌더링 (체크값 기준 배지 표시)
 function renderSpecialCard(item, type) {
+    // ★ 수정: 금액이 아니라, 서버에서 보내준 '체크여부(completed)'로 판단
+    const isChecked = item.completed === true;
     const amount = Number(String(item['중고폰반납'] || 0).replace(/,/g, ''));
     
-    // 1. 상태 뱃지 설정 (크고 잘 보이게 유지)
     let statusBadge = '';
-    if (amount > 0) {
+    if (isChecked) {
         const label = (type === 'usedphone') ? '반납완료' : '수령완료';
         statusBadge = `<span class="badge bg-success rounded-pill px-4 py-2 fs-6 shadow-sm"><i class="bi bi-check-lg me-1"></i>${label}</span>`;
     } else {
@@ -1558,17 +1559,14 @@ function renderSpecialCard(item, type) {
         statusBadge = `<span class="badge bg-danger bg-opacity-75 rounded-pill px-4 py-2 fs-6 shadow-sm animate__animated animate__pulse animate__infinite">${label}</span>`;
     }
 
-    // 2. 상단 뱃지 색상
     let typeBadgeClass = 'bg-primary';
     if(item.sheetName === '유선개통') typeBadgeClass = 'bg-success';
     else if(item.sheetName === '중고개통') typeBadgeClass = 'bg-warning text-dark';
 
     const itemStr = JSON.stringify(item).replace(/"/g, '&quot;');
 
-    // 3. UI 렌더링
     return `
     <div class="glass-card p-3 mb-3 w-100 d-block" onclick="openSpecialModal(${itemStr}, '${type}')" style="cursor:pointer; transition: transform 0.2s;">
-        
         <div class="d-flex w-100 justify-content-between align-items-center mb-3 border-bottom pb-2">
             <div>
                 <span class="badge ${typeBadgeClass} me-1">${item.sheetName}</span>
@@ -1576,29 +1574,26 @@ function renderSpecialCard(item, type) {
             </div>
             <small class="fw-bold text-dark">${item['개통일']}</small>
         </div>
-        
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div class="text-truncate me-2">
                 <span class="fw-bold text-primary fs-5 me-2">${item['고객명']}</span>
                 <span class="small text-dark">
                     ${item['연락처']} <span class="text-muted mx-1">|</span>
                     ${item['개통처']} <span class="text-muted mx-1">|</span>
-                    ${item['개통유형']} <span class="text-muted mx-1">|</span>
-                    ${item['약정유형']}
+                    ${item['개통유형']}
                 </span>
             </div>
             <span class="badge bg-white text-primary border rounded-pill px-2 shadow-sm text-nowrap">
                 <i class="bi bi-person-circle me-1"></i>${item['담당자'] || '미지정'}
             </span>
         </div>
-
         <div class="d-flex justify-content-center mt-1">
             ${statusBadge}
         </div>
     </div>`;
 }
 
-// 3. 모달 열기 (라벨 텍스트 동적 변경)
+// 3. 모달 열기 (체크박스 세팅 추가)
 function openSpecialModal(item, type) {
     document.getElementById('sp_sheetName').value = item.sheetName;
     document.getElementById('sp_rowIndex').value = item.rowIndex;
@@ -1608,35 +1603,40 @@ function openSpecialModal(item, type) {
     document.getElementById('sp_customer_name').innerText = item['고객명'];
     document.getElementById('sp_customer_info').innerText = `${item['연락처']} | ${item['개통일']}`;
 
-    // 1) [요청 1] 라벨 텍스트 변경
     const amtLabel = document.getElementById('sp_amt_label');
     const dateLabel = document.getElementById('sp_date_label');
     const modalTitle = document.getElementById('special-modal-title');
     const modelGroup = document.getElementById('sp_model_group');
+    // ★ 체크박스 라벨
+    const checkLabel = document.getElementById('sp_check_label'); 
 
     if (type === 'usedphone') {
         modalTitle.innerText = "중고폰 반납 등록";
         amtLabel.innerText = "정산 금액 (반납 금액)";
         dateLabel.innerText = "반납일";
+        checkLabel.innerText = " 반납 확인 (체크 시 정산 반영)"; // 라벨 변경
         modelGroup.style.display = 'block'; 
     } else {
         modalTitle.innerText = "상품권 수령 등록";
         amtLabel.innerText = "정산 금액 (수령 금액)";
         dateLabel.innerText = "수령일";
+        checkLabel.innerText = " 수령 확인 (체크 시 정산 반영)"; // 라벨 변경
         modelGroup.style.display = 'none'; 
     }
 
-    // 2) 기존 값 채우기
     const existingAmount = item['중고폰반납'] || ''; 
     document.getElementById('sp_amount').value = existingAmount ? Number(String(existingAmount).replace(/,/g,'')).toLocaleString() : '';
     
+    // ★ 체크박스 상태 세팅 (DB값: item.completed)
+    document.getElementById('sp_checkbox').checked = (item.completed === true);
+
     const memo = item['중고폰메모'] || ''; 
     let savedDate = '';
     let savedModel = '';
 
     if (memo) {
         if (memo.length >= 10 && memo.includes('-')) savedDate = memo.substring(0, 10);
-        if (type === 'phone' && memo.includes('/')) {
+        if (type === 'usedphone' && memo.includes('/')) {
             let parts = memo.split('/');
             if (parts.length > 1) savedModel = parts[1].replace(' 반납', '').trim();
         }
@@ -1648,12 +1648,13 @@ function openSpecialModal(item, type) {
     new bootstrap.Modal(document.getElementById('modal-special-update')).show();
 }
 
-// 4. 저장하기
+// 4. 저장하기 (체크값 전송 추가)
 function submitSpecialUpdate() {
     const type = document.getElementById('sp_type').value;
     const amountStr = document.getElementById('sp_amount').value;
     const dateVal = document.getElementById('sp_date').value;
     const modelVal = document.getElementById('sp_model_name').value;
+    const isChecked = document.getElementById('sp_checkbox').checked; // ★ 체크값 가져오기
     
     let memoText = "";
     if (type === 'usedphone') {
@@ -1665,19 +1666,18 @@ function submitSpecialUpdate() {
 
     const formData = {
         action: "update_history",
-        sheetName: document.getElementById('sp_sheetName').value,
-        rowIndex: document.getElementById('sp_rowIndex').value,
         branch: document.getElementById('sp_branch').value,
-        '중고폰반납': amountStr, 
-        '중고폰메모': memoText
+        rowIndex: document.getElementById('sp_rowIndex').value,
+        
+        specialType: type,
+        amount: amountStr, 
+        memo: memoText,
+        isChecked: isChecked // ★ 서버로 전송
     };
 
     Swal.fire({ title: '저장 중...', didOpen: () => Swal.showLoading() });
 
-    fetch(GAS_URL, {
-        method: "POST",
-        body: JSON.stringify(formData)
-    })
+    fetch(GAS_URL, { method: "POST", body: JSON.stringify(formData) })
     .then(r => r.json())
     .then(data => {
         if (data.status === 'success') {
