@@ -1447,53 +1447,66 @@ function deleteHistoryItem() {
 }
 
 // =========================================================
-// [신규] 중고폰 반납 / 상품권 수령 관리 로직
+// [최종] 중고폰 반납 / 상품권 수령 관리 로직 (기능 개선)
 // =========================================================
 
-// 1. 통합 조회 함수
+// [헬퍼] 날짜 초기화 (당월 1일 ~ 오늘)
+function initSpecialDates(type) {
+    const today = new Date();
+    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+    
+    // YYYY-MM-DD 포맷 함수
+    const fmt = d => {
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${y}-${m}-${day}`;
+    };
+
+    if (type === 'phone') {
+        if(!document.getElementById('search_return_start').value) document.getElementById('search_return_start').value = fmt(firstDay);
+        if(!document.getElementById('search_return_end').value) document.getElementById('search_return_end').value = fmt(today);
+    } else {
+        if(!document.getElementById('search_gift_start').value) document.getElementById('search_gift_start').value = fmt(firstDay);
+        if(!document.getElementById('search_gift_end').value) document.getElementById('search_gift_end').value = fmt(today);
+    }
+}
+
+// 1. 통합 조회 함수 (기간 검색 추가)
 function searchSpecialList(type) {
-    let branch, keyword, containerId;
+    let branch, keyword, containerId, start, end;
     
     if (type === 'phone') {
         branch = document.getElementById('search_return_branch').value;
         keyword = document.getElementById('search_return_keyword').value;
+        start = document.getElementById('search_return_start').value;
+        end = document.getElementById('search_return_end').value;
         containerId = 'return-phone-list';
     } else {
         branch = document.getElementById('search_gift_branch').value;
         keyword = document.getElementById('search_gift_keyword').value;
+        start = document.getElementById('search_gift_start').value;
+        end = document.getElementById('search_gift_end').value;
         containerId = 'receive-gift-list';
     }
 
-    if (!keyword || keyword.trim().length < 2) {
-        Swal.fire({ icon: 'warning', title: '검색어 입력', text: '이름이나 번호를 2글자 이상 입력하세요.' });
-        return;
+    // 날짜 유효성 체크
+    if (!start || !end) {
+        // 날짜가 없으면 강제로 초기화
+        initSpecialDates(type);
+        start = (type==='phone') ? document.getElementById('search_return_start').value : document.getElementById('search_gift_start').value;
+        end = (type==='phone') ? document.getElementById('search_return_end').value : document.getElementById('search_gift_end').value;
     }
 
     const container = document.getElementById(containerId);
     container.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary"></div></div>';
 
-    // 기존 get_all_history API 재사용 (기간은 넉넉하게, 검색어 기반)
-    // *최근 6개월 데이터 조회 (필요시 기간 조절)*
-    const end = new Date();
-    const start = new Date();
-    start.setMonth(start.getMonth() - 6);
-    
-    const fmt = d => {
-        const year = d.getFullYear();
-        const month = String(d.getMonth() + 1).padStart(2, '0');
-        const day = String(d.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
-    };
-    
-    const sStr = fmt(start);
-    const eStr = fmt(end);
-
     fetch(GAS_URL, {
         method: "POST",
         body: JSON.stringify({
             action: "get_all_history",
-            start: sStr,
-            end: eStr,
+            start: start,
+            end: end,
             keyword: keyword,
             branch: branch
         })
@@ -1502,16 +1515,13 @@ function searchSpecialList(type) {
     .then(data => {
         container.innerHTML = '';
         if (data.status === 'success' && data.data.length > 0) {
-            // [필터링 핵심]
-            // 중고폰(phone) -> '유선개통'이 아닌 것 (무선, 중고)
-            // 상품권(gift) -> '유선개통'인 것
             const filtered = data.data.filter(item => {
                 if (type === 'phone') return item.sheetName !== '유선개통';
                 else return item.sheetName === '유선개통';
             });
 
             if (filtered.length === 0) {
-                container.innerHTML = '<div class="col-12 text-center text-muted py-5">해당 조건의 대상이 없습니다.</div>';
+                container.innerHTML = '<div class="col-12 text-center text-muted py-5">해당 기간/조건의 대상이 없습니다.</div>';
                 return;
             }
 
@@ -1528,37 +1538,50 @@ function searchSpecialList(type) {
     });
 }
 
-// 2. 카드 렌더링 (디자인 일관성 유지 + 하단 상태표시 변경)
+// 2. 카드 렌더링 (디자인 전면 수정)
 function renderSpecialCard(item, type) {
-    // 금액 확인 (중고폰반납 or 상품권 액수)
-    // item['중고폰반납']에는 DB의 해당 컬럼 값이 들어있음 (유선이면 상품권, 무선이면 중고폰값)
     const amount = Number(String(item['중고폰반납'] || 0).replace(/,/g, ''));
     
+    // [요청 2] 문구 수정 및 뱃지 스타일
     let statusBadge = '';
     if (amount > 0) {
-        const amtStr = amount.toLocaleString();
-        statusBadge = `<span class="badge bg-success rounded-pill px-3 py-2"><i class="bi bi-check-lg me-1"></i>${amtStr}원 지급완료</span>`;
+        const label = (type === 'phone') ? '반납완료' : '수령완료';
+        statusBadge = `<span class="badge bg-success rounded-pill px-3 py-2"><i class="bi bi-check-lg me-1"></i>${label}</span>`;
     } else {
         const label = (type === 'phone') ? '미반납' : '미수령';
-        statusBadge = `<span class="badge bg-danger rounded-pill px-3 py-2 animate__animated animate__pulse animate__infinite">${label}</span>`;
+        statusBadge = `<span class="badge bg-danger bg-opacity-75 rounded-pill px-3 py-2 animate__animated animate__pulse animate__infinite">${label}</span>`;
     }
 
-    // 아이템 JSON을 문자열로 변환 (따옴표 처리)
+    // [요청 6] 뱃지 색상 (개통조회와 동일)
+    let typeBadgeClass = 'bg-primary';
+    if(item.sheetName === '유선개통') typeBadgeClass = 'bg-success';
+    else if(item.sheetName === '중고개통') typeBadgeClass = 'bg-warning text-dark';
+
     const itemStr = JSON.stringify(item).replace(/"/g, '&quot;');
 
+    // [요청 5, 6] 레이아웃 변경 (상단 뱃지 / 하단 한줄 정보)
     return `
     <div class="col-md-6 col-lg-4">
         <div class="card shadow-sm h-100 border-0 hover-effect" onclick="openSpecialModal(${itemStr}, '${type}')" style="cursor:pointer;">
             <div class="card-body">
-                <div class="d-flex justify-content-between mb-2">
-                    <span class="badge bg-light text-secondary border">${item['개통일']}</span>
-                    <span class="badge bg-white text-dark border">${item['지점']}</span>
+                <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
+                    <div>
+                        <span class="badge ${typeBadgeClass} me-1">${item.sheetName}</span>
+                        <span class="badge bg-white text-secondary border">${item['지점']}</span>
+                    </div>
+                    <small class="fw-bold text-secondary">${item['개통일']}</small>
                 </div>
-                <h5 class="card-title fw-bold text-primary mb-1">${item['고객명']}</h5>
-                <p class="card-text text-muted small mb-3">${item['연락처']} | ${item['통신사']}</p>
                 
-                <div class="d-flex justify-content-center border-top pt-3 mt-2 bg-light rounded-bottom">
+                <div class="text-center mb-3">
                     ${statusBadge}
+                </div>
+
+                <div class="bg-light p-2 rounded text-center text-truncate text-dark small fw-bold">
+                    ${item['고객명']} <span class="text-muted mx-1">|</span> 
+                    ${item['연락처']} <span class="text-muted mx-1">|</span> 
+                    ${item['통신사']} <span class="text-muted mx-1">|</span> 
+                    ${item['개통유형']} <span class="text-muted mx-1">|</span> 
+                    ${item['약정유형']}
                 </div>
             </div>
         </div>
@@ -1566,27 +1589,51 @@ function renderSpecialCard(item, type) {
     `;
 }
 
-// 3. 모달 열기
+// 3. 모달 열기 (기존 값 파싱 기능 추가)
 function openSpecialModal(item, type) {
-    // 값 세팅
     document.getElementById('sp_sheetName').value = item.sheetName;
     document.getElementById('sp_rowIndex').value = item.rowIndex;
     document.getElementById('sp_branch').value = item.branch;
     document.getElementById('sp_type').value = type;
 
-    // UI 세팅
     document.getElementById('sp_customer_name').innerText = item['고객명'];
     document.getElementById('sp_customer_info').innerText = `${item['연락처']} | ${item['개통일']}`;
 
-    // 기존 값 채우기 (이미 입력된 경우)
-    const existingAmount = item['중고폰반납'] || '';
-    document.getElementById('sp_amount').value = existingAmount ? Number(existingAmount).toLocaleString() : '';
+    // 1) 금액 채우기
+    const existingAmount = item['중고폰반납'] || ''; // DB의 금액 컬럼
+    document.getElementById('sp_amount').value = existingAmount ? Number(String(existingAmount).replace(/,/g,'')).toLocaleString() : '';
     
-    // 날짜는 오늘 날짜 기본 세팅
-    document.getElementById('sp_date').value = new Date().toISOString().split('T')[0];
-    document.getElementById('sp_model_name').value = ''; // 모델명 초기화
+    // 2) [요청 3] 날짜 및 모델명 파싱 (메모에서 추출)
+    // 저장 형식: "YYYY-MM-DD / 모델명 반납" 또는 "YYYY-MM-DD 수령"
+    const memo = item['중고폰메모'] || ''; 
+    let savedDate = '';
+    let savedModel = '';
 
-    // 타입별 UI 변경
+    if (memo) {
+        // 날짜 추출 (앞 10자리)
+        if (memo.length >= 10 && memo.includes('-')) {
+            savedDate = memo.substring(0, 10);
+        }
+        
+        // 모델명 추출 (중고폰인 경우 '/' 뒤의 내용 파싱)
+        if (type === 'phone' && memo.includes('/')) {
+            // "2024-05-01 / 아이폰12 반납" -> " 아이폰12 반납" -> "아이폰12"
+            let parts = memo.split('/');
+            if (parts.length > 1) {
+                let temp = parts[1].trim(); 
+                savedModel = temp.replace(' 반납', '').trim();
+            }
+        }
+    }
+
+    // 날짜 값 설정 (저장된 값 없으면 오늘)
+    document.getElementById('sp_date').value = savedDate || new Date().toISOString().split('T')[0];
+    
+    // 모델명 값 설정
+    document.getElementById('sp_model_name').value = savedModel;
+
+
+    // UI 설정
     const modalTitle = document.getElementById('special-modal-title');
     const dateLabel = document.getElementById('sp_date_label');
     const modelGroup = document.getElementById('sp_model_group');
@@ -1594,48 +1641,40 @@ function openSpecialModal(item, type) {
     if (type === 'phone') {
         modalTitle.innerText = "중고폰 반납 등록";
         dateLabel.innerText = "반납일";
-        modelGroup.style.display = 'block'; // 모델명 입력 보이기
+        modelGroup.style.display = 'block'; 
     } else {
         modalTitle.innerText = "상품권 수령 등록";
         dateLabel.innerText = "수령일";
-        modelGroup.style.display = 'none'; // 모델명 입력 숨기기
+        modelGroup.style.display = 'none'; 
     }
 
     new bootstrap.Modal(document.getElementById('modal-special-update')).show();
 }
 
-// 4. 저장하기 (메모 조합 로직)
+// 4. 저장하기
 function submitSpecialUpdate() {
     const type = document.getElementById('sp_type').value;
     const amountStr = document.getElementById('sp_amount').value;
     const dateVal = document.getElementById('sp_date').value;
     const modelVal = document.getElementById('sp_model_name').value;
     
-    // 메모 조합
     let memoText = "";
     if (type === 'phone') {
-        // 중고폰: "2024-12-25 / 아이폰13 반납" 형식
         const model = modelVal.trim() || "모델미지정";
         memoText = `${dateVal} / ${model} 반납`;
     } else {
-        // 상품권: "2024-12-25 수령" 형식
         memoText = `${dateVal} 수령`;
     }
 
-    // 서버 전송 데이터 구성
     const formData = {
         action: "update_history",
         sheetName: document.getElementById('sp_sheetName').value,
         rowIndex: document.getElementById('sp_rowIndex').value,
         branch: document.getElementById('sp_branch').value,
-        
-        // ★ 핵심: Backend는 '중고폰반납', '중고폰메모' 키값을 공통으로 사용함
-        // (Wired 시트면 알아서 상품권 칸에 들어감)
         '중고폰반납': amountStr, 
         '중고폰메모': memoText
     };
 
-    // 저장 요청
     Swal.fire({ title: '저장 중...', didOpen: () => Swal.showLoading() });
 
     fetch(GAS_URL, {
@@ -1647,8 +1686,6 @@ function submitSpecialUpdate() {
         if (data.status === 'success') {
             Swal.fire({ icon: 'success', title: '처리 완료', timer: 1000, showConfirmButton: false });
             bootstrap.Modal.getInstance(document.getElementById('modal-special-update')).hide();
-            
-            // 리스트 새로고침
             searchSpecialList(type);
         } else {
             Swal.fire({ icon: 'error', title: '실패', text: data.message });
