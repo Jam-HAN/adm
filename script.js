@@ -1538,55 +1538,60 @@ function searchSpecialList(type) {
     });
 }
 
-// 2. 카드 렌더링 (디자인 전면 수정)
+// 2. 카드 렌더링 (개통 정보 조회와 100% 동일한 UI + 상태 뱃지)
 function renderSpecialCard(item, type) {
     const amount = Number(String(item['중고폰반납'] || 0).replace(/,/g, ''));
     
-    // [요청 2] 문구 수정 및 뱃지 스타일
+    // 1. 상태 뱃지 및 문구 설정
     let statusBadge = '';
     if (amount > 0) {
         const label = (type === 'phone') ? '반납완료' : '수령완료';
-        statusBadge = `<span class="badge bg-success rounded-pill px-3 py-2"><i class="bi bi-check-lg me-1"></i>${label}</span>`;
+        // 초록색(성공) 뱃지 - 우측 정렬용
+        statusBadge = `<span class="badge bg-success rounded-pill px-3"><i class="bi bi-check-lg me-1"></i>${label}</span>`;
     } else {
         const label = (type === 'phone') ? '미반납' : '미수령';
-        statusBadge = `<span class="badge bg-danger bg-opacity-75 rounded-pill px-3 py-2 animate__animated animate__pulse animate__infinite">${label}</span>`;
+        // 빨간색(경고) 뱃지 - 애니메이션 효과
+        statusBadge = `<span class="badge bg-danger bg-opacity-75 rounded-pill px-3 animate__animated animate__pulse animate__infinite">${label}</span>`;
     }
 
-    // [요청 6] 뱃지 색상 (개통조회와 동일)
+    // 2. 개통유형별 뱃지 색상 (개통조회와 동일)
     let typeBadgeClass = 'bg-primary';
     if(item.sheetName === '유선개통') typeBadgeClass = 'bg-success';
     else if(item.sheetName === '중고개통') typeBadgeClass = 'bg-warning text-dark';
 
     const itemStr = JSON.stringify(item).replace(/"/g, '&quot;');
 
-    // [요청 5, 6] 레이아웃 변경 (상단 뱃지 / 하단 한줄 정보)
+    // 3. UI 렌더링 (개통조회 카드 스타일 그대로 적용)
     return `
-    <div class="col-md-6 col-lg-4">
-        <div class="card shadow-sm h-100 border-0 hover-effect" onclick="openSpecialModal(${itemStr}, '${type}')" style="cursor:pointer;">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
-                    <div>
-                        <span class="badge ${typeBadgeClass} me-1">${item.sheetName}</span>
-                        <span class="badge bg-white text-secondary border">${item['지점']}</span>
-                    </div>
-                    <small class="fw-bold text-secondary">${item['개통일']}</small>
-                </div>
-                
-                <div class="text-center mb-3">
-                    ${statusBadge}
-                </div>
-
-                <div class="bg-light p-2 rounded text-center text-truncate text-dark small fw-bold">
-                    ${item['고객명']} <span class="text-muted mx-1">|</span> 
-                    ${item['연락처']} <span class="text-muted mx-1">|</span> 
-                    ${item['통신사']} <span class="text-muted mx-1">|</span> 
-                    ${item['개통유형']} <span class="text-muted mx-1">|</span> 
-                    ${item['약정유형']}
-                </div>
+    <div class="glass-card p-3 mb-3 w-100 d-block" onclick="openSpecialModal(${itemStr}, '${type}')" style="cursor:pointer; transition: transform 0.2s;">
+        
+        <div class="d-flex w-100 justify-content-between align-items-center mb-2 border-bottom pb-2">
+            <div>
+                <span class="badge ${typeBadgeClass} me-1">${item.sheetName}</span>
+                <span class="badge bg-white text-secondary border">${item['지점'] || '-'}</span>
             </div>
+            <small class="fw-bold text-dark">${item['개통일']}</small>
         </div>
-    </div>
-    `;
+        
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <div class="text-truncate me-2">
+                <span class="fw-bold text-primary fs-5 me-2">${item['고객명']}</span>
+                <span class="small text-dark">
+                    ${item['연락처']} <span class="text-muted mx-1">|</span>
+                    ${item['개통처']} <span class="text-muted mx-1">|</span>
+                    ${item['개통유형']} <span class="text-muted mx-1">|</span>
+                    ${item['약정유형']}
+                </span>
+            </div>
+            <span class="badge bg-white text-primary border rounded-pill px-2 shadow-sm text-nowrap">
+                <i class="bi bi-person-circle me-1"></i>${item['담당자'] || '미지정'}
+            </span>
+        </div>
+
+        <div class="d-flex justify-content-end mt-2 pt-2 border-top">
+            ${statusBadge}
+        </div>
+    </div>`;
 }
 
 // 3. 모달 열기 (기존 값 파싱 기능 추가)
