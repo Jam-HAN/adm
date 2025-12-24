@@ -1478,8 +1478,15 @@ function searchSpecialList(type) {
     const start = new Date();
     start.setMonth(start.getMonth() - 6);
     
-    const sStr = start.toISOString().split('T')[0];
-    const eStr = end.toISOString().split('T')[0];
+    const fmt = d => {
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    };
+    
+    const sStr = fmt(start);
+    const eStr = fmt(end);
 
     fetch(GAS_URL, {
         method: "POST",
