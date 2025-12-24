@@ -1345,7 +1345,7 @@ function openEditModal(item) {
     modal.show();
 }
 
-// [최종 수정] 변경된 값만 전송하는 로직 적용
+// [최종 수정] 저장 시 텍스트("작성")를 Boolean(true)으로 변환 전송
 function submitEditHistory() {
     const sheetName = document.getElementById('edit_sheet_name').value;
     const rowIndex = document.getElementById('edit_row_index').value;
@@ -1356,7 +1356,6 @@ function submitEditHistory() {
         return;
     }
 
-    // 기본 식별 정보는 무조건 보냄
     const formData = {
         sheetName: sheetName,
         rowIndex: rowIndex,
@@ -1365,23 +1364,26 @@ function submitEditHistory() {
     };
 
     const inputs = document.querySelectorAll('.edit-input');
-    let changeCount = 0; // 변경된 갯수 체크
+    let changeCount = 0; 
 
     inputs.forEach(input => {
         const key = input.getAttribute('data-key');
-        const currentVal = input.value;
-        // 저장해둔 초기값 가져오기 (없으면 빈 문자열 취급)
+        let currentVal = input.value;
         const originalVal = input.getAttribute('data-original') || '';
 
-        // [비교] 값이 달라졌을 때만 formData에 추가
-        // 주의: 숫자형 문자열 비교 등을 위해 둘 다 String으로 변환 후 비교
+        // [핵심] 값이 변경되었는지 비교
         if (String(currentVal) !== String(originalVal)) {
-            formData[key] = currentVal;
+            
+            // [변환] 리뷰작성의 경우: "작성" -> true, "미작성" -> false 로 변환
+            if (key === '리뷰작성') {
+                formData[key] = (currentVal === '작성'); 
+            } else {
+                formData[key] = currentVal;
+            }
             changeCount++;
         }
     });
 
-    // 변경된 게 하나도 없으면 전송 안 함 (불필요한 서버 호출 방지)
     if (changeCount === 0) {
         Swal.fire({ icon: 'info', title: '변경사항 없음', text: '수정된 내용이 없습니다.' });
         return;
