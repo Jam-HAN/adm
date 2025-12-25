@@ -1626,7 +1626,6 @@ function openSpecialModal(item, type) {
     document.getElementById('sp_customer_info').innerText = `${item['연락처']} | ${item['개통일']}`;
 
     const amtLabel = document.getElementById('sp_amt_label');
-    const dateLabel = document.getElementById('sp_date_label');
     const modalTitle = document.getElementById('special-modal-title');
     const modelGroup = document.getElementById('sp_model_group');
     const checkLabel = document.getElementById('sp_check_label');
@@ -1634,13 +1633,11 @@ function openSpecialModal(item, type) {
     if (type === 'usedphone') {
         modalTitle.innerText = "중고폰 반납 등록";
         amtLabel.innerText = "정산 금액 (반납 금액)";
-        dateLabel.innerText = "반납일";
         checkLabel.innerText = " 반납 확인 (체크 시 정산 반영)";
         modelGroup.style.display = 'block'; 
     } else {
         modalTitle.innerText = "상품권 수령 등록";
         amtLabel.innerText = "정산 금액 (수령 금액)";
-        dateLabel.innerText = "수령일";
         checkLabel.innerText = " 수령 확인 (체크 시 정산 반영)";
         modelGroup.style.display = 'none'; 
     }
