@@ -646,11 +646,8 @@
                                 <label class="form-label fw-bold" id="sp_amt_label">정산 금액 (반납 금액)</label>
                                 <input type="text" class="form-control form-control-lg fw-bold text-primary" id="sp_amount" placeholder="금액 입력" onkeyup="formatCurrency(this)">
                             </div>
-            
-                            <div class="mb-3">
-                                <label class="form-label fw-bold" id="sp_date_label">반납일/수령일</label>
-                                <input type="date" class="form-control" id="sp_date">
-                            </div>
+
+                            <input type="hidden" id="sp_date">
             
                             <div class="mb-3" id="sp_model_group">
                                 <label class="form-label fw-bold">반납 모델명</label>
