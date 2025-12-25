@@ -1615,7 +1615,7 @@ function renderSpecialCard(item, type) {
     </div>`;
 }
 
-// 3. 모달 열기 (체크박스 세팅 추가)
+// 3. 모달 열기 (데이터 바인딩 로직 개선)
 function openSpecialModal(item, type) {
     document.getElementById('sp_sheetName').value = item.sheetName;
     document.getElementById('sp_rowIndex').value = item.rowIndex;
@@ -1629,39 +1629,44 @@ function openSpecialModal(item, type) {
     const dateLabel = document.getElementById('sp_date_label');
     const modalTitle = document.getElementById('special-modal-title');
     const modelGroup = document.getElementById('sp_model_group');
-    // ★ 체크박스 라벨
-    const checkLabel = document.getElementById('sp_check_label'); 
+    const checkLabel = document.getElementById('sp_check_label');
 
     if (type === 'usedphone') {
         modalTitle.innerText = "중고폰 반납 등록";
         amtLabel.innerText = "정산 금액 (반납 금액)";
         dateLabel.innerText = "반납일";
-        checkLabel.innerText = " 반납 확인 (체크 시 정산 반영)"; // 라벨 변경
+        checkLabel.innerText = " 반납 확인 (체크 시 정산 반영)";
         modelGroup.style.display = 'block'; 
     } else {
         modalTitle.innerText = "상품권 수령 등록";
         amtLabel.innerText = "정산 금액 (수령 금액)";
         dateLabel.innerText = "수령일";
-        checkLabel.innerText = " 수령 확인 (체크 시 정산 반영)"; // 라벨 변경
+        checkLabel.innerText = " 수령 확인 (체크 시 정산 반영)";
         modelGroup.style.display = 'none'; 
     }
 
+    // 1. 금액 세팅
     const existingAmount = item['중고폰반납'] || ''; 
     document.getElementById('sp_amount').value = existingAmount ? Number(String(existingAmount).replace(/,/g,'')).toLocaleString() : '';
     
-    // ★ 체크박스 상태 세팅 (DB값: item.completed)
+    // 2. 체크 상태 세팅
     document.getElementById('sp_checkbox').checked = (item.completed === true);
 
-    const memo = item['중고폰메모'] || ''; 
-    let savedDate = '';
-    let savedModel = '';
+    // 3. 모델명 & 날짜 세팅 (분리된 로직)
+    // - item['checkDate']: AV/AX 메모에 저장된 날짜 (체크 날짜)
+    // - item['중고폰메모']: AU/AW 메모에 저장된 모델명
+    
+    let savedDate = item['checkDate'] || ''; // 체크칸 메모에서 날짜 가져옴
+    let savedModel = item['중고폰메모'] || ''; // 금액칸 메모에서 모델명 가져옴
 
-    if (memo) {
-        if (memo.length >= 10 && memo.includes('-')) savedDate = memo.substring(0, 10);
-        if (type === 'usedphone' && memo.includes('/')) {
-            let parts = memo.split('/');
-            if (parts.length > 1) savedModel = parts[1].replace(' 반납', '').trim();
-        }
+    // (호환성 유지) 만약 체크칸 메모(날짜)가 없으면, 예전 방식(모델/날짜 섞인 텍스트)에서 추출 시도
+    if (!savedDate && savedModel.includes('-')) {
+        savedDate = savedModel.substring(0, 10);
+    }
+    // 모델명 정제 (날짜나 슬래시 제거하고 순수 모델명만 남기기 시도)
+    if (savedModel.includes('/')) {
+        let parts = savedModel.split('/');
+        if (parts.length > 1) savedModel = parts[1].replace(' 반납', '').trim();
     }
 
     document.getElementById('sp_date').value = savedDate || new Date().toISOString().split('T')[0];
@@ -1670,31 +1675,33 @@ function openSpecialModal(item, type) {
     new bootstrap.Modal(document.getElementById('modal-special-update')).show();
 }
 
-// 4. 저장하기 (체크값 전송 추가)
+// 4. 저장하기 (모델명과 날짜를 분리해서 전송)
 function submitSpecialUpdate() {
     const type = document.getElementById('sp_type').value;
     const amountStr = document.getElementById('sp_amount').value;
     const dateVal = document.getElementById('sp_date').value;
     const modelVal = document.getElementById('sp_model_name').value;
-    const isChecked = document.getElementById('sp_checkbox').checked; // ★ 체크값 가져오기
+    const isChecked = document.getElementById('sp_checkbox').checked;
     
-    let memoText = "";
-    if (type === 'usedphone') {
-        const model = modelVal.trim() || "모델미지정";
-        memoText = `${dateVal} / ${model} 반납`;
-    } else {
-        memoText = `${dateVal} 수령`;
-    }
-
+    // ★ 핵심: 모델명은 모델명대로, 날짜는 날짜대로 따로 보냄
+    const modelMemo = (type === 'usedphone') ? modelVal.trim() : ""; // AU/AW에 저장될 모델명
+    
     const formData = {
         action: "update_history",
         branch: document.getElementById('sp_branch').value,
         rowIndex: document.getElementById('sp_rowIndex').value,
-        
         specialType: type,
+        
         amount: amountStr, 
-        memo: memoText,
-        isChecked: isChecked // ★ 서버로 전송
+        
+        // 1. 모델명 (AU/AW 열의 메모로 저장됨)
+        modelMemo: modelMemo, 
+        
+        // 2. 체크 상태 (AV/AX 열의 값으로 저장됨)
+        isChecked: isChecked,
+        
+        // 3. 날짜 (AV/AX 열의 메모로 저장됨 - 체크된 경우만)
+        checkDate: dateVal 
     };
 
     Swal.fire({ title: '저장 중...', didOpen: () => Swal.showLoading() });
@@ -1710,4 +1717,36 @@ function submitSpecialUpdate() {
             Swal.fire({ icon: 'error', title: '실패', text: data.message });
         }
     });
+}
+
+// [신규] 체크박스 클릭 시 날짜 입력 팝업 띄우기
+function toggleCheckDate() {
+    const chk = document.getElementById('sp_checkbox');
+    const dateInput = document.getElementById('sp_date');
+    
+    if (chk.checked) {
+        // 체크 켜짐 -> 날짜 입력창 띄우기
+        Swal.fire({
+            title: '날짜 지정',
+            text: '반납/수령 날짜를 선택해주세요.',
+            html: `<input type="date" id="swal-date" class="form-control form-control-lg text-center fw-bold" value="${dateInput.value}">`,
+            showCancelButton: true,
+            confirmButtonText: '확인',
+            cancelButtonText: '취소',
+            preConfirm: () => {
+                return document.getElementById('swal-date').value;
+            }
+        }).then((result) => {
+            if (result.isConfirmed && result.value) {
+                // 확인 시: 선택한 날짜 반영
+                dateInput.value = result.value;
+            } else {
+                // 취소 시: 체크 해제 (강제)
+                chk.checked = false;
+            }
+        });
+    } else {
+        // 체크 꺼짐 -> (옵션) 날짜는 놔두거나 초기화? 현재는 그냥 둠.
+        // 저장 시 서버에서 메모를 삭제하므로 여기선 UI만 반응하면 됨.
+    }
 }
