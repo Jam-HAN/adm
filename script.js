@@ -755,11 +755,65 @@ function startWiredActivation() {
     document.getElementById('w_target_info').innerText = `${type} : ${contract}`; document.getElementById('w_target_branch').innerText = branch;
     renderWiredPlanInputs(contract);
 }
+// [script.js 수정] 유선 개통 요금제 입력칸 그리기 (변경요금제 추가 + 1줄 배치)
 function renderWiredPlanInputs(contractType) {
-    const area = document.getElementById('w_plan_input_area'); area.innerHTML = "";
-    if(contractType === "인터넷+TV+기타서비스") { area.innerHTML = `<div class="row g-2"><div class="col-4"><label class="form-label-sm">인터넷요금제</label><input type="text" class="form-control form-control-sm" id="w_plan_net"></div><div class="col-4"><label class="form-label-sm">TV요금제</label><input type="text" class="form-control form-control-sm" id="w_plan_tv"></div><div class="col-4"><label class="form-label-sm">기타서비스</label><input type="text" class="form-control form-control-sm" id="w_plan_other"></div></div>`; } 
-    else if(contractType === "인터넷+TV") { area.innerHTML = `<div class="row g-2"><div class="col-6"><label class="form-label-sm">인터넷요금제</label><input type="text" class="form-control form-control-sm" id="w_plan_net"></div><div class="col-6"><label class="form-label-sm">TV요금제</label><input type="text" class="form-control form-control-sm" id="w_plan_tv"></div></div>`; } 
-    else { area.innerHTML = `<div class="row g-2"><div class="col-12"><label class="form-label-sm">인터넷요금제</label><input type="text" class="form-control form-control-sm" id="w_plan_net"></div></div>`; }
+    const area = document.getElementById('w_plan_input_area'); 
+    area.innerHTML = "";
+    
+    if(contractType === "인터넷+TV+기타서비스") { 
+        // ★ 요청사항: 4개 항목을 한 줄에 배치 (12 / 4 = col-3)
+        area.innerHTML = `
+        <div class="row g-2">
+            <div class="col-3">
+                <label class="form-label-sm">인터넷</label>
+                <input type="text" class="form-control form-control-sm" id="w_plan_net">
+            </div>
+            <div class="col-3">
+                <label class="form-label-sm">TV</label>
+                <input type="text" class="form-control form-control-sm" id="w_plan_tv">
+            </div>
+            <div class="col-3">
+                <label class="form-label-sm">기타서비스</label>
+                <input type="text" class="form-control form-control-sm" id="w_plan_other">
+            </div>
+            <div class="col-3">
+                <label class="form-label-sm">변경요금제</label>
+                <input type="text" class="form-control form-control-sm" id="w_plan_chg">
+            </div>
+        </div>`; 
+    } 
+    else if(contractType === "인터넷+TV") { 
+        // 3개 항목 (인터넷, TV, 변경요금제) -> 한 줄에 배치 (12 / 3 = col-4)
+        area.innerHTML = `
+        <div class="row g-2">
+            <div class="col-4">
+                <label class="form-label-sm">인터넷</label>
+                <input type="text" class="form-control form-control-sm" id="w_plan_net">
+            </div>
+            <div class="col-4">
+                <label class="form-label-sm">TV</label>
+                <input type="text" class="form-control form-control-sm" id="w_plan_tv">
+            </div>
+            <div class="col-4">
+                <label class="form-label-sm">변경요금제</label>
+                <input type="text" class="form-control form-control-sm" id="w_plan_chg">
+            </div>
+        </div>`; 
+    } 
+    else { 
+        // 2개 항목 (인터넷, 변경요금제) -> 한 줄에 배치 (12 / 2 = col-6)
+        area.innerHTML = `
+        <div class="row g-2">
+            <div class="col-6">
+                <label class="form-label-sm">인터넷</label>
+                <input type="text" class="form-control form-control-sm" id="w_plan_net">
+            </div>
+            <div class="col-6">
+                <label class="form-label-sm">변경요금제</label>
+                <input type="text" class="form-control form-control-sm" id="w_plan_chg">
+            </div>
+        </div>`; 
+    }
 }
 function resetWiredForm() {
     document.getElementById('wired_branch').selectedIndex = 0; document.getElementById('w_pre_avalue').selectedIndex = 0; document.getElementById('w_pre_act_type').selectedIndex = 0; document.getElementById('w_pre_cont_type').selectedIndex = 0;
