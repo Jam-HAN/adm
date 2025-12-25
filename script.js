@@ -1751,3 +1751,24 @@ function toggleCheckDate() {
         submitSpecialUpdate(); // ★ 바로 저장 함수 호출
     }
 }
+
+// [script.js 맨 아래에 추가] 
+// 모든 금액 입력칸을 자동으로 찾아서 '모바일 숫자 패드'가 뜨도록 설정
+document.addEventListener('DOMContentLoaded', function() {
+    // onkeyup="inputNumberFormat(this)" 가 들어간 모든 입력창을 찾음
+    const moneyInputs = document.querySelectorAll('input[onkeyup*="inputNumberFormat"]');
+    
+    moneyInputs.forEach(input => {
+        // 1. 모바일에서 숫자 키패드 강제 호출 (아이폰/안드로이드 공통)
+        input.setAttribute('inputmode', 'decimal'); 
+        
+        // 2. 혹시 모를 호환성을 위해 패턴 지정
+        input.setAttribute('pattern', '[0-9]*');
+        
+        // 3. 콤마(,)가 들어가야 하므로 type은 text로 유지 (number로 하면 콤마가 안 찍힘)
+        input.setAttribute('type', 'text');
+        
+        // 4. (선택사항) 우측 정렬해서 숫자 보기 편하게
+        input.classList.add('text-end'); 
+    });
+});
