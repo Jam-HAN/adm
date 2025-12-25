@@ -1719,16 +1719,19 @@ function submitSpecialUpdate() {
     });
 }
 
-// [신규] 체크박스 클릭 시 날짜 입력 팝업 띄우기
+// [script.js] 체크박스 클릭 시 날짜 팝업 -> 확인 시 즉시 저장
 function toggleCheckDate() {
     const chk = document.getElementById('sp_checkbox');
     const dateInput = document.getElementById('sp_date');
+    const type = document.getElementById('sp_type').value; // 'usedphone' or 'gift'
     
+    // 1. 팝업 제목 결정
+    const titleText = (type === 'usedphone') ? '반납일' : '수령일';
+
     if (chk.checked) {
-        // 체크 켜짐 -> 날짜 입력창 띄우기
+        // [체크 ON] -> 날짜 선택 팝업 띄우기
         Swal.fire({
-            title: '날짜 지정',
-            text: '반납/수령 날짜를 선택해주세요.',
+            title: titleText, // "반납일" or "수령일"
             html: `<input type="date" id="swal-date" class="form-control form-control-lg text-center fw-bold" value="${dateInput.value}">`,
             showCancelButton: true,
             confirmButtonText: '확인',
@@ -1738,15 +1741,16 @@ function toggleCheckDate() {
             }
         }).then((result) => {
             if (result.isConfirmed && result.value) {
-                // 확인 시: 선택한 날짜 반영
+                // [확인] 선택한 날짜 반영 후 -> 즉시 저장!
                 dateInput.value = result.value;
+                submitSpecialUpdate(); // ★ 바로 저장 함수 호출
             } else {
-                // 취소 시: 체크 해제 (강제)
+                // [취소] 체크박스 다시 끄기
                 chk.checked = false;
             }
         });
     } else {
-        // 체크 꺼짐 -> (옵션) 날짜는 놔두거나 초기화? 현재는 그냥 둠.
-        // 저장 시 서버에서 메모를 삭제하므로 여기선 UI만 반응하면 됨.
+        // [체크 OFF] -> 즉시 저장 (서버에서 날짜 삭제됨)
+        submitSpecialUpdate(); // ★ 바로 저장 함수 호출
     }
 }
