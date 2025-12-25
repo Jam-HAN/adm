@@ -251,42 +251,42 @@
                             <div class="row g-2 mb-3">
                                 <div class="col-6"><label class="form-label-sm">개통처</label><input type="text" class="form-control form-control-sm" id="f_avalue" oninput="refreshAddons()"></div>
                                 <div class="col-6"><label class="form-label-sm">정책차수</label><input type="text" class="form-control form-control-sm" id="f_policy"></div>
-                                <div class="col-6"><label class="form-label-sm">액면/히든</label><input type="number" class="form-control form-control-sm" id="f_inc1"></div>
+                                <div class="col-6"><label class="form-label-sm">액면/히든</label><input type="number" inputmode="decimal" class="form-control form-control-sm" id="f_inc1"></div>
                                 <div class="col-6"><label class="form-label-sm">메모</label><input type="text" class="form-control form-control-sm" id="f_inc1_m"></div>
-                                <div class="col-6"><label class="form-label-sm">추가정책</label><input type="number" class="form-control form-control-sm" id="f_inc2"></div>
+                                <div class="col-6"><label class="form-label-sm">추가정책</label><input type="number" inputmode="decimal" class="form-control form-control-sm" id="f_inc2"></div>
                                 <div class="col-6"><label class="form-label-sm">메모</label><input type="text" class="form-control form-control-sm" id="f_inc2_m"></div>
-                                <div class="col-6"><label class="form-label-sm">부가정책</label><input type="number" class="form-control form-control-sm" id="f_inc3"></div>
+                                <div class="col-6"><label class="form-label-sm">부가정책</label><input type="number" inputmode="decimal" class="form-control form-control-sm" id="f_inc3"></div>
                                 <div class="col-6"><label class="form-label-sm">메모</label><input type="text" class="form-control form-control-sm" id="f_inc3_m"></div>
-                                <div class="col-6"><label class="form-label-sm text-danger-custom">차감정책</label><input type="number" class="form-control form-control-sm border-danger-custom" id="f_cost1"></div>
+                                <div class="col-6"><label class="form-label-sm text-danger-custom">차감정책</label><input type="number" inputmode="decimal" class="form-control form-control-sm border-danger-custom" id="f_cost1"></div>
                                 <div class="col-6"><label class="form-label-sm">메모</label><input type="text" class="form-control form-control-sm" id="f_cost1_m"></div>
-                                <div class="col-6"><label class="form-label-sm text-danger-custom">프리할인</label><input type="number" class="form-control form-control-sm border-danger-custom" id="f_cost2"></div>
+                                <div class="col-6"><label class="form-label-sm text-danger-custom">프리할인</label><input type="number" inputmode="decimal" class="form-control form-control-sm border-danger-custom" id="f_cost2"></div>
                                 <div class="col-6"><label class="form-label-sm">유심</label><select class="form-select form-select-sm" id="f_usim"></select></div>
                             </div>
                             <div class="divider"></div>
                             <div class="section-header"><i class="bi bi-credit-card"></i> 대납 및 지원</div>
                             <div class="row g-2 mb-3">
-                                <div class="col-4"><label class="form-label-sm text-danger-custom">대납1</label><input type="number" class="form-control form-control-sm border-danger-custom" id="f_pay1"></div>
+                                <div class="col-4"><label class="form-label-sm text-danger-custom">대납1</label><input type="number" inputmode="decimal" class="form-control form-control-sm border-danger-custom" id="f_pay1"></div>
                                 <div class="col-4"><label class="form-label-sm">방법</label><select class="form-select form-select-sm" id="f_pay1_m"></select></div>
                                 <div class="col-4"><label class="form-label-sm">처리일</label><input type="date" class="form-control form-control-sm" id="f_pay1_d"></div>
-                                <div class="col-4"><label class="form-label-sm text-danger-custom">대납2</label><input type="number" class="form-control form-control-sm border-danger-custom" id="f_pay2"></div>
+                                <div class="col-4"><label class="form-label-sm text-danger-custom">대납2</label><input type="number" inputmode="decimal" class="form-control form-control-sm border-danger-custom" id="f_pay2"></div>
                                 <div class="col-4"><label class="form-label-sm">방법</label><select class="form-select form-select-sm" id="f_pay2_m"></select></div>
                                 <div class="col-4"><label class="form-label-sm">처리일</label><input type="date" class="form-control form-control-sm" id="f_pay2_d"></div>
-                                <div class="col-6"><label class="form-label-sm text-danger-custom">현금지급</label><input type="number" class="form-control form-control-sm border-danger-custom" id="f_cash"></div>
-                                <div class="col-6"><label class="form-label-sm text-danger-custom">페이백</label><input type="number" class="form-control form-control-sm border-danger-custom" id="f_back"></div>
+                                <div class="col-6"><label class="form-label-sm text-danger-custom">현금지급</label><input type="number" inputmode="decimal" class="form-control form-control-sm border-danger-custom" id="f_cash"></div>
+                                <div class="col-6"><label class="form-label-sm text-danger-custom">페이백</label><input type="number" inputmode="decimal" class="form-control form-control-sm border-danger-custom" id="f_back"></div>
                                 <div class="col-4"><label class="form-label-sm">은행명</label><input type="text" class="form-control form-control-sm" id="f_bank"></div>
-                                <div class="col-4"><label class="form-label-sm">계좌번호</label><input type="text" class="form-control form-control-sm" id="f_acc"></div>
+                                <div class="col-4"><label class="form-label-sm">계좌번호</label><input type="number" inputmode="decimal" class="form-control form-control-sm" id="f_acc"></div>
                                 <div class="col-4"><label class="form-label-sm">예금주</label><input type="text" class="form-control form-control-sm" id="f_holder"></div>
                             </div>
                             <div class="divider"></div>
                             <div class="section-header"><i class="bi bi-wallet2"></i> 수납 상세</div>
                             <div class="row g-2 mb-3">
-                                <div class="col-6"><label class="form-label-sm">단말기수납1</label><input type="number" class="form-control form-control-sm" id="f_inc4"></div>
+                                <div class="col-6"><label class="form-label-sm">단말기수납1</label><input type="number" inputmode="decimal" class="form-control form-control-sm" id="f_inc4"></div>
                                 <div class="col-6"><label class="form-label-sm">방법</label><select class="form-select form-select-sm" id="f_inc4_m"></select></div>
-                                <div class="col-6"><label class="form-label-sm">단말기수납2</label><input type="number" class="form-control form-control-sm" id="f_inc4_2"></div>
+                                <div class="col-6"><label class="form-label-sm">단말기수납2</label><input type="number" inputmode="decimal" class="form-control form-control-sm" id="f_inc4_2"></div>
                                 <div class="col-6"><label class="form-label-sm">방법</label><select class="form-select form-select-sm" id="f_inc4_2_m"></select></div>
-                                <div class="col-6"><label class="form-label-sm">요금수납</label><input type="number" class="form-control form-control-sm" id="f_inc5"></div>
+                                <div class="col-6"><label class="form-label-sm">요금수납</label><input type="number" inputmode="decimal" class="form-control form-control-sm" id="f_inc5"></div>
                                 <div class="col-6"><label class="form-label-sm">방법</label><select class="form-select form-select-sm" id="f_inc5_m"></select></div>
-                                <div class="col-6"><label class="form-label-sm">중고폰</label><input type="number" class="form-control form-control-sm" id="f_inc6"></div>
+                                <div class="col-6"><label class="form-label-sm">중고폰</label><input type="number" inputmode="decimal" class="form-control form-control-sm" id="f_inc6"></div>
                                 <div class="col-6"><label class="form-label-sm">메모</label><input type="text" class="form-control form-control-sm" id="f_inc6_m"></div>
                                 <div class="col-12"><label class="form-label-sm">기타 특이사항</label><input type="text" class="form-control form-control-sm" id="f_comment"></div>
                             </div>
@@ -339,34 +339,34 @@
                             <div class="row g-2 mb-3">
                                 <div class="col-6"><label class="form-label-sm">개통처</label><input type="text" class="form-control form-control-sm" id="w_avalue"></div>
                                 <div class="col-6"><label class="form-label-sm">정책차수</label><input type="text" class="form-control form-control-sm" id="w_policy"></div>
-                                <div class="col-6"><label class="form-label-sm">액면/히든</label><input type="number" class="form-control form-control-sm" id="w_inc1"></div>
+                                <div class="col-6"><label class="form-label-sm">액면/히든</label><input type="number" inputmode="decimal" class="form-control form-control-sm" id="w_inc1"></div>
                                 <div class="col-6"><label class="form-label-sm">메모</label><input type="text" class="form-control form-control-sm" id="w_inc1_m"></div>
-                                <div class="col-6"><label class="form-label-sm">추가정책</label><input type="number" class="form-control form-control-sm" id="w_inc2"></div>
+                                <div class="col-6"><label class="form-label-sm">추가정책</label><input type="number" inputmode="decimal" class="form-control form-control-sm" id="w_inc2"></div>
                                 <div class="col-6"><label class="form-label-sm">메모</label><input type="text" class="form-control form-control-sm" id="w_inc2_m"></div>
-                                <div class="col-6"><label class="form-label-sm">부가정책</label><input type="number" class="form-control form-control-sm" id="w_inc3"></div>
+                                <div class="col-6"><label class="form-label-sm">부가정책</label><input type="number" inputmode="decimal" class="form-control form-control-sm" id="w_inc3"></div>
                                 <div class="col-6"><label class="form-label-sm">메모</label><input type="text" class="form-control form-control-sm" id="w_inc3_m"></div>
-                                <div class="col-6"><label class="form-label-sm text-danger-custom">차감정책</label><input type="number" class="form-control form-control-sm border-danger-custom" id="w_cost1"></div>
+                                <div class="col-6"><label class="form-label-sm text-danger-custom">차감정책</label><input type="number" inputmode="decimal" class="form-control form-control-sm border-danger-custom" id="w_cost1"></div>
                                 <div class="col-6"><label class="form-label-sm">메모</label><input type="text" class="form-control form-control-sm" id="w_cost1_m"></div>
                             </div>
                             <div class="divider"></div><div class="section-header"><i class="bi bi-credit-card"></i> 대납 및 지원</div>
                             <div class="row g-2 mb-3">
-                                <div class="col-4"><label class="form-label-sm text-danger-custom">대납1</label><input type="number" class="form-control form-control-sm border-danger-custom" id="w_pay1"></div>
+                                <div class="col-4"><label class="form-label-sm text-danger-custom">대납1</label><input type="number" inputmode="decimal" class="form-control form-control-sm border-danger-custom" id="w_pay1"></div>
                                 <div class="col-4"><label class="form-label-sm">방법</label><select class="form-select form-select-sm" id="w_pay1_m"></select></div>
                                 <div class="col-4"><label class="form-label-sm">처리일</label><input type="date" class="form-control form-control-sm" id="w_pay1_d"></div>
-                                <div class="col-4"><label class="form-label-sm text-danger-custom">대납2</label><input type="number" class="form-control form-control-sm border-danger-custom" id="w_pay2"></div>
+                                <div class="col-4"><label class="form-label-sm text-danger-custom">대납2</label><input type="number" inputmode="decimal" class="form-control form-control-sm border-danger-custom" id="w_pay2"></div>
                                 <div class="col-4"><label class="form-label-sm">방법</label><select class="form-select form-select-sm" id="w_pay2_m"></select></div>
                                 <div class="col-4"><label class="form-label-sm">처리일</label><input type="date" class="form-control form-control-sm" id="w_pay2_d"></div>
-                                <div class="col-6"><label class="form-label-sm text-danger-custom">현금지급</label><input type="number" class="form-control form-control-sm border-danger-custom" id="w_cash"></div>
-                                <div class="col-6"><label class="form-label-sm text-danger-custom">페이백</label><input type="number" class="form-control form-control-sm border-danger-custom" id="w_back"></div>
+                                <div class="col-6"><label class="form-label-sm text-danger-custom">현금지급</label><input type="number" inputmode="decimal" class="form-control form-control-sm border-danger-custom" id="w_cash"></div>
+                                <div class="col-6"><label class="form-label-sm text-danger-custom">페이백</label><input type="number" inputmode="decimal" class="form-control form-control-sm border-danger-custom" id="w_back"></div>
                                 <div class="col-4"><label class="form-label-sm">은행명</label><input type="text" class="form-control form-control-sm" id="w_bank"></div>
-                                <div class="col-4"><label class="form-label-sm">계좌번호</label><input type="text" class="form-control form-control-sm" id="w_acc"></div>
+                                <div class="col-4"><label class="form-label-sm">계좌번호</label><input type="number" inputmode="decimal" class="form-control form-control-sm" id="w_acc"></div>
                                 <div class="col-4"><label class="form-label-sm">예금주</label><input type="text" class="form-control form-control-sm" id="w_holder"></div>
                             </div>
                             <div class="divider"></div><div class="section-header"><i class="bi bi-wallet2"></i> 수납 상세</div>
                             <div class="row g-2 mb-3">
-                                <div class="col-6"><label class="form-label-sm">요금수납</label><input type="number" class="form-control form-control-sm" id="w_inc5"></div>
+                                <div class="col-6"><label class="form-label-sm">요금수납</label><input type="number" inputmode="decimal" class="form-control form-control-sm" id="w_inc5"></div>
                                 <div class="col-6"><label class="form-label-sm">방법</label><select class="form-select form-select-sm" id="w_inc5_m"></select></div>
-                                <div class="col-6"><label class="form-label-sm">상품권/기타</label><input type="number" class="form-control form-control-sm" id="w_inc6"></div>
+                                <div class="col-6"><label class="form-label-sm">상품권/기타</label><input type="number" inputmode="decimal" class="form-control form-control-sm" id="w_inc6"></div>
                                 <div class="col-6"><label class="form-label-sm">메모</label><input type="text" class="form-control form-control-sm" id="w_inc6_m"></div>
                                 <div class="col-12"><label class="form-label-sm">기타 특이사항</label><input type="text" class="form-control form-control-sm" id="w_comment"></div>
                             </div>
@@ -427,31 +427,31 @@
                             <div class="row g-2 mb-3">
                                 <div class="col-6"><label class="form-label-sm">개통처</label><input type="text" class="form-control form-control-sm" id="u_avalue" oninput="refreshUsedAddons()"></div>
                                 <div class="col-6"><label class="form-label-sm">정책차수</label><input type="text" class="form-control form-control-sm" id="u_policy"></div>
-                                <div class="col-6"><label class="form-label-sm">액면/히든</label><input type="number" class="form-control form-control-sm" id="u_inc1"></div>
+                                <div class="col-6"><label class="form-label-sm">액면/히든</label><input type="number" inputmode="decimal" class="form-control form-control-sm" id="u_inc1"></div>
                                 <div class="col-6"><label class="form-label-sm">메모</label><input type="text" class="form-control form-control-sm" id="u_inc1_m"></div>
-                                <div class="col-6"><label class="form-label-sm">추가정책</label><input type="number" class="form-control form-control-sm" id="u_inc2"></div>
+                                <div class="col-6"><label class="form-label-sm">추가정책</label><input type="number" inputmode="decimal" class="form-control form-control-sm" id="u_inc2"></div>
                                 <div class="col-6"><label class="form-label-sm">메모</label><input type="text" class="form-control form-control-sm" id="u_inc2_m"></div>
-                                <div class="col-6"><label class="form-label-sm">부가정책</label><input type="number" class="form-control form-control-sm" id="u_inc3"></div>
+                                <div class="col-6"><label class="form-label-sm">부가정책</label><input type="number" inputmode="decimal" class="form-control form-control-sm" id="u_inc3"></div>
                                 <div class="col-6"><label class="form-label-sm">메모</label><input type="text" class="form-control form-control-sm" id="u_inc3_m"></div>
-                                <div class="col-6"><label class="form-label-sm text-danger-custom">차감정책</label><input type="number" class="form-control form-control-sm border-danger-custom" id="u_cost1"></div>
+                                <div class="col-6"><label class="form-label-sm text-danger-custom">차감정책</label><input type="number" inputmode="decimal" class="form-control form-control-sm border-danger-custom" id="u_cost1"></div>
                                 <div class="col-6"><label class="form-label-sm">메모</label><input type="text" class="form-control form-control-sm" id="u_cost1_m"></div>
-                                <div class="col-6"><label class="form-label-sm text-danger-custom">프리할인</label><input type="number" class="form-control form-control-sm border-danger-custom" id="u_cost2"></div>
+                                <div class="col-6"><label class="form-label-sm text-danger-custom">프리할인</label><input type="number" inputmode="decimal" class="form-control form-control-sm border-danger-custom" id="u_cost2"></div>
                                 <div class="col-6"><label class="form-label-sm">유심</label><select class="form-select form-select-sm" id="u_usim"><option value="" selected>선택</option></select></div>
                             </div>
                             <div class="divider"></div><div class="section-header"><i class="bi bi-credit-card"></i> 대납 및 지원</div>
                             <div class="row g-2 mb-3">
-                                <div class="col-4"><label class="form-label-sm text-danger-custom">대납1</label><input type="number" class="form-control form-control-sm border-danger-custom" id="u_pay1"></div>
+                                <div class="col-4"><label class="form-label-sm text-danger-custom">대납1</label><input type="number" inputmode="decimal" class="form-control form-control-sm border-danger-custom" id="u_pay1"></div>
                                 <div class="col-4"><label class="form-label-sm">방법</label><select class="form-select form-select-sm" id="u_pay1_m"></select></div>
                                 <div class="col-4"><label class="form-label-sm">처리일</label><input type="date" class="form-control form-control-sm" id="u_pay1_d"></div>
-                                <div class="col-4"><label class="form-label-sm text-danger-custom">대납2</label><input type="number" class="form-control form-control-sm border-danger-custom" id="u_pay2"></div>
+                                <div class="col-4"><label class="form-label-sm text-danger-custom">대납2</label><input type="number" inputmode="decimal" class="form-control form-control-sm border-danger-custom" id="u_pay2"></div>
                                 <div class="col-4"><label class="form-label-sm">방법</label><select class="form-select form-select-sm" id="u_pay2_m"></select></div>
                                 <div class="col-4"><label class="form-label-sm">처리일</label><input type="date" class="form-control form-control-sm" id="u_pay2_d"></div>
                             </div>
                             <div class="divider"></div><div class="section-header"><i class="bi bi-wallet2"></i> 수납 상세</div>
                             <div class="row g-2 mb-3">
-                                <div class="col-6"><label class="form-label-sm">요금수납</label><input type="number" class="form-control form-control-sm" id="u_inc5"></div>
+                                <div class="col-6"><label class="form-label-sm">요금수납</label><input type="number" inputmode="decimal" class="form-control form-control-sm" id="u_inc5"></div>
                                 <div class="col-6"><label class="form-label-sm">방법</label><select class="form-select form-select-sm" id="u_inc5_m"></select></div>
-                                <div class="col-6"><label class="form-label-sm">중고폰</label><input type="number" class="form-control form-control-sm" id="u_inc6"></div>
+                                <div class="col-6"><label class="form-label-sm">중고폰</label><input type="number" inputmode="decimal" class="form-control form-control-sm" id="u_inc6"></div>
                                 <div class="col-6"><label class="form-label-sm">메모</label><input type="text" class="form-control form-control-sm" id="u_inc6_m"></div>
                                 <div class="col-12"><label class="form-label-sm">기타 특이사항</label><input type="text" class="form-control form-control-sm" id="u_comment"></div>
                             </div>
