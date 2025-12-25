@@ -1752,35 +1752,3 @@ function toggleCheckDate() {
     }
 }
 
-// [script.js 맨 아래에 추가] 
-// 금액 입력칸(액면, 추가, 부가, 차감, 프리 등)에 숫자 키패드 강제 적용
-document.addEventListener('DOMContentLoaded', function() {
-    // 1. 숫자패드를 띄울 입력창들의 ID를 직접 지정 (이게 제일 확실합니다)
-    // (사장님 HTML에 있는 ID들과 일치하는지 확인해보세요)
-    const targetIds = [
-        'sp_amount', // 중고폰/상품권 금액
-        'val_policy_face', 'val_policy_add', 'val_policy_sub', 'val_policy_deduct', 'val_policy_free', // 액면, 추가, 부가, 차감, 프리
-        'val_usim', 'val_cash_pay', 'val_payback', // 유심비, 현금지급, 페이백
-        'val_dev_pay1', 'val_dev_pay2', 'val_fee_pay' // 단말기수납, 요금수납
-    ];
-
-    // 2. 혹은 'onkeyup' 속성이 있는 모든 텍스트 상자를 찾아서 적용 (보완책)
-    const allInputs = document.querySelectorAll('input[type="text"]');
-    
-    allInputs.forEach(input => {
-        const onkeyupAttr = input.getAttribute('onkeyup');
-        const id = input.id;
-
-        // (A) 위에서 지정한 ID 목록에 있거나
-        // (B) onkeyup 속성에 'format' 또는 'Currency' 또는 'Number'라는 단어가 들어있으면
-        if (targetIds.includes(id) || (onkeyupAttr && (onkeyupAttr.includes('format') || onkeyupAttr.includes('Currency') || onkeyupAttr.includes('Number')))) {
-            
-            // ★ 핵심: 숫자 패드 모드 설정
-            input.setAttribute('inputmode', 'decimal'); 
-            input.setAttribute('pattern', '[0-9]*');
-            
-            // 우측 정렬 (숫자 보기 편하게)
-            input.classList.add('text-end'); 
-        }
-    });
-});
