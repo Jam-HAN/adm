@@ -910,33 +910,28 @@ function searchHistory() {
 
 function updateSearchUI() { const criteria = document.getElementById('search_criteria').value; const area = document.getElementById('search_input_area'); area.innerHTML = ""; if(criteria === 'supplier') { const sel = document.createElement('select'); sel.className = "form-select"; sel.id = "search_value"; globalVendorList.forEach(v => { const opt = document.createElement('option'); opt.value=v; opt.innerText=v; sel.appendChild(opt); }); area.appendChild(sel); } else if(criteria === 'branch') { const sel = document.createElement('select'); sel.className = "form-select"; sel.id = "search_value"; ["장지 본점", "명일 직영점"].forEach(v => { const opt = document.createElement('option'); opt.value=v; opt.innerText=v; sel.appendChild(opt); }); area.appendChild(sel); } else if(criteria === 'model') { const sel = document.createElement('select'); sel.className = "form-select"; sel.id = "search_value"; globalModelList.forEach(v => { const opt = document.createElement('option'); opt.value=v; opt.innerText=v; sel.appendChild(opt); }); area.appendChild(sel); } else { const inp = document.createElement('input'); inp.className = "form-control"; inp.id = "search_value"; inp.placeholder = "입력하세요"; inp.onkeydown = function(e){ if(e.key==='Enter') searchStock(); }; area.appendChild(inp); inp.focus(); } }
 
-// [추가 1] 모든 모바일 메뉴 닫기 (배경 클릭 시 실행됨)
+// [수정] 모든 모바일 메뉴 닫기 (관리 메뉴 추가됨)
 function closeAllMobileMenus() {
     const overlay = document.getElementById('fab-menu-overlay');
     
     // 1. 더하기 메뉴 닫기
     const fabMenu = document.getElementById('fab-menu-container');
-    if (fabMenu) {
-        fabMenu.classList.add('d-none');
-        fabMenu.classList.remove('d-flex');
-    }
+    if (fabMenu) { fabMenu.classList.add('d-none'); fabMenu.classList.remove('d-flex'); }
 
     // 2. 조회 메뉴 닫기
     const searchMenu = document.getElementById('search-menu-container');
-    if (searchMenu) {
-        searchMenu.classList.add('d-none');
-        searchMenu.classList.remove('d-flex');
-    }
+    if (searchMenu) { searchMenu.classList.add('d-none'); searchMenu.classList.remove('d-flex'); }
     
-    // 3. 오버레이(배경) 숨기기
+    // 3. ★ [신규 추가] 관리 메뉴 닫기
+    const manageMenu = document.getElementById('manage-menu-container');
+    if (manageMenu) { manageMenu.classList.add('d-none'); manageMenu.classList.remove('d-flex'); }
+
+    // 4. 오버레이(배경) 숨기기
     if (overlay) overlay.classList.add('d-none');
     
-    // 4. 더하기 아이콘 원상복구 (X -> +)
+    // 5. 더하기 아이콘 복구
     const fabIcon = document.querySelector('.center-fab .bi');
-    if(fabIcon) { 
-        fabIcon.classList.remove('bi-x-lg'); 
-        fabIcon.classList.add('bi-plus-lg'); 
-    }
+    if(fabIcon) { fabIcon.classList.remove('bi-x-lg'); fabIcon.classList.add('bi-plus-lg'); }
 }
 
 // [누락된 함수 추가] 더하기(+) 메뉴 토글 함수
@@ -994,6 +989,33 @@ function toggleSearchMenu() {
         overlay.classList.remove('d-none'); // 배경 켜기
     } else {
         // 메뉴 닫기
+        menu.classList.add('d-none');
+        menu.classList.remove('d-flex');
+        overlay.classList.add('d-none'); // 배경 끄기
+    }
+}
+
+// [신규 추가] 관리 메뉴 토글 함수
+function toggleManageMenu() {
+    const overlay = document.getElementById('fab-menu-overlay');
+    const menu = document.getElementById('manage-menu-container');
+    
+    // 다른 메뉴들이 열려있으면 닫기 (충돌 방지)
+    const fabMenu = document.getElementById('fab-menu-container');
+    const searchMenu = document.getElementById('search-menu-container');
+    if (fabMenu && !fabMenu.classList.contains('d-none')) { fabMenu.classList.add('d-none'); fabMenu.classList.remove('d-flex'); }
+    if (searchMenu && !searchMenu.classList.contains('d-none')) { searchMenu.classList.add('d-none'); searchMenu.classList.remove('d-flex'); }
+    
+    // 아이콘 복구
+    const fabIcon = document.querySelector('.center-fab .bi');
+    if(fabIcon) { fabIcon.classList.remove('bi-x-lg'); fabIcon.classList.add('bi-plus-lg'); }
+
+    // 토글 로직
+    if (menu.classList.contains('d-none')) {
+        menu.classList.remove('d-none');
+        menu.classList.add('d-flex');
+        overlay.classList.remove('d-none'); // 배경 켜기
+    } else {
         menu.classList.add('d-none');
         menu.classList.remove('d-flex');
         overlay.classList.add('d-none'); // 배경 끄기
