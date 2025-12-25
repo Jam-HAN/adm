@@ -1753,22 +1753,34 @@ function toggleCheckDate() {
 }
 
 // [script.js 맨 아래에 추가] 
-// 모든 금액 입력칸을 자동으로 찾아서 '모바일 숫자 패드'가 뜨도록 설정
+// 금액 입력칸(액면, 추가, 부가, 차감, 프리 등)에 숫자 키패드 강제 적용
 document.addEventListener('DOMContentLoaded', function() {
-    // onkeyup="inputNumberFormat(this)" 가 들어간 모든 입력창을 찾음
-    const moneyInputs = document.querySelectorAll('input[onkeyup*="inputNumberFormat"]');
+    // 1. 숫자패드를 띄울 입력창들의 ID를 직접 지정 (이게 제일 확실합니다)
+    // (사장님 HTML에 있는 ID들과 일치하는지 확인해보세요)
+    const targetIds = [
+        'sp_amount', // 중고폰/상품권 금액
+        'val_policy_face', 'val_policy_add', 'val_policy_sub', 'val_policy_deduct', 'val_policy_free', // 액면, 추가, 부가, 차감, 프리
+        'val_usim', 'val_cash_pay', 'val_payback', // 유심비, 현금지급, 페이백
+        'val_dev_pay1', 'val_dev_pay2', 'val_fee_pay' // 단말기수납, 요금수납
+    ];
+
+    // 2. 혹은 'onkeyup' 속성이 있는 모든 텍스트 상자를 찾아서 적용 (보완책)
+    const allInputs = document.querySelectorAll('input[type="text"]');
     
-    moneyInputs.forEach(input => {
-        // 1. 모바일에서 숫자 키패드 강제 호출 (아이폰/안드로이드 공통)
-        input.setAttribute('inputmode', 'decimal'); 
-        
-        // 2. 혹시 모를 호환성을 위해 패턴 지정
-        input.setAttribute('pattern', '[0-9]*');
-        
-        // 3. 콤마(,)가 들어가야 하므로 type은 text로 유지 (number로 하면 콤마가 안 찍힘)
-        input.setAttribute('type', 'text');
-        
-        // 4. (선택사항) 우측 정렬해서 숫자 보기 편하게
-        input.classList.add('text-end'); 
+    allInputs.forEach(input => {
+        const onkeyupAttr = input.getAttribute('onkeyup');
+        const id = input.id;
+
+        // (A) 위에서 지정한 ID 목록에 있거나
+        // (B) onkeyup 속성에 'format' 또는 'Currency' 또는 'Number'라는 단어가 들어있으면
+        if (targetIds.includes(id) || (onkeyupAttr && (onkeyupAttr.includes('format') || onkeyupAttr.includes('Currency') || onkeyupAttr.includes('Number')))) {
+            
+            // ★ 핵심: 숫자 패드 모드 설정
+            input.setAttribute('inputmode', 'decimal'); 
+            input.setAttribute('pattern', '[0-9]*');
+            
+            // 우측 정렬 (숫자 보기 편하게)
+            input.classList.add('text-end'); 
+        }
     });
 });
