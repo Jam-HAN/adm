@@ -803,9 +803,9 @@
             <i class="bi bi-search"></i>
             <span>조회</span>
         </a>
-        <a href="#" class="nav-item" onclick="showSection('section-vendor'); activeNav(this)">
-            <i class="bi bi-shop"></i>
-            <span>거래처</span>
+        <a href="#" class="nav-item" onclick="toggleManageMenu()">
+            <i class="bi bi-sliders"></i>
+            <span>관리</span>
         </a>
     </nav>
 
@@ -828,6 +828,18 @@
         </button>
         <button onclick="showSection('section-stock'); toggleSearchMenu();" class="btn btn-light shadow-lg fw-bold py-3 text-dark border-0 rounded-4">
             <i class="bi bi-search me-2 text-success"></i> 재고 조회
+        </button>
+    </div>
+
+    <div id="manage-menu-container" class="d-none flex-column gap-2" style="position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); z-index: 1060; width: 220px;">
+        <button onclick="showSection('section-return-usedphone'); toggleManageMenu();" class="btn btn-light shadow-lg fw-bold py-3 text-primary border-0 rounded-4">
+            <i class="bi bi-phone me-2"></i> 중고폰 반납
+        </button>
+        <button onclick="showSection('section-receive-gift'); toggleManageMenu();" class="btn btn-light shadow-lg fw-bold py-3 text-danger border-0 rounded-4">
+            <i class="bi bi-gift me-2"></i> 상품권 수령
+        </button>
+        <button onclick="showSection('section-vendor'); toggleManageMenu();" class="btn btn-light shadow-lg fw-bold py-3 text-dark border-0 rounded-4">
+            <i class="bi bi-shop me-2"></i> 거래처 관리
         </button>
     </div>
 
