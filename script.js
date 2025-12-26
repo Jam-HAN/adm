@@ -1627,17 +1627,7 @@ function searchSpecialList(type) {
 function renderSpecialCard(item, type) {
     // ★ 수정: 금액이 아니라, 서버에서 보내준 '체크여부(completed)'로 판단
     const isChecked = item.completed === true;
-    
-    // ★ [수정] 백엔드 V58.2는 '중고폰'과 '상품권' 키를 따로 줍니다.
-    // 기존: const amount = Number(String(item['중고폰반납'] || 0).replace(/,/g, ''));
-    
-    let rawAmount = 0;
-    if (item.sheetName === '유선개통') {
-        rawAmount = item['상품권']; // V58.2 키 이름
-    } else {
-        rawAmount = item['중고폰']; // V58.2 키 이름
-    }
-    const amount = Number(String(rawAmount || 0).replace(/,/g, ''));
+    const amount = Number(String(item['중고폰반납'] || 0).replace(/,/g, ''));
     
     let statusBadge = '';
     if (isChecked) {
@@ -1708,17 +1698,9 @@ function openSpecialModal(item, type) {
         checkLabel.innerText = " 수령 확인 (체크 시 정산 반영)";
         modelGroup.style.display = 'none'; 
     }
-    
-    // 1. 금액 세팅 (★ 수정됨)
-    // 기존: const existingAmount = item['중고폰반납'] || '';
-    
-    let existingAmount = '';
-    if (type === 'usedphone') {
-        existingAmount = item['중고폰']; // 백엔드에서 준 키
-    } else {
-        existingAmount = item['상품권']; // 백엔드에서 준 키
-    }
-    
+
+    // 1. 금액 세팅
+    const existingAmount = item['중고폰반납'] || ''; 
     document.getElementById('sp_amount').value = existingAmount ? Number(String(existingAmount).replace(/,/g,'')).toLocaleString() : '';
     
     // 2. 체크 상태 세팅
@@ -1729,16 +1711,7 @@ function openSpecialModal(item, type) {
     // - item['중고폰메모']: AU/AW 메모에 저장된 모델명
     
     let savedDate = item['checkDate'] || ''; // 체크칸 메모에서 날짜 가져옴
-    
-    // ★ [수정] 타입에 따라 맞는 메모 키를 가져옵니다.
-    // 기존: let savedModel = item['중고폰메모'] || ''; 
-    
-    let savedModel = '';
-    if (type === 'usedphone') {
-        savedModel = item['중고폰메모'] || '';
-    } else {
-        savedModel = item['상품권메모'] || '';
-    }
+    let savedModel = item['중고폰메모'] || ''; // 금액칸 메모에서 모델명 가져옴
 
     // (호환성 유지) 만약 체크칸 메모(날짜)가 없으면, 예전 방식(모델/날짜 섞인 텍스트)에서 추출 시도
     if (!savedDate && savedModel.includes('-')) {
@@ -1835,4 +1808,3 @@ function toggleCheckDate() {
         submitSpecialUpdate(); // ★ 바로 저장 함수 호출
     }
 }
-
