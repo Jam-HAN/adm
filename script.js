@@ -765,11 +765,11 @@ function renderWiredPlanInputs(contractType) {
         area.innerHTML = `
         <div class="row g-2">
             <div class="col-3">
-                <label class="form-label-sm">인터넷</label>
+                <label class="form-label-sm">인터넷요금제</label>
                 <input type="text" class="form-control form-control-sm" id="w_plan_net">
             </div>
             <div class="col-3">
-                <label class="form-label-sm">TV</label>
+                <label class="form-label-sm">TV요금제</label>
                 <input type="text" class="form-control form-control-sm" id="w_plan_tv">
             </div>
             <div class="col-3">
@@ -787,11 +787,11 @@ function renderWiredPlanInputs(contractType) {
         area.innerHTML = `
         <div class="row g-2">
             <div class="col-4">
-                <label class="form-label-sm">인터넷</label>
+                <label class="form-label-sm">인터넷요금제</label>
                 <input type="text" class="form-control form-control-sm" id="w_plan_net">
             </div>
             <div class="col-4">
-                <label class="form-label-sm">TV</label>
+                <label class="form-label-sm">TV요금제</label>
                 <input type="text" class="form-control form-control-sm" id="w_plan_tv">
             </div>
             <div class="col-4">
@@ -805,7 +805,7 @@ function renderWiredPlanInputs(contractType) {
         area.innerHTML = `
         <div class="row g-2">
             <div class="col-6">
-                <label class="form-label-sm">인터넷</label>
+                <label class="form-label-sm">인터넷요금제</label>
                 <input type="text" class="form-control form-control-sm" id="w_plan_net">
             </div>
             <div class="col-6">
