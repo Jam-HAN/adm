@@ -1383,6 +1383,9 @@ function openEditModal(item) {
     // ==========================================
     // 5. [수납 상세]
     // ==========================================
+    // ★ [핵심] 유선이면 '상품권/기타', 무선이면 '중고폰'으로 이름표 변경
+    let labelSpecial = (item.sheetName === '유선개통') ? '상품권/기타' : '중고폰';
+    
     let sectionCollect = `
         <div class="divider"></div>
         <div class="section-header"><i class="bi bi-wallet2"></i> 수납 상세</div>
@@ -1396,7 +1399,7 @@ function openEditModal(item) {
             ${makeInput('요금수납', '요금수납', 'col-6', 'number')}
             ${makeSelect('방법', '요금수납방법', colMethodList, 'col-6')}
             
-            ${makeInput('중고폰', '중고폰반납', 'col-6', 'number')}
+            ${makeInput(labelSpecial, '중고폰반납', 'col-6', 'number')}
             ${makeInput('메모', '중고폰메모', 'col-6')}
             
             ${makeInput('기타 특이사항', '특이사항', 'col-12')}
