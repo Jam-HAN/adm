@@ -457,7 +457,8 @@ function showStockRegisterModal(type, dataObj) {
     const areaManual = document.getElementById('area-manual');
     const areaSupplier = document.getElementById('area-modal-supplier'); 
     const areaBarcode = document.getElementById('area-modal-barcode'); 
-    const msgText = document.getElementById('msg-manual-text'); 
+    const msgText = document.getElementById('msg-manual-text');
+    const areaBranch = document.getElementById('area-modal-branch');
     
     document.getElementById('reg_modal_barcode').value = dataObj.barcode || "";
     document.getElementById('reg_modal_serial').value = dataObj.serial || "";
@@ -467,8 +468,13 @@ function showStockRegisterModal(type, dataObj) {
     tempInStockData = { type, barcode: dataObj.barcode, serial: dataObj.serial, supplier: defaultSup, branch: defaultBranch };
 
     if (type === 'simple_open') {
+        // [간편 입고 모드]
         if (title) title.innerHTML = '<i class="bi bi-lightning-fill"></i> 간편 입고 (개통용)';
         if (areaBarcode) areaBarcode.style.display = 'none';
+        if (areaBranch) {
+            areaBranch.style.display = 'block'; 
+            document.getElementById('reg_modal_branch').value = ""; // 켤 때마다 초기화 (선택 강제)
+        }
         if (areaSupplier) {
             areaSupplier.style.display = 'block'; 
             const modalSupSel = document.getElementById('reg_modal_supplier');
@@ -550,15 +556,29 @@ function submitStockRegister() {
     const isIphoneMode = document.getElementById('area-iphone').style.display !== 'none';
     
     // 간편 입고 시 거래처 확인
-    if (type === 'simple_open') {
-        const supEl = document.getElementById('reg_modal_supplier');
-        // 거래처 선택창이 존재하고 화면에 보일 때만 체크
-        if (supEl && supEl.offsetParent !== null) { 
-            if (!supEl.value) { alert("거래처를 선택해주세요!"); supEl.focus(); return; }
-            supplier = supEl.value;
+    // ★ [추가] 간편 입고일 때만 지점 값을 읽어서 덮어쓰기
+    if (tempInStockData.type === 'simple_open') {
+        
+        // 1. 지점 값 읽기
+        const branchEl = document.getElementById('reg_modal_branch');
+        if (branchEl && branchEl.value) {
+            tempInStockData.branch = branchEl.value; // 여기서 덮어쓰기!
+        } else {
+            alert("입고할 지점을 선택해주세요!");
+            branchEl.focus();
+            return; // 중단
         }
-    }
 
+        // 2. 거래처 값 읽기 (기존 로직)
+        const supEl = document.getElementById('reg_modal_supplier');
+        if (supEl && !supEl.value) {
+            alert("거래처를 선택해주세요!");
+            supEl.focus();
+            return;
+        }
+        tempInStockData.supplier = supEl.value;
+    }
+    
     // 값 추출
     if (isIphoneMode) {
         const iModel = document.getElementById('reg_iphone_model').value;
