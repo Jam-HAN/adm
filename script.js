@@ -531,54 +531,58 @@ function updateIphoneColors() {
     }
 }
 
-// [최종 수정] 입력 완료 버튼 로직 (포커스 해제 및 모달 안전 처리)
+// [최종 수정] 입력 완료 버튼 로직 (지점/거래처 선택 완벽 대응)
 function submitStockRegister() {
     console.log("▶ 입력 완료 버튼 클릭됨");
 
-    // 1. 버튼 포커스 해제 (크롬 aria-hidden 에러 방지)
+    // 1. 버튼 포커스 해제 (에러 방지)
     const btn = document.getElementById('btn-stock-submit');
     if (btn) btn.blur(); 
 
-    // 2. 데이터 검증
+    // 2. 데이터 유실 체크
     if (!tempInStockData) {
         alert("데이터가 유실되었습니다. 다시 스캔해주세요.");
         return;
     }
 
+    // 3. 기본 변수 준비
     const type = tempInStockData.type;
-    let supplier = tempInStockData.supplier;
+    let supplier = tempInStockData.supplier; // 기본값
     let model = "";
     let color = "";
-
-    // 3. 화면에 보이는 요소(아이폰 vs 수동) 확인
-    const isIphoneMode = document.getElementById('area-iphone').style.display !== 'none';
     
-    // 간편 입고 시 거래처 확인
-    // ★ [추가] 간편 입고일 때만 지점 값을 읽어서 덮어쓰기
-    if (tempInStockData.type === 'simple_open') {
+    // ★ [FIX] 아이폰 모드인지 판단
+    const isIphoneMode = (document.getElementById('area-iphone').style.display !== 'none');
+
+    // 4. [간편 입고]일 때만 지점/거래처 화면에서 읽어오기
+    if (type === 'simple_open') {
         
-        // 1. 지점 값 읽기
+        // (1) 지점 확인
         const branchEl = document.getElementById('reg_modal_branch');
-        if (branchEl && branchEl.value) {
-            tempInStockData.branch = branchEl.value; // 여기서 덮어쓰기!
-        } else {
-            alert("입고할 지점을 선택해주세요!");
-            branchEl.focus();
-            return; // 중단
+        if (branchEl && branchEl.offsetParent !== null) { // 화면에 보인다면
+            if (!branchEl.value) { 
+                alert("입고할 지점을 선택해주세요!"); 
+                branchEl.focus(); 
+                return; // 중단
+            }
+            tempInStockData.branch = branchEl.value; // 데이터 갱신
         }
 
-        // 2. 거래처 값 읽기 (기존 로직)
+        // (2) 거래처 확인
         const supEl = document.getElementById('reg_modal_supplier');
-        if (supEl && !supEl.value) {
-            alert("거래처를 선택해주세요!");
-            supEl.focus();
-            return;
+        if (supEl && supEl.offsetParent !== null) { // 화면에 보인다면
+            if (!supEl.value) { 
+                alert("거래처를 선택해주세요!"); 
+                supEl.focus(); 
+                return; // 중단
+            }
+            // ★ [핵심] 여기서 변수들을 확실하게 업데이트
+            tempInStockData.supplier = supEl.value; 
+            supplier = supEl.value; 
         }
-        tempInStockData.supplier = supEl.value;
-        supplier = supEl.value;
     }
-    
-    // 값 추출
+
+    // 5. 모델명/색상 값 추출
     if (isIphoneMode) {
         const iModel = document.getElementById('reg_iphone_model').value;
         const iStorage = document.getElementById('reg_iphone_storage').value;
@@ -592,7 +596,7 @@ function submitStockRegister() {
         const mColor = document.getElementById('reg_manual_color').value.trim();
         
         if (!mModel) { alert("모델명을 입력해주세요."); document.getElementById('reg_manual_model').focus(); return; }
-        // 용량 필수 체크
+        // 용량 선택 필수
         if (!mStorage) { alert("용량을 선택해주세요."); document.getElementById('reg_manual_storage').focus(); return; }
         if (!mColor) { alert("색상을 입력해주세요."); document.getElementById('reg_manual_color').focus(); return; }
         
@@ -600,26 +604,30 @@ function submitStockRegister() {
         color = mColor;
     }
 
-    // 4. 데이터 갱신
+    // 6. 최종 데이터 갱신
     tempInStockData.model = model;
     tempInStockData.color = color;
-    tempInStockData.supplier = supplier;
+    tempInStockData.supplier = supplier; // ★ 갱신된 거래처 반영
 
-    // 5. 모달 닫기 (안전한 방식)
     const modalEl = document.getElementById('modal-stock-register');
     const modalInstance = bootstrap.Modal.getOrCreateInstance(modalEl);
     
-    // 연속 스캔 모드인 경우
+    // 7. 연속 스캔 모드 처리
     const toggleEl = document.getElementById('in_mode_toggle');
     if (toggleEl && toggleEl.checked) {
         inPendingList.push(tempInStockData);
         renderInList();
+        
+        // 포커스 에러 방지
+        document.activeElement.blur();
+        const mainInput = document.getElementById('in_scan');
+        if(mainInput) mainInput.focus();
+        
         modalInstance.hide();
-        document.getElementById('in_scan').focus();
         return; 
     }
 
-    // 6. 서버 전송
+    // 8. 서버 전송 시작 (버튼 비활성화)
     if(btn) {
         btn.disabled = true;
         btn.innerText = "처리 중...";
@@ -634,19 +642,23 @@ function submitStockRegister() {
             serial: tempInStockData.serial,
             model: model,
             color: color,
-            supplier: supplier,
+            supplier: supplier, // ★ 여기서 갱신된 값을 보냄
             branch: tempInStockData.branch,
             user: currentUser
         })
     })
     .then(r => r.json())
     .then(d => {
-        modalInstance.hide(); // 결과와 상관없이 모달 닫기
+        // 모달 닫기 안전 처리
+        document.activeElement.blur();
+        const mainInput = document.getElementById('in_scan');
+        if(mainInput) mainInput.focus();
+        modalInstance.hide();
 
         if(d.status === 'success') {
             if (type === 'simple_open') {
                 alert("간편 입고 완료! 개통 정보를 입력합니다.");
-                // 개통 화면 데이터 전달
+                // 개통 화면으로 넘길 데이터 준비
                 tempOpenStockData = {
                     inputCode: tempInStockData.serial,
                     model: model,
@@ -655,7 +667,7 @@ function submitStockRegister() {
                     branch: tempInStockData.branch,
                     supplier: supplier
                 };
-                // UI 갱신
+                // 개통 화면 UI 채우기
                 document.getElementById('target_model').innerText = `${model} (${color})`; 
                 document.getElementById('target_serial').innerText = tempInStockData.serial;
                 document.getElementById('target_branch').innerText = tempInStockData.branch; 
@@ -668,7 +680,6 @@ function submitStockRegister() {
                 setTimeout(() => document.getElementById('f_name').focus(), 300);
             } else {
                 showMsg('in-msg','success',`입고 완료: ${model}`);
-                document.getElementById('in_scan').focus();
             }
         } else {
             alert("오류: " + d.message);
@@ -678,6 +689,7 @@ function submitStockRegister() {
         alert("통신 오류 발생: " + err);
     })
     .finally(() => {
+        // 버튼 복구
         if(btn) {
             btn.disabled = false;
             btn.innerText = "입력 완료";
