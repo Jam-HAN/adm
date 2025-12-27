@@ -494,6 +494,7 @@ function showStockRegisterModal(type, dataObj) {
         document.getElementById('reg_manual_model').value = ""; manualStorage.value = ""; document.getElementById('reg_manual_color').value = "";
     } else {
         if (areaBarcode) areaBarcode.style.display = 'block'; 
+        if (areaBranch) areaBranch.style.display = 'none';
         if (areaSupplier) areaSupplier.style.display = 'none'; 
         if (type === 'iphone') {
             if (title) title.innerHTML = '<i class="bi bi-apple"></i> 아이폰 정보 입력';
