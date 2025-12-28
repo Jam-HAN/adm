@@ -1582,7 +1582,7 @@ function submitEditHistory() {
             if (modal) modal.hide();
 
             const activeSection = document.querySelector('.section-view.active-section');
-            if (activeSection && activeSection.id === 'section-history-all') {
+            if (activeSection && activeSection.id === 'section-search-all') {
                 searchAllHistory(); 
             } else {
                 loadDashboard(); 
