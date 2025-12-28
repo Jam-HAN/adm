@@ -88,20 +88,31 @@ window.onload = function() {
         });
     };
     
-    // 3. [로직] 세션 확인 및 데이터 로드
+    // 3. [핵심 수정] 로그인 세션 복구 로직 (에러 방지 Try-Catch 추가)
     const saved = sessionStorage.getItem('dbphone_user');
     if(saved) {
-        const u = JSON.parse(saved);
-        currentUser = u.name;
-        document.getElementById('login-view').style.display = 'none';
-        document.getElementById('main-view').style.display = 'block';
-        document.getElementById('user-name').innerText = currentUser;
-        
-        loadInitData();
-        loadDropdownData();
-        setupAutoLogout();
-        loadDashboard();
-        initHistoryDates();
+        try {
+            const u = JSON.parse(saved); // ★ 여기서 에러나면 catch로 이동
+            
+            // 데이터가 정상이면 실행
+            currentUser = u.name;
+            document.getElementById('login-view').style.display = 'none';
+            document.getElementById('main-view').style.display = 'block';
+            document.getElementById('user-name').innerText = currentUser;
+            
+            loadDashboard(); // 대시보드 먼저 실행
+            
+            loadInitData();
+            loadDropdownData();
+            setupAutoLogout();
+            initHistoryDates();
+
+        } catch (e) {
+            console.error("세션 데이터 손상됨. 초기화합니다.", e);
+            sessionStorage.removeItem('dbphone_user'); // 1. 깨진 정보 삭제
+            alert("로그인 정보가 만료되었습니다. 다시 로그인해주세요.");
+            location.reload(); // 2. 새로고침 (로그인 화면으로 이동)
+        }
     }
 
     // 4. [로직] 엔터키 이벤트 연결 (거래처 등록 등)
