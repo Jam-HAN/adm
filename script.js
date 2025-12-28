@@ -470,37 +470,78 @@ function showStockRegisterModal(type, dataObj) {
         if (areaBarcode) areaBarcode.style.display = 'none';
         if (areaBranch) {
             areaBranch.style.display = 'block'; 
-            document.getElementById('reg_modal_branch').value = ""; // 켤 때마다 초기화 (선택 강제)
+            document.getElementById('reg_modal_branch').value = ""; // 초기화
         }
+        
+        // ★ [수정됨] 거래처 목록 로딩 로직 강화
         if (areaSupplier) {
             areaSupplier.style.display = 'block'; 
             const modalSupSel = document.getElementById('reg_modal_supplier');
-            if(modalSupSel) {
+            
+            // 1. 이미 목록이 있으면 바로 그림
+            if (globalVendorList && globalVendorList.length > 0) {
                 modalSupSel.innerHTML = '<option value="">선택하세요</option>';
-                if (globalVendorList.length > 0) globalVendorList.forEach(v => modalSupSel.innerHTML += `<option value="${v}">${v}</option>`);
-                else modalSupSel.innerHTML += `<option value="" disabled>로딩 중...</option>`;
+                globalVendorList.forEach(v => modalSupSel.innerHTML += `<option value="${v}">${v}</option>`);
                 modalSupSel.value = ""; 
+            } else {
+                // 2. 목록이 없으면 "로딩 중" 표시 후 즉시 서버 요청
+                modalSupSel.innerHTML = `<option value="" disabled selected>데이터 불러오는 중...</option>`;
+                
+                fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "get_vendors" }) })
+                .then(r => r.json())
+                .then(d => {
+                    if(d.status === 'success') {
+                        globalVendorList = d.list.map(v => v.name); // 전역 변수 업데이트
+                        localStorage.setItem('dbphone_vendors', JSON.stringify(globalVendorList)); // 캐시 저장
+                        
+                        // 드롭다운 다시 그리기
+                        modalSupSel.innerHTML = '<option value="">선택하세요</option>';
+                        globalVendorList.forEach(v => modalSupSel.innerHTML += `<option value="${v}">${v}</option>`);
+                    } else {
+                        modalSupSel.innerHTML = `<option value="" disabled>로드 실패</option>`;
+                    }
+                })
+                .catch(() => {
+                    modalSupSel.innerHTML = `<option value="" disabled>통신 오류</option>`;
+                });
             }
         }
+
         if (msgText) { msgText.style.display = 'block'; msgText.innerHTML = `<i class="bi bi-info-circle"></i> 재고에 없는 단말기입니다.<br>거래처와 정보를 입력하여 입고 후 개통합니다.`; msgText.className = "alert alert-primary small fw-bold mb-3"; }
         if (areaIphone) areaIphone.style.display = 'none';
         if (areaManual) areaManual.style.display = 'block';
+        
         const manualStorage = document.getElementById('reg_manual_storage');
         manualStorage.innerHTML = '<option value="">선택하세요</option>';
         if (globalDropdownData && globalDropdownData.otherCapacityList) globalDropdownData.otherCapacityList.forEach(c => manualStorage.innerHTML += `<option value="${c}">${c}</option>`);
+        
         document.getElementById('reg_manual_model').value = ""; manualStorage.value = ""; document.getElementById('reg_manual_color').value = "";
+    
     } else {
+        // [일반/아이폰 입고 모드] - 기존 코드 유지
         if (areaBarcode) areaBarcode.style.display = 'block'; 
         if (areaBranch) areaBranch.style.display = 'none';
         if (areaSupplier) areaSupplier.style.display = 'none'; 
+        
         if (type === 'iphone') {
             if (title) title.innerHTML = '<i class="bi bi-apple"></i> 아이폰 정보 입력';
             if (msgText) msgText.style.display = 'none';
             if (areaIphone) areaIphone.style.display = 'block';
             if (areaManual) areaManual.style.display = 'none';
+            
+            // 아이폰 데이터가 아직 로드 안 됐을 경우 대비
+            if (Object.keys(globalIphoneData).length === 0) {
+                 fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "get_iphone_data" }) })
+                 .then(r => r.json()).then(d => {
+                     globalIphoneData = d.data;
+                     updateIphoneColors(); // 데이터 로드 후 갱신
+                 });
+            }
+
             const modelSel = document.getElementById('reg_iphone_model');
             modelSel.innerHTML = '<option value="">선택하세요</option>';
             Object.keys(globalIphoneData).forEach(m => modelSel.innerHTML += `<option value="${m}">${m}</option>`);
+            
             document.getElementById('reg_iphone_storage').innerHTML = '<option value="">선택하세요</option>';
             document.getElementById('reg_iphone_color').innerHTML = '<option value="">선택하세요</option>';
         } else {
@@ -939,9 +980,12 @@ function addVendor() {
     .then(d => { 
         alert(d.message); 
         
-        // [추가] 캐시 즉시 업데이트 (드롭다운 반영용)
+        // [캐시 동기화 로직]
         if (n && !globalVendorList.includes(n)) {
-            globalVendorList.push(n);
+            globalVendorList.push(n); // 1. 전역 변수 업데이트
+            
+            // ★ [추가된 부분] 로컬 스토리지도 즉시 업데이트!
+            localStorage.setItem('dbphone_vendors', JSON.stringify(globalVendorList)); 
         }
 
         loadVendorsToList(); 
