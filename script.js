@@ -4,6 +4,40 @@
 
 const GAS_URL = "https://script.google.com/macros/s/AKfycbyd_prXEX1KffclSnXxUs0iQ2UFBDxArPztGbOy0YRiR5Kr2SLdeivWfR2J03etf27f/exec"; 
 
+// ============================================================
+// [Core] 통신 전용 엔진 (재시도 로직 + 타임아웃 처리 포함)
+// ============================================================
+async function requestAPI(payload, retries = 2) {
+    const timeout = 15000; // 15초 타임아웃 설정
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), timeout);
+
+    try {
+        const response = await fetch(GAS_URL, {
+            method: "POST",
+            body: JSON.stringify(payload),
+            signal: controller.signal
+        });
+        clearTimeout(id);
+        
+        if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
+        
+        const json = await response.json();
+        return json;
+
+    } catch (error) {
+        clearTimeout(id);
+        console.warn(`통신 실패 (남은 재시도: ${retries}):`, error);
+        
+        if (retries > 0) {
+            // 0.5초 대기 후 재시도 (Backoff)
+            await new Promise(res => setTimeout(res, 500));
+            return requestAPI(payload, retries - 1);
+        }
+        throw error;
+    }
+}
+
 let currentUser = "";
 let inPendingList = [];
 let globalVendorList = [];
