@@ -86,6 +86,62 @@
                                 </li>
                             </ul>
                         </li>
+
+                        <li class="nav-item"><a class="nav-link" onclick="showSection('section-settlement')">💰 정산 관리</a></li>
+                    
+                        <div id="section-settlement" class="section-view">
+                            <div class="glass-card p-4">
+                                <h5 class="fw-bold mb-4 text-primary"><i class="bi bi-cash-coin"></i> 기간별 정산/집계</h5>
+                                
+                                <div class="row g-2 align-items-end mb-4">
+                                    <div class="col-5">
+                                        <label class="small text-muted fw-bold">시작일</label>
+                                        <input type="date" id="settle_start" class="form-control form-control-sm">
+                                    </div>
+                                    <div class="col-5">
+                                        <label class="small text-muted fw-bold">종료일</label>
+                                        <input type="date" id="settle_end" class="form-control form-control-sm">
+                                    </div>
+                                    <div class="col-2">
+                                        <button class="btn btn-primary btn-sm w-100 fw-bold" onclick="loadSettlement()">조회</button>
+                                    </div>
+                                </div>
+                        
+                                <div id="settle_admin_summary" style="display:none;" class="mb-4">
+                                    <div class="row g-2 text-center">
+                                        <div class="col-4">
+                                            <div class="p-3 bg-light rounded border">
+                                                <div class="small text-muted">총 건수</div>
+                                                <div class="h4 fw-bold mb-0" id="st_total_count">0</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-8">
+                                            <div class="p-3 bg-primary bg-opacity-10 rounded border border-primary">
+                                                <div class="small text-primary fw-bold">총 순수익 (마진)</div>
+                                                <div class="h4 fw-bold text-primary mb-0" id="st_total_margin">0</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                        
+                                <div class="table-responsive">
+                                    <table class="table table-hover align-middle text-center small">
+                                        <thead class="table-light">
+                                            <tr id="settle_table_head">
+                                                <th>직원명</th>
+                                                <th>판매건수</th>
+                                                <th class="admin-only">총 마진</th>
+                                                </tr>
+                                        </thead>
+                                        <tbody id="settle_tbody">
+                                            <tr><td colspan="4" class="text-muted py-4">기간을 선택하고 조회하세요.</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        
                         <li class="nav-item"><a class="nav-link" onclick="showSection('section-vendor')">🏢 거래처</a></li>
                     </ul>
                     <div class="d-flex align-items-center mt-3 mt-lg-0">
@@ -672,60 +728,6 @@
                 </div>
             </div>
 
-        </div>
-    </div>
-
-    <li class="nav-item"><a class="nav-link" onclick="showSection('section-settlement')">💰 정산 관리</a></li>
-
-    <div id="section-settlement" class="section-view">
-        <div class="glass-card p-4">
-            <h5 class="fw-bold mb-4 text-primary"><i class="bi bi-cash-coin"></i> 기간별 정산/집계</h5>
-            
-            <div class="row g-2 align-items-end mb-4">
-                <div class="col-5">
-                    <label class="small text-muted fw-bold">시작일</label>
-                    <input type="date" id="settle_start" class="form-control form-control-sm">
-                </div>
-                <div class="col-5">
-                    <label class="small text-muted fw-bold">종료일</label>
-                    <input type="date" id="settle_end" class="form-control form-control-sm">
-                </div>
-                <div class="col-2">
-                    <button class="btn btn-primary btn-sm w-100 fw-bold" onclick="loadSettlement()">조회</button>
-                </div>
-            </div>
-    
-            <div id="settle_admin_summary" style="display:none;" class="mb-4">
-                <div class="row g-2 text-center">
-                    <div class="col-4">
-                        <div class="p-3 bg-light rounded border">
-                            <div class="small text-muted">총 건수</div>
-                            <div class="h4 fw-bold mb-0" id="st_total_count">0</div>
-                        </div>
-                    </div>
-                    <div class="col-8">
-                        <div class="p-3 bg-primary bg-opacity-10 rounded border border-primary">
-                            <div class="small text-primary fw-bold">총 순수익 (마진)</div>
-                            <div class="h4 fw-bold text-primary mb-0" id="st_total_margin">0</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-    
-            <div class="table-responsive">
-                <table class="table table-hover align-middle text-center small">
-                    <thead class="table-light">
-                        <tr id="settle_table_head">
-                            <th>직원명</th>
-                            <th>판매건수</th>
-                            <th class="admin-only">총 마진</th>
-                            </tr>
-                    </thead>
-                    <tbody id="settle_tbody">
-                        <tr><td colspan="4" class="text-muted py-4">기간을 선택하고 조회하세요.</td></tr>
-                    </tbody>
-                </table>
-            </div>
         </div>
     </div>
 
