@@ -1929,38 +1929,45 @@ function toggleCheckDate() {
     }
 }
 
-// [script.js] 정산 시스템 (기간별/직원별 통합 처리)
+// [script.js 수정] 정산 관리 시스템 (날짜 자동화 + 거래처별 집계)
 
-// 1. 날짜 초기화 (화면 진입 시 호출)
+// 1. 날짜 초기화 (이번 달 1일 ~ 말일)
 function initSettlementDates() {
     const today = new Date();
+    // 이번 달 1일
     const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
-    const fmt = d => d.toISOString().split('T')[0];
+    // 이번 달 말일 (다음 달 0일)
+    const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
     
-    // 기간별 화면 날짜
+    const fmt = d => {
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${y}-${m}-${day}`;
+    };
+    
+    // 기간별 화면
     if(document.getElementById('sp_start')) document.getElementById('sp_start').value = fmt(firstDay);
-    if(document.getElementById('sp_end')) document.getElementById('sp_end').value = fmt(today);
+    if(document.getElementById('sp_end')) document.getElementById('sp_end').value = fmt(lastDay);
     
-    // 직원별 화면 날짜
+    // 직원별 화면
     if(document.getElementById('ss_start')) document.getElementById('ss_start').value = fmt(firstDay);
-    if(document.getElementById('ss_end')) document.getElementById('ss_end').value = fmt(today);
+    if(document.getElementById('ss_end')) document.getElementById('ss_end').value = fmt(lastDay);
 }
 
-// 2. 데이터 조회 (type: 'period' 또는 'staff')
+// 2. 데이터 조회
 async function loadSettlement(type) {
     let start, end;
     
     if (type === 'period') {
         start = document.getElementById('sp_start').value;
         end = document.getElementById('sp_end').value;
-        // 로딩 표시
         document.getElementById('sp_result_area').style.display = 'none';
         document.getElementById('sp_msg').style.display = 'block';
         document.getElementById('sp_msg').innerHTML = '<div class="spinner-border text-primary"></div>';
     } else {
         start = document.getElementById('ss_start').value;
         end = document.getElementById('ss_end').value;
-        // 로딩 표시
         document.getElementById('ss_tbody').innerHTML = '<tr><td colspan="4" class="py-4"><div class="spinner-border text-success"></div></td></tr>';
     }
 
@@ -1987,51 +1994,81 @@ async function loadSettlement(type) {
     }
 }
 
-// 3. [기간별 집계] 렌더링 (관리자만 가능)
+// 3. [기간별 집계] 렌더링 (거래처별 테이블)
 function renderPeriodStats(data) {
     const msgEl = document.getElementById('sp_msg');
     const resultEl = document.getElementById('sp_result_area');
+    const tbody = document.getElementById('sp_tbody');
+    const tfoot = document.getElementById('sp_tfoot');
 
-    // ★ 권한 체크: 관리자가 아니면 차단
+    // 관리자 아니면 차단
     if (!data.isAdmin) {
-        msgEl.innerHTML = '<i class="bi bi-lock-fill text-danger fs-1 d-block mb-3"></i><span class="text-danger fw-bold">접근 권한이 없습니다.</span>';
+        msgEl.innerHTML = '<i class="bi bi-lock-fill text-danger fs-1 d-block mb-3"></i><span class="text-danger fw-bold">관리자 전용 화면입니다.</span>';
         resultEl.style.display = 'none';
         return;
     }
 
-    // 관리자라면 데이터 표시
-    document.getElementById('sp_total_count').innerText = data.total.count + "건";
-    document.getElementById('sp_total_margin').innerText = Number(data.total.margin).toLocaleString();
-    document.getElementById('sp_total_settlement').innerText = Number(data.total.settlement).toLocaleString();
+    if (data.periodData.length === 0) {
+        msgEl.innerHTML = '데이터가 없습니다.';
+        resultEl.style.display = 'none';
+        msgEl.style.display = 'block';
+        return;
+    }
+
+    let html = '';
+    let sumCount = 0;
+    let sumSettle = 0;
+    let sumMargin = 0;
+
+    data.periodData.forEach(row => {
+        sumCount += row.count;
+        sumSettle += row.settlement;
+        sumMargin += row.margin;
+
+        html += `
+            <tr>
+                <td class="fw-bold text-start ps-4">${row.name}</td>
+                <td>${row.count}</td>
+                <td>${Number(row.settlement).toLocaleString()}</td>
+                <td class="fw-bold text-primary">${Number(row.margin).toLocaleString()}</td>
+            </tr>
+        `;
+    });
+
+    tbody.innerHTML = html;
+
+    // 합계 줄 생성
+    tfoot.innerHTML = `
+        <tr>
+            <td>합계</td>
+            <td>${sumCount}</td>
+            <td>${sumSettle.toLocaleString()}</td>
+            <td class="text-primary">${sumMargin.toLocaleString()}</td>
+        </tr>
+    `;
 
     msgEl.style.display = 'none';
     resultEl.style.display = 'block';
 }
 
-// 4. [직원별 집계] 렌더링 (본인 것만 보기)
+// 4. [직원별 집계] 렌더링
 function renderStaffStats(data) {
     const tbody = document.getElementById('ss_tbody');
     const isAdmin = data.isAdmin;
     
-    // 데이터가 없으면
-    if (data.list.length === 0) {
+    if (data.staffData.length === 0) {
         tbody.innerHTML = '<tr><td colspan="4" class="text-muted py-4">실적이 없습니다.</td></tr>';
         return;
     }
 
     let html = '';
-    
-    // ★ 리스트 순회
-    data.list.forEach(row => {
-        // [보안 필터] 관리자가 아니고, 내 이름과 다르면? -> 화면에 그리지 않음 (Skip)
-        if (!isAdmin && row.name !== currentUser) {
-            return; 
-        }
+    data.staffData.forEach(row => {
+        // 직원이면 본인 이름만 표시
+        if (!isAdmin && row.name !== currentUser) return;
 
-        const countBadge = row.count > 0 ? `<span class="badge bg-success rounded-pill">${row.count}</span>` : '-';
+        const countBadge = `<span class="badge bg-success rounded-pill">${row.count}</span>`;
         
-        // 관리자면 금액 표시, 직원이면 '조회불가' 또는 숨김
-        // (이미 Code.gs에서 직원이면 금액을 0으로 줬겠지만, UI에서도 한 번 더 처리)
+        // 관리자면 금액 표시, 직원이면 자물쇠
         const marginStr = isAdmin ? Number(row.margin).toLocaleString() : '<span class="text-muted text-xs">🔒</span>';
         const settleStr = isAdmin ? Number(row.settlement).toLocaleString() : '<span class="text-muted text-xs">🔒</span>';
 
@@ -2045,10 +2082,8 @@ function renderStaffStats(data) {
         `;
     });
 
-    // 필터링 결과 내가 볼 수 있는 게 하나도 없으면
     if (html === '') {
         html = '<tr><td colspan="4" class="text-muted py-4">본인의 실적 내역이 없습니다.</td></tr>';
     }
-
     tbody.innerHTML = html;
 }
