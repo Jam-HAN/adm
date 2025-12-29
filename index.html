@@ -683,7 +683,7 @@
 
             <div id="section-settlement-period" class="section-view">
                 <div class="glass-card p-4">
-                    <h5 class="fw-bold mb-4 text-primary"><i class="bi bi-calendar-check"></i> 기간별 매출 집계 (관리자)</h5>
+                    <h5 class="fw-bold mb-4 text-primary"><i class="bi bi-calendar-check"></i> 기간별 매출 집계 (거래처별)</h5>
                     
                     <div class="row g-2 align-items-end mb-4">
                         <div class="col-5"><label class="small text-muted fw-bold">시작일</label><input type="date" id="sp_start" class="form-control form-control-sm"></div>
@@ -692,24 +692,24 @@
                     </div>
             
                     <div id="sp_result_area" style="display:none;">
-                        <div class="row g-3 text-center">
-                            <div class="col-12 col-md-6">
-                                <div class="p-4 bg-light rounded-4 border h-100 d-flex flex-column justify-content-center">
-                                    <div class="text-secondary fw-bold mb-2">총 판매 건수</div>
-                                    <div class="display-4 fw-bold text-dark" id="sp_total_count">0</div>
-                                </div>
-                            </div>
-                            <div class="col-12 col-md-6">
-                                <div class="p-4 bg-primary bg-opacity-10 rounded-4 border border-primary h-100 d-flex flex-column justify-content-center">
-                                    <div class="text-primary fw-bold mb-2">총 순수익 (마진)</div>
-                                    <div class="display-4 fw-bold text-primary" id="sp_total_margin">0</div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="mt-3 text-end text-muted small">
-                            * 정산금 합계: <span id="sp_total_settlement" class="fw-bold text-dark">0</span>원
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle text-center small">
+                                <thead class="table-primary">
+                                    <tr>
+                                        <th>거래처</th>
+                                        <th>건수</th>
+                                        <th>정산금</th>
+                                        <th>순수익(마진)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="sp_tbody">
+                                    </tbody>
+                                <tfoot class="table-light fw-bold" id="sp_tfoot">
+                                    </tfoot>
+                            </table>
                         </div>
                     </div>
+                    
                     <div id="sp_msg" class="text-center py-5 text-muted">기간을 선택하고 조회하세요.</div>
                 </div>
             </div>
