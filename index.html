@@ -696,16 +696,22 @@
                             <table class="table table-hover align-middle text-center small">
                                 <thead class="table-primary">
                                     <tr>
-                                        <th>거래처</th>
-                                        <th>건수</th>
-                                        <th>정산금</th>
-                                        <th>순수익(마진)</th>
+                                        <th rowspan="2" class="align-middle">거래처</th>
+                                        <th colspan="2">건수</th>
+                                        <th colspan="3">매출 상세</th>
+                                        <th rowspan="2" class="align-middle">정산금</th>
+                                        <th rowspan="2" class="align-middle">순수익</th>
+                                    </tr>
+                                    <tr>
+                                        <th class="bg-white text-muted" style="font-size:0.8rem;">무선</th>
+                                        <th class="bg-white text-muted" style="font-size:0.8rem;">유선</th>
+                                        <th class="bg-white text-muted" style="font-size:0.8rem;">기기대</th>
+                                        <th class="bg-white text-muted" style="font-size:0.8rem;">중고폰</th>
+                                        <th class="bg-white text-muted" style="font-size:0.8rem;">상품권</th>
                                     </tr>
                                 </thead>
-                                <tbody id="sp_tbody">
-                                    </tbody>
-                                <tfoot class="table-light fw-bold" id="sp_tfoot">
-                                    </tfoot>
+                                <tbody id="sp_tbody"></tbody>
+                                <tfoot class="table-light fw-bold" id="sp_tfoot"></tfoot>
                             </table>
                         </div>
                     </div>
@@ -726,12 +732,15 @@
             
                     <div class="table-responsive">
                         <table class="table table-hover align-middle text-center small">
-                            <thead class="table-light">
+                            <thead class="table-success">
                                 <tr>
-                                    <th>직원명</th>
-                                    <th>판매건수</th>
-                                    <th class="admin-only">총 마진</th>
-                                    <th class="admin-only">총 정산금</th>
+                                    <th rowspan="2" class="align-middle">직원명</th>
+                                    <th colspan="2">판매건수</th>
+                                    <th rowspan="2" class="align-middle admin-only">총 마진</th>
+                                </tr>
+                                <tr>
+                                    <th class="bg-white text-muted" style="font-size:0.8rem;">무선</th>
+                                    <th class="bg-white text-muted" style="font-size:0.8rem;">유선</th>
                                 </tr>
                             </thead>
                             <tbody id="ss_tbody">
