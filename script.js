@@ -1994,14 +1994,13 @@ async function loadSettlement(type) {
     }
 }
 
-// 3. [기간별 집계] 렌더링 (거래처별 테이블)
+// [script.js 수정] 3. [기간별 집계] 렌더링 (상세 컬럼 추가)
 function renderPeriodStats(data) {
     const msgEl = document.getElementById('sp_msg');
     const resultEl = document.getElementById('sp_result_area');
     const tbody = document.getElementById('sp_tbody');
     const tfoot = document.getElementById('sp_tfoot');
 
-    // 관리자 아니면 차단
     if (!data.isAdmin) {
         msgEl.innerHTML = '<i class="bi bi-lock-fill text-danger fs-1 d-block mb-3"></i><span class="text-danger fw-bold">관리자 전용 화면입니다.</span>';
         resultEl.style.display = 'none';
@@ -2016,34 +2015,48 @@ function renderPeriodStats(data) {
     }
 
     let html = '';
-    let sumCount = 0;
-    let sumSettle = 0;
-    let sumMargin = 0;
+    // 합계 변수들
+    let sum = { mCount:0, wCount:0, device:0, used:0, gift:0, settle:0, margin:0 };
 
     data.periodData.forEach(row => {
-        sumCount += row.count;
-        sumSettle += row.settlement;
-        sumMargin += row.margin;
+        sum.mCount += row.mCount;
+        sum.wCount += row.wCount;
+        sum.device += row.deviceSum;
+        sum.used += row.usedPhone;
+        sum.gift += row.gift;
+        sum.settle += row.settlement;
+        sum.margin += row.margin;
+
+        // 0원은 '-'로 표시하여 깔끔하게
+        const fmt = n => n === 0 ? '<span class="text-muted">-</span>' : Number(n).toLocaleString();
 
         html += `
             <tr>
-                <td class="fw-bold text-start ps-4">${row.name}</td>
-                <td>${row.count}</td>
-                <td>${Number(row.settlement).toLocaleString()}</td>
-                <td class="fw-bold text-primary">${Number(row.margin).toLocaleString()}</td>
+                <td class="fw-bold text-start ps-3 text-truncate" style="max-width:100px;">${row.name}</td>
+                <td>${row.mCount > 0 ? row.mCount : '-'}</td>
+                <td>${row.wCount > 0 ? row.wCount : '-'}</td>
+                <td class="text-secondary">${fmt(row.deviceSum)}</td>
+                <td class="text-secondary">${fmt(row.usedPhone)}</td>
+                <td class="text-secondary">${fmt(row.gift)}</td>
+                <td class="text-dark">${fmt(row.settlement)}</td>
+                <td class="fw-bold text-primary">${fmt(row.margin)}</td>
             </tr>
         `;
     });
 
     tbody.innerHTML = html;
 
-    // 합계 줄 생성
+    // 합계 줄
     tfoot.innerHTML = `
         <tr>
             <td>합계</td>
-            <td>${sumCount}</td>
-            <td>${sumSettle.toLocaleString()}</td>
-            <td class="text-primary">${sumMargin.toLocaleString()}</td>
+            <td>${sum.mCount}</td>
+            <td>${sum.wCount}</td>
+            <td>${sum.device.toLocaleString()}</td>
+            <td>${sum.used.toLocaleString()}</td>
+            <td>${sum.gift.toLocaleString()}</td>
+            <td>${sum.settle.toLocaleString()}</td>
+            <td class="text-primary">${sum.margin.toLocaleString()}</td>
         </tr>
     `;
 
@@ -2051,7 +2064,7 @@ function renderPeriodStats(data) {
     resultEl.style.display = 'block';
 }
 
-// 4. [직원별 집계] 렌더링
+// [script.js 수정] 4. [직원별 집계] 렌더링 (건수 분리, 정산금 삭제)
 function renderStaffStats(data) {
     const tbody = document.getElementById('ss_tbody');
     const isAdmin = data.isAdmin;
@@ -2063,21 +2076,23 @@ function renderStaffStats(data) {
 
     let html = '';
     data.staffData.forEach(row => {
-        // 직원이면 본인 이름만 표시
         if (!isAdmin && row.name !== currentUser) return;
 
-        const countBadge = `<span class="badge bg-success rounded-pill">${row.count}</span>`;
-        
-        // 관리자면 금액 표시, 직원이면 자물쇠
+        // 마진 표시 여부
         const marginStr = isAdmin ? Number(row.margin).toLocaleString() : '<span class="text-muted text-xs">🔒</span>';
-        const settleStr = isAdmin ? Number(row.settlement).toLocaleString() : '<span class="text-muted text-xs">🔒</span>';
+        const marginClass = isAdmin ? "text-danger fw-bold" : "";
 
+        // 건수 0이면 '-' 표시
+        const mBadge = row.mCount > 0 ? `<span class="badge bg-primary rounded-pill opacity-75">${row.mCount}</span>` : '-';
+        const wBadge = row.wCount > 0 ? `<span class="badge bg-success rounded-pill opacity-75">${row.wCount}</span>` : '-';
+
+        // 정산금 컬럼이 삭제되었으므로 td가 4개입니다.
         html += `
             <tr>
                 <td class="fw-bold">${row.name}</td>
-                <td>${countBadge}</td>
-                <td>${marginStr}</td>
-                <td>${settleStr}</td>
+                <td>${mBadge}</td>
+                <td>${wBadge}</td>
+                <td class="${marginClass}">${marginStr}</td>
             </tr>
         `;
     });
