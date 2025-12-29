@@ -1894,3 +1894,90 @@ function toggleCheckDate() {
         submitSpecialUpdate(); // ★ 바로 저장 함수 호출
     }
 }
+
+// 정산 화면 진입 시 날짜 세팅
+function initSettlementDates() {
+    const today = new Date();
+    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+    const fmt = d => d.toISOString().split('T')[0];
+    
+    if(document.getElementById('settle_start')) document.getElementById('settle_start').value = fmt(firstDay);
+    if(document.getElementById('settle_end')) document.getElementById('settle_end').value = fmt(today);
+}
+
+// 정산 데이터 조회 및 렌더링
+async function loadSettlement() {
+    const start = document.getElementById('settle_start').value;
+    const end = document.getElementById('settle_end').value;
+    
+    // 로딩 표시
+    const tbody = document.getElementById('settle_tbody');
+    tbody.innerHTML = '<tr><td colspan="4" class="py-4"><div class="spinner-border text-primary"></div></td></tr>';
+
+    try {
+        // userEmail도 같이 보냄 (본인 확인용)
+        // 주의: sessionStorage의 email은 currentUserEmail 변수(로그인 시 저장된)를 사용
+        const userSession = JSON.parse(sessionStorage.getItem('dbphone_user'));
+        const myEmail = userSession ? userSession.email : "";
+
+        const d = await requestAPI({
+            action: "get_settlement_report",
+            userEmail: myEmail, 
+            startDate: start,
+            endDate: end
+        });
+
+        if (d.status === 'success') {
+            renderSettlementTable(d);
+        } else {
+            alert("조회 실패: " + d.message);
+        }
+    } catch (e) {
+        console.error(e);
+        tbody.innerHTML = '<tr><td colspan="4" class="text-danger py-4">통신 오류</td></tr>';
+    }
+}
+
+function renderSettlementTable(data) {
+    const isAdmin = data.isAdmin;
+    const tbody = document.getElementById('settle_tbody');
+    const summaryBox = document.getElementById('settle_admin_summary');
+    
+    // 1. 관리자용 요약 박스 제어
+    if (isAdmin) {
+        summaryBox.style.display = 'block';
+        document.getElementById('st_total_count').innerText = data.total.count + "건";
+        document.getElementById('st_total_margin').innerText = Number(data.total.margin).toLocaleString() + "원";
+        
+        // 테이블 헤더에 마진 컬럼 보이기
+        document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'table-cell');
+    } else {
+        summaryBox.style.display = 'none';
+        // 직원에게는 마진 컬럼 숨기기
+        document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
+    }
+
+    // 2. 테이블 렌더링
+    if (data.list.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="text-muted py-4">실적이 없습니다.</td></tr>';
+        return;
+    }
+
+    let html = '';
+    data.list.forEach(row => {
+        const countBadge = row.count > 0 ? `<span class="badge bg-primary rounded-pill">${row.count}</span>` : '-';
+        const marginStr = isAdmin ? `<span class="fw-bold text-danger">${Number(row.margin).toLocaleString()}</span>` : '';
+        
+        // 직원은 마진 컬럼 자체를 렌더링 안 함 (CSS display:none 과 맞춤)
+        const marginTd = isAdmin ? `<td>${marginStr}</td>` : `<td class="admin-only" style="display:none"></td>`;
+
+        html += `
+            <tr>
+                <td class="fw-bold">${row.name}</td>
+                <td>${countBadge}</td>
+                ${marginTd}
+            </tr>
+        `;
+    });
+    tbody.innerHTML = html;
+}
