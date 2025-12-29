@@ -1929,28 +1929,42 @@ function toggleCheckDate() {
     }
 }
 
-// 정산 화면 진입 시 날짜 세팅
+// [script.js] 정산 시스템 (기간별/직원별 통합 처리)
+
+// 1. 날짜 초기화 (화면 진입 시 호출)
 function initSettlementDates() {
     const today = new Date();
     const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
     const fmt = d => d.toISOString().split('T')[0];
     
-    if(document.getElementById('settle_start')) document.getElementById('settle_start').value = fmt(firstDay);
-    if(document.getElementById('settle_end')) document.getElementById('settle_end').value = fmt(today);
+    // 기간별 화면 날짜
+    if(document.getElementById('sp_start')) document.getElementById('sp_start').value = fmt(firstDay);
+    if(document.getElementById('sp_end')) document.getElementById('sp_end').value = fmt(today);
+    
+    // 직원별 화면 날짜
+    if(document.getElementById('ss_start')) document.getElementById('ss_start').value = fmt(firstDay);
+    if(document.getElementById('ss_end')) document.getElementById('ss_end').value = fmt(today);
 }
 
-// 정산 데이터 조회 및 렌더링
-async function loadSettlement() {
-    const start = document.getElementById('settle_start').value;
-    const end = document.getElementById('settle_end').value;
+// 2. 데이터 조회 (type: 'period' 또는 'staff')
+async function loadSettlement(type) {
+    let start, end;
     
-    // 로딩 표시
-    const tbody = document.getElementById('settle_tbody');
-    tbody.innerHTML = '<tr><td colspan="4" class="py-4"><div class="spinner-border text-primary"></div></td></tr>';
+    if (type === 'period') {
+        start = document.getElementById('sp_start').value;
+        end = document.getElementById('sp_end').value;
+        // 로딩 표시
+        document.getElementById('sp_result_area').style.display = 'none';
+        document.getElementById('sp_msg').style.display = 'block';
+        document.getElementById('sp_msg').innerHTML = '<div class="spinner-border text-primary"></div>';
+    } else {
+        start = document.getElementById('ss_start').value;
+        end = document.getElementById('ss_end').value;
+        // 로딩 표시
+        document.getElementById('ss_tbody').innerHTML = '<tr><td colspan="4" class="py-4"><div class="spinner-border text-success"></div></td></tr>';
+    }
 
     try {
-        // userEmail도 같이 보냄 (본인 확인용)
-        // 주의: sessionStorage의 email은 currentUserEmail 변수(로그인 시 저장된)를 사용
         const userSession = JSON.parse(sessionStorage.getItem('dbphone_user'));
         const myEmail = userSession ? userSession.email : "";
 
@@ -1962,56 +1976,79 @@ async function loadSettlement() {
         });
 
         if (d.status === 'success') {
-            renderSettlementTable(d);
+            if (type === 'period') renderPeriodStats(d);
+            else renderStaffStats(d);
         } else {
             alert("조회 실패: " + d.message);
         }
     } catch (e) {
         console.error(e);
-        tbody.innerHTML = '<tr><td colspan="4" class="text-danger py-4">통신 오류</td></tr>';
+        alert("통신 오류가 발생했습니다.");
     }
 }
 
-function renderSettlementTable(data) {
-    const isAdmin = data.isAdmin;
-    const tbody = document.getElementById('settle_tbody');
-    const summaryBox = document.getElementById('settle_admin_summary');
-    
-    // 1. 관리자용 요약 박스 제어
-    if (isAdmin) {
-        summaryBox.style.display = 'block';
-        document.getElementById('st_total_count').innerText = data.total.count + "건";
-        document.getElementById('st_total_margin').innerText = Number(data.total.margin).toLocaleString() + "원";
-        
-        // 테이블 헤더에 마진 컬럼 보이기
-        document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'table-cell');
-    } else {
-        summaryBox.style.display = 'none';
-        // 직원에게는 마진 컬럼 숨기기
-        document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
+// 3. [기간별 집계] 렌더링 (관리자만 가능)
+function renderPeriodStats(data) {
+    const msgEl = document.getElementById('sp_msg');
+    const resultEl = document.getElementById('sp_result_area');
+
+    // ★ 권한 체크: 관리자가 아니면 차단
+    if (!data.isAdmin) {
+        msgEl.innerHTML = '<i class="bi bi-lock-fill text-danger fs-1 d-block mb-3"></i><span class="text-danger fw-bold">접근 권한이 없습니다.</span>';
+        resultEl.style.display = 'none';
+        return;
     }
 
-    // 2. 테이블 렌더링
+    // 관리자라면 데이터 표시
+    document.getElementById('sp_total_count').innerText = data.total.count + "건";
+    document.getElementById('sp_total_margin').innerText = Number(data.total.margin).toLocaleString();
+    document.getElementById('sp_total_settlement').innerText = Number(data.total.settlement).toLocaleString();
+
+    msgEl.style.display = 'none';
+    resultEl.style.display = 'block';
+}
+
+// 4. [직원별 집계] 렌더링 (본인 것만 보기)
+function renderStaffStats(data) {
+    const tbody = document.getElementById('ss_tbody');
+    const isAdmin = data.isAdmin;
+    
+    // 데이터가 없으면
     if (data.list.length === 0) {
         tbody.innerHTML = '<tr><td colspan="4" class="text-muted py-4">실적이 없습니다.</td></tr>';
         return;
     }
 
     let html = '';
+    
+    // ★ 리스트 순회
     data.list.forEach(row => {
-        const countBadge = row.count > 0 ? `<span class="badge bg-primary rounded-pill">${row.count}</span>` : '-';
-        const marginStr = isAdmin ? `<span class="fw-bold text-danger">${Number(row.margin).toLocaleString()}</span>` : '';
+        // [보안 필터] 관리자가 아니고, 내 이름과 다르면? -> 화면에 그리지 않음 (Skip)
+        if (!isAdmin && row.name !== currentUser) {
+            return; 
+        }
+
+        const countBadge = row.count > 0 ? `<span class="badge bg-success rounded-pill">${row.count}</span>` : '-';
         
-        // 직원은 마진 컬럼 자체를 렌더링 안 함 (CSS display:none 과 맞춤)
-        const marginTd = isAdmin ? `<td>${marginStr}</td>` : `<td class="admin-only" style="display:none"></td>`;
+        // 관리자면 금액 표시, 직원이면 '조회불가' 또는 숨김
+        // (이미 Code.gs에서 직원이면 금액을 0으로 줬겠지만, UI에서도 한 번 더 처리)
+        const marginStr = isAdmin ? Number(row.margin).toLocaleString() : '<span class="text-muted text-xs">🔒</span>';
+        const settleStr = isAdmin ? Number(row.settlement).toLocaleString() : '<span class="text-muted text-xs">🔒</span>';
 
         html += `
             <tr>
                 <td class="fw-bold">${row.name}</td>
                 <td>${countBadge}</td>
-                ${marginTd}
+                <td>${marginStr}</td>
+                <td>${settleStr}</td>
             </tr>
         `;
     });
+
+    // 필터링 결과 내가 볼 수 있는 게 하나도 없으면
+    if (html === '') {
+        html = '<tr><td colspan="4" class="text-muted py-4">본인의 실적 내역이 없습니다.</td></tr>';
+    }
+
     tbody.innerHTML = html;
 }
