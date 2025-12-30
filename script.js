@@ -1977,12 +1977,12 @@ async function loadSettlement(type) {
     let start, end, viewType = 'branch';
     
     if (type === 'period') {
+        // [수정] UI 요소 제어 로직 제거
         start = document.getElementById('sp_start').value;
         end = document.getElementById('sp_end').value;
-        viewType = document.getElementById('sp_view_type').value; // ★ 선택값 읽기
+        viewType = document.getElementById('sp_view_type').value;
 
-        // ★ [수정] 기간별 조회도 테이블 형태 유지하며 로딩 표시
-        // (기존의 sp_msg, sp_result_area 토글 로직 삭제됨)
+        // 테이블은 항상 보이고, 내용물만 로딩 바로 교체
         document.getElementById('sp_tbody').innerHTML = `
             <tr style="height: 450px;">
                 <td colspan="8" class="align-middle">
@@ -1991,9 +1991,9 @@ async function loadSettlement(type) {
                 </td>
             </tr>
         `;
-        document.getElementById('sp_tfoot').innerHTML = ''; // 합계 초기화
+        document.getElementById('sp_tfoot').innerHTML = ''; 
     } else {
-        // ... (직원별 조회 로직 기존 유지) ...
+        // 직원별 로직 (기존 유지)
         start = document.getElementById('ss_start').value;
         end = document.getElementById('ss_end').value;
         document.getElementById('ss_tbody').innerHTML = `
@@ -2009,51 +2009,73 @@ async function loadSettlement(type) {
     try {
         const userSession = JSON.parse(sessionStorage.getItem('dbphone_user'));
         const myEmail = userSession ? userSession.email : "";
-
+        
+        // requestAPI 호출은 그대로
         const d = await requestAPI({
             action: "get_settlement_report",
-            userEmail: myEmail,
-            userName: currentUser, // ★ 핵심: 이름을 보내야 서버가 비교함
+            userEmail: myEmail, 
+            userName: currentUser, 
             startDate: start,
             endDate: end,
-            viewType: viewType // ★ 서버로 전송
+            viewType: viewType
         });
 
         if (d.status === 'success') {
             if (type === 'period') renderPeriodStats(d);
             else renderStaffStats(d);
         } else {
-            alert("조회 실패: " + d.message);
+            // 에러 처리
+            const colspan = type === 'period' ? 8 : 7;
+            const targetId = type === 'period' ? 'sp_tbody' : 'ss_tbody';
+            document.getElementById(targetId).innerHTML = `
+                <tr style="height: 450px;">
+                    <td colspan="${colspan}" class="text-danger align-middle fw-bold">
+                        <i class="bi bi-exclamation-triangle fs-1 d-block mb-3"></i>
+                        ${d.message}
+                    </td>
+                </tr>`;
         }
     } catch (e) {
         console.error(e);
-        alert("통신 오류가 발생했습니다.");
+        const colspan = type === 'period' ? 8 : 7;
+        const targetId = type === 'period' ? 'sp_tbody' : 'ss_tbody';
+        document.getElementById(targetId).innerHTML = `
+            <tr style="height: 450px;">
+                <td colspan="${colspan}" class="text-danger align-middle fw-bold">
+                    통신 오류가 발생했습니다.
+                </td>
+            </tr>`;
     }
 }
 
 // [script.js 수정] 3. [기간별 집계] 렌더링 (지점별 그룹화 + 소계)
 function renderPeriodStats(data) {
-    const msgEl = document.getElementById('sp_msg');
-    const resultEl = document.getElementById('sp_result_area');
     const tbody = document.getElementById('sp_tbody');
     const tfoot = document.getElementById('sp_tfoot');
 
+    // ★ [핵심 수정] 기존에 있던 sp_msg.style.display, sp_result_area.style.display 코드 삭제함!
+    // 이제 그냥 tbody만 비우고 시작하면 됩니다.
+    tbody.innerHTML = "";
+    tfoot.innerHTML = "";
+
+    // 1. 관리자 권한 체크
     if (!data.isAdmin) {
-        msgEl.innerHTML = '<i class="bi bi-lock-fill text-danger fs-1 d-block mb-3"></i><span class="text-danger fw-bold">관리자 전용 화면입니다.</span>';
-        resultEl.style.display = 'none';
+        tbody.innerHTML = `
+            <tr style="height: 450px;">
+                <td colspan="8" class="align-middle text-danger fw-bold">
+                    <i class="bi bi-lock-fill fs-1 d-block mb-3"></i>
+                    관리자 전용 화면입니다.
+                </td>
+            </tr>`;
         return;
     }
 
-    // 데이터 존재 여부 체크
+    // 2. 데이터 유무 체크
     let hasData = false;
-    if (data.viewType === 'carrier') {
-        hasData = data.periodData.length > 0;
-    } else {
-        hasData = data.periodData.some(b => b.list.length > 0);
-    }
+    if (data.viewType === 'carrier') hasData = data.periodData.length > 0;
+    else hasData = data.periodData.some(b => b.list.length > 0);
 
     if (!hasData) {
-        // ★ [수정] 데이터 없을 때 테이블 높이 유지
         tbody.innerHTML = `
             <tr style="height: 450px;">
                 <td colspan="8" class="text-muted align-middle">
@@ -2061,119 +2083,89 @@ function renderPeriodStats(data) {
                     해당 기간에 데이터가 없습니다.
                 </td>
             </tr>`;
-        tfoot.innerHTML = '';
         return;
     }
 
-    let html = '';
-    let grandTotal = { mCount:0, wCount:0, device:0, used:0, gift:0, settle:0, margin:0 };
-    const fmt = n => n === 0 ? '<span class="text-muted">-</span>' : Number(n).toLocaleString();
+    // 3. 데이터 렌더링 (기존 로직 유지)
+    // 숫자에 콤마 찍는 함수
+    const fmt = (n) => Number(n).toLocaleString();
 
-    // ------------------------------------------
-    // [A] 거래처별 보기 (단순 리스트)
-    // ------------------------------------------
-    if (data.viewType === 'carrier') {
-        data.periodData.forEach(row => {
-            // 전체 합계 누적
-            grandTotal.mCount += row.mCount; grandTotal.wCount += row.wCount;
-            grandTotal.device += row.deviceSum; grandTotal.used += row.usedPhone;
-            grandTotal.gift += row.gift; grandTotal.settle += row.settlement;
-            grandTotal.margin += row.margin;
+    let totalMobile = 0, totalWired = 0, totalSettle = 0, totalMargin = 0;
+    let totalDevice = 0, totalUsed = 0, totalGift = 0;
 
-            html += `
-                <tr>
-                    <td class="fw-bold text-start ps-4">${row.name}</td>
-                    <td>${row.mCount > 0 ? row.mCount : '-'}</td>
-                    <td>${row.wCount > 0 ? row.wCount : '-'}</td>
-                    <td class="text-secondary small">${fmt(row.deviceSum)}</td>
-                    <td class="text-secondary small">${fmt(row.usedPhone)}</td>
-                    <td class="text-secondary small">${fmt(row.gift)}</td>
-                    <td class="text-dark">${fmt(row.settlement)}</td>
-                    <td class="fw-bold text-primary">${fmt(row.margin)}</td>
-                </tr>
-            `;
+    // (1) 지점별 보기
+    if (data.viewType === 'branch') {
+        data.periodData.forEach(branch => {
+            if (branch.list.length === 0) return;
+
+            // 지점 헤더 (구분선 느낌)
+            tbody.insertAdjacentHTML('beforeend', `
+                <tr class="table-light"><td colspan="8" class="fw-bold text-start ps-4 text-primary">${branch.branch}</td></tr>
+            `);
+
+            branch.list.forEach(item => {
+                totalMobile += item.mCount;
+                totalWired += item.wCount;
+                totalSettle += item.settlement;
+                totalMargin += item.margin;
+                totalDevice += item.deviceSum;
+                totalUsed += item.usedPhone;
+                totalGift += item.gift;
+
+                tbody.insertAdjacentHTML('beforeend', `
+                    <tr>
+                        <td class="fw-bold">${item.name}</td>
+                        <td>${item.mCount}</td>
+                        <td>${item.wCount}</td>
+                        <td class="text-end pe-3 text-muted" style="font-size:0.85rem;">${fmt(item.deviceSum)}</td>
+                        <td class="text-end pe-3 text-muted" style="font-size:0.85rem;">${fmt(item.usedPhone)}</td>
+                        <td class="text-end pe-3 text-muted" style="font-size:0.85rem;">${fmt(item.gift)}</td>
+                        <td class="text-end pe-3 fw-bold text-dark">${fmt(item.settlement)}</td>
+                        <td class="text-end pe-3 fw-bold text-danger">${fmt(item.margin)}</td>
+                    </tr>
+                `);
+            });
         });
     } 
-    // ------------------------------------------
-    // [B] 지점별 보기 (헤더 + 소계)
-    // ------------------------------------------
+    // (2) 거래처별 보기
     else {
-        data.periodData.forEach(branchData => {
-            const bName = branchData.branch;
-            const list = branchData.list;
-            if (list.length === 0) return; 
+        data.periodData.forEach(item => {
+            totalMobile += item.mCount;
+            totalWired += item.wCount;
+            totalSettle += item.settlement;
+            totalMargin += item.margin;
+            totalDevice += item.deviceSum;
+            totalUsed += item.usedPhone;
+            totalGift += item.gift;
 
-            // 지점 헤더
-            html += `
-                <tr class="table-light border-top border-bottom border-2">
-                    <td colspan="8" class="text-start fw-bold ps-3 text-dark">
-                        <i class="bi bi-shop me-2"></i>${bName}
-                    </td>
+            tbody.insertAdjacentHTML('beforeend', `
+                <tr>
+                    <td class="fw-bold">${item.name}</td>
+                    <td>${item.mCount}</td>
+                    <td>${item.wCount}</td>
+                    <td class="text-end pe-3 text-muted" style="font-size:0.85rem;">${fmt(item.deviceSum)}</td>
+                    <td class="text-end pe-3 text-muted" style="font-size:0.85rem;">${fmt(item.usedPhone)}</td>
+                    <td class="text-end pe-3 text-muted" style="font-size:0.85rem;">${fmt(item.gift)}</td>
+                    <td class="text-end pe-3 fw-bold text-dark">${fmt(item.settlement)}</td>
+                    <td class="text-end pe-3 fw-bold text-danger">${fmt(item.margin)}</td>
                 </tr>
-            `;
-
-            let subTotal = { mCount:0, wCount:0, device:0, used:0, gift:0, settle:0, margin:0 };
-
-            list.forEach(row => {
-                subTotal.mCount += row.mCount; subTotal.wCount += row.wCount;
-                subTotal.device += row.deviceSum; subTotal.used += row.usedPhone;
-                subTotal.gift += row.gift; subTotal.settle += row.settlement;
-                subTotal.margin += row.margin;
-
-                html += `
-                    <tr>
-                        <td class="text-start ps-4 text-truncate" style="max-width:100px;">${row.name}</td>
-                        <td>${row.mCount > 0 ? row.mCount : '-'}</td>
-                        <td>${row.wCount > 0 ? row.wCount : '-'}</td>
-                        <td class="text-secondary small">${fmt(row.deviceSum)}</td>
-                        <td class="text-secondary small">${fmt(row.usedPhone)}</td>
-                        <td class="text-secondary small">${fmt(row.gift)}</td>
-                        <td class="text-dark">${fmt(row.settlement)}</td>
-                        <td class="fw-bold text-primary">${fmt(row.margin)}</td>
-                    </tr>
-                `;
-            });
-
-            // 지점 소계
-            html += `
-                <tr class="bg-light fw-bold" style="border-top: 1px double #dee2e6;">
-                    <td class="text-end pe-3 text-secondary">└ ${bName} 소계</td>
-                    <td class="text-secondary">${subTotal.mCount}</td>
-                    <td class="text-secondary">${subTotal.wCount}</td>
-                    <td class="text-secondary small">${fmt(subTotal.device)}</td>
-                    <td class="text-secondary small">${fmt(subTotal.used)}</td>
-                    <td class="text-secondary small">${fmt(subTotal.gift)}</td>
-                    <td class="text-dark">${fmt(subTotal.settle)}</td>
-                    <td class="text-primary">${fmt(subTotal.margin)}</td>
-                </tr>
-            `;
-
-            // 전체 합계 누적
-            grandTotal.mCount += subTotal.mCount; grandTotal.wCount += subTotal.wCount;
-            grandTotal.device += subTotal.device; grandTotal.used += subTotal.used;
-            grandTotal.gift += subTotal.gift; grandTotal.settle += subTotal.settle;
-            grandTotal.margin += subTotal.margin;
+            `);
         });
     }
 
-    tbody.innerHTML = html;
-
-    // 전체 총계 (공통)
+    // 4. 합계 (Footer)
     tfoot.innerHTML = `
-        <tr class="table-dark">
-            <td>전체 합계</td>
-            <td>${grandTotal.mCount}</td>
-            <td>${grandTotal.wCount}</td>
-            <td>${grandTotal.device.toLocaleString()}</td>
-            <td>${grandTotal.used.toLocaleString()}</td>
-            <td>${grandTotal.gift.toLocaleString()}</td>
-            <td>${grandTotal.settle.toLocaleString()}</td>
-            <td class="text-warning">${grandTotal.margin.toLocaleString()}</td>
+        <tr class="table-primary border-top border-primary">
+            <td class="text-primary">총 합계</td>
+            <td class="text-primary">${totalMobile}</td>
+            <td class="text-primary">${totalWired}</td>
+            <td class="text-end pe-3 text-primary">${fmt(totalDevice)}</td>
+            <td class="text-end pe-3 text-primary">${fmt(totalUsed)}</td>
+            <td class="text-end pe-3 text-primary">${fmt(totalGift)}</td>
+            <td class="text-end pe-3 text-primary">${fmt(totalSettle)}</td>
+            <td class="text-end pe-3 text-danger" style="font-size:1.1rem;">${fmt(totalMargin)}</td>
         </tr>
     `;
-
-    msgEl.style.display = 'none';
-    resultEl.style.display = 'block';
 }
 
 // [script.js 수정] 4. 직원별 집계 렌더링 (5단 상세 분류)
