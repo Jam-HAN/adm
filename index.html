@@ -124,8 +124,10 @@
                     
                     <div class="col-lg-6">
                         <div class="glass-card h-100">
-                            <div class="card-header py-3 px-4 bg-white border-bottom">
-                                <h6 class="m-0 fw-bold text-primary text-uppercase">오늘 개통 현황 (전체)</h6>
+                            <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center px-4" 
+                                 style="height: 60px; overflow: hidden;">
+                                <h6 class="m-0 fw-bold text-primary text-uppercase text-truncate">오늘 개통 현황 (전체)</h6>
+                                <div></div> 
                             </div>
                             <div class="card-body p-4 d-flex align-items-center justify-content-center">
                                 <div class="row text-center w-100">
@@ -144,8 +146,10 @@
             
                     <div class="col-lg-6">
                         <div class="glass-card h-100">
-                            <div class="card-header py-3 px-4 bg-white border-bottom">
-                                <h6 class="m-0 fw-bold text-success text-uppercase">이번 달 누적 (지점별)</h6>
+                            <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center px-4" 
+                                 style="height: 60px; overflow: hidden;">
+                                <h6 class="m-0 fw-bold text-success text-uppercase text-truncate">이번 달 누적 (지점별)</h6>
+                                <div></div>
                             </div>
                             <div class="card-body p-4 d-flex flex-column justify-content-center" id="dash_month_stats">
                                 </div>
@@ -157,12 +161,15 @@
                     
                     <div class="col-lg-6">
                         <div class="glass-card h-100">
-                            <div class="card-header py-3 px-4 bg-white border-bottom d-flex justify-content-between align-items-center">
-                                <h6 class="m-0 fw-bold text-primary"><i class="bi bi-broadcast me-2"></i>실시간 개통 (Today)</h6>
-                                <button class="btn btn-sm btn-light border rounded-circle" onclick="loadDashboard()" title="새로고침"><i class="bi bi-arrow-clockwise"></i></button>
+                            <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center px-4" 
+                                 style="height: 60px; overflow: hidden;">
+                                <h6 class="m-0 fw-bold text-primary text-truncate"><i class="bi bi-broadcast me-2"></i>실시간 개통 (Today)</h6>
+                                <button class="btn btn-sm btn-light border rounded-circle flex-shrink-0" onclick="loadDashboard()" title="새로고침" style="width: 32px; height: 32px; padding: 0;">
+                                    <i class="bi bi-arrow-clockwise"></i>
+                                </button>
                             </div>
                             <div class="card-body p-0">
-                                <div class="table-responsive" style="height: 300px; overflow-y: auto;">
+                                <div class="table-responsive" style="height: 400px; overflow-y: auto;">
                                     <table class="table table-hover align-middle mb-0 dash-table">
                                         <thead class="sticky-top border-bottom bg-white">
                                             <tr>
@@ -184,10 +191,12 @@
             
                     <div class="col-lg-6">
                         <div class="glass-card h-100">
-                            <div class="card-header py-3 px-4 bg-white border-bottom">
-                                <h6 class="m-0 fw-bold text-success"><i class="bi bi-trophy me-2"></i>이달의 실적 (매니저별)</h6>
+                            <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center px-4" 
+                                 style="height: 60px; overflow: hidden;">
+                                <h6 class="m-0 fw-bold text-success text-truncate"><i class="bi bi-trophy me-2"></i>이달의 실적 (매니저별)</h6>
+                                <div></div>
                             </div>
-                            <div class="card-body p-0" id="dash_user_rank" style="height: 300px; overflow-y: auto;">
+                            <div class="card-body p-0" id="dash_user_rank" style="height: 400px; overflow-y: auto;">
                                 <div class="text-center py-5 text-muted">데이터 로딩 중...</div>
                             </div>
                         </div>
