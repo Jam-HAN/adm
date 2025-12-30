@@ -70,11 +70,12 @@ window.handleCredentialResponse = function(response) {
     .then(res => res.json())
     .then(d => {
         if (d.status === 'success') {
-            sessionStorage.setItem('dbphone_user', JSON.stringify({ name: d.name, email: d.user }));
+            sessionStorage.setItem('dbphone_user', JSON.stringify({ name: d.name, email: d.user, isAdmin: d.isAdmin }));
             currentUser = d.name;
             document.getElementById('login-view').style.display = 'none';
             document.getElementById('main-view').style.display = 'block';
             document.getElementById('user-name').innerText = currentUser;
+            checkAdminMenu(); // ★ 메뉴 숨기기 함수 호출
             loadInitData();
             loadDropdownData();
             setupAutoLogout();
@@ -133,9 +134,9 @@ window.onload = function() {
             document.getElementById('login-view').style.display = 'none';
             document.getElementById('main-view').style.display = 'block';
             document.getElementById('user-name').innerText = currentUser;
-            
+
+            checkAdminMenu(); // ★ 새로고침 해도 메뉴 검사 실행
             loadDashboard(); // 대시보드 먼저 실행
-            
             loadInitData();
             loadDropdownData();
             setupAutoLogout();
@@ -197,6 +198,21 @@ function resetLogoutTimer() {
     clearTimeout(logoutTimer);
     if(currentUser) {
         logoutTimer = setTimeout(() => { alert("10분 동안 활동이 없어 자동 로그아웃 되었습니다."); logout(); }, 600000);
+    }
+}
+
+// [신규 함수] 관리자가 아니면 '기간별 집계' 메뉴 숨김
+function checkAdminMenu() {
+    const saved = sessionStorage.getItem('dbphone_user');
+    const menuPeriod = document.getElementById('menu_period_item');
+    
+    if (saved && menuPeriod) {
+        const u = JSON.parse(saved);
+        if (u.isAdmin) {
+            menuPeriod.style.display = 'block'; // 관리자: 보임
+        } else {
+            menuPeriod.style.display = 'none';  // 직원: 안 보임
+        }
     }
 }
 
@@ -2137,41 +2153,50 @@ function renderPeriodStats(data) {
     resultEl.style.display = 'block';
 }
 
-// [script.js 수정] 4. [직원별 집계] 렌더링 (건수 분리, 정산금 삭제)
+// [script.js 수정] 4. 직원별 집계 렌더링 (5단 상세 분류)
 function renderStaffStats(data) {
     const tbody = document.getElementById('ss_tbody');
     const isAdmin = data.isAdmin;
     
     if (data.staffData.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" class="text-muted py-4">실적이 없습니다.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" class="text-muted py-4">실적이 없습니다.</td></tr>';
         return;
     }
 
     let html = '';
     data.staffData.forEach(row => {
+        // 직원인 경우 본인 데이터만 표시
         if (!isAdmin && row.name !== currentUser) return;
 
-        // 마진 표시 여부
+        // 관리자면 금액 표시, 직원이면 자물쇠
         const marginStr = isAdmin ? Number(row.margin).toLocaleString() : '<span class="text-muted text-xs">🔒</span>';
         const marginClass = isAdmin ? "text-danger fw-bold" : "";
 
-        // 건수 0이면 '-' 표시
-        const mBadge = row.mCount > 0 ? `<span class="badge bg-primary rounded-pill opacity-75">${row.mCount}</span>` : '-';
-        const wBadge = row.wCount > 0 ? `<span class="badge bg-success rounded-pill opacity-75">${row.wCount}</span>` : '-';
+        // 0건이면 '-' 로 표시해서 깔끔하게
+        const fmt = n => n > 0 ? `<span class="fw-bold text-dark">${n}</span>` : '<span class="text-muted text-xs">-</span>';
 
-        // 정산금 컬럼이 삭제되었으므로 td가 4개입니다.
+        // 5가지 상세 카운트
+        const cellMobile = fmt(row.cnt_mobile);
+        const cellUsed = fmt(row.cnt_used);
+        const cellCopper = fmt(row.cnt_copper);
+        const cellRenew = fmt(row.cnt_renew);
+        const cellSingle = fmt(row.cnt_single);
+
         html += `
             <tr>
                 <td class="fw-bold">${row.name}</td>
-                <td>${mBadge}</td>
-                <td>${wBadge}</td>
+                <td class="bg-primary bg-opacity-10">${cellMobile}</td>
+                <td>${cellUsed}</td>
+                <td class="bg-success bg-opacity-10">${cellCopper}</td>
+                <td>${cellRenew}</td>
+                <td>${cellSingle}</td>
                 <td class="${marginClass}">${marginStr}</td>
             </tr>
         `;
     });
 
     if (html === '') {
-        html = '<tr><td colspan="4" class="text-muted py-4">본인의 실적 내역이 없습니다.</td></tr>';
+        html = '<tr><td colspan="7" class="text-muted py-4">본인의 실적 내역이 없습니다.</td></tr>';
     }
     tbody.innerHTML = html;
 }
