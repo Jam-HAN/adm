@@ -50,20 +50,32 @@ body {
 /* 3. 폼 요소 디자인 (기본) */
 .form-label-sm { font-size: 0.8rem; font-weight: 700; color: #6c757d; margin-bottom: 6px; }
 
-/* ★ [중요] 폼 요소 높이 및 정렬 강제 통일 
-   (사장님 코드 + 아까 만든 정렬 코드 합침) 
-*/
+/* 1. 입력창과 드롭다운 (흰색 배경 유지) */
 .form-control, 
-.form-select, 
-.btn {
+.form-select {
     border-radius: 10px;
     border: 1px solid #e0e0e0;
     font-size: 0.95rem;
-    background-color: rgba(255, 255, 255, 0.9);
-    
-    /* 높이 38px 강제 고정 (흔들림 방지 핵심) */
+    background-color: rgba(255, 255, 255, 0.9); /* 입력창은 흰색 OK */
     height: 38px !important; 
     min-height: 38px !important;
+}
+
+/* 2. 버튼 (배경색 설정 제거 -> 자기 색깔 나오게 둠) */
+.btn {
+    border-radius: 10px;
+    font-size: 0.95rem;
+    /* background-color 삭제함 -> 이제 흰색 안 입음 */
+    
+    height: 38px !important; 
+    min-height: 38px !important;
+    
+    /* 정렬 기능 유지 */
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
 }
 
 /* 드롭다운(Select) 텍스트 수직 중앙 정렬 해결 */
