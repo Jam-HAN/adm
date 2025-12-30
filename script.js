@@ -2275,21 +2275,24 @@ function initSetupDates() {
     document.getElementById('search_wired_end').value = todayStr;
 }
 
-// 1. 통합 검색 함수
+// 1. 통합 검색 함수 (리스트 컨테이너 ID 변경 반영)
 async function searchSetupList(type) {
     const branchId = type === 'card' ? 'search_card_branch' : 'search_wired_branch';
     const startId = type === 'card' ? 'search_card_start' : 'search_wired_start';
     const endId = type === 'card' ? 'search_card_end' : 'search_wired_end';
     const keyId = type === 'card' ? 'search_card_keyword' : 'search_wired_keyword';
-    const tbodyId = type === 'card' ? 'card_setup_tbody' : 'wired_setup_tbody';
+    
+    // ★ [변경] 테이블 바디 ID -> 리스트 컨테이너 ID
+    const containerId = type === 'card' ? 'card_setup_list' : 'wired_setup_list';
 
     const branch = document.getElementById(branchId).value;
     const start = document.getElementById(startId).value;
     const end = document.getElementById(endId).value;
     const keyword = document.getElementById(keyId).value;
-    const tbody = document.getElementById(tbodyId);
+    const container = document.getElementById(containerId);
 
-    tbody.innerHTML = `<tr><td colspan="7"><div class="spinner-border spinner-border-sm text-secondary"></div> 검색 중...</td></tr>`;
+    // 로딩 표시
+    container.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-secondary"></div><div class="mt-2 small text-muted">데이터 조회 중...</div></div>';
 
     try {
         const d = await requestAPI({ 
@@ -2302,73 +2305,115 @@ async function searchSetupList(type) {
         });
 
         if (d.status === 'success') {
-            if (type === 'card') renderCardSetupTable(d.list);
-            else renderWiredSetupTable(d.list);
+            if (type === 'card') renderCardSetupList(d.list);
+            else renderWiredSetupList(d.list);
         } else {
-            tbody.innerHTML = `<tr><td colspan="7" class="text-danger">${d.message}</td></tr>`;
+            container.innerHTML = `<div class="text-center text-danger py-5 small">${d.message}</div>`;
         }
     } catch (e) {
-        tbody.innerHTML = `<tr><td colspan="7" class="text-danger">통신 오류</td></tr>`;
+        container.innerHTML = `<div class="text-center text-danger py-5 small">통신 오류가 발생했습니다.</div>`;
     }
 }
 
-// 2. 제휴카드 테이블 그리기
-function renderCardSetupTable(list) {
-    const tbody = document.getElementById('card_setup_tbody');
-    tbody.innerHTML = "";
-
-    if (list.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" class="text-muted py-5">검색 조건에 맞는 미처리 건이 없습니다. (모두 완료! ✨)</td></tr>`;
+// 2. [UI 개선] 제휴카드 리스트 렌더링 (카드 형태)
+function renderCardSetupList(list) {
+    const container = document.getElementById('card_setup_list');
+    
+    if (!list || list.length === 0) {
+        container.innerHTML = `<div class="text-center text-muted py-5 small">
+            <i class="bi bi-check-circle fs-1 d-block mb-3 opacity-25"></i>
+            미처리 내역이 없습니다. (모두 완료!)
+        </div>`;
         return;
     }
 
-    list.forEach(item => {
+    // map().join('') 방식 사용 (속도 최적화)
+    container.innerHTML = list.map(item => {
         const rowId = `card_${item.branch}_${item.rowIndex}`;
-        // 날짜 포맷 (YYYY-MM-DD) 추출
         const v1 = item.val1 ? String(item.val1).substring(0, 10) : "";
         const v2 = item.val2 ? String(item.val2).substring(0, 10) : "";
 
-        tbody.insertAdjacentHTML('beforeend', `
-            <tr>
-                <td><span class="badge bg-secondary opacity-75">${item.branch}</span></td>
-                <td>${item.date}</td>
-                <td class="fw-bold">${item.name}</td>
-                <td class="text-primary small">${item.cardName}</td>
-                <td><input type="date" class="form-control form-control-sm text-center" id="val1_${rowId}" value="${v1}"></td>
-                <td><input type="date" class="form-control form-control-sm text-center" id="val2_${rowId}" value="${v2}"></td>
-                <td><button class="btn btn-sm btn-primary" onclick="saveSetupInfo('card', '${item.branch}', '${item.rowIndex}', '${rowId}')">저장</button></td>
-            </tr>
-        `);
-    });
+        return `
+        <div class="glass-card p-3 mb-3 border-start border-4 border-primary shadow-sm" style="background: #fff;">
+            <div class="d-flex justify-content-between align-items-center mb-2 border-bottom pb-2">
+                <span class="badge bg-light text-secondary border">${item.branch}</span>
+                <span class="small fw-bold text-muted">${item.date}</span>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <div class="fw-bold fs-5 text-dark">${item.name}</div>
+                    <div class="small text-primary fw-bold"><i class="bi bi-credit-card me-1"></i>${item.cardName}</div>
+                </div>
+            </div>
+
+            <div class="bg-light p-3 rounded-3">
+                <div class="row g-2 mb-3">
+                    <div class="col-6">
+                        <label class="form-label-sm fw-bold text-muted small">세이브 등록일</label>
+                        <input type="date" class="form-control form-control-sm border-primary" id="val1_${rowId}" value="${v1}">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label-sm fw-bold text-muted small">자동이체일</label>
+                        <input type="date" class="form-control form-control-sm border-primary" id="val2_${rowId}" value="${v2}">
+                    </div>
+                </div>
+                <button class="btn btn-primary w-100 fw-bold shadow-sm" onclick="saveSetupInfo('card', '${item.branch}', '${item.rowIndex}', '${rowId}')">
+                    <i class="bi bi-check-lg me-1"></i> 저장 완료
+                </button>
+            </div>
+        </div>`;
+    }).join('');
 }
 
-// 3. 유선설치 테이블 그리기
-function renderWiredSetupTable(list) {
-    const tbody = document.getElementById('wired_setup_tbody');
-    tbody.innerHTML = "";
-
-    if (list.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" class="text-muted py-5">검색 조건에 맞는 미처리 건이 없습니다. (모두 완료! ✨)</td></tr>`;
+// 3. [UI 개선] 유선설치 리스트 렌더링 (카드 형태)
+function renderWiredSetupList(list) {
+    const container = document.getElementById('wired_setup_list');
+    
+    if (!list || list.length === 0) {
+        container.innerHTML = `<div class="text-center text-muted py-5 small">
+            <i class="bi bi-check-circle fs-1 d-block mb-3 opacity-25"></i>
+            미처리 내역이 없습니다. (모두 완료!)
+        </div>`;
         return;
     }
 
-    list.forEach(item => {
+    container.innerHTML = list.map(item => {
         const rowId = `wired_${item.branch}_${item.rowIndex}`;
         const v1 = item.val1 ? String(item.val1).substring(0, 10) : "";
         const v2 = item.val2 ? String(item.val2).substring(0, 10) : "";
 
-        tbody.insertAdjacentHTML('beforeend', `
-            <tr>
-                <td><span class="badge bg-secondary opacity-75">${item.branch}</span></td>
-                <td>${item.date}</td>
-                <td class="text-success small">${item.type}</td>
-                <td class="fw-bold">${item.name}</td>
-                <td><input type="date" class="form-control form-control-sm text-center" id="val1_${rowId}" value="${v1}"></td>
-                <td><input type="date" class="form-control form-control-sm text-center" id="val2_${rowId}" value="${v2}"></td>
-                <td><button class="btn btn-sm btn-success" onclick="saveSetupInfo('wired', '${item.branch}', '${item.rowIndex}', '${rowId}')">저장</button></td>
-            </tr>
-        `);
-    });
+        return `
+        <div class="glass-card p-3 mb-3 border-start border-4 border-success shadow-sm" style="background: #fff;">
+            <div class="d-flex justify-content-between align-items-center mb-2 border-bottom pb-2">
+                <span class="badge bg-light text-secondary border">${item.branch}</span>
+                <span class="small fw-bold text-muted">${item.date}</span>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <div class="fw-bold fs-5 text-dark">${item.name}</div>
+                    <div class="small text-success fw-bold"><i class="bi bi-router me-1"></i>${item.type}</div>
+                </div>
+            </div>
+
+            <div class="bg-light p-3 rounded-3">
+                <div class="row g-2 mb-3">
+                    <div class="col-6">
+                        <label class="form-label-sm fw-bold text-muted small">설치 예정일</label>
+                        <input type="date" class="form-control form-control-sm border-success" id="val1_${rowId}" value="${v1}">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label-sm fw-bold text-muted small">설치 완료일</label>
+                        <input type="date" class="form-control form-control-sm border-success" id="val2_${rowId}" value="${v2}">
+                    </div>
+                </div>
+                <button class="btn btn-success w-100 fw-bold shadow-sm" onclick="saveSetupInfo('wired', '${item.branch}', '${item.rowIndex}', '${rowId}')">
+                    <i class="bi bi-check-lg me-1"></i> 저장 완료
+                </button>
+            </div>
+        </div>`;
+    }).join('');
 }
 
 // 4. 저장 함수
