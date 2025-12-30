@@ -119,40 +119,52 @@
         <div class="container py-4">
 
             <div id="section-dashboard" class="section-view active-section">
+                
                 <div class="row g-3 mb-4">
+                    
                     <div class="col-lg-6">
-                        <div class="glass-card stat-card p-4 h-100">
-                            <div class="text-xs fw-bold text-primary text-uppercase mb-2">오늘 개통 현황 (전체)</div>
-                            <div class="row text-center mt-2">
-                                <div class="col-6 border-end">
-                                    <div class="small text-muted mb-1">📱 무선</div>
-                                    <div class="h3 fw-bold text-dark mb-0" id="dash_today_mobile">-</div>
-                                </div>
-                                <div class="col-6">
-                                    <div class="small text-muted mb-1">📺 유선</div>
-                                    <div class="h3 fw-bold text-dark mb-0" id="dash_today_wired">-</div>
+                        <div class="glass-card h-100">
+                            <div class="card-header py-3 px-4 bg-white border-bottom">
+                                <h6 class="m-0 fw-bold text-primary text-uppercase">오늘 개통 현황 (전체)</h6>
+                            </div>
+                            <div class="card-body p-4 d-flex align-items-center justify-content-center">
+                                <div class="row text-center w-100">
+                                    <div class="col-6 border-end">
+                                        <div class="small text-muted mb-2">📱 무선</div>
+                                        <div class="h2 fw-bold text-dark mb-0" id="dash_today_mobile">-</div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="small text-muted mb-2">📺 유선</div>
+                                        <div class="h2 fw-bold text-dark mb-0" id="dash_today_wired">-</div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
+            
                     <div class="col-lg-6">
-                        <div class="glass-card stat-card month p-4 h-100">
-                            <div class="text-xs fw-bold text-success text-uppercase mb-3">이번 달 누적 (지점별)</div>
-                            <div id="dash_month_stats" class="d-flex flex-column justify-content-center"></div>
+                        <div class="glass-card h-100">
+                            <div class="card-header py-3 px-4 bg-white border-bottom">
+                                <h6 class="m-0 fw-bold text-success text-uppercase">이번 달 누적 (지점별)</h6>
+                            </div>
+                            <div class="card-body p-4 d-flex flex-column justify-content-center" id="dash_month_stats">
+                                </div>
                         </div>
                     </div>
                 </div>
+            
                 <div class="row g-3">
+                    
                     <div class="col-lg-6">
                         <div class="glass-card h-100">
                             <div class="card-header py-3 px-4 bg-white border-bottom d-flex justify-content-between align-items-center">
-                                <h6 class="m-0 fw-bold text-primary"><i class="bi bi-broadcast"></i> 실시간 개통 (Today)</h6>
+                                <h6 class="m-0 fw-bold text-primary"><i class="bi bi-broadcast me-2"></i>실시간 개통 (Today)</h6>
                                 <button class="btn btn-sm btn-light border rounded-circle" onclick="loadDashboard()" title="새로고침"><i class="bi bi-arrow-clockwise"></i></button>
                             </div>
                             <div class="card-body p-0">
-                                <div class="table-responsive" style="min-height: 200px; overflow-y: auto;">
+                                <div class="table-responsive" style="height: 400px; overflow-y: auto;">
                                     <table class="table table-hover align-middle mb-0 dash-table">
-                                        <thead class="sticky-top border-bottom">
+                                        <thead class="sticky-top border-bottom bg-white">
                                             <tr>
                                                 <th>지점</th>
                                                 <th>유형</th>
@@ -169,12 +181,13 @@
                             </div>
                         </div>
                     </div>
+            
                     <div class="col-lg-6">
                         <div class="glass-card h-100">
                             <div class="card-header py-3 px-4 bg-white border-bottom">
-                                <h6 class="m-0 fw-bold text-success"><i class="bi bi-trophy"></i> 이달의 실적 (매니저별)</h6>
+                                <h6 class="m-0 fw-bold text-success"><i class="bi bi-trophy me-2"></i>이달의 실적 (매니저별)</h6>
                             </div>
-                            <div class="card-body p-0" id="dash_user_rank" style="min-height: 200px; overflow-y: auto;">
+                            <div class="card-body p-0" id="dash_user_rank" style="height: 400px; overflow-y: auto;">
                                 <div class="text-center py-5 text-muted">데이터 로딩 중...</div>
                             </div>
                         </div>
