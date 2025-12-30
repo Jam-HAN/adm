@@ -674,7 +674,7 @@
 
             <div id="section-card-setup" class="section-view">
                 <div class="glass-card p-4">
-                    <h5 class="fw-bold mb-4"><i class="bi bi-credit-card"></i> 제휴카드 등록</h5>
+                    <h5 class="fw-bold mb-4 text-primary"><i class="bi bi-credit-card"></i> 제휴카드 등록</h5>
                     
                     <div class="row g-2 mb-3">
                         <div class="col-12">
@@ -693,7 +693,7 @@
                         <div class="col-12">
                             <div class="input-group">
                                 <input type="text" class="form-control" id="search_card_keyword" placeholder="고객명, 연락처" onkeydown="if(event.key==='Enter') searchSetupList('card')">
-                                <button class="btn btn-outline-secondary" onclick="searchSetupList('card')">조회</button>
+                                <button class="btn btn-outline-primary" onclick="searchSetupList('card')">조회</button>
                             </div>
                         </div>
                     </div>
@@ -706,8 +706,8 @@
                                     <th>개통일</th>
                                     <th>고객명</th>
                                     <th>카드명</th>
-                                    <th style="width: 120px;">발급상태(BG)</th>
-                                    <th style="width: 120px;">처리결과(BH)</th>
+                                    <th style="width: 130px;">세이브등록일(BG)</th>
+                                    <th style="width: 130px;">자동이체등록일(BH)</th>
                                     <th>저장</th>
                                 </tr>
                             </thead>
@@ -721,11 +721,11 @@
             
             <div id="section-wired-setup" class="section-view">
                 <div class="glass-card p-4">
-                    <h5 class="fw-bold mb-4"><i class="bi bi-router"></i> 유선설치 등록</h5>
+                    <h5 class="fw-bold mb-4 text-success"><i class="bi bi-router"></i> 유선설치 등록</h5>
                     
                     <div class="row g-2 mb-3">
                         <div class="col-12">
-                            <select id="search_wired_branch" class="form-select form-select-sm fw-bold text-primary">
+                            <select id="search_wired_branch" class="form-select form-select-sm fw-bold text-success">
                                 <option value="전체">🏢 전체 지점 보기</option>
                                 <option value="장지 본점">장지 본점</option>
                                 <option value="명일 직영점">명일 직영점</option>
@@ -740,7 +740,7 @@
                         <div class="col-12">
                             <div class="input-group">
                                 <input type="text" class="form-control" id="search_wired_keyword" placeholder="고객명, 연락처" onkeydown="if(event.key==='Enter') searchSetupList('wired')">
-                                <button class="btn btn-outline-secondary" onclick="searchSetupList('wired')">조회</button>
+                                <button class="btn btn-outline-success" onclick="searchSetupList('wired')">조회</button>
                             </div>
                         </div>
                     </div>
@@ -753,8 +753,8 @@
                                     <th>접수일</th>
                                     <th>유형</th>
                                     <th>고객명</th>
-                                    <th style="width: 140px;">설치예정일(BI)</th>
-                                    <th style="width: 100px;">상태(BJ)</th>
+                                    <th style="width: 130px;">설치예정일(BI)</th>
+                                    <th style="width: 130px;">설치일(BJ)</th>
                                     <th>저장</th>
                                 </tr>
                             </thead>
