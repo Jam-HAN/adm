@@ -219,7 +219,7 @@ function showSection(id) {
     if (id === 'section-search-all') initHistoryDates();
     if (id === 'section-return-usedphone') initSpecialDates('usedphone');
     if (id === 'section-receive-gift') initSpecialDates('gift');
-    if (id === 'section-settlement') initSpecialDates('settlement');
+    if (id === 'section-settlement-period' || id === 'section-settlement-staff') {initSettlementDates();}
     // ---------------------------------------------------------
     
     // 3. [핵심 수정] 입고 화면(section-in) 진입 시 로직 개선
