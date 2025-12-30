@@ -683,12 +683,27 @@
 
             <div id="section-settlement-period" class="section-view">
                 <div class="glass-card p-4">
-                    <h5 class="fw-bold mb-4 text-primary"><i class="bi bi-calendar-check"></i> 기간별 매출 집계</h5>
+                    <h5 class="fw-bold mb-4 text-primary"><i class="bi bi-calendar-check"></i> 기간별 매출 집계 (관리자)</h5>
                     
                     <div class="row g-2 align-items-end mb-4">
-                        <div class="col-5"><label class="small text-muted fw-bold">시작일</label><input type="date" id="sp_start" class="form-control form-control-sm"></div>
-                        <div class="col-5"><label class="small text-muted fw-bold">종료일</label><input type="date" id="sp_end" class="form-control form-control-sm"></div>
-                        <div class="col-2"><button class="btn btn-primary btn-sm w-100 fw-bold" onclick="loadSettlement('period')">조회</button></div>
+                        <div class="col-3">
+                            <label class="small text-muted fw-bold">보기 방식</label>
+                            <select class="form-select form-select-sm fw-bold border-primary text-primary" id="sp_view_type">
+                                <option value="branch" selected>🏢 지점별 보기</option>
+                                <option value="carrier">📊 거래처별 합산</option>
+                            </select>
+                        </div>
+                        <div class="col-4">
+                            <label class="small text-muted fw-bold">시작일</label>
+                            <input type="date" id="sp_start" class="form-control form-control-sm">
+                        </div>
+                        <div class="col-3">
+                            <label class="small text-muted fw-bold">종료일</label>
+                            <input type="date" id="sp_end" class="form-control form-control-sm">
+                        </div>
+                        <div class="col-2">
+                            <button class="btn btn-primary btn-sm w-100 fw-bold" onclick="loadSettlement('period')">조회</button>
+                        </div>
                     </div>
             
                     <div id="sp_result_area" style="display:none;">
@@ -696,8 +711,7 @@
                             <table class="table table-hover align-middle text-center small">
                                 <thead class="table-primary">
                                     <tr>
-                                        <th rowspan="2" class="align-middle">거래처</th>
-                                        <th colspan="2">건수</th>
+                                        <th rowspan="2" class="align-middle">구분</th> <th colspan="2">건수</th>
                                         <th colspan="3">매출 상세</th>
                                         <th rowspan="2" class="align-middle">정산금</th>
                                         <th rowspan="2" class="align-middle">순수익</th>
@@ -705,7 +719,7 @@
                                     <tr>
                                         <th class="bg-white text-muted" style="font-size:0.8rem;">무선</th>
                                         <th class="bg-white text-muted" style="font-size:0.8rem;">유선</th>
-                                        <th class="bg-white text-muted" style="font-size:0.8rem;">기기대</th>
+                                        <th class="bg-white text-muted" style="font-size:0.8rem;">기기반납</th>
                                         <th class="bg-white text-muted" style="font-size:0.8rem;">중고폰</th>
                                         <th class="bg-white text-muted" style="font-size:0.8rem;">상품권</th>
                                     </tr>
@@ -716,7 +730,7 @@
                         </div>
                     </div>
                     
-                    <div id="sp_msg" class="text-center py-5 text-muted">기간을 선택하고 조회하세요.</div>
+                    <div id="sp_msg" class="text-center py-5 text-muted">기간과 방식을 선택하고 조회하세요.</div>
                 </div>
             </div>
             
