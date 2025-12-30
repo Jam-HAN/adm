@@ -274,6 +274,7 @@ function showSection(id) {
 
     document.getElementById('view_start').value = first;
     document.getElementById('view_end').value = today;
+    }
 }
 
 function showOpenSection(type) {
