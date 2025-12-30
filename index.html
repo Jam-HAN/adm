@@ -685,21 +685,21 @@
                 <div class="glass-card p-4 w-100 d-block" style="min-height: 600px;">
                     <h5 class="fw-bold mb-4 text-primary"><i class="bi bi-calendar-check"></i> 기간별 매출 집계</h5>
                     
-                    <div class="row g-2 mb-4">
+                    <div class="row g-2 mb-4 align-items-end">
                         <div class="col-4">
                             <label class="small text-muted fw-bold mb-1">보기 방식</label>
-                            <select class="form-select fw-bold border-primary text-primary" id="sp_view_type">
+                            <select class="form-select fw-bold border-primary text-primary" id="sp_view_type" style="height: 38px;">
                                 <option value="branch" selected>🏢 지점별 보기</option>
                                 <option value="carrier">📊 거래처별 보기</option>
                             </select>
                         </div>
                         <div class="col-3">
                             <label class="small text-muted fw-bold mb-1">시작일</label>
-                            <input type="date" id="sp_start" class="form-control">
+                            <input type="date" id="sp_start" class="form-control" style="height: 38px;">
                         </div>
                         <div class="col-3">
                             <label class="small text-muted fw-bold mb-1">종료일</label>
-                            <input type="date" id="sp_end" class="form-control">
+                            <input type="date" id="sp_end" class="form-control" style="height: 38px;">
                         </div>
                         <div class="col-2">
                             <button class="btn btn-primary w-100 fw-bold" onclick="loadSettlement('period')" style="height: 38px;">조회</button>
@@ -708,6 +708,7 @@
             
                     <div id="sp_result_area" class="table-responsive w-100">
                         <table class="table table-hover align-middle text-center small border w-100" style="table-layout: fixed;">
+                            
                             <colgroup>
                                 <col style="width: 14%;">
                                 <col style="width: 7%;">
