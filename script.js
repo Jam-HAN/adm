@@ -1958,11 +1958,13 @@ function initSettlementDates() {
 
 // 2. 데이터 조회
 async function loadSettlement(type) {
-    let start, end;
+    let start, end, viewType = 'branch';
     
     if (type === 'period') {
         start = document.getElementById('sp_start').value;
         end = document.getElementById('sp_end').value;
+        viewType = document.getElementById('sp_view_type').value; // ★ 선택값 읽기
+
         document.getElementById('sp_result_area').style.display = 'none';
         document.getElementById('sp_msg').style.display = 'block';
         document.getElementById('sp_msg').innerHTML = '<div class="spinner-border text-primary"></div>';
@@ -1980,7 +1982,8 @@ async function loadSettlement(type) {
             action: "get_settlement_report",
             userEmail: myEmail, 
             startDate: start,
-            endDate: end
+            endDate: end,
+            viewType: viewType // ★ 서버로 전송
         });
 
         if (d.status === 'success') {
@@ -2008,8 +2011,14 @@ function renderPeriodStats(data) {
         return;
     }
 
-    // 데이터가 전체적으로 없는 경우
-    const hasData = data.periodData.some(b => b.list.length > 0);
+    // 데이터 존재 여부 체크
+    let hasData = false;
+    if (data.viewType === 'carrier') {
+        hasData = data.periodData.length > 0;
+    } else {
+        hasData = data.periodData.some(b => b.list.length > 0);
+    }
+
     if (!hasData) {
         msgEl.innerHTML = '해당 기간에 데이터가 없습니다.';
         resultEl.style.display = 'none';
@@ -2021,35 +2030,20 @@ function renderPeriodStats(data) {
     let grandTotal = { mCount:0, wCount:0, device:0, used:0, gift:0, settle:0, margin:0 };
     const fmt = n => n === 0 ? '<span class="text-muted">-</span>' : Number(n).toLocaleString();
 
-    // ★ 지점별 루프 (장지 -> 명일 순)
-    data.periodData.forEach(branchData => {
-        const bName = branchData.branch;
-        const list = branchData.list;
-
-        if (list.length === 0) return; // 데이터 없는 지점 건너뜀
-
-        // [1] 지점 헤더 (구분선 역할)
-        html += `
-            <tr class="table-light border-top border-bottom border-2">
-                <td colspan="8" class="text-start fw-bold ps-3 text-dark">
-                    <i class="bi bi-shop me-2"></i>${bName}
-                </td>
-            </tr>
-        `;
-
-        let subTotal = { mCount:0, wCount:0, device:0, used:0, gift:0, settle:0, margin:0 };
-
-        // [2] 거래처별 데이터 출력
-        list.forEach(row => {
-            // 누적
-            subTotal.mCount += row.mCount; subTotal.wCount += row.wCount;
-            subTotal.device += row.deviceSum; subTotal.used += row.usedPhone;
-            subTotal.gift += row.gift; subTotal.settle += row.settlement;
-            subTotal.margin += row.margin;
+    // ------------------------------------------
+    // [A] 거래처별 보기 (단순 리스트)
+    // ------------------------------------------
+    if (data.viewType === 'carrier') {
+        data.periodData.forEach(row => {
+            // 전체 합계 누적
+            grandTotal.mCount += row.mCount; grandTotal.wCount += row.wCount;
+            grandTotal.device += row.deviceSum; grandTotal.used += row.usedPhone;
+            grandTotal.gift += row.gift; grandTotal.settle += row.settlement;
+            grandTotal.margin += row.margin;
 
             html += `
                 <tr>
-                    <td class="text-start ps-4 text-truncate" style="max-width:100px;">${row.name}</td>
+                    <td class="fw-bold text-start ps-4">${row.name}</td>
                     <td>${row.mCount > 0 ? row.mCount : '-'}</td>
                     <td>${row.wCount > 0 ? row.wCount : '-'}</td>
                     <td class="text-secondary small">${fmt(row.deviceSum)}</td>
@@ -2060,31 +2054,72 @@ function renderPeriodStats(data) {
                 </tr>
             `;
         });
+    } 
+    // ------------------------------------------
+    // [B] 지점별 보기 (헤더 + 소계)
+    // ------------------------------------------
+    else {
+        data.periodData.forEach(branchData => {
+            const bName = branchData.branch;
+            const list = branchData.list;
+            if (list.length === 0) return; 
 
-        // [3] 지점 소계 (Subtotal)
-        html += `
-            <tr class="bg-light fw-bold" style="border-top: 1px double #dee2e6;">
-                <td class="text-end pe-3 text-secondary">└ ${bName} 소계</td>
-                <td class="text-secondary">${subTotal.mCount}</td>
-                <td class="text-secondary">${subTotal.wCount}</td>
-                <td class="text-secondary small">${fmt(subTotal.device)}</td>
-                <td class="text-secondary small">${fmt(subTotal.used)}</td>
-                <td class="text-secondary small">${fmt(subTotal.gift)}</td>
-                <td class="text-dark">${fmt(subTotal.settle)}</td>
-                <td class="text-primary">${fmt(subTotal.margin)}</td>
-            </tr>
-        `;
+            // 지점 헤더
+            html += `
+                <tr class="table-light border-top border-bottom border-2">
+                    <td colspan="8" class="text-start fw-bold ps-3 text-dark">
+                        <i class="bi bi-shop me-2"></i>${bName}
+                    </td>
+                </tr>
+            `;
 
-        // 전체 합계 누적
-        grandTotal.mCount += subTotal.mCount; grandTotal.wCount += subTotal.wCount;
-        grandTotal.device += subTotal.device; grandTotal.used += subTotal.used;
-        grandTotal.gift += subTotal.gift; grandTotal.settle += subTotal.settle;
-        grandTotal.margin += subTotal.margin;
-    });
+            let subTotal = { mCount:0, wCount:0, device:0, used:0, gift:0, settle:0, margin:0 };
+
+            list.forEach(row => {
+                subTotal.mCount += row.mCount; subTotal.wCount += row.wCount;
+                subTotal.device += row.deviceSum; subTotal.used += row.usedPhone;
+                subTotal.gift += row.gift; subTotal.settle += row.settlement;
+                subTotal.margin += row.margin;
+
+                html += `
+                    <tr>
+                        <td class="text-start ps-4 text-truncate" style="max-width:100px;">${row.name}</td>
+                        <td>${row.mCount > 0 ? row.mCount : '-'}</td>
+                        <td>${row.wCount > 0 ? row.wCount : '-'}</td>
+                        <td class="text-secondary small">${fmt(row.deviceSum)}</td>
+                        <td class="text-secondary small">${fmt(row.usedPhone)}</td>
+                        <td class="text-secondary small">${fmt(row.gift)}</td>
+                        <td class="text-dark">${fmt(row.settlement)}</td>
+                        <td class="fw-bold text-primary">${fmt(row.margin)}</td>
+                    </tr>
+                `;
+            });
+
+            // 지점 소계
+            html += `
+                <tr class="bg-light fw-bold" style="border-top: 1px double #dee2e6;">
+                    <td class="text-end pe-3 text-secondary">└ ${bName} 소계</td>
+                    <td class="text-secondary">${subTotal.mCount}</td>
+                    <td class="text-secondary">${subTotal.wCount}</td>
+                    <td class="text-secondary small">${fmt(subTotal.device)}</td>
+                    <td class="text-secondary small">${fmt(subTotal.used)}</td>
+                    <td class="text-secondary small">${fmt(subTotal.gift)}</td>
+                    <td class="text-dark">${fmt(subTotal.settle)}</td>
+                    <td class="text-primary">${fmt(subTotal.margin)}</td>
+                </tr>
+            `;
+
+            // 전체 합계 누적
+            grandTotal.mCount += subTotal.mCount; grandTotal.wCount += subTotal.wCount;
+            grandTotal.device += subTotal.device; grandTotal.used += subTotal.used;
+            grandTotal.gift += subTotal.gift; grandTotal.settle += subTotal.settle;
+            grandTotal.margin += subTotal.margin;
+        });
+    }
 
     tbody.innerHTML = html;
 
-    // [4] 전체 총계 (Grand Total)
+    // 전체 총계 (공통)
     tfoot.innerHTML = `
         <tr class="table-dark">
             <td>전체 합계</td>
