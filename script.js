@@ -2084,7 +2084,6 @@ function renderPeriodStats(data) {
 
     const fmt = (n) => Number(n).toLocaleString();
 
-    // 전체 합계 변수
     let totalMobile = 0, totalWired = 0, totalSettle = 0, totalMargin = 0;
     let totalDevice = 0, totalUsed = 0, totalGift = 0;
 
@@ -2096,45 +2095,41 @@ function renderPeriodStats(data) {
             let subMobile = 0, subWired = 0, subSettle = 0, subMargin = 0;
             let subDevice = 0, subUsed = 0, subGift = 0;
 
-            // ★ 직원 리스트 루프 (index 추가)
-            branch.list.forEach((item, index) => {
+            // ★ [수정 1] 지점 헤더 다시 복구 (가장 깔끔한 스타일)
+            tbody.insertAdjacentHTML('beforeend', `
+                <tr class="table-light">
+                    <td colspan="8" class="fw-bold text-start ps-4 text-dark" style="background-color: #f1f3f5;">
+                        <i class="bi bi-building me-2 text-primary"></i>${branch.branch}
+                    </td>
+                </tr>
+            `);
+
+            // 직원 리스트
+            branch.list.forEach(item => {
                 totalMobile += item.mCount; totalWired += item.wCount; totalSettle += item.settlement;
                 totalMargin += item.margin; totalDevice += item.deviceSum; totalUsed += item.usedPhone; totalGift += item.gift;
 
                 subMobile += item.mCount; subWired += item.wCount; subSettle += item.settlement;
                 subMargin += item.margin; subDevice += item.deviceSum; subUsed += item.usedPhone; subGift += item.gift;
 
-                // ★ [핵심 디자인] 첫 번째 직원에게만 '지점 뱃지' 달아주기
-                // 1. 첫 줄이면 구분선(border-top)을 진하게 줌
-                // 2. 이름 앞에 뱃지(badge) 추가
-                let nameDisplay = item.name;
-                let trClass = "";
-                
-                if (index === 0) {
-                    // 첫 번째 사람: 위에 지점 이름 뱃지 표시
-                    nameDisplay = `<span class="badge bg-primary bg-opacity-10 text-primary mb-1 border border-primary border-opacity-25">${branch.branch}</span><br>${item.name}`;
-                    // 지점 간 구분을 위해 윗줄 그어주기 (첫 지점 제외)
-                    trClass = "border-top border-2"; 
-                }
-
                 tbody.insertAdjacentHTML('beforeend', `
-                    <tr class="${trClass}">
-                        <td class="fw-bold text-secondary">${nameDisplay}</td>
-                        <td class="align-middle">${item.mCount}</td>
-                        <td class="align-middle">${item.wCount}</td>
-                        <td class="text-end pe-3 text-muted align-middle" style="font-size:0.85rem;">${fmt(item.deviceSum)}</td>
-                        <td class="text-end pe-3 text-muted align-middle" style="font-size:0.85rem;">${fmt(item.usedPhone)}</td>
-                        <td class="text-end pe-3 text-muted align-middle" style="font-size:0.85rem;">${fmt(item.gift)}</td>
-                        <td class="text-end pe-3 fw-bold text-dark align-middle">${fmt(item.settlement)}</td>
-                        <td class="text-end pe-3 fw-bold text-danger align-middle">${fmt(item.margin)}</td>
+                    <tr>
+                        <td class="fw-bold text-secondary">${item.name}</td>
+                        <td>${item.mCount}</td>
+                        <td>${item.wCount}</td>
+                        <td class="text-end pe-3 text-muted" style="font-size:0.85rem;">${fmt(item.deviceSum)}</td>
+                        <td class="text-end pe-3 text-muted" style="font-size:0.85rem;">${fmt(item.usedPhone)}</td>
+                        <td class="text-end pe-3 text-muted" style="font-size:0.85rem;">${fmt(item.gift)}</td>
+                        <td class="text-end pe-3 fw-bold text-dark">${fmt(item.settlement)}</td>
+                        <td class="text-end pe-3 fw-bold text-danger">${fmt(item.margin)}</td>
                     </tr>
                 `);
             });
 
-            // 지점 소계 (디자인 유지)
+            // ★ [수정 2] 소계는 딱 '소 계'라고만 표시 (지점명 제거)
             tbody.insertAdjacentHTML('beforeend', `
-                <tr style="background-color: #f8faff;">
-                    <td class="text-primary fw-bold text-end pe-4" style="font-size:0.9rem;">└ ${branch.branch} 소계</td>
+                <tr style="background-color: #eef2ff; border-top: 1px solid #dee2e6; border-bottom: 2px solid #cbd3e6;">
+                    <td class="text-primary fw-bold">소 계</td>
                     <td class="text-primary fw-bold">${subMobile}</td>
                     <td class="text-primary fw-bold">${subWired}</td>
                     <td class="text-end pe-3 text-primary fw-bold">${fmt(subDevice)}</td>
@@ -2146,7 +2141,7 @@ function renderPeriodStats(data) {
             `);
         });
     } 
-    // (2) 거래처별 보기 (기존 유지)
+    // (2) 거래처별 보기
     else {
         data.periodData.forEach(item => {
             totalMobile += item.mCount; totalWired += item.wCount; totalSettle += item.settlement;
@@ -2167,7 +2162,7 @@ function renderPeriodStats(data) {
         });
     }
 
-    // Footer (기존 유지)
+    // Footer (총 합계)
     tfoot.innerHTML = `
         <tr class="table-primary border-top border-primary" style="border-top-width: 3px;">
             <td class="text-primary fw-bolder">총 합계</td>
