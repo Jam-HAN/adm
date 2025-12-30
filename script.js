@@ -80,6 +80,8 @@ window.handleCredentialResponse = function(response) {
             loadDropdownData();
             setupAutoLogout();
             loadDashboard();
+            initHistoryDates(); // 기존: 통합 조회 날짜 세팅
+            initSetupDates();
         } else {
             alert("로그인 실패: " + d.message);
             document.getElementById('login-msg').innerText = d.message;
@@ -236,6 +238,7 @@ function showSection(id) {
     if (id === 'section-return-usedphone') initSpecialDates('usedphone');
     if (id === 'section-receive-gift') initSpecialDates('gift');
     if (id === 'section-settlement-period' || id === 'section-settlement-staff') {initSettlementDates();}
+    if (id === 'section-card-setup' || id === 'section-wired-setup') {initSetupDates();}
     // ---------------------------------------------------------
     
     // 3. [핵심 수정] 입고 화면(section-in) 진입 시 로직 개선
