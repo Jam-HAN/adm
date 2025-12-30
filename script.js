@@ -2053,8 +2053,7 @@ function renderPeriodStats(data) {
     const tbody = document.getElementById('sp_tbody');
     const tfoot = document.getElementById('sp_tfoot');
 
-    // ★ [핵심 수정] 기존에 있던 sp_msg.style.display, sp_result_area.style.display 코드 삭제함!
-    // 이제 그냥 tbody만 비우고 시작하면 됩니다.
+    // 초기화
     tbody.innerHTML = "";
     tfoot.innerHTML = "";
 
@@ -2086,24 +2085,29 @@ function renderPeriodStats(data) {
         return;
     }
 
-    // 3. 데이터 렌더링 (기존 로직 유지)
-    // 숫자에 콤마 찍는 함수
     const fmt = (n) => Number(n).toLocaleString();
 
+    // 전체 합계 변수
     let totalMobile = 0, totalWired = 0, totalSettle = 0, totalMargin = 0;
     let totalDevice = 0, totalUsed = 0, totalGift = 0;
 
-    // (1) 지점별 보기
+    // (1) 지점별 보기 (소계 추가)
     if (data.viewType === 'branch') {
         data.periodData.forEach(branch => {
             if (branch.list.length === 0) return;
 
-            // 지점 헤더 (구분선 느낌)
+            // ★ 지점별 소계 변수 초기화 (지점 바뀔 때마다 0으로 리셋)
+            let subMobile = 0, subWired = 0, subSettle = 0, subMargin = 0;
+            let subDevice = 0, subUsed = 0, subGift = 0;
+
+            // 지점 이름 헤더
             tbody.insertAdjacentHTML('beforeend', `
-                <tr class="table-light"><td colspan="8" class="fw-bold text-start ps-4 text-primary">${branch.branch}</td></tr>
+                <tr class="table-light"><td colspan="8" class="fw-bold text-start ps-4 text-primary" style="background-color: #f8f9fa;">${branch.branch}</td></tr>
             `);
 
+            // 직원별 리스트 출력
             branch.list.forEach(item => {
+                // 전체 합계 누적
                 totalMobile += item.mCount;
                 totalWired += item.wCount;
                 totalSettle += item.settlement;
@@ -2112,9 +2116,18 @@ function renderPeriodStats(data) {
                 totalUsed += item.usedPhone;
                 totalGift += item.gift;
 
+                // ★ 지점 소계 누적
+                subMobile += item.mCount;
+                subWired += item.wCount;
+                subSettle += item.settlement;
+                subMargin += item.margin;
+                subDevice += item.deviceSum;
+                subUsed += item.usedPhone;
+                subGift += item.gift;
+
                 tbody.insertAdjacentHTML('beforeend', `
                     <tr>
-                        <td class="fw-bold">${item.name}</td>
+                        <td class="fw-bold text-secondary">${item.name}</td>
                         <td>${item.mCount}</td>
                         <td>${item.wCount}</td>
                         <td class="text-end pe-3 text-muted" style="font-size:0.85rem;">${fmt(item.deviceSum)}</td>
@@ -2125,6 +2138,20 @@ function renderPeriodStats(data) {
                     </tr>
                 `);
             });
+
+            // ★ [핵심] 지점 소계 행 출력
+            tbody.insertAdjacentHTML('beforeend', `
+                <tr style="background-color: #eef2ff; border-top: 2px solid #dee2e6; border-bottom: 2px solid #dee2e6;">
+                    <td class="text-primary fw-bold text-end pe-4">└ ${branch.branch} 소계</td>
+                    <td class="text-primary fw-bold">${subMobile}</td>
+                    <td class="text-primary fw-bold">${subWired}</td>
+                    <td class="text-end pe-3 text-primary fw-bold">${fmt(subDevice)}</td>
+                    <td class="text-end pe-3 text-primary fw-bold">${fmt(subUsed)}</td>
+                    <td class="text-end pe-3 text-primary fw-bold">${fmt(subGift)}</td>
+                    <td class="text-end pe-3 text-primary fw-bold">${fmt(subSettle)}</td>
+                    <td class="text-end pe-3 text-danger fw-bold" style="font-size:1rem;">${fmt(subMargin)}</td>
+                </tr>
+            `);
         });
     } 
     // (2) 거래처별 보기
@@ -2153,17 +2180,17 @@ function renderPeriodStats(data) {
         });
     }
 
-    // 4. 합계 (Footer)
+    // 4. 맨 아래 총 합계 (Footer)
     tfoot.innerHTML = `
-        <tr class="table-primary border-top border-primary">
-            <td class="text-primary">총 합계</td>
-            <td class="text-primary">${totalMobile}</td>
-            <td class="text-primary">${totalWired}</td>
-            <td class="text-end pe-3 text-primary">${fmt(totalDevice)}</td>
-            <td class="text-end pe-3 text-primary">${fmt(totalUsed)}</td>
-            <td class="text-end pe-3 text-primary">${fmt(totalGift)}</td>
-            <td class="text-end pe-3 text-primary">${fmt(totalSettle)}</td>
-            <td class="text-end pe-3 text-danger" style="font-size:1.1rem;">${fmt(totalMargin)}</td>
+        <tr class="table-primary border-top border-primary" style="border-top-width: 3px;">
+            <td class="text-primary fw-bolder">총 합계</td>
+            <td class="text-primary fw-bolder">${totalMobile}</td>
+            <td class="text-primary fw-bolder">${totalWired}</td>
+            <td class="text-end pe-3 text-primary fw-bolder">${fmt(totalDevice)}</td>
+            <td class="text-end pe-3 text-primary fw-bolder">${fmt(totalUsed)}</td>
+            <td class="text-end pe-3 text-primary fw-bolder">${fmt(totalGift)}</td>
+            <td class="text-end pe-3 text-primary fw-bolder">${fmt(totalSettle)}</td>
+            <td class="text-end pe-3 text-danger fw-bolder" style="font-size:1.2rem;">${fmt(totalMargin)}</td>
         </tr>
     `;
 }
