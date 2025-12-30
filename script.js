@@ -2313,53 +2313,88 @@ async function searchSetupList(type) {
     }
 }
 
-// 2. 제휴카드 테이블 그리기
+// 2. 제휴카드 테이블 그리기 (세이브/자동이체)
 function renderCardSetupTable(list) {
     const tbody = document.getElementById('card_setup_tbody');
     tbody.innerHTML = "";
 
     if (list.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" class="text-muted py-5">검색 조건에 맞는 미처리 건이 없습니다.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="7" class="text-muted py-5">검색 조건에 맞는 미처리 건이 없습니다. (모두 등록됨 ✨)</td></tr>`;
         return;
     }
 
     list.forEach(item => {
         const rowId = `card_${item.branch}_${item.rowIndex}`;
+        
+        // ★ 날짜 포맷팅 (YYYY-MM-DD 형태로 변환해야 input type="date"에 들어감)
+        const val1 = item.val1 ? item.val1.substring(0, 10) : "";
+        const val2 = item.val2 ? item.val2.substring(0, 10) : "";
+
         tbody.insertAdjacentHTML('beforeend', `
             <tr>
                 <td><span class="badge bg-secondary opacity-75">${item.branch}</span></td>
                 <td>${item.date}</td>
                 <td class="fw-bold">${item.name}</td>
                 <td class="text-primary small">${item.cardName}</td>
-                <td><input type="text" class="form-control form-control-sm text-center" id="val1_${rowId}" value="${item.val1}" placeholder="발급상태"></td>
-                <td><input type="text" class="form-control form-control-sm text-center" id="val2_${rowId}" value="${item.val2}" placeholder="처리결과"></td>
-                <td><button class="btn btn-sm btn-primary" onclick="saveSetupInfo('card', '${item.branch}', '${item.rowIndex}', '${rowId}')">저장</button></td>
+                
+                <td>
+                    <input type="date" class="form-control form-control-sm text-center" 
+                           id="val1_${rowId}" value="${val1}">
+                </td>
+                
+                <td>
+                    <input type="date" class="form-control form-control-sm text-center" 
+                           id="val2_${rowId}" value="${val2}">
+                </td>
+                
+                <td>
+                    <button class="btn btn-sm btn-primary" onclick="saveSetupInfo('card', '${item.branch}', '${item.rowIndex}', '${rowId}')">
+                        저장
+                    </button>
+                </td>
             </tr>
         `);
     });
 }
 
-// 3. 유선설치 테이블 그리기
+// 3. 유선설치 테이블 그리기 (예정일/설치일)
 function renderWiredSetupTable(list) {
     const tbody = document.getElementById('wired_setup_tbody');
     tbody.innerHTML = "";
 
     if (list.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" class="text-muted py-5">검색 조건에 맞는 미처리 건이 없습니다.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="7" class="text-muted py-5">검색 조건에 맞는 미처리 건이 없습니다. (모두 설치됨 ✨)</td></tr>`;
         return;
     }
 
     list.forEach(item => {
         const rowId = `wired_${item.branch}_${item.rowIndex}`;
+        
+        const val1 = item.val1 ? item.val1.substring(0, 10) : "";
+        const val2 = item.val2 ? item.val2.substring(0, 10) : "";
+
         tbody.insertAdjacentHTML('beforeend', `
             <tr>
                 <td><span class="badge bg-secondary opacity-75">${item.branch}</span></td>
                 <td>${item.date}</td>
                 <td class="text-success small">${item.type}</td>
                 <td class="fw-bold">${item.name}</td>
-                <td><input type="date" class="form-control form-control-sm text-center" id="val1_${rowId}" value="${item.val1}"></td>
-                <td><input type="text" class="form-control form-control-sm text-center" id="val2_${rowId}" value="${item.val2}" placeholder="설치상태"></td>
-                <td><button class="btn btn-sm btn-success" onclick="saveSetupInfo('wired', '${item.branch}', '${item.rowIndex}', '${rowId}')">저장</button></td>
+                
+                <td>
+                    <input type="date" class="form-control form-control-sm text-center" 
+                           id="val1_${rowId}" value="${val1}">
+                </td>
+                
+                <td>
+                    <input type="date" class="form-control form-control-sm text-center" 
+                           id="val2_${rowId}" value="${val2}">
+                </td>
+                
+                <td>
+                    <button class="btn btn-sm btn-success" onclick="saveSetupInfo('wired', '${item.branch}', '${item.rowIndex}', '${rowId}')">
+                        저장
+                    </button>
+                </td>
             </tr>
         `);
     });
