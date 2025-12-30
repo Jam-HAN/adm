@@ -1981,20 +1981,26 @@ async function loadSettlement(type) {
         end = document.getElementById('sp_end').value;
         viewType = document.getElementById('sp_view_type').value; // ★ 선택값 읽기
 
-        document.getElementById('sp_result_area').style.display = 'none';
-        document.getElementById('sp_msg').style.display = 'block';
-        document.getElementById('sp_msg').innerHTML = '<div class="spinner-border text-primary"></div>';
+        // ★ [수정] 기간별 조회도 테이블 형태 유지하며 로딩 표시
+        // (기존의 sp_msg, sp_result_area 토글 로직 삭제됨)
+        document.getElementById('sp_tbody').innerHTML = `
+            <tr style="height: 450px;">
+                <td colspan="8" class="align-middle">
+                    <div class="spinner-border text-primary mb-2" style="width: 3rem; height: 3rem;"></div>
+                    <div class="text-muted fw-bold mt-2">데이터를 불러오는 중입니다...</div>
+                </td>
+            </tr>
+        `;
+        document.getElementById('sp_tfoot').innerHTML = ''; // 합계 초기화
     } else {
-        // [★ 핵심 변경] 직원별 조회 시: 표 구조 유지하고 내용만 로딩바 삽입
+        // ... (직원별 조회 로직 기존 유지) ...
         start = document.getElementById('ss_start').value;
         end = document.getElementById('ss_end').value;
-        
-        // colspan="7"은 테이블 칸 수에 맞춘 것
         document.getElementById('ss_tbody').innerHTML = `
-            <tr>
-                <td colspan="7" class="py-5">
-                    <div class="spinner-border text-success mb-2"></div>
-                    <div class="text-muted small">데이터를 불러오는 중입니다...</div>
+            <tr style="height: 450px;">
+                <td colspan="7" class="align-middle">
+                    <div class="spinner-border text-success mb-2" style="width: 3rem; height: 3rem;"></div>
+                    <div class="text-muted fw-bold mt-2">데이터를 불러오는 중입니다...</div>
                 </td>
             </tr>
         `;
@@ -2047,9 +2053,15 @@ function renderPeriodStats(data) {
     }
 
     if (!hasData) {
-        msgEl.innerHTML = '해당 기간에 데이터가 없습니다.';
-        resultEl.style.display = 'none';
-        msgEl.style.display = 'block';
+        // ★ [수정] 데이터 없을 때 테이블 높이 유지
+        tbody.innerHTML = `
+            <tr style="height: 450px;">
+                <td colspan="8" class="text-muted align-middle">
+                    <i class="bi bi-exclamation-circle fs-1 d-block mb-3 opacity-25"></i>
+                    해당 기간에 데이터가 없습니다.
+                </td>
+            </tr>`;
+        tfoot.innerHTML = '';
         return;
     }
 
