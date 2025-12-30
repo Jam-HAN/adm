@@ -2255,29 +2255,61 @@ function renderStaffStats(data) {
 }
 
 // ==========================================
-// [신규 기능] 제휴카드 & 유선설치 관리
+// [제휴카드 / 유선설치] 검색 및 저장 로직
 // ==========================================
 
-// 1. 제휴카드 목록 로딩
-async function loadCardSetupList() {
-    const tbody = document.getElementById('card_setup_tbody');
-    tbody.innerHTML = `<tr><td colspan="7"><div class="spinner-border text-primary"></div></td></tr>`;
+// 0. 날짜 자동 세팅 (화면 열릴 때 호출됨)
+function initSetupDates() {
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    
+    // 기본값: 이번 달 1일 ~ 오늘
+    const firstDay = `${yyyy}-${mm}-01`;
+    const todayStr = `${yyyy}-${mm}-${dd}`;
+
+    document.getElementById('search_card_start').value = firstDay;
+    document.getElementById('search_card_end').value = todayStr;
+    document.getElementById('search_wired_start').value = firstDay;
+    document.getElementById('search_wired_end').value = todayStr;
+}
+
+// 1. 통합 검색 함수
+async function searchSetupList(type) {
+    const branchId = type === 'card' ? 'search_card_branch' : 'search_wired_branch';
+    const startId = type === 'card' ? 'search_card_start' : 'search_wired_start';
+    const endId = type === 'card' ? 'search_card_end' : 'search_wired_end';
+    const keyId = type === 'card' ? 'search_card_keyword' : 'search_wired_keyword';
+    const tbodyId = type === 'card' ? 'card_setup_tbody' : 'wired_setup_tbody';
+
+    const branch = document.getElementById(branchId).value;
+    const start = document.getElementById(startId).value;
+    const end = document.getElementById(endId).value;
+    const keyword = document.getElementById(keyId).value;
+    const tbody = document.getElementById(tbodyId);
+
+    // 로딩 표시
+    tbody.innerHTML = `<tr><td colspan="7"><div class="spinner-border spinner-border-sm text-secondary"></div> 검색 중...</td></tr>`;
 
     try {
         const d = await requestAPI({ 
             action: "get_setup_pending_list", 
-            type: "card",
-            branch: "전체" // 필요시 필터 연동 가능
+            type: type,
+            branch: branch,
+            startDate: start,
+            endDate: end,
+            keyword: keyword
         });
 
         if (d.status === 'success') {
-            renderCardSetupTable(d.list);
+            if (type === 'card') renderCardSetupTable(d.list);
+            else renderWiredSetupTable(d.list);
         } else {
             tbody.innerHTML = `<tr><td colspan="7" class="text-danger">${d.message}</td></tr>`;
         }
     } catch (e) {
-        console.error(e);
-        tbody.innerHTML = `<tr><td colspan="7" class="text-danger">로드 실패</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="7" class="text-danger">통신 오류</td></tr>`;
     }
 }
 
@@ -2287,123 +2319,48 @@ function renderCardSetupTable(list) {
     tbody.innerHTML = "";
 
     if (list.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" class="text-muted py-4">미처리된 제휴카드 건이 없습니다. (깨끗하네요! ✨)</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="7" class="text-muted py-5">검색 조건에 맞는 미처리 건이 없습니다.</td></tr>`;
         return;
     }
 
     list.forEach(item => {
-        // ID 생성 (입력값 추출용)
         const rowId = `card_${item.branch}_${item.rowIndex}`;
-        
         tbody.insertAdjacentHTML('beforeend', `
             <tr>
-                <td><span class="badge bg-secondary">${item.branch}</span></td>
+                <td><span class="badge bg-secondary opacity-75">${item.branch}</span></td>
                 <td>${item.date}</td>
                 <td class="fw-bold">${item.name}</td>
-                <td class="text-primary">${item.cardName}</td>
-                <td>
-                    <input type="text" class="form-control form-control-sm text-center" 
-                           id="val1_${rowId}" value="${item.val1}" placeholder="입력">
-                </td>
-                <td>
-                    <input type="text" class="form-control form-control-sm text-center" 
-                           id="val2_${rowId}" value="${item.val2}" placeholder="입력">
-                </td>
-                <td>
-                    <button class="btn btn-sm btn-primary" onclick="saveSetupInfo('card', '${item.branch}', '${item.rowIndex}', '${rowId}')">
-                        저장
-                    </button>
-                </td>
+                <td class="text-primary small">${item.cardName}</td>
+                <td><input type="text" class="form-control form-control-sm text-center" id="val1_${rowId}" value="${item.val1}" placeholder="발급상태"></td>
+                <td><input type="text" class="form-control form-control-sm text-center" id="val2_${rowId}" value="${item.val2}" placeholder="처리결과"></td>
+                <td><button class="btn btn-sm btn-primary" onclick="saveSetupInfo('card', '${item.branch}', '${item.rowIndex}', '${rowId}')">저장</button></td>
             </tr>
         `);
     });
 }
 
-// 3. 유선설치 목록 로딩
-async function loadWiredSetupList() {
-    const tbody = document.getElementById('wired_setup_tbody');
-    tbody.innerHTML = `<tr><td colspan="7"><div class="spinner-border text-success"></div></td></tr>`;
-
-    try {
-        const d = await requestAPI({ 
-            action: "get_setup_pending_list", 
-            type: "wired",
-            branch: "전체"
-        });
-
-        if (d.status === 'success') {
-            renderWiredSetupTable(d.list);
-        } else {
-            tbody.innerHTML = `<tr><td colspan="7" class="text-danger">${d.message}</td></tr>`;
-        }
-    } catch (e) {
-        tbody.innerHTML = `<tr><td colspan="7" class="text-danger">로드 실패</td></tr>`;
-    }
-}
-
-// 4. 유선설치 테이블 그리기
+// 3. 유선설치 테이블 그리기
 function renderWiredSetupTable(list) {
     const tbody = document.getElementById('wired_setup_tbody');
     tbody.innerHTML = "";
 
     if (list.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" class="text-muted py-4">미처리된 유선설치 건이 없습니다.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="7" class="text-muted py-5">검색 조건에 맞는 미처리 건이 없습니다.</td></tr>`;
         return;
     }
 
     list.forEach(item => {
         const rowId = `wired_${item.branch}_${item.rowIndex}`;
-        
         tbody.insertAdjacentHTML('beforeend', `
             <tr>
-                <td><span class="badge bg-secondary">${item.branch}</span></td>
+                <td><span class="badge bg-secondary opacity-75">${item.branch}</span></td>
                 <td>${item.date}</td>
                 <td class="text-success small">${item.type}</td>
                 <td class="fw-bold">${item.name}</td>
-                <td>
-                    <input type="date" class="form-control form-control-sm text-center" 
-                           id="val1_${rowId}" value="${item.val1}">
-                </td>
-                <td>
-                    <input type="text" class="form-control form-control-sm text-center" 
-                           id="val2_${rowId}" value="${item.val2}" placeholder="상태(완료 등)">
-                </td>
-                <td>
-                    <button class="btn btn-sm btn-success" onclick="saveSetupInfo('wired', '${item.branch}', '${item.rowIndex}', '${rowId}')">
-                        저장
-                    </button>
-                </td>
+                <td><input type="date" class="form-control form-control-sm text-center" id="val1_${rowId}" value="${item.val1}"></td>
+                <td><input type="text" class="form-control form-control-sm text-center" id="val2_${rowId}" value="${item.val2}" placeholder="설치상태"></td>
+                <td><button class="btn btn-sm btn-success" onclick="saveSetupInfo('wired', '${item.branch}', '${item.rowIndex}', '${rowId}')">저장</button></td>
             </tr>
         `);
     });
-}
-
-// 5. 공통 저장 함수
-async function saveSetupInfo(type, branch, rowIndex, rowId) {
-    const val1 = document.getElementById(`val1_${rowId}`).value;
-    const val2 = document.getElementById(`val2_${rowId}`).value;
-
-    if (!confirm("이대로 저장하시겠습니까?")) return;
-
-    try {
-        const d = await requestAPI({
-            action: "update_setup_info",
-            type: type,
-            branch: branch,
-            rowIndex: rowIndex,
-            val1: val1,
-            val2: val2
-        });
-
-        if (d.status === 'success') {
-            alert("저장되었습니다!");
-            // 목록 새로고침
-            if (type === 'card') loadCardSetupList();
-            else loadWiredSetupList();
-        } else {
-            alert("저장 실패: " + d.message);
-        }
-    } catch (e) {
-        alert("통신 오류가 발생했습니다.");
-    }
 }
