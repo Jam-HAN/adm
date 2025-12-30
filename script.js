@@ -207,6 +207,7 @@ function resetLogoutTimer() {
 function checkAdminMenu() {
     const saved = sessionStorage.getItem('dbphone_user');
     const menuPeriod = document.getElementById('menu_period_item');
+    const menuDbView = document.getElementById('menu_db_view_item'); // ★ 신규 DB 열람
     
     if (saved && menuPeriod) {
         const u = JSON.parse(saved);
@@ -261,6 +262,18 @@ function showSection(id) {
     // 5. 입력창 포커스
     const input = document.querySelector(`#${id} input`);
     if(input) input.focus();
+
+    if (id === 'section-db-view') {
+    // 오늘 날짜 구하기
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = String(now.getMonth() + 1).padStart(2, '0');
+    const d = String(now.getDate()).padStart(2, '0');
+    const today = `${y}-${m}-${d}`;
+    const first = `${y}-${m}-01`;
+
+    document.getElementById('view_start').value = first;
+    document.getElementById('view_end').value = today;
 }
 
 function showOpenSection(type) {
@@ -2486,4 +2499,98 @@ function saveSetupInfo(type, branch, rowIndex, rowId) {
             else alert("통신 오류가 발생했습니다.");
         });
     }
+}
+
+// ==========================================
+// [신규] 관리자 DB 열람 로직
+// ==========================================
+
+function searchDbView() {
+    const start = document.getElementById('view_start').value;
+    const end = document.getElementById('view_end').value;
+    const carrier = document.getElementById('view_carrier').value;
+    const actType = document.getElementById('view_act_type').value;
+    const contType = document.getElementById('view_cont_type').value;
+    
+    const container = document.getElementById('db_view_result');
+    container.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-dark"></div><div class="mt-2 small text-muted">데이터를 불러오는 중...</div></div>';
+
+    fetch(GAS_URL, {
+        method: "POST",
+        body: JSON.stringify({
+            action: "get_db_view",
+            start: start,
+            end: end,
+            carrier: carrier,
+            actType: actType,
+            contType: contType
+        })
+    })
+    .then(r => r.json())
+    .then(d => {
+        if (d.status === 'success') {
+            renderDbViewList(d.list);
+        } else {
+            container.innerHTML = `<div class="text-center text-danger py-5 small">${d.message}</div>`;
+        }
+    })
+    .catch(e => {
+        container.innerHTML = `<div class="text-center text-danger py-5 small">통신 오류 발생</div>`;
+    });
+}
+
+function renderDbViewList(list) {
+    const container = document.getElementById('db_view_result');
+    
+    if (!list || list.length === 0) {
+        container.innerHTML = `<div class="text-center text-muted py-5 small">
+            <i class="bi bi-exclamation-circle fs-1 d-block mb-3 opacity-25"></i>
+            검색 결과가 없습니다.
+        </div>`;
+        return;
+    }
+
+    // 결과 갯수 표시
+    const countHeader = `<div class="mb-2 small fw-bold text-end text-dark">총 ${list.length}건</div>`;
+
+    const html = list.map(item => {
+        // 통신사별 뱃지 색상
+        let badgeClass = 'bg-secondary';
+        const c = String(item.carrier);
+        if (c.includes('SK')) badgeClass = 'bg-danger';
+        else if (c.includes('KT')) badgeClass = 'bg-dark';
+        else if (c.includes('LG')) badgeClass = 'bg-pink-custom'; // CSS에 없으면 핫핑크색 처리 필요하나 일단 기본값
+
+        return `
+        <div class="glass-card p-3 mb-3 border shadow-sm bg-white">
+            <div class="d-flex justify-content-between align-items-center mb-2 border-bottom pb-2">
+                <span class="small fw-bold text-muted">${item.date}</span>
+                <span class="badge bg-light text-secondary border">${item.branch}</span>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <div>
+                    <span class="fw-bold text-dark fs-5 me-2">${item.name}</span>
+                    <span class="small text-muted">${item.birth}</span>
+                </div>
+                <span class="fw-bold text-primary small text-end text-truncate" style="max-width: 120px;">
+                    ${item.model}
+                </span>
+            </div>
+
+            <div class="mb-2">
+                <span class="badge bg-light text-dark border font-monospace">
+                    <i class="bi bi-telephone me-1"></i>${item.phone}
+                </span>
+            </div>
+
+            <div class="d-flex gap-1 mt-2">
+                <span class="badge ${badgeClass} bg-opacity-75">${item.carrier}</span>
+                <span class="badge bg-primary bg-opacity-75">${item.actType}</span>
+                <span class="badge bg-success bg-opacity-75">${item.contType}</span>
+            </div>
+        </div>`;
+    }).join('');
+
+    container.innerHTML = countHeader + html;
 }
