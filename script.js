@@ -2099,7 +2099,7 @@ function renderPeriodStats(data) {
             tbody.insertAdjacentHTML('beforeend', `
                 <tr class="table-light">
                     <td colspan="8" class="fw-bold text-start ps-4 text-dark" style="background-color: #f1f3f5;">
-                        <i class="bi bi-building me-2 text-primary"></i>${branch.branch}
+                        <span style="font-size: 1.1rem; margin-right: 6px;">🏢</span>${branch.branch}
                     </td>
                 </tr>
             `);
