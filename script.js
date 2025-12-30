@@ -1996,7 +1996,8 @@ async function loadSettlement(type) {
 
         const d = await requestAPI({
             action: "get_settlement_report",
-            userEmail: myEmail, 
+            userEmail: myEmail,
+            userName: currentUser, // ★ 핵심: 이름을 보내야 서버가 비교함
             startDate: start,
             endDate: end,
             viewType: viewType // ★ 서버로 전송
