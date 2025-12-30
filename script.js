@@ -1977,12 +1977,11 @@ async function loadSettlement(type) {
     let start, end, viewType = 'branch';
     
     if (type === 'period') {
-        // [수정] UI 요소 제어 로직 제거
         start = document.getElementById('sp_start').value;
         end = document.getElementById('sp_end').value;
         viewType = document.getElementById('sp_view_type').value;
 
-        // 테이블은 항상 보이고, 내용물만 로딩 바로 교체
+        // [초기화] 기존 데이터 및 합계 줄 삭제
         document.getElementById('sp_tbody').innerHTML = `
             <tr style="height: 450px;">
                 <td colspan="8" class="align-middle">
@@ -1991,11 +1990,13 @@ async function loadSettlement(type) {
                 </td>
             </tr>
         `;
-        document.getElementById('sp_tfoot').innerHTML = ''; 
+        document.getElementById('sp_tfoot').innerHTML = ''; // 잔상 제거
     } else {
-        // 직원별 로직 (기존 유지)
+        // 직원별 조회
         start = document.getElementById('ss_start').value;
         end = document.getElementById('ss_end').value;
+        
+        // [초기화] 기존 데이터 및 합계 줄 삭제 (★ 여기 추가됨)
         document.getElementById('ss_tbody').innerHTML = `
             <tr style="height: 450px;">
                 <td colspan="7" class="align-middle">
@@ -2004,13 +2005,16 @@ async function loadSettlement(type) {
                 </td>
             </tr>
         `;
+        // ★ [핵심] 조회 버튼 누르자마자 하단 합계 줄 삭제 -> 잔상 해결
+        const tfoot = document.getElementById('ss_tfoot');
+        if (tfoot) tfoot.innerHTML = ''; 
     }
 
     try {
         const userSession = JSON.parse(sessionStorage.getItem('dbphone_user'));
         const myEmail = userSession ? userSession.email : "";
         
-        // requestAPI 호출은 그대로
+        // 타임아웃 5분(300000ms) 설정된 requestAPI 호출
         const d = await requestAPI({
             action: "get_settlement_report",
             userEmail: myEmail, 
@@ -2024,27 +2028,33 @@ async function loadSettlement(type) {
             if (type === 'period') renderPeriodStats(d);
             else renderStaffStats(d);
         } else {
-            // 에러 처리
+            // 에러 표시
             const colspan = type === 'period' ? 8 : 7;
             const targetId = type === 'period' ? 'sp_tbody' : 'ss_tbody';
-            document.getElementById(targetId).innerHTML = `
-                <tr style="height: 450px;">
-                    <td colspan="${colspan}" class="text-danger align-middle fw-bold">
-                        <i class="bi bi-exclamation-triangle fs-1 d-block mb-3"></i>
-                        ${d.message}
-                    </td>
-                </tr>`;
+            const targetEl = document.getElementById(targetId);
+            if(targetEl) {
+                targetEl.innerHTML = `
+                    <tr style="height: 450px;">
+                        <td colspan="${colspan}" class="text-danger align-middle fw-bold">
+                            <i class="bi bi-exclamation-triangle fs-1 d-block mb-3"></i>
+                            ${d.message}
+                        </td>
+                    </tr>`;
+            }
         }
     } catch (e) {
         console.error(e);
         const colspan = type === 'period' ? 8 : 7;
         const targetId = type === 'period' ? 'sp_tbody' : 'ss_tbody';
-        document.getElementById(targetId).innerHTML = `
-            <tr style="height: 450px;">
-                <td colspan="${colspan}" class="text-danger align-middle fw-bold">
-                    통신 오류가 발생했습니다.
-                </td>
-            </tr>`;
+        const targetEl = document.getElementById(targetId);
+        if(targetEl) {
+            targetEl.innerHTML = `
+                <tr style="height: 450px;">
+                    <td colspan="${colspan}" class="text-danger align-middle fw-bold">
+                        통신 오류가 발생했습니다.
+                    </td>
+                </tr>`;
+        }
     }
 }
 
@@ -2100,11 +2110,6 @@ function renderPeriodStats(data) {
             let subMobile = 0, subWired = 0, subSettle = 0, subMargin = 0;
             let subDevice = 0, subUsed = 0, subGift = 0;
 
-            // 지점 이름 헤더
-            tbody.insertAdjacentHTML('beforeend', `
-                <tr class="table-light"><td colspan="8" class="fw-bold text-start ps-4 text-primary" style="background-color: #f8f9fa;">${branch.branch}</td></tr>
-            `);
-
             // 직원별 리스트 출력
             branch.list.forEach(item => {
                 // 전체 합계 누적
@@ -2142,7 +2147,7 @@ function renderPeriodStats(data) {
             // ★ [핵심] 지점 소계 행 출력
             tbody.insertAdjacentHTML('beforeend', `
                 <tr style="background-color: #eef2ff; border-top: 2px solid #dee2e6; border-bottom: 2px solid #dee2e6;">
-                    <td class="text-primary fw-bold text-end pe-4">└ ${branch.branch} 소계</td>
+                    <td class="text-primary fw-bold text-end pe-4">${branch.branch}</td>
                     <td class="text-primary fw-bold">${subMobile}</td>
                     <td class="text-primary fw-bold">${subWired}</td>
                     <td class="text-end pe-3 text-primary fw-bold">${fmt(subDevice)}</td>
@@ -2200,10 +2205,12 @@ function renderStaffStats(data) {
     const tbody = document.getElementById('ss_tbody');
     const tfoot = document.getElementById('ss_tfoot');
 
+    if (!tbody || !tfoot) return; // 안전장치
+
     tbody.innerHTML = "";
     tfoot.innerHTML = "";
 
-    if (data.staffData.length === 0) {
+    if (!data.staffData || data.staffData.length === 0) {
         tbody.innerHTML = `
             <tr style="height: 450px;">
                 <td colspan="7" class="text-muted align-middle">
@@ -2215,17 +2222,28 @@ function renderStaffStats(data) {
     }
 
     const fmt = (n) => Number(n).toLocaleString();
-    let totalMobile = 0, totalMargin = 0;
+    
+    // ★ [핵심] 항목별 합계 변수 따로 선언
+    let sumMobile = 0; // 신규/기변
+    let sumUsed = 0;   // 중고
+    let sumCopper = 0; // 동시판매
+    let sumRenew = 0;  // 약정갱신
+    let sumSingle = 0; // 단품
+    let sumMargin = 0; // 총 마진
 
     data.staffData.forEach(item => {
-        totalMobile += (item.cnt_mobile + item.cnt_used);
-        totalMargin += item.margin;
+        // 각각 누적
+        sumMobile += item.cnt_mobile;
+        sumUsed += item.cnt_used;
+        sumCopper += item.cnt_copper;
+        sumRenew += item.cnt_renew;
+        sumSingle += item.cnt_single;
+        sumMargin += item.margin;
 
-        // ★ [수정] 복잡한 조건문 삭제
-        // 서버에서 이미 남의 돈은 0으로 보냈으니, 그냥 "0이면 빈칸, 아니면 표시" 하면 끝!
+        // 마진 표시 (0원이면 빈칸)
         let marginDisplay = (item.margin === 0) 
-            ? ""  // 0원이면 빈칸 (남의 실적 or 내 실적 0원)
-            : `<span class="text-danger fw-bold">${fmt(item.margin)}</span>`; // 0원 아니면 표시
+            ? "" 
+            : `<span class="text-danger fw-bold">${fmt(item.margin)}</span>`;
 
         tbody.insertAdjacentHTML('beforeend', `
             <tr>
@@ -2240,13 +2258,16 @@ function renderStaffStats(data) {
         `);
     });
 
-    // 하단 합계
+    // ★ [핵심] 하단 합계: 각 컬럼에 맞춰서 값 출력
     tfoot.innerHTML = `
-        <tr class="border-top border-success text-success">
-            <td>합계</td>
-            <td colspan="2">${totalMobile}</td>
-            <td colspan="3" class="small text-muted">유선 제외</td>
-            <td class="text-end pe-4 fw-bold" style="font-size:1.1rem;">${fmt(totalMargin)}</td>
+        <tr class="border-top border-success text-success bg-light">
+            <td class="fw-bold">합계</td>
+            <td class="fw-bold">${sumMobile}</td>
+            <td class="fw-bold">${sumUsed}</td>
+            <td class="fw-bold">${sumCopper}</td>
+            <td class="fw-bold">${sumRenew}</td>
+            <td class="fw-bold">${sumSingle}</td>
+            <td class="text-end pe-4 fw-bold" style="font-size:1.1rem;">${fmt(sumMargin)}</td>
         </tr>
     `;
 }
