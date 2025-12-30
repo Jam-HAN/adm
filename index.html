@@ -686,38 +686,33 @@
                     <h5 class="fw-bold mb-4 text-primary"><i class="bi bi-calendar-check"></i> 기간별 매출 집계</h5>
                     
                     <div class="row g-2 mb-4 align-items-end">
-                        <div class="col-4"> <label class="small text-muted fw-bold mb-1">보기 방식</label>
-                            <select class="form-select fw-bold border-primary text-primary py-1" id="sp_view_type" style="height: 38px;">
+                        <div class="col-4">
+                            <label class="small text-muted fw-bold">보기 방식</label>
+                            <select class="form-select fw-bold border-primary text-primary" id="sp_view_type">
                                 <option value="branch" selected>🏢 지점별 보기</option>
                                 <option value="carrier">📊 거래처별 보기</option>
                             </select>
                         </div>
                         <div class="col-3">
-                            <label class="small text-muted fw-bold mb-1">시작일</label>
-                            <input type="date" id="sp_start" class="form-control" style="height: 38px;">
+                            <label class="small text-muted fw-bold">시작일</label>
+                            <input type="date" id="sp_start" class="form-control">
                         </div>
                         <div class="col-3">
-                            <label class="small text-muted fw-bold mb-1">종료일</label>
-                            <input type="date" id="sp_end" class="form-control" style="height: 38px;">
+                            <label class="small text-muted fw-bold">종료일</label>
+                            <input type="date" id="sp_end" class="form-control">
                         </div>
-                        <div class="col-2">
-                            <button class="btn btn-primary w-100 fw-bold d-flex align-items-center justify-content-center p-0" onclick="loadSettlement('period')" style="height: 38px;">조회</button>
+                        <div class="col-3">
+                            <button class="btn btn-primary w-100 fw-bold" onclick="loadSettlement('period')">조회</button>
                         </div>
                     </div>
             
                     <div id="sp_result_area" class="table-responsive w-100">
                         <table class="table table-hover align-middle text-center small border w-100" style="table-layout: fixed;">
                             <colgroup>
-                                <col style="width: 14%;">
-                                <col style="width: 7%;">
-                                <col style="width: 7%;">
-                                <col style="width: 12%;">
-                                <col style="width: 12%;">
-                                <col style="width: 12%;">
-                                <col style="width: 16%;">
-                                <col style="width: 20%;">
+                                <col style="width: 14%;"> <col style="width: 7%;"> <col style="width: 7%;"> 
+                                <col style="width: 12%;"> <col style="width: 12%;"> <col style="width: 12%;"> 
+                                <col style="width: 16%;"> <col style="width: 20%;">
                             </colgroup>
-            
                             <thead class="table-primary">
                                 <tr>
                                     <th rowspan="2" class="align-middle border-bottom-0">구분</th>
@@ -734,7 +729,6 @@
                                     <th class="bg-white text-muted" style="font-size:0.8rem;">상품권</th>
                                 </tr>
                             </thead>
-            
                             <tbody id="sp_tbody">
                                 <tr style="height: 450px;">
                                     <td colspan="8" class="text-muted align-middle">
@@ -743,7 +737,6 @@
                                     </td>
                                 </tr>
                             </tbody>
-                            
                             <tfoot class="table-light fw-bold" id="sp_tfoot"></tfoot>
                         </table>
                     </div>
