@@ -2254,18 +2254,15 @@ function renderStaffStats(data) {
     `;
 }
 
-// ==========================================
-// [제휴카드 / 유선설치] 검색 및 저장 로직
-// ==========================================
+// [script.js] 맨 아래 추가
 
-// 0. 날짜 자동 세팅 (화면 열릴 때 호출됨)
+// 0. 초기화: 날짜 기본값 세팅 (이번달 1일 ~ 오늘)
 function initSetupDates() {
     const today = new Date();
     const yyyy = today.getFullYear();
     const mm = String(today.getMonth() + 1).padStart(2, '0');
     const dd = String(today.getDate()).padStart(2, '0');
     
-    // 기본값: 이번 달 1일 ~ 오늘
     const firstDay = `${yyyy}-${mm}-01`;
     const todayStr = `${yyyy}-${mm}-${dd}`;
 
@@ -2289,7 +2286,6 @@ async function searchSetupList(type) {
     const keyword = document.getElementById(keyId).value;
     const tbody = document.getElementById(tbodyId);
 
-    // 로딩 표시
     tbody.innerHTML = `<tr><td colspan="7"><div class="spinner-border spinner-border-sm text-secondary"></div> 검색 중...</td></tr>`;
 
     try {
@@ -2313,22 +2309,21 @@ async function searchSetupList(type) {
     }
 }
 
-// 2. 제휴카드 테이블 그리기 (세이브/자동이체)
+// 2. 제휴카드 테이블 그리기
 function renderCardSetupTable(list) {
     const tbody = document.getElementById('card_setup_tbody');
     tbody.innerHTML = "";
 
     if (list.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" class="text-muted py-5">검색 조건에 맞는 미처리 건이 없습니다. (모두 등록됨 ✨)</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="7" class="text-muted py-5">검색 조건에 맞는 미처리 건이 없습니다. (모두 완료! ✨)</td></tr>`;
         return;
     }
 
     list.forEach(item => {
         const rowId = `card_${item.branch}_${item.rowIndex}`;
-        
-        // ★ 날짜 포맷팅 (YYYY-MM-DD 형태로 변환해야 input type="date"에 들어감)
-        const val1 = item.val1 ? item.val1.substring(0, 10) : "";
-        const val2 = item.val2 ? item.val2.substring(0, 10) : "";
+        // 날짜 포맷 (YYYY-MM-DD) 추출
+        const v1 = item.val1 ? String(item.val1).substring(0, 10) : "";
+        const v2 = item.val2 ? String(item.val2).substring(0, 10) : "";
 
         tbody.insertAdjacentHTML('beforeend', `
             <tr>
@@ -2336,42 +2331,28 @@ function renderCardSetupTable(list) {
                 <td>${item.date}</td>
                 <td class="fw-bold">${item.name}</td>
                 <td class="text-primary small">${item.cardName}</td>
-                
-                <td>
-                    <input type="date" class="form-control form-control-sm text-center" 
-                           id="val1_${rowId}" value="${val1}">
-                </td>
-                
-                <td>
-                    <input type="date" class="form-control form-control-sm text-center" 
-                           id="val2_${rowId}" value="${val2}">
-                </td>
-                
-                <td>
-                    <button class="btn btn-sm btn-primary" onclick="saveSetupInfo('card', '${item.branch}', '${item.rowIndex}', '${rowId}')">
-                        저장
-                    </button>
-                </td>
+                <td><input type="date" class="form-control form-control-sm text-center" id="val1_${rowId}" value="${v1}"></td>
+                <td><input type="date" class="form-control form-control-sm text-center" id="val2_${rowId}" value="${v2}"></td>
+                <td><button class="btn btn-sm btn-primary" onclick="saveSetupInfo('card', '${item.branch}', '${item.rowIndex}', '${rowId}')">저장</button></td>
             </tr>
         `);
     });
 }
 
-// 3. 유선설치 테이블 그리기 (예정일/설치일)
+// 3. 유선설치 테이블 그리기
 function renderWiredSetupTable(list) {
     const tbody = document.getElementById('wired_setup_tbody');
     tbody.innerHTML = "";
 
     if (list.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" class="text-muted py-5">검색 조건에 맞는 미처리 건이 없습니다. (모두 설치됨 ✨)</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="7" class="text-muted py-5">검색 조건에 맞는 미처리 건이 없습니다. (모두 완료! ✨)</td></tr>`;
         return;
     }
 
     list.forEach(item => {
         const rowId = `wired_${item.branch}_${item.rowIndex}`;
-        
-        const val1 = item.val1 ? item.val1.substring(0, 10) : "";
-        const val2 = item.val2 ? item.val2.substring(0, 10) : "";
+        const v1 = item.val1 ? String(item.val1).substring(0, 10) : "";
+        const v2 = item.val2 ? String(item.val2).substring(0, 10) : "";
 
         tbody.insertAdjacentHTML('beforeend', `
             <tr>
@@ -2379,23 +2360,39 @@ function renderWiredSetupTable(list) {
                 <td>${item.date}</td>
                 <td class="text-success small">${item.type}</td>
                 <td class="fw-bold">${item.name}</td>
-                
-                <td>
-                    <input type="date" class="form-control form-control-sm text-center" 
-                           id="val1_${rowId}" value="${val1}">
-                </td>
-                
-                <td>
-                    <input type="date" class="form-control form-control-sm text-center" 
-                           id="val2_${rowId}" value="${val2}">
-                </td>
-                
-                <td>
-                    <button class="btn btn-sm btn-success" onclick="saveSetupInfo('wired', '${item.branch}', '${item.rowIndex}', '${rowId}')">
-                        저장
-                    </button>
-                </td>
+                <td><input type="date" class="form-control form-control-sm text-center" id="val1_${rowId}" value="${v1}"></td>
+                <td><input type="date" class="form-control form-control-sm text-center" id="val2_${rowId}" value="${v2}"></td>
+                <td><button class="btn btn-sm btn-success" onclick="saveSetupInfo('wired', '${item.branch}', '${item.rowIndex}', '${rowId}')">저장</button></td>
             </tr>
         `);
     });
+}
+
+// 4. 저장 함수
+async function saveSetupInfo(type, branch, rowIndex, rowId) {
+    const val1 = document.getElementById(`val1_${rowId}`).value;
+    const val2 = document.getElementById(`val2_${rowId}`).value;
+
+    if (!confirm("입력한 내용으로 저장하시겠습니까?")) return;
+
+    try {
+        const d = await requestAPI({
+            action: "update_setup_info",
+            type: type,
+            branch: branch,
+            rowIndex: rowIndex,
+            val1: val1,
+            val2: val2
+        });
+
+        if (d.status === 'success') {
+            alert("저장되었습니다!");
+            // 목록 갱신
+            searchSetupList(type);
+        } else {
+            alert("저장 실패: " + d.message);
+        }
+    } catch (e) {
+        alert("통신 오류가 발생했습니다.");
+    }
 }
