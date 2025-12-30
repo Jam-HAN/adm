@@ -2182,11 +2182,13 @@ function renderStaffStats(data) {
     const tbody = document.getElementById('ss_tbody');
     const tfoot = document.getElementById('ss_tfoot');
 
-    if (!tbody || !tfoot) return; // 안전장치
+    // 안전장치
+    if (!tbody || !tfoot) return;
 
     tbody.innerHTML = "";
     tfoot.innerHTML = "";
 
+    // 데이터 없음
     if (!data.staffData || data.staffData.length === 0) {
         tbody.innerHTML = `
             <tr style="height: 450px;">
@@ -2200,16 +2202,10 @@ function renderStaffStats(data) {
 
     const fmt = (n) => Number(n).toLocaleString();
     
-    // ★ [핵심] 항목별 합계 변수 따로 선언
-    let sumMobile = 0; // 신규/기변
-    let sumUsed = 0;   // 중고
-    let sumCopper = 0; // 동시판매
-    let sumRenew = 0;  // 약정갱신
-    let sumSingle = 0; // 단품
-    let sumMargin = 0; // 총 마진
+    // 항목별 합계 변수
+    let sumMobile = 0, sumUsed = 0, sumCopper = 0, sumRenew = 0, sumSingle = 0, sumMargin = 0;
 
     data.staffData.forEach(item => {
-        // 각각 누적
         sumMobile += item.cnt_mobile;
         sumUsed += item.cnt_used;
         sumCopper += item.cnt_copper;
@@ -2217,17 +2213,22 @@ function renderStaffStats(data) {
         sumSingle += item.cnt_single;
         sumMargin += item.margin;
 
-        // 마진 표시 (0원이면 빈칸)
+        // 마진 표시
         let marginDisplay = (item.margin === 0) 
             ? "" 
             : `<span class="text-danger fw-bold">${fmt(item.margin)}</span>`;
 
+        // ★ [핵심 수정] 배경색(bg-opacity)과 글자색(text-primary/success) 복구
         tbody.insertAdjacentHTML('beforeend', `
             <tr>
                 <td class="fw-bold">${item.name}</td>
-                <td>${item.cnt_mobile}</td>
+                
+                <td class="fw-bold text-primary bg-primary bg-opacity-10">${item.cnt_mobile}</td>
+                
                 <td>${item.cnt_used}</td>
-                <td class="text-muted">${item.cnt_copper}</td>
+                
+                <td class="fw-bold text-success bg-success bg-opacity-10">${item.cnt_copper}</td>
+                
                 <td class="text-muted">${item.cnt_renew}</td>
                 <td class="text-muted">${item.cnt_single}</td>
                 <td class="text-end pe-4">${marginDisplay}</td>
@@ -2235,16 +2236,20 @@ function renderStaffStats(data) {
         `);
     });
 
-    // ★ [핵심] 하단 합계: 각 컬럼에 맞춰서 값 출력
+    // 하단 합계 (합계 줄도 색상 깔맞춤)
     tfoot.innerHTML = `
         <tr class="border-top border-success text-success bg-light">
-            <td class="fw-bold">합계</td>
-            <td class="fw-bold">${sumMobile}</td>
-            <td class="fw-bold">${sumUsed}</td>
-            <td class="fw-bold">${sumCopper}</td>
-            <td class="fw-bold">${sumRenew}</td>
-            <td class="fw-bold">${sumSingle}</td>
-            <td class="text-end pe-4 fw-bold" style="font-size:1.1rem;">${fmt(sumMargin)}</td>
+            <td class="fw-bold text-dark">합계</td>
+            
+            <td class="fw-bold text-primary bg-primary bg-opacity-10">${sumMobile}</td>
+            
+            <td class="fw-bold text-dark">${sumUsed}</td>
+            
+            <td class="fw-bold text-success bg-success bg-opacity-10">${sumCopper}</td>
+            
+            <td class="fw-bold text-dark">${sumRenew}</td>
+            <td class="fw-bold text-dark">${sumSingle}</td>
+            <td class="text-end pe-4 fw-bold text-danger" style="font-size:1.1rem;">${fmt(sumMargin)}</td>
         </tr>
     `;
 }
