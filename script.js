@@ -219,6 +219,7 @@ function showSection(id) {
     if (id === 'section-search-all') initHistoryDates();
     if (id === 'section-return-usedphone') initSpecialDates('usedphone');
     if (id === 'section-receive-gift') initSpecialDates('gift');
+    if (id === 'section-settlement') initSpecialDates('settlement');
     // ---------------------------------------------------------
     
     // 3. [핵심 수정] 입고 화면(section-in) 진입 시 로직 개선
@@ -1994,7 +1995,7 @@ async function loadSettlement(type) {
     }
 }
 
-// [script.js 수정] 3. [기간별 집계] 렌더링 (상세 컬럼 추가)
+// [script.js 수정] 3. [기간별 집계] 렌더링 (지점별 그룹화 + 소계)
 function renderPeriodStats(data) {
     const msgEl = document.getElementById('sp_msg');
     const resultEl = document.getElementById('sp_result_area');
@@ -2007,56 +2008,93 @@ function renderPeriodStats(data) {
         return;
     }
 
-    if (data.periodData.length === 0) {
-        msgEl.innerHTML = '데이터가 없습니다.';
+    // 데이터가 전체적으로 없는 경우
+    const hasData = data.periodData.some(b => b.list.length > 0);
+    if (!hasData) {
+        msgEl.innerHTML = '해당 기간에 데이터가 없습니다.';
         resultEl.style.display = 'none';
         msgEl.style.display = 'block';
         return;
     }
 
     let html = '';
-    // 합계 변수들
-    let sum = { mCount:0, wCount:0, device:0, used:0, gift:0, settle:0, margin:0 };
+    let grandTotal = { mCount:0, wCount:0, device:0, used:0, gift:0, settle:0, margin:0 };
+    const fmt = n => n === 0 ? '<span class="text-muted">-</span>' : Number(n).toLocaleString();
 
-    data.periodData.forEach(row => {
-        sum.mCount += row.mCount;
-        sum.wCount += row.wCount;
-        sum.device += row.deviceSum;
-        sum.used += row.usedPhone;
-        sum.gift += row.gift;
-        sum.settle += row.settlement;
-        sum.margin += row.margin;
+    // ★ 지점별 루프 (장지 -> 명일 순)
+    data.periodData.forEach(branchData => {
+        const bName = branchData.branch;
+        const list = branchData.list;
 
-        // 0원은 '-'로 표시하여 깔끔하게
-        const fmt = n => n === 0 ? '<span class="text-muted">-</span>' : Number(n).toLocaleString();
+        if (list.length === 0) return; // 데이터 없는 지점 건너뜀
 
+        // [1] 지점 헤더 (구분선 역할)
         html += `
-            <tr>
-                <td class="fw-bold text-start ps-3 text-truncate" style="max-width:100px;">${row.name}</td>
-                <td>${row.mCount > 0 ? row.mCount : '-'}</td>
-                <td>${row.wCount > 0 ? row.wCount : '-'}</td>
-                <td class="text-secondary">${fmt(row.deviceSum)}</td>
-                <td class="text-secondary">${fmt(row.usedPhone)}</td>
-                <td class="text-secondary">${fmt(row.gift)}</td>
-                <td class="text-dark">${fmt(row.settlement)}</td>
-                <td class="fw-bold text-primary">${fmt(row.margin)}</td>
+            <tr class="table-light border-top border-bottom border-2">
+                <td colspan="8" class="text-start fw-bold ps-3 text-dark">
+                    <i class="bi bi-shop me-2"></i>${bName}
+                </td>
             </tr>
         `;
+
+        let subTotal = { mCount:0, wCount:0, device:0, used:0, gift:0, settle:0, margin:0 };
+
+        // [2] 거래처별 데이터 출력
+        list.forEach(row => {
+            // 누적
+            subTotal.mCount += row.mCount; subTotal.wCount += row.wCount;
+            subTotal.device += row.deviceSum; subTotal.used += row.usedPhone;
+            subTotal.gift += row.gift; subTotal.settle += row.settlement;
+            subTotal.margin += row.margin;
+
+            html += `
+                <tr>
+                    <td class="text-start ps-4 text-truncate" style="max-width:100px;">${row.name}</td>
+                    <td>${row.mCount > 0 ? row.mCount : '-'}</td>
+                    <td>${row.wCount > 0 ? row.wCount : '-'}</td>
+                    <td class="text-secondary small">${fmt(row.deviceSum)}</td>
+                    <td class="text-secondary small">${fmt(row.usedPhone)}</td>
+                    <td class="text-secondary small">${fmt(row.gift)}</td>
+                    <td class="text-dark">${fmt(row.settlement)}</td>
+                    <td class="fw-bold text-primary">${fmt(row.margin)}</td>
+                </tr>
+            `;
+        });
+
+        // [3] 지점 소계 (Subtotal)
+        html += `
+            <tr class="bg-light fw-bold" style="border-top: 1px double #dee2e6;">
+                <td class="text-end pe-3 text-secondary">└ ${bName} 소계</td>
+                <td class="text-secondary">${subTotal.mCount}</td>
+                <td class="text-secondary">${subTotal.wCount}</td>
+                <td class="text-secondary small">${fmt(subTotal.device)}</td>
+                <td class="text-secondary small">${fmt(subTotal.used)}</td>
+                <td class="text-secondary small">${fmt(subTotal.gift)}</td>
+                <td class="text-dark">${fmt(subTotal.settle)}</td>
+                <td class="text-primary">${fmt(subTotal.margin)}</td>
+            </tr>
+        `;
+
+        // 전체 합계 누적
+        grandTotal.mCount += subTotal.mCount; grandTotal.wCount += subTotal.wCount;
+        grandTotal.device += subTotal.device; grandTotal.used += subTotal.used;
+        grandTotal.gift += subTotal.gift; grandTotal.settle += subTotal.settle;
+        grandTotal.margin += subTotal.margin;
     });
 
     tbody.innerHTML = html;
 
-    // 합계 줄
+    // [4] 전체 총계 (Grand Total)
     tfoot.innerHTML = `
-        <tr>
-            <td>합계</td>
-            <td>${sum.mCount}</td>
-            <td>${sum.wCount}</td>
-            <td>${sum.device.toLocaleString()}</td>
-            <td>${sum.used.toLocaleString()}</td>
-            <td>${sum.gift.toLocaleString()}</td>
-            <td>${sum.settle.toLocaleString()}</td>
-            <td class="text-primary">${sum.margin.toLocaleString()}</td>
+        <tr class="table-dark">
+            <td>전체 합계</td>
+            <td>${grandTotal.mCount}</td>
+            <td>${grandTotal.wCount}</td>
+            <td>${grandTotal.device.toLocaleString()}</td>
+            <td>${grandTotal.used.toLocaleString()}</td>
+            <td>${grandTotal.gift.toLocaleString()}</td>
+            <td>${grandTotal.settle.toLocaleString()}</td>
+            <td class="text-warning">${grandTotal.margin.toLocaleString()}</td>
         </tr>
     `;
 
