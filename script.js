@@ -1985,9 +1985,19 @@ async function loadSettlement(type) {
         document.getElementById('sp_msg').style.display = 'block';
         document.getElementById('sp_msg').innerHTML = '<div class="spinner-border text-primary"></div>';
     } else {
+        // [★ 핵심 변경] 직원별 조회 시: 표 구조 유지하고 내용만 로딩바 삽입
         start = document.getElementById('ss_start').value;
         end = document.getElementById('ss_end').value;
-        document.getElementById('ss_tbody').innerHTML = '<tr><td colspan="4" class="py-4"><div class="spinner-border text-success"></div></td></tr>';
+        
+        // colspan="7"은 테이블 칸 수에 맞춘 것
+        document.getElementById('ss_tbody').innerHTML = `
+            <tr>
+                <td colspan="7" class="py-5">
+                    <div class="spinner-border text-success mb-2"></div>
+                    <div class="text-muted small">데이터를 불러오는 중입니다...</div>
+                </td>
+            </tr>
+        `;
     }
 
     try {
