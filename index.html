@@ -661,19 +661,102 @@
             </div>
 
             
-            <div class="collapse show" id="submenu-opening">
-                <ul class="nav flex-column ms-3">
-                    <li class="nav-item">
-                        <a class="nav-link text-white opacity-75" href="#" onclick="showSection('section-card-setup'); loadCardSetupList();">
-                            <i class="bi bi-credit-card me-2"></i>제휴카드 관리
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-white opacity-75" href="#" onclick="showSection('section-wired-setup'); loadWiredSetupList();">
-                            <i class="bi bi-router me-2"></i>유선설치 관리
-                        </a>
-                    </li>
-                </ul>
+            <div id="section-card-setup" class="section-view">
+                <div class="glass-card p-4">
+                    <h5 class="fw-bold mb-4 text-primary"><i class="bi bi-credit-card"></i> 제휴카드 관리 (미처리)</h5>
+                    
+                    <div class="row g-2 mb-3">
+                        <div class="col-12">
+                            <select id="search_card_branch" class="form-select form-select-sm fw-bold text-primary">
+                                <option value="전체">🏢 전체 지점 보기</option>
+                                <option value="장지 본점">장지 본점</option>
+                                <option value="명일 직영점">명일 직영점</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-6">
+                            <input type="date" class="form-control form-control-sm" id="search_card_start">
+                        </div>
+                        <div class="col-6">
+                            <input type="date" class="form-control form-control-sm" id="search_card_end">
+                        </div>
+                        
+                        <div class="col-12">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="search_card_keyword" placeholder="고객명, 연락처" onkeydown="if(event.key==='Enter') searchSetupList('card')">
+                                <button class="btn btn-primary" onclick="searchSetupList('card')">조회</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="table-responsive" style="max-height: 60vh; overflow-y: auto;">
+                        <table class="table table-hover align-middle text-center small mb-0">
+                            <thead class="table-light sticky-top">
+                                <tr>
+                                    <th>지점</th>
+                                    <th>개통일</th>
+                                    <th>고객명</th>
+                                    <th>카드명</th>
+                                    <th style="width: 120px;">발급상태(BG)</th>
+                                    <th style="width: 120px;">처리결과(BH)</th>
+                                    <th>저장</th>
+                                </tr>
+                            </thead>
+                            <tbody id="card_setup_tbody">
+                                <tr><td colspan="7" class="text-center text-muted py-5">조회 버튼을 눌러주세요.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="section-wired-setup" class="section-view">
+                <div class="glass-card p-4">
+                    <h5 class="fw-bold mb-4 text-success"><i class="bi bi-router"></i> 유선설치 관리 (미처리)</h5>
+                    
+                    <div class="row g-2 mb-3">
+                        <div class="col-12">
+                            <select id="search_wired_branch" class="form-select form-select-sm fw-bold text-success">
+                                <option value="전체">🏢 전체 지점 보기</option>
+                                <option value="장지 본점">장지 본점</option>
+                                <option value="명일 직영점">명일 직영점</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-6">
+                            <input type="date" class="form-control form-control-sm" id="search_wired_start">
+                        </div>
+                        <div class="col-6">
+                            <input type="date" class="form-control form-control-sm" id="search_wired_end">
+                        </div>
+                        
+                        <div class="col-12">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="search_wired_keyword" placeholder="고객명, 연락처" onkeydown="if(event.key==='Enter') searchSetupList('wired')">
+                                <button class="btn btn-success" onclick="searchSetupList('wired')">조회</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="table-responsive" style="max-height: 60vh; overflow-y: auto;">
+                        <table class="table table-hover align-middle text-center small mb-0">
+                            <thead class="table-light sticky-top">
+                                <tr>
+                                    <th>지점</th>
+                                    <th>접수일</th>
+                                    <th>유형</th>
+                                    <th>고객명</th>
+                                    <th style="width: 140px;">설치예정일(BI)</th>
+                                    <th style="width: 100px;">상태(BJ)</th>
+                                    <th>저장</th>
+                                </tr>
+                            </thead>
+                            <tbody id="wired_setup_tbody">
+                                <tr><td colspan="7" class="text-center text-muted py-5">조회 버튼을 눌러주세요.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
             
             <div class="modal fade" id="modal-special-update" tabindex="-1">
