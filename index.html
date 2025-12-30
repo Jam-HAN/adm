@@ -735,26 +735,25 @@
             </div>
             
             <div id="section-settlement-staff" class="section-view">
-                <div class="glass-card p-4 w-100 d-block">
+                <div class="glass-card p-4 w-100 d-block" style="min-height: 600px;">
                     <h5 class="fw-bold mb-4 text-success"><i class="bi bi-people"></i> 직원별 실적 현황</h5>
                     
-                    <div class="row g-2 mb-4">
+                    <div class="row g-2 mb-4 align-items-end">
                         <div class="col-5">
-                            <label class="small text-muted fw-bold">시작일</label>
-                            <input type="date" id="ss_start" class="form-control form-control-sm">
+                            <label class="small text-muted fw-bold mb-1">시작일</label>
+                            <input type="date" id="ss_start" class="form-control" style="height: 38px;">
                         </div>
                         <div class="col-5">
-                            <label class="small text-muted fw-bold">종료일</label>
-                            <input type="date" id="ss_end" class="form-control form-control-sm">
+                            <label class="small text-muted fw-bold mb-1">종료일</label>
+                            <input type="date" id="ss_end" class="form-control" style="height: 38px;">
                         </div>
                         <div class="col-2">
-                            <button class="btn btn-success btn-sm w-100 fw-bold" onclick="loadSettlement('staff')">조회</button>
+                            <button class="btn btn-success w-100 fw-bold" onclick="loadSettlement('staff')" style="height: 38px;">조회</button>
                         </div>
                     </div>
             
                     <div class="table-responsive w-100">
                         <table class="table table-hover align-middle text-center small border w-100" style="table-layout: fixed;">
-                            
                             <colgroup>
                                 <col style="width: 15%;"> 
                                 <col style="width: 13%;"> 
@@ -782,7 +781,12 @@
                             </thead>
                             
                             <tbody id="ss_tbody">
-                                <tr><td colspan="7" class="text-muted py-5">조회 버튼을 눌러주세요.</td></tr>
+                                <tr style="height: 450px;">
+                                    <td colspan="7" class="text-muted align-middle">
+                                        <i class="bi bi-search fs-1 d-block mb-3 opacity-25"></i>
+                                        조회 버튼을 눌러주세요.
+                                    </td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
