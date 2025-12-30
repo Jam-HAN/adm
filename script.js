@@ -203,19 +203,25 @@ function resetLogoutTimer() {
     }
 }
 
-// [신규 함수] 관리자가 아니면 '기간별 집계' 메뉴 숨김
+//  관리자 메뉴 숨김/표시 (기간별 집계 + DB 열람 둘 다 제어)
 function checkAdminMenu() {
     const saved = sessionStorage.getItem('dbphone_user');
-    const menuPeriod = document.getElementById('menu_period_item');
-    const menuDbView = document.getElementById('menu_db_view_item'); // ★ 신규 DB 열람
     
-    if (saved && menuPeriod) {
+    // 제어할 메뉴 ID들 가져오기
+    const menuPeriod = document.getElementById('menu_period_item'); // 기간별 정산
+    const menuDbView = document.getElementById('menu_db_view_item'); // DB 열람
+    
+    if (saved) {
         const u = JSON.parse(saved);
-        if (u.isAdmin) {
-            menuPeriod.style.display = 'block'; // 관리자: 보임
-        } else {
-            menuPeriod.style.display = 'none';  // 직원: 안 보임
-        }
+        
+        // 관리자면 'block'(보임), 직원이면 'none'(숨김)
+        const displayVal = u.isAdmin ? 'block' : 'none';
+        
+        // 1. 기간별 집계 제어 (직원은 안 보임)
+        if (menuPeriod) menuPeriod.style.display = displayVal;
+        
+        // 2. DB 열람 제어 (직원은 안 보임)
+        if (menuDbView) menuDbView.style.display = displayVal;
     }
 }
 
