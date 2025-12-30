@@ -2171,47 +2171,55 @@ function renderPeriodStats(data) {
 // [script.js 수정] 4. 직원별 집계 렌더링 (5단 상세 분류)
 function renderStaffStats(data) {
     const tbody = document.getElementById('ss_tbody');
-    const isAdmin = data.isAdmin;
-    
+    const tfoot = document.getElementById('ss_tfoot');
+
+    tbody.innerHTML = "";
+    tfoot.innerHTML = "";
+
     if (data.staffData.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" class="text-muted py-4">실적이 없습니다.</td></tr>';
+        tbody.innerHTML = `
+            <tr style="height: 450px;">
+                <td colspan="7" class="text-muted align-middle">
+                    <i class="bi bi-exclamation-circle fs-1 d-block mb-3 opacity-25"></i>
+                    실적이 없습니다.
+                </td>
+            </tr>`;
         return;
     }
 
-    let html = '';
-    data.staffData.forEach(row => {
-        // 직원인 경우 본인 데이터만 표시
-        if (!isAdmin && row.name !== currentUser) return;
+    const fmt = (n) => Number(n).toLocaleString();
+    let totalMobile = 0, totalMargin = 0;
 
-        // 관리자면 금액 표시, 직원이면 자물쇠
-        const marginStr = isAdmin ? Number(row.margin).toLocaleString() : '<span class="text-muted text-xs">🔒</span>';
-        const marginClass = isAdmin ? "text-danger fw-bold" : "";
+    data.staffData.forEach(item => {
+        totalMobile += (item.cnt_mobile + item.cnt_used);
+        totalMargin += item.margin;
 
-        // 0건이면 '-' 로 표시해서 깔끔하게
-        const fmt = n => n > 0 ? `<span class="fw-bold text-dark">${n}</span>` : '<span class="text-muted text-xs">-</span>';
+        // ★ [수정] 복잡한 조건문 삭제
+        // 서버에서 이미 남의 돈은 0으로 보냈으니, 그냥 "0이면 빈칸, 아니면 표시" 하면 끝!
+        let marginDisplay = (item.margin === 0) 
+            ? ""  // 0원이면 빈칸 (남의 실적 or 내 실적 0원)
+            : `<span class="text-danger fw-bold">${fmt(item.margin)}</span>`; // 0원 아니면 표시
 
-        // 5가지 상세 카운트
-        const cellMobile = fmt(row.cnt_mobile);
-        const cellUsed = fmt(row.cnt_used);
-        const cellCopper = fmt(row.cnt_copper);
-        const cellRenew = fmt(row.cnt_renew);
-        const cellSingle = fmt(row.cnt_single);
-
-        html += `
+        tbody.insertAdjacentHTML('beforeend', `
             <tr>
-                <td class="fw-bold">${row.name}</td>
-                <td class="bg-primary bg-opacity-10">${cellMobile}</td>
-                <td>${cellUsed}</td>
-                <td class="bg-success bg-opacity-10">${cellCopper}</td>
-                <td>${cellRenew}</td>
-                <td>${cellSingle}</td>
-                <td class="${marginClass}">${marginStr}</td>
+                <td class="fw-bold">${item.name}</td>
+                <td>${item.cnt_mobile}</td>
+                <td>${item.cnt_used}</td>
+                <td class="text-muted">${item.cnt_copper}</td>
+                <td class="text-muted">${item.cnt_renew}</td>
+                <td class="text-muted">${item.cnt_single}</td>
+                <td class="text-end pe-4">${marginDisplay}</td>
             </tr>
-        `;
+        `);
     });
 
-    if (html === '') {
-        html = '<tr><td colspan="7" class="text-muted py-4">본인의 실적 내역이 없습니다.</td></tr>';
-    }
-    tbody.innerHTML = html;
+    // 하단 합계
+    tfoot.innerHTML = `
+        <tr class="border-top border-success text-success">
+            <td>합계</td>
+            <td colspan="2">${totalMobile}</td>
+            <td colspan="3" class="small text-muted">유선 제외</td>
+            <td class="text-end pe-4 fw-bold" style="font-size:1.1rem;">${fmt(totalMargin)}</td>
+        </tr>
+    `;
 }
