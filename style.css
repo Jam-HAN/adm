@@ -1,5 +1,5 @@
 :root {
-    /* [수정] 세련된 브랜드 컬러 (딥 블루 & 그라데이션) */
+    /* [디자인] 세련된 브랜드 컬러 (딥 블루 & 그라데이션) */
     --primary-color: #4361ee;
     --primary-gradient: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%);
     --success-color: #2ec4b6;
@@ -23,7 +23,7 @@ body {
 /* 1. 리얼 글래스모피즘 카드 */
 .glass-card {
     background: var(--glass-bg);
-    backdrop-filter: blur(12px); /* 핵심: 뒤가 흐릿하게 보임 */
+    backdrop-filter: blur(12px); /* 뒤가 흐릿하게 보임 */
     -webkit-backdrop-filter: blur(12px);
     border: 1px solid var(--glass-border);
     border-radius: 16px;
@@ -47,31 +47,58 @@ body {
     to { opacity: 1; transform: translateY(0); } 
 }
 
-/* 3. 폼 요소 디자인 개선 (터치 영역 확대) */
+/* 3. 폼 요소 디자인 (기본) */
 .form-label-sm { font-size: 0.8rem; font-weight: 700; color: #6c757d; margin-bottom: 6px; }
-.form-control, .form-select {
+
+/* ★ [중요] 폼 요소 높이 및 정렬 강제 통일 
+   (사장님 코드 + 아까 만든 정렬 코드 합침) 
+*/
+.form-control, 
+.form-select, 
+.btn {
     border-radius: 10px;
     border: 1px solid #e0e0e0;
-    padding: 0.6rem 0.8rem; /* 높이 키움 */
     font-size: 0.95rem;
     background-color: rgba(255, 255, 255, 0.9);
+    
+    /* 높이 38px 강제 고정 (흔들림 방지 핵심) */
+    height: 38px !important; 
+    min-height: 38px !important;
 }
+
+/* 드롭다운(Select) 텍스트 수직 중앙 정렬 해결 */
+.form-select {
+    padding-top: 0 !important;      
+    padding-bottom: 0 !important;   
+    line-height: 38px !important;   /* 줄 간격을 높이와 같게 -> 글자 정중앙 */
+    background-position: right 0.75rem center !important;
+}
+
+/* 버튼 텍스트 정중앙 정렬 */
+.btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+}
+
+/* 포커스 효과 */
 .form-control:focus, .form-select:focus {
     border-color: var(--primary-color);
     box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15);
 }
 
-/* 4. 버튼 디자인 (그라데이션 적용) */
+/* 4. 버튼 디자인 (그라데이션) */
 .btn-primary {
-    background: var(--primary-gradient);
-    border: none;
-    border-radius: 10px;
-    padding: 10px 0;
+    background: var(--primary-gradient) !important; /* !important 추가하여 확실하게 적용 */
+    border: none !important;
+    color: white !important;
     transition: transform 0.1s;
 }
 .btn-primary:active { transform: scale(0.98); }
 
-/* 5. 모바일 하단 탭바 (핵심 UI) */
+/* 5. 모바일 하단 탭바 */
 .mobile-bottom-nav {
     position: fixed;
     bottom: 0;
@@ -132,3 +159,8 @@ body {
 /* 대시보드 테이블 */
 .dash-table th { background: transparent; color: #6c757d; font-size: 0.75rem; border-bottom: 1px solid #eee; }
 .dash-table td { padding: 12px 4px; font-size: 0.9rem; }
+
+/* 라벨 간격 미세 조정 */
+.form-label, label {
+    margin-bottom: 0.3rem !important;
+}
