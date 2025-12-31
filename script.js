@@ -2616,18 +2616,18 @@ function renderDbViewList(list) {
 }
 
 // ==========================================
-// [최종] PDF 다운로드 (축소 저장 + 전체 데이터 출력)
+// [최종 완결] PDF 다운로드 (스크롤 잘림 해결 + 전체 출력)
 // ==========================================
 function downloadDbPdf() {
-    const element = document.getElementById('db_view_result');
+    const originalElement = document.getElementById('db_view_result');
     
     // 1. 데이터 확인
-    if (!element || element.innerText.includes("검색 결과가 없습니다") || element.innerText.includes("조건을 선택하고")) {
+    if (!originalElement || originalElement.innerText.includes("검색 결과가 없습니다") || originalElement.innerText.includes("조건을 선택하고")) {
         alert("저장할 데이터가 없습니다. 먼저 조회를 해주세요.");
         return;
     }
 
-    // 2. 파일명 생성 (정보 조합)
+    // 2. 파일명 생성
     const branch = document.getElementById('view_branch').value;
     const start = document.getElementById('view_start').value.replace(/-/g, '');
     const end = document.getElementById('view_end').value.replace(/-/g, '');
@@ -2635,61 +2635,76 @@ function downloadDbPdf() {
     const actType = document.getElementById('view_act_type').value;
     const contType = document.getElementById('view_cont_type').value;
 
-    const filename = `DB상세_지점-${branch}_기간-${start}~${end}_통신사-${carrier}_개통유형-${actType}_약정유형-${contType}.pdf`;
+    const filename = `DB상세_${branch}_${start}~${end}_통신사-${carrier}_개통유형-${actType}_약정유형-${contType}.pdf`;
 
-    // 3. PDF 옵션 설정 (축소 로직 포함)
+    // 3. ★ [핵심] 복제본 생성 및 스타일 강제 변경 (화면 밖에서 전체 펼치기)
+    const clone = originalElement.cloneNode(true);
+    
+    // 복제본의 스타일을 강제로 수정하여 스크롤을 없애고 전체를 다 보여줌
+    clone.style.width = '100%'; 
+    clone.style.height = 'auto';
+    clone.style.maxHeight = 'none';
+    clone.style.overflow = 'visible';
+    clone.style.position = 'absolute';
+    clone.style.top = '-10000px'; // 화면 밖에 숨김 (사용자 눈엔 안 보임)
+    clone.style.left = '0';
+    clone.style.zIndex = '-1';
+    clone.style.background = 'white'; // 배경 투명 방지
+
+    // 내부 스크롤 영역(.table-responsive)도 강제 확장
+    const scrollArea = clone.querySelector('.table-responsive');
+    if (scrollArea) {
+        scrollArea.style.maxHeight = 'none'; // 높이 제한 해제
+        scrollArea.style.overflow = 'visible'; // 스크롤바 제거
+        scrollArea.style.display = 'block'; // 테이블 전체 표시
+    }
+
+    // 4. [축소 로직] 글씨 크기 및 여백 줄이기 (A4에 많이 담기 위해)
+    clone.style.fontSize = '10px';
+    const cells = clone.querySelectorAll('th, td');
+    cells.forEach(cell => {
+        cell.style.padding = '3px 2px'; // 여백 최소화
+        cell.style.fontSize = '10px';
+        cell.style.lineHeight = '1.1';
+        cell.style.whiteSpace = 'normal'; // 글자가 길면 줄바꿈 되도록
+    });
+    
+    const badges = clone.querySelectorAll('.badge');
+    badges.forEach(badge => {
+        badge.style.fontSize = '9px';
+        badge.style.padding = '1px 3px';
+    });
+
+    // 5. 복제본을 바디에 잠시 붙임 (그래야 html2pdf가 읽을 수 있음)
+    document.body.appendChild(clone);
+
+    // 6. PDF 옵션
     const opt = {
-        margin:       5, // 여백 (mm)
+        margin:       5, 
         filename:     filename,
         image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { 
-            scale: 2, // 해상도는 높게 유지 (선명하게)
-            useCORS: true,
-            // ★ [핵심] PDF 생성 직전에 가상으로 스타일을 변경하는 함수
-            onclone: (clonedDoc) => {
-                const target = clonedDoc.getElementById('db_view_result');
-                
-                // (1) 스크롤바 없애고 전체 내용 다 펼치기
-                const scrollArea = target.querySelector('.table-responsive');
-                if (scrollArea) {
-                    scrollArea.style.maxHeight = 'none'; // 높이 제한 해제
-                    scrollArea.style.overflow = 'visible'; // 스크롤 제거
-                }
-
-                // (2) 글씨 크기 축소 (전체적으로 10px로 줄임)
-                target.style.fontSize = '10px';
-
-                // (3) 표 내부 여백(Padding) 확 줄이기 (콤팩트하게)
-                const cells = target.querySelectorAll('th, td');
-                cells.forEach(cell => {
-                    cell.style.padding = '4px 2px'; // 상하 4px, 좌우 2px로 좁힘
-                    cell.style.fontSize = '10px';   // 셀 내부 글씨도 강제 축소
-                    cell.style.lineHeight = '1.2';  // 줄 간격도 좁힘
-                });
-
-                // (4) 뱃지(Badge) 크기도 축소
-                const badges = target.querySelectorAll('.badge');
-                badges.forEach(badge => {
-                    badge.style.fontSize = '9px';
-                    badge.style.padding = '2px 4px';
-                });
-            }
-        }, 
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' } // 가로 모드
+        html2canvas:  { scale: 2, useCORS: true, scrollY: 0 }, // scrollY:0 중요
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' },
+        pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] } // 행이 잘리지 않고 다음 페이지로 넘어가도록 설정
     };
 
-    // 4. 로딩 및 실행
+    // 7. 로딩 및 실행
     Swal.fire({
         title: 'PDF 생성 중...',
-        text: '데이터를 압축하여 변환 중입니다. 잠시만 기다려주세요.',
+        text: '전체 데이터를 변환 중입니다. 잠시만 기다려주세요.',
         allowOutsideClick: false,
         didOpen: () => { Swal.showLoading(); }
     });
 
-    html2pdf().set(opt).from(element).save().then(() => {
+    // ★ 복제본(clone)을 대상으로 PDF 생성
+    html2pdf().set(opt).from(clone).save().then(() => {
+        // 완료 후 복제본 삭제 (메모리 정리)
+        document.body.removeChild(clone);
         Swal.close();
         Swal.fire({ icon: 'success', title: '다운로드 완료!', text: filename, timer: 2000, showConfirmButton: false });
     }).catch(err => {
+        // 에러 나도 복제본은 지워야 함
+        if(document.body.contains(clone)) document.body.removeChild(clone);
         Swal.close();
         console.error(err);
         alert("PDF 생성 중 오류가 발생했습니다.");
