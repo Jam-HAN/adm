@@ -2546,6 +2546,7 @@ function searchDbView() {
     });
 }
 
+// [script.js] DB 열람 결과 렌더링 (테이블 형태)
 function renderDbViewList(list) {
     const container = document.getElementById('db_view_result');
     
@@ -2557,47 +2558,56 @@ function renderDbViewList(list) {
         return;
     }
 
-    // 결과 갯수 표시
-    const countHeader = `<div class="mb-2 small fw-bold text-end text-dark">총 ${list.length}건</div>`;
+    // 총 건수 표시
+    const countHeader = `<div class="d-flex justify-content-between align-items-center mb-2">
+        <span class="fw-bold text-dark"><i class="bi bi-list-columns-reverse me-1"></i>조회 결과</span>
+        <span class="badge bg-dark rounded-pill">총 ${list.length}건</span>
+    </div>`;
 
-    const html = list.map(item => {
-        // 통신사별 뱃지 색상
-        let badgeClass = 'bg-secondary';
-        const c = String(item.carrier);
-        if (c.includes('SK')) badgeClass = 'bg-danger';
-        else if (c.includes('KT')) badgeClass = 'bg-dark';
-        else if (c.includes('LG')) badgeClass = 'bg-pink-custom'; // CSS에 없으면 핫핑크색 처리 필요하나 일단 기본값
+    // ★ [변경] 테이블 헤더 생성
+    let tableHtml = `
+    <div class="table-responsive border rounded shadow-sm bg-white" style="max-height: 60vh;">
+        <table class="table table-hover table-striped align-middle text-center small mb-0" style="white-space: nowrap; font-size: 0.85rem;">
+            <thead class="table-dark sticky-top">
+                <tr>
+                    <th>개통일</th>
+                    <th>지점</th>
+                    <th>통신사</th>
+                    <th>유형</th>
+                    <th>약정</th>
+                    <th>고객명</th>
+                    <th>생년월일</th>
+                    <th>연락처</th>
+                    <th>모델명</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+
+    // ★ [변경] 테이블 행(Row) 생성
+    const rows = list.map(item => {
+        // 통신사별 글자색 포인트
+        let carrierClass = "text-dark";
+        if (item.carrier === 'SKT') carrierClass = "text-danger fw-bold";
+        else if (item.carrier === 'KT') carrierClass = "text-dark fw-bold";
+        else if (item.carrier === 'LG') carrierClass = "text-primary fw-bold";
 
         return `
-        <div class="glass-card p-3 mb-3 border shadow-sm bg-white">
-            <div class="d-flex justify-content-between align-items-center mb-2 border-bottom pb-2">
-                <span class="small fw-bold text-muted">${item.date}</span>
-                <span class="badge bg-light text-secondary border">${item.branch}</span>
-            </div>
-
-            <div class="d-flex justify-content-between align-items-center mb-2">
-                <div>
-                    <span class="fw-bold text-dark fs-5 me-2">${item.name}</span>
-                    <span class="small text-muted">${item.birth}</span>
-                </div>
-                <span class="fw-bold text-primary small text-end text-truncate" style="max-width: 120px;">
-                    ${item.model}
-                </span>
-            </div>
-
-            <div class="mb-2">
-                <span class="badge bg-light text-dark border font-monospace">
-                    <i class="bi bi-telephone me-1"></i>${item.phone}
-                </span>
-            </div>
-
-            <div class="d-flex gap-1 mt-2">
-                <span class="badge ${badgeClass} bg-opacity-75">${item.carrier}</span>
-                <span class="badge bg-primary bg-opacity-75">${item.actType}</span>
-                <span class="badge bg-success bg-opacity-75">${item.contType}</span>
-            </div>
-        </div>`;
+            <tr>
+                <td>${item.date}</td>
+                <td><span class="badge bg-light text-secondary border">${item.branch}</span></td>
+                <td class="${carrierClass}">${item.carrier}</td>
+                <td class="fw-bold text-primary">${item.actType}</td>
+                <td class="text-muted">${item.contType}</td>
+                <td class="fw-bold text-dark">${item.name}</td>
+                <td>${item.birth}</td>
+                <td class="font-monospace">${item.phone}</td>
+                <td class="text-start text-truncate" style="max-width: 150px;" title="${item.model}">${item.model}</td>
+            </tr>
+        `;
     }).join('');
 
-    container.innerHTML = countHeader + html;
+    tableHtml += rows + `</tbody></table></div>`;
+
+    container.innerHTML = countHeader + tableHtml;
 }
