@@ -2461,48 +2461,40 @@ function renderWiredSetupList(list) {
     }).join('');
 }
 
-// 4. 저장 함수 (미사용 처리 로직 추가)
-function saveSetupInfo(type, branch, rowIndex, rowId, mode) {
-    let val1 = document.getElementById(`val1_${rowId}`).value;
-    let val2 = document.getElementById(`val2_${rowId}`).value;
-    let msg = '입력된 날짜 정보를 저장하시겠습니까?';
+// 4. 저장 함수 (입력값 그대로 전송)
+function saveSetupInfo(type, branch, rowIndex, rowId) {
+    const val1 = document.getElementById(`val1_${rowId}`).value;
+    const val2 = document.getElementById(`val2_${rowId}`).value;
 
-    // ★ [추가] 미사용 모드일 경우 강제로 '미사용' 값 할당
-    if (mode === 'unused') {
-        val1 = "미사용";
-        val2 = "미사용";
-        msg = '해당 건을 [미사용] 처리하시겠습니까?\n(목록에서 사라집니다)';
-    }
+    if (!confirm("입력된 정보로 저장하시겠습니까?")) return;
 
-    if (confirm(msg)) {
-        if(typeof Swal !== 'undefined') Swal.fire({ title: '저장 중...', didOpen: () => Swal.showLoading() });
+    if(typeof Swal !== 'undefined') Swal.fire({ title: '저장 중...', didOpen: () => Swal.showLoading() });
 
-        fetch(GAS_URL, {
-            method: "POST",
-            body: JSON.stringify({
-                action: "update_setup_info",
-                type: type,
-                branch: branch,
-                rowIndex: rowIndex,
-                val1: val1,
-                val2: val2
-            })
+    fetch(GAS_URL, {
+        method: "POST",
+        body: JSON.stringify({
+            action: "update_setup_info",
+            type: type,
+            branch: branch,
+            rowIndex: rowIndex,
+            val1: val1,
+            val2: val2
         })
-        .then(r => r.json())
-        .then(d => {
-            if (d.status === 'success') {
-                if(typeof Swal !== 'undefined') Swal.fire({ icon: 'success', title: '처리 완료', timer: 1000, showConfirmButton: false });
-                else alert("저장되었습니다.");
-                // 목록 갱신
-                searchSetupList(type);
-            } else {
-                alert(d.message);
-            }
-        })
-        .catch(e => {
-            alert("통신 오류가 발생했습니다.");
-        });
-    }
+    })
+    .then(r => r.json())
+    .then(d => {
+        if (d.status === 'success') {
+            if(typeof Swal !== 'undefined') Swal.fire({ icon: 'success', title: '처리 완료', timer: 1000, showConfirmButton: false });
+            else alert("저장되었습니다.");
+            // 목록 갱신
+            searchSetupList(type);
+        } else {
+            alert(d.message);
+        }
+    })
+    .catch(e => {
+        alert("통신 오류가 발생했습니다.");
+    });
 }
 
 // ==========================================
