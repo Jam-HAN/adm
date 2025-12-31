@@ -2336,15 +2336,12 @@ function searchSetupList(type) {
     });
 }
 
-// 2. 제휴카드 리스트 렌더링 (카드 내부에 입력창 배치)
+// 2. 제휴카드 리스트 렌더링 (미사용 버튼 추가)
 function renderCardSetupList(list) {
     const container = document.getElementById('card_setup_list');
     
     if (!list || list.length === 0) {
-        container.innerHTML = `<div class="text-center text-muted py-5 small">
-            <i class="bi bi-check-circle fs-1 d-block mb-3 opacity-25"></i>
-            미처리 내역이 없습니다. (모두 완료!)
-        </div>`;
+        container.innerHTML = `<div class="text-center text-muted py-5 small"><i class="bi bi-check-circle fs-1 d-block mb-3 opacity-25"></i>미처리 내역이 없습니다.</div>`;
         return;
     }
 
@@ -2354,39 +2351,28 @@ function renderCardSetupList(list) {
         const v2 = item.val2 ? String(item.val2).substring(0, 10) : "";
 
         return `
-        <div class="glass-card p-3 mb-3 border-start border-4 border-primary shadow-sm" style="background: #fff;">
+        <div class="glass-card p-3 mb-3 border-start border-4 border-primary shadow-sm bg-white">
             <div class="d-flex justify-content-between align-items-center mb-2 border-bottom pb-2">
-                <div>
-                    <span class="badge bg-primary bg-opacity-10 text-primary me-1 border border-primary">제휴카드</span>
-                    <span class="badge bg-light text-secondary border">${item.branch}</span>
-                </div>
+                <div><span class="badge bg-primary bg-opacity-10 text-primary me-1 border border-primary">제휴카드</span><span class="badge bg-light text-secondary border">${item.branch}</span></div>
                 <span class="small fw-bold text-muted">${item.date}</span>
             </div>
-
             <div class="d-flex justify-content-between align-items-center mb-3">
-                <div>
-                    <div class="fw-bold fs-5 text-dark">${item.name}</div>
-                    <div class="small text-primary fw-bold mt-1"><i class="bi bi-credit-card me-1"></i>${item.cardName}</div>
-                </div>
-                <span class="badge bg-white text-dark border rounded-pill px-2">
-                    <i class="bi bi-person-circle me-1"></i>${item.manager || '미지정'}
-                </span>
+                <div><div class="fw-bold fs-5 text-dark">${item.name}</div><div class="small text-primary fw-bold mt-1"><i class="bi bi-credit-card me-1"></i>${item.cardName}</div></div>
+                <span class="badge bg-white text-dark border rounded-pill px-2"><i class="bi bi-person-circle me-1"></i>${item.manager || '미지정'}</span>
             </div>
-
             <div class="bg-light p-3 rounded-3 border">
                 <div class="row g-2 mb-2">
-                    <div class="col-6">
-                        <label class="form-label-sm fw-bold text-muted small" style="font-size: 0.75rem;">세이브 등록일</label>
-                        <input type="date" class="form-control form-control-sm border-primary fw-bold text-center" id="val1_${rowId}" value="${v1}">
-                    </div>
-                    <div class="col-6">
-                        <label class="form-label-sm fw-bold text-muted small" style="font-size: 0.75rem;">자동이체 등록일</label>
-                        <input type="date" class="form-control form-control-sm border-primary fw-bold text-center" id="val2_${rowId}" value="${v2}">
-                    </div>
+                    <div class="col-6"><label class="form-label-sm fw-bold text-muted small">세이브 등록</label><input type="date" class="form-control form-control-sm border-primary fw-bold text-center" id="val1_${rowId}" value="${v1}"></div>
+                    <div class="col-6"><label class="form-label-sm fw-bold text-muted small">자동이체 등록</label><input type="date" class="form-control form-control-sm border-primary fw-bold text-center" id="val2_${rowId}" value="${v2}"></div>
                 </div>
-                <button class="btn btn-primary w-100 btn-sm fw-bold shadow-sm" onclick="saveSetupInfo('card', '${item.branch}', '${item.rowIndex}', '${rowId}')">
-                    <i class="bi bi-check-lg me-1"></i> 저장하기
-                </button>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-secondary flex-grow-1 btn-sm fw-bold shadow-sm" onclick="saveSetupInfo('card', '${item.branch}', '${item.rowIndex}', '${rowId}', 'unused')">
+                        <i class="bi bi-slash-circle me-1"></i> 미사용
+                    </button>
+                    <button class="btn btn-primary flex-grow-1 btn-sm fw-bold shadow-sm" onclick="saveSetupInfo('card', '${item.branch}', '${item.rowIndex}', '${rowId}', 'date')">
+                        <i class="bi bi-check-lg me-1"></i> 저장
+                    </button>
+                </div>
             </div>
         </div>`;
     }).join('');
@@ -2448,28 +2434,20 @@ function renderWiredSetupList(list) {
     }).join('');
 }
 
-// 4. 저장 함수 (리스트에서 직접 저장)
-function saveSetupInfo(type, branch, rowIndex, rowId) {
-    const val1 = document.getElementById(`val1_${rowId}`).value;
-    const val2 = document.getElementById(`val2_${rowId}`).value;
+// 4. 저장 함수 (미사용 처리 로직 추가)
+function saveSetupInfo(type, branch, rowIndex, rowId, mode) {
+    let val1 = document.getElementById(`val1_${rowId}`).value;
+    let val2 = document.getElementById(`val2_${rowId}`).value;
+    let msg = '입력된 날짜 정보를 저장하시겠습니까?';
 
-    // confirm 창은 띄우되, 모달이 없으므로 심플하게 처리
-    if (typeof Swal !== 'undefined') {
-        Swal.fire({
-            title: '저장하시겠습니까?',
-            text: '입력된 날짜 정보를 반영합니다.',
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonText: '저장',
-            cancelButtonText: '취소'
-        }).then((result) => {
-            if (result.isConfirmed) processSave();
-        });
-    } else {
-        if (confirm("저장하시겠습니까?")) processSave();
+    // ★ [추가] 미사용 모드일 경우 강제로 '미사용' 값 할당
+    if (mode === 'unused') {
+        val1 = "미사용";
+        val2 = "미사용";
+        msg = '해당 건을 [미사용] 처리하시겠습니까?\n(목록에서 사라집니다)';
     }
 
-    function processSave() {
+    if (confirm(msg)) {
         if(typeof Swal !== 'undefined') Swal.fire({ title: '저장 중...', didOpen: () => Swal.showLoading() });
 
         fetch(GAS_URL, {
@@ -2486,19 +2464,16 @@ function saveSetupInfo(type, branch, rowIndex, rowId) {
         .then(r => r.json())
         .then(d => {
             if (d.status === 'success') {
-                if(typeof Swal !== 'undefined') Swal.fire({ icon: 'success', title: '저장 완료', timer: 1000, showConfirmButton: false });
+                if(typeof Swal !== 'undefined') Swal.fire({ icon: 'success', title: '처리 완료', timer: 1000, showConfirmButton: false });
                 else alert("저장되었습니다.");
-                
-                // 성공하면 목록 갱신
+                // 목록 갱신
                 searchSetupList(type);
             } else {
-                if(typeof Swal !== 'undefined') Swal.fire({ icon: 'error', title: '오류', text: d.message });
-                else alert(d.message);
+                alert(d.message);
             }
         })
         .catch(e => {
-            if(typeof Swal !== 'undefined') Swal.fire({ icon: 'error', title: '통신 오류', text: e });
-            else alert("통신 오류가 발생했습니다.");
+            alert("통신 오류가 발생했습니다.");
         });
     }
 }
