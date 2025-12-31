@@ -1750,31 +1750,26 @@ function searchSpecialList(type) {
 
     fetch(GAS_URL, {
         method: "POST",
-        body: JSON.stringify({ action: "get_all_history", start, end, keyword, branch })
+        body: JSON.stringify({ 
+            action: "get_all_history", 
+            start: start, 
+            end: end, 
+            keyword: keyword, 
+            branch: branch,
+            specialType: type  // ★ 핵심: 이 꼬리표를 달아줘야 서버가 "아! 필터링해야지" 하고 알아듣습니다.
+        })
     })
     .then(r => r.json())
     .then(data => {
+        // 서버가 이미 조건(값 있음 + 미완료)에 맞는 것만 골라서 'data.data'에 담아 보냄
         if (data.status === 'success' && data.data.length > 0) {
-            const filtered = data.data.filter(item => {
-                if (type === 'usedphone') {
-                    return item.sheetName !== '유선개통';
-                } else {
-                    const targetTypes = ['유선동판', '유선단품', '약정갱신'];
-                    return item.sheetName === '유선개통' && targetTypes.includes(item['개통유형']);
-                }
-            });
-
-            if (filtered.length === 0) {
-                container.innerHTML = '<div class="text-center text-muted py-5 small">조건에 맞는 대상이 없습니다.</div>';
-                return;
-            }
-
-            // ★ [개선] HTML을 한 번에 모아서 집어넣기 (속도 향상 & 깨짐 방지)
-            const htmlString = filtered.map(item => renderSpecialCard(item, type)).join('');
+            
+            // ★ 복잡한 filter 로직 제거하고 바로 렌더링
+            const htmlString = data.data.map(item => renderSpecialCard(item, type)).join('');
             container.innerHTML = htmlString;
 
         } else {
-            container.innerHTML = '<div class="text-center text-muted py-5 small">검색 결과가 없습니다.</div>';
+            container.innerHTML = '<div class="text-center text-muted py-5 small">미처리 내역이 없습니다. (모두 완료됨)</div>';
         }
     })
     .catch(err => {
