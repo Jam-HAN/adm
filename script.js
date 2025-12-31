@@ -2638,7 +2638,7 @@ function downloadDbPdf() {
     // 3. 파일명 조합 (요청하신 포맷)
     // 예: DB상세_장지 본점_20251201~20251231_통신사-SKT_개통유형-무선_약정유형-전체.pdf
     // (콜론 : 은 윈도우 파일명 금지 문자라 - 로 대체하여 안전하게 저장합니다)
-    const filename = `DB상세_${branch}_${start}~${end}_통신사-${carrier}_개통유형-${actType}_약정유형-${contType}.pdf`;
+    const filename = `DB상세_지점-${branch}_${start}~${end}_통신사-${carrier}_개통유형-${actType}_약정유형-${contType}.pdf`;
 
     // 4. PDF 옵션 설정
     const opt = {
