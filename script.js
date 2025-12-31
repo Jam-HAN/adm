@@ -2336,19 +2336,20 @@ function searchSetupList(type) {
     });
 }
 
-// 2. 제휴카드 리스트 렌더링 (미사용 버튼 추가)
+// 2. 제휴카드 렌더링 (각각 미사용 버튼 적용)
 function renderCardSetupList(list) {
     const container = document.getElementById('card_setup_list');
     
     if (!list || list.length === 0) {
-        container.innerHTML = `<div class="text-center text-muted py-5 small"><i class="bi bi-check-circle fs-1 d-block mb-3 opacity-25"></i>미처리 내역이 없습니다.</div>`;
+        container.innerHTML = `<div class="text-center text-muted py-5 small"><i class="bi bi-check-circle fs-1 d-block mb-3 opacity-25"></i>미처리 내역이 없습니다. (모두 완료)</div>`;
         return;
     }
 
     container.innerHTML = list.map(item => {
         const rowId = `card_${item.branch}_${item.rowIndex}`;
-        const v1 = item.val1 ? String(item.val1).substring(0, 10) : "";
-        const v2 = item.val2 ? String(item.val2).substring(0, 10) : "";
+        // 날짜가 있으면 표시, '미사용'이면 '미사용' 표시
+        const v1 = item.val1 || ""; 
+        const v2 = item.val2 || "";
 
         return `
         <div class="glass-card p-3 mb-3 border-start border-4 border-primary shadow-sm bg-white">
@@ -2360,22 +2361,48 @@ function renderCardSetupList(list) {
                 <div><div class="fw-bold fs-5 text-dark">${item.name}</div><div class="small text-primary fw-bold mt-1"><i class="bi bi-credit-card me-1"></i>${item.cardName}</div></div>
                 <span class="badge bg-white text-dark border rounded-pill px-2"><i class="bi bi-person-circle me-1"></i>${item.manager || '미지정'}</span>
             </div>
+            
             <div class="bg-light p-3 rounded-3 border">
-                <div class="row g-2 mb-2">
-                    <div class="col-6"><label class="form-label-sm fw-bold text-muted small">세이브 등록</label><input type="date" class="form-control form-control-sm border-primary fw-bold text-center" id="val1_${rowId}" value="${v1}"></div>
-                    <div class="col-6"><label class="form-label-sm fw-bold text-muted small">자동이체 등록</label><input type="date" class="form-control form-control-sm border-primary fw-bold text-center" id="val2_${rowId}" value="${v2}"></div>
+                <div class="mb-2">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <label class="form-label-sm fw-bold text-muted small">세이브 등록</label>
+                        <button class="btn btn-xs btn-outline-secondary py-0" style="font-size: 0.75rem;" onclick="setUnused('val1_${rowId}')">미사용 처리</button>
+                    </div>
+                    <input type="text" class="form-control form-control-sm border-primary fw-bold text-center" id="val1_${rowId}" value="${v1}" placeholder="날짜 선택 또는 미사용">
                 </div>
-                <div class="d-flex gap-2">
-                    <button class="btn btn-secondary flex-grow-1 btn-sm fw-bold shadow-sm" onclick="saveSetupInfo('card', '${item.branch}', '${item.rowIndex}', '${rowId}', 'unused')">
-                        <i class="bi bi-slash-circle me-1"></i> 미사용
-                    </button>
-                    <button class="btn btn-primary flex-grow-1 btn-sm fw-bold shadow-sm" onclick="saveSetupInfo('card', '${item.branch}', '${item.rowIndex}', '${rowId}', 'date')">
-                        <i class="bi bi-check-lg me-1"></i> 저장
-                    </button>
+
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <label class="form-label-sm fw-bold text-muted small">자동이체 등록</label>
+                        <button class="btn btn-xs btn-outline-secondary py-0" style="font-size: 0.75rem;" onclick="setUnused('val2_${rowId}')">미사용 처리</button>
+                    </div>
+                    <input type="text" class="form-control form-control-sm border-primary fw-bold text-center" id="val2_${rowId}" value="${v2}" placeholder="날짜 선택 또는 미사용">
                 </div>
+
+                <button class="btn btn-primary w-100 btn-sm fw-bold shadow-sm" onclick="saveSetupInfo('card', '${item.branch}', '${item.rowIndex}', '${rowId}')">
+                    <i class="bi bi-check-lg me-1"></i> 저장하기
+                </button>
             </div>
         </div>`;
     }).join('');
+    
+    // 날짜 입력칸을 클릭하면 달력 팝업 (type='text'로 두고 포커스 시 type='date'로 변경하는 트릭 사용 가능하지만, 
+    // 여기서는 간단하게 input에 포커스 리스너를 달아줍니다.)
+    document.querySelectorAll('input[id^="val"]').forEach(el => {
+        el.addEventListener('focus', function() {
+            if(this.value !== '미사용') this.type = 'date';
+        });
+        el.addEventListener('blur', function() {
+            if(!this.value) this.type = 'text';
+        });
+    });
+}
+
+// [script.js 추가] 미사용 버튼 클릭 시 동작
+function setUnused(inputId) {
+    const el = document.getElementById(inputId);
+    el.type = 'text'; // 날짜 모드 해제
+    el.value = '미사용';
 }
 
 // 3. 유선설치 리스트 렌더링 (카드 내부에 입력창 배치)
