@@ -2635,7 +2635,7 @@ function downloadDbPdf() {
     const actType = document.getElementById('view_act_type').value;
     const contType = document.getElementById('view_cont_type').value;
 
-    const title = `DB상세 지점: (${branch})`;
+    const title = `DB상세 지점: ${branch}`;
     const subTitle = `기간: ${start} ~ ${end} | 통신사: ${carrier}/개통유형: ${actType}/약정유형: ${contType}`;
 
     // 3. 현재 테이블의 HTML 가져오기 (스크롤 영역 무시하고 내용만 가져옴)
