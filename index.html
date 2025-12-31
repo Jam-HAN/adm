@@ -26,6 +26,7 @@
     </style>
     <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body>
 
@@ -789,9 +790,12 @@
                             </select>
                         </div>
             
-                        <div class="col-12 mt-2">
-                            <button class="btn btn-dark w-100 fw-bold shadow-sm" onclick="searchDbView()">
+                        <div class="col-12 mt-2 d-flex gap-2">
+                            <button class="btn btn-dark flex-grow-1 fw-bold shadow-sm" onclick="searchDbView()">
                                 <i class="bi bi-search me-1"></i> 조건 검색
+                            </button>
+                            <button class="btn btn-danger fw-bold shadow-sm" onclick="downloadDbPdf()" style="width: 120px;">
+                                <i class="bi bi-file-earmark-pdf me-1"></i> PDF 저장
                             </button>
                         </div>
                     </div>
