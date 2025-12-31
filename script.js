@@ -2614,3 +2614,47 @@ function renderDbViewList(list) {
 
     container.innerHTML = countHeader + tableHtml;
 }
+
+// ==========================================
+// [신규] PDF 다운로드 기능
+// ==========================================
+function downloadDbPdf() {
+    const element = document.getElementById('db_view_result');
+    
+    // 데이터가 없는지 확인
+    if (!element || element.innerText.includes("검색 결과가 없습니다") || element.innerText.includes("조건을 선택하고")) {
+        alert("저장할 데이터가 없습니다. 먼저 조회를 해주세요.");
+        return;
+    }
+
+    // 파일명 생성 (오늘날짜_DB조회.pdf)
+    const today = new Date();
+    const dateStr = `${today.getFullYear()}${(today.getMonth()+1).toString().padStart(2,'0')}${today.getDate().toString().padStart(2,'0')}`;
+    const filename = `개통내역_${dateStr}.pdf`;
+
+    // PDF 옵션 설정
+    const opt = {
+        margin:       10, // 여백 (mm)
+        filename:     filename,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2 }, // 해상도 (2배 확대해서 선명하게)
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' } // A4 세로
+    };
+
+    // 로딩 표시 (잠깐 멈춤 느낌 방지)
+    Swal.fire({
+        title: 'PDF 생성 중...',
+        text: '데이터 양에 따라 시간이 걸릴 수 있습니다.',
+        allowOutsideClick: false,
+        didOpen: () => { Swal.showLoading(); }
+    });
+
+    // 변환 실행
+    html2pdf().set(opt).from(element).save().then(() => {
+        Swal.close(); // 완료되면 로딩창 닫기
+        Swal.fire({ icon: 'success', title: '다운로드 완료!', timer: 1500, showConfirmButton: false });
+    }).catch(err => {
+        Swal.close();
+        alert("PDF 생성 중 오류가 발생했습니다.");
+    });
+}
