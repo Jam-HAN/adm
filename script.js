@@ -2616,97 +2616,87 @@ function renderDbViewList(list) {
 }
 
 // ==========================================
-// [최종 완결] PDF 다운로드 (스크롤 잘림 해결 + 전체 출력)
+// [진짜_최종] PDF 저장 (브라우저 네이티브 인쇄 엔진 사용)
 // ==========================================
 function downloadDbPdf() {
-    const originalElement = document.getElementById('db_view_result');
+    const tableDiv = document.getElementById('db_view_result');
     
     // 1. 데이터 확인
-    if (!originalElement || originalElement.innerText.includes("검색 결과가 없습니다") || originalElement.innerText.includes("조건을 선택하고")) {
+    if (!tableDiv || tableDiv.innerText.includes("검색 결과가 없습니다") || tableDiv.innerText.includes("조건을 선택하고")) {
         alert("저장할 데이터가 없습니다. 먼저 조회를 해주세요.");
         return;
     }
 
-    // 2. 파일명 생성
+    // 2. 파일명 및 타이틀 정보 생성
     const branch = document.getElementById('view_branch').value;
-    const start = document.getElementById('view_start').value.replace(/-/g, '');
-    const end = document.getElementById('view_end').value.replace(/-/g, '');
+    const start = document.getElementById('view_start').value;
+    const end = document.getElementById('view_end').value;
     const carrier = document.getElementById('view_carrier').value;
     const actType = document.getElementById('view_act_type').value;
     const contType = document.getElementById('view_cont_type').value;
 
-    const filename = `DB상세_${branch}_${start}~${end}_통신사-${carrier}_개통유형-${actType}_약정유형-${contType}.pdf`;
+    const title = `개통상세내역 (${branch})`;
+    const subTitle = `기간: ${start} ~ ${end} | 조건: ${carrier}/${actType}/${contType}`;
 
-    // 3. ★ [핵심] 복제본 생성 및 스타일 강제 변경 (화면 밖에서 전체 펼치기)
-    const clone = originalElement.cloneNode(true);
+    // 3. 현재 테이블의 HTML 가져오기 (스크롤 영역 무시하고 내용만 가져옴)
+    // 테이블 내의 배지 색상 등 스타일을 유지하기 위해 clone을 뜹니다.
+    const originalTable = tableDiv.querySelector('table');
+    const tableHtml = originalTable.outerHTML;
+
+    // 4. 인쇄용 팝업 윈도우 생성 (사용자 눈에는 미리보기 창으로 뜸)
+    const win = window.open('', '_blank', 'width=1200,height=900');
     
-    // 복제본의 스타일을 강제로 수정하여 스크롤을 없애고 전체를 다 보여줌
-    clone.style.width = '100%'; 
-    clone.style.height = 'auto';
-    clone.style.maxHeight = 'none';
-    clone.style.overflow = 'visible';
-    clone.style.position = 'absolute';
-    clone.style.top = '-10000px'; // 화면 밖에 숨김 (사용자 눈엔 안 보임)
-    clone.style.left = '0';
-    clone.style.zIndex = '-1';
-    clone.style.background = 'white'; // 배경 투명 방지
+    // 5. 인쇄용 문서 작성 (HTML + CSS 주입)
+    win.document.write(`
+        <html>
+        <head>
+            <title>${title}</title>
+            <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+            <style>
+                @page { 
+                    size: A4 landscape; /* 가로 모드 */
+                    margin: 10mm; 
+                }
+                body { 
+                    font-family: 'Noto Sans KR', sans-serif; 
+                    padding: 20px; 
+                    -webkit-print-color-adjust: exact; /* 배경색/뱃지 색상 강제 출력 */
+                    print-color-adjust: exact;
+                }
+                h3 { font-weight: bold; margin-bottom: 5px; }
+                p { font-size: 12px; color: #555; margin-bottom: 20px; }
+                
+                /* 테이블 스타일 최적화 */
+                table { width: 100%; border-collapse: collapse; font-size: 10px; }
+                th { background-color: #f8f9fa !important; color: #000 !important; text-align: center; white-space: nowrap; }
+                td { vertical-align: middle; padding: 4px 2px !important; }
+                
+                /* 뱃지 크기 조정 */
+                .badge { font-size: 9px !important; padding: 2px 4px !important; border: 1px solid #ddd; }
+                
+                /* 링크/버튼 숨기기 */
+                .no-print { display: none !important; }
+            </style>
+        </head>
+        <body>
+            <h3>${title}</h3>
+            <p>${subTitle}</p>
+            <div class="table-responsive">
+                ${tableHtml}
+            </div>
+            <script>
+                // 로딩(CSS 적용) 완료 후 인쇄 실행
+                window.onload = function() {
+                    setTimeout(function() {
+                        window.print(); // 인쇄 다이얼로그 호출
+                        window.close(); // 인쇄 후 창 닫기 (일부 브라우저는 사용자가 닫아야 함)
+                    }, 500);
+                };
+            </script>
+        </body>
+        </html>
+    `);
 
-    // 내부 스크롤 영역(.table-responsive)도 강제 확장
-    const scrollArea = clone.querySelector('.table-responsive');
-    if (scrollArea) {
-        scrollArea.style.maxHeight = 'none'; // 높이 제한 해제
-        scrollArea.style.overflow = 'visible'; // 스크롤바 제거
-        scrollArea.style.display = 'block'; // 테이블 전체 표시
-    }
-
-    // 4. [축소 로직] 글씨 크기 및 여백 줄이기 (A4에 많이 담기 위해)
-    clone.style.fontSize = '10px';
-    const cells = clone.querySelectorAll('th, td');
-    cells.forEach(cell => {
-        cell.style.padding = '3px 2px'; // 여백 최소화
-        cell.style.fontSize = '10px';
-        cell.style.lineHeight = '1.1';
-        cell.style.whiteSpace = 'normal'; // 글자가 길면 줄바꿈 되도록
-    });
-    
-    const badges = clone.querySelectorAll('.badge');
-    badges.forEach(badge => {
-        badge.style.fontSize = '9px';
-        badge.style.padding = '1px 3px';
-    });
-
-    // 5. 복제본을 바디에 잠시 붙임 (그래야 html2pdf가 읽을 수 있음)
-    document.body.appendChild(clone);
-
-    // 6. PDF 옵션
-    const opt = {
-        margin:       5, 
-        filename:     filename,
-        image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2, useCORS: true, scrollY: 0 }, // scrollY:0 중요
-        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' },
-        pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] } // 행이 잘리지 않고 다음 페이지로 넘어가도록 설정
-    };
-
-    // 7. 로딩 및 실행
-    Swal.fire({
-        title: 'PDF 생성 중...',
-        text: '전체 데이터를 변환 중입니다. 잠시만 기다려주세요.',
-        allowOutsideClick: false,
-        didOpen: () => { Swal.showLoading(); }
-    });
-
-    // ★ 복제본(clone)을 대상으로 PDF 생성
-    html2pdf().set(opt).from(clone).save().then(() => {
-        // 완료 후 복제본 삭제 (메모리 정리)
-        document.body.removeChild(clone);
-        Swal.close();
-        Swal.fire({ icon: 'success', title: '다운로드 완료!', text: filename, timer: 2000, showConfirmButton: false });
-    }).catch(err => {
-        // 에러 나도 복제본은 지워야 함
-        if(document.body.contains(clone)) document.body.removeChild(clone);
-        Swal.close();
-        console.error(err);
-        alert("PDF 생성 중 오류가 발생했습니다.");
-    });
+    win.document.close(); // 문서 작성 완료 신호
+    win.focus(); // 윈도우 포커스
 }
