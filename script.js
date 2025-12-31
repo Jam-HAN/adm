@@ -2336,7 +2336,7 @@ function searchSetupList(type) {
     });
 }
 
-// 2. 제휴카드 렌더링 (UI 개선: 입력창+버튼 일체형)
+// 2. 제휴카드 렌더링 (UI 디자인 업그레이드: 세련된 입력 그룹)
 function renderCardSetupList(list) {
     const container = document.getElementById('card_setup_list');
     
@@ -2349,6 +2349,10 @@ function renderCardSetupList(list) {
         const rowId = `card_${item.branch}_${item.rowIndex}`;
         const v1 = item.val1 || ""; 
         const v2 = item.val2 || "";
+
+        // 값이 '미사용'이면 빨간색 텍스트, 아니면 기본색
+        const color1 = v1 === '미사용' ? 'text-danger' : 'text-primary';
+        const color2 = v2 === '미사용' ? 'text-danger' : 'text-primary';
 
         return `
         <div class="glass-card p-3 mb-3 border-start border-4 border-primary shadow-sm bg-white">
@@ -2363,45 +2367,78 @@ function renderCardSetupList(list) {
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <div>
                     <div class="fw-bold fs-5 text-dark">${item.name}</div>
-                    <div class="small text-primary fw-bold mt-1"><i class="bi bi-credit-card me-1"></i>${item.cardName}</div>
+                    <div class="small text-secondary fw-bold mt-1">
+                        <i class="bi bi-credit-card-2-front me-1 text-primary"></i>${item.cardName}
+                    </div>
                 </div>
-                <span class="badge bg-white text-dark border rounded-pill px-2">
-                    <i class="bi bi-person-circle me-1"></i>${item.manager || '미지정'}
+                <span class="badge bg-white text-dark border rounded-pill px-2 shadow-sm">
+                    <i class="bi bi-person-circle me-1 text-muted"></i>${item.manager || '미지정'}
                 </span>
             </div>
             
             <div class="bg-light p-3 rounded-3 border">
                 <div class="row g-2 mb-3">
+                    
                     <div class="col-6">
-                        <label class="form-label-sm fw-bold text-muted small mb-1">세이브 등록</label>
-                        <div class="input-group input-group-sm">
-                            <input type="text" class="form-control border-primary fw-bold text-center p-0" id="val1_${rowId}" value="${v1}" placeholder="날짜" onfocus="if(this.value!=='미사용')this.type='date'" onblur="if(!this.value)this.type='text'">
-                            <button class="btn btn-outline-secondary" type="button" onclick="setUnused('val1_${rowId}')" style="font-size: 0.7rem;">미사용</button>
+                        <label class="form-label-sm fw-bold text-secondary small mb-1 ms-1">세이브 등록</label>
+                        <div class="input-group input-group-sm shadow-sm">
+                            <input type="text" class="form-control border-primary fw-bold text-center ${color1}" 
+                                   id="val1_${rowId}" value="${v1}" placeholder="날짜" 
+                                   onfocus="if(this.value!=='미사용')this.type='date'" 
+                                   onblur="if(!this.value)this.type='text'"
+                                   style="border-right: none;">
+                            <button class="btn btn-white border border-primary border-start-0 text-muted" type="button" 
+                                    onclick="setUnused('val1_${rowId}')" title="미사용 처리" 
+                                    style="background: white;">
+                                <i class="bi bi-slash-circle"></i>
+                            </button>
                         </div>
                     </div>
                     
                     <div class="col-6">
-                        <label class="form-label-sm fw-bold text-muted small mb-1">자동이체 등록</label>
-                        <div class="input-group input-group-sm">
-                            <input type="text" class="form-control border-primary fw-bold text-center p-0" id="val2_${rowId}" value="${v2}" placeholder="날짜" onfocus="if(this.value!=='미사용')this.type='date'" onblur="if(!this.value)this.type='text'">
-                            <button class="btn btn-outline-secondary" type="button" onclick="setUnused('val2_${rowId}')" style="font-size: 0.7rem;">미사용</button>
+                        <label class="form-label-sm fw-bold text-secondary small mb-1 ms-1">자동이체 등록</label>
+                        <div class="input-group input-group-sm shadow-sm">
+                            <input type="text" class="form-control border-primary fw-bold text-center ${color2}" 
+                                   id="val2_${rowId}" value="${v2}" placeholder="날짜" 
+                                   onfocus="if(this.value!=='미사용')this.type='date'" 
+                                   onblur="if(!this.value)this.type='text'"
+                                   style="border-right: none;">
+                            <button class="btn btn-white border border-primary border-start-0 text-muted" type="button" 
+                                    onclick="setUnused('val2_${rowId}')" title="미사용 처리" 
+                                    style="background: white;">
+                                <i class="bi bi-slash-circle"></i>
+                            </button>
                         </div>
                     </div>
                 </div>
 
-                <button class="btn btn-primary w-100 btn-sm fw-bold shadow-sm" onclick="saveSetupInfo('card', '${item.branch}', '${item.rowIndex}', '${rowId}')">
+                <button class="btn btn-primary w-100 btn-sm fw-bold shadow hover-effect" onclick="saveSetupInfo('card', '${item.branch}', '${item.rowIndex}', '${rowId}')">
                     <i class="bi bi-check-lg me-1"></i> 저장하기
                 </button>
             </div>
         </div>`;
     }).join('');
+    
+    // 날짜 입력 이벤트 리스너 (기존과 동일)
+    document.querySelectorAll('input[id^="val"]').forEach(el => {
+        el.addEventListener('input', function() {
+            // 값이 바뀌면 글자색을 파란색으로 (미사용일땐 빨강이었음)
+            if(this.value !== '미사용') {
+                this.classList.remove('text-danger');
+                this.classList.add('text-primary');
+            }
+        });
+    });
 }
 
-// [script.js 추가] 미사용 버튼 클릭 시 동작
+// [script.js] 미사용 버튼 동작 (글자색 빨강으로 변경 추가)
 function setUnused(inputId) {
     const el = document.getElementById(inputId);
-    el.type = 'text'; // 날짜 모드 해제
+    el.type = 'text'; 
     el.value = '미사용';
+    // 시각적 강조
+    el.classList.remove('text-primary');
+    el.classList.add('text-danger');
 }
 
 // 3. 유선설치 리스트 렌더링 (카드 내부에 입력창 배치)
