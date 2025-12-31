@@ -2513,6 +2513,8 @@ function saveSetupInfo(type, branch, rowIndex, rowId) {
 // ==========================================
 
 function searchDbView() {
+    // ★ [추가] 지점 값 읽기
+    const branch = document.getElementById('view_branch').value;
     const start = document.getElementById('view_start').value;
     const end = document.getElementById('view_end').value;
     const carrier = document.getElementById('view_carrier').value;
@@ -2526,6 +2528,7 @@ function searchDbView() {
         method: "POST",
         body: JSON.stringify({
             action: "get_db_view",
+            branch: branch, // ★ 서버로 전송
             start: start,
             end: end,
             carrier: carrier,
