@@ -2616,7 +2616,7 @@ function renderDbViewList(list) {
 }
 
 // ==========================================
-// [최종] PDF 다운로드 기능 (파일명 상세화)
+// [최종] PDF 다운로드 (축소 저장 + 전체 데이터 출력)
 // ==========================================
 function downloadDbPdf() {
     const element = document.getElementById('db_view_result');
@@ -2627,32 +2627,61 @@ function downloadDbPdf() {
         return;
     }
 
-    // 2. 파일명에 들어갈 정보 가져오기
+    // 2. 파일명 생성 (정보 조합)
     const branch = document.getElementById('view_branch').value;
-    const start = document.getElementById('view_start').value.replace(/-/g, ''); // 2025-01-01 -> 20250101
+    const start = document.getElementById('view_start').value.replace(/-/g, '');
     const end = document.getElementById('view_end').value.replace(/-/g, '');
     const carrier = document.getElementById('view_carrier').value;
     const actType = document.getElementById('view_act_type').value;
     const contType = document.getElementById('view_cont_type').value;
 
-    // 3. 파일명 조합 (요청하신 포맷)
-    // 예: DB상세_장지 본점_20251201~20251231_통신사-SKT_개통유형-무선_약정유형-전체.pdf
-    // (콜론 : 은 윈도우 파일명 금지 문자라 - 로 대체하여 안전하게 저장합니다)
-    const filename = `DB상세_지점-${branch}_${start}~${end}_통신사-${carrier}_개통유형-${actType}_약정유형-${contType}.pdf`;
+    const filename = `DB상세_지점-${branch}_기간-${start}~${end}_통신사-${carrier}_개통유형-${actType}_약정유형-${contType}.pdf`;
 
-    // 4. PDF 옵션 설정
+    // 3. PDF 옵션 설정 (축소 로직 포함)
     const opt = {
-        margin:       5, // 여백을 조금 줄여서 내용을 더 많이 담음
+        margin:       5, // 여백 (mm)
         filename:     filename,
         image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2 }, 
-        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' } // 가로 모드(landscape)로 변경하여 표가 잘리지 않게 함
+        html2canvas:  { 
+            scale: 2, // 해상도는 높게 유지 (선명하게)
+            useCORS: true,
+            // ★ [핵심] PDF 생성 직전에 가상으로 스타일을 변경하는 함수
+            onclone: (clonedDoc) => {
+                const target = clonedDoc.getElementById('db_view_result');
+                
+                // (1) 스크롤바 없애고 전체 내용 다 펼치기
+                const scrollArea = target.querySelector('.table-responsive');
+                if (scrollArea) {
+                    scrollArea.style.maxHeight = 'none'; // 높이 제한 해제
+                    scrollArea.style.overflow = 'visible'; // 스크롤 제거
+                }
+
+                // (2) 글씨 크기 축소 (전체적으로 10px로 줄임)
+                target.style.fontSize = '10px';
+
+                // (3) 표 내부 여백(Padding) 확 줄이기 (콤팩트하게)
+                const cells = target.querySelectorAll('th, td');
+                cells.forEach(cell => {
+                    cell.style.padding = '4px 2px'; // 상하 4px, 좌우 2px로 좁힘
+                    cell.style.fontSize = '10px';   // 셀 내부 글씨도 강제 축소
+                    cell.style.lineHeight = '1.2';  // 줄 간격도 좁힘
+                });
+
+                // (4) 뱃지(Badge) 크기도 축소
+                const badges = target.querySelectorAll('.badge');
+                badges.forEach(badge => {
+                    badge.style.fontSize = '9px';
+                    badge.style.padding = '2px 4px';
+                });
+            }
+        }, 
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' } // 가로 모드
     };
 
-    // 5. 로딩 및 실행
+    // 4. 로딩 및 실행
     Swal.fire({
         title: 'PDF 생성 중...',
-        text: '데이터 양에 따라 시간이 걸릴 수 있습니다.',
+        text: '데이터를 압축하여 변환 중입니다. 잠시만 기다려주세요.',
         allowOutsideClick: false,
         didOpen: () => { Swal.showLoading(); }
     });
@@ -2662,6 +2691,7 @@ function downloadDbPdf() {
         Swal.fire({ icon: 'success', title: '다운로드 완료!', text: filename, timer: 2000, showConfirmButton: false });
     }).catch(err => {
         Swal.close();
+        console.error(err);
         alert("PDF 생성 중 오류가 발생했습니다.");
     });
 }
