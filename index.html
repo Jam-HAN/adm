@@ -739,14 +739,6 @@
                     <h5 class="fw-bold mb-4 text-dark"><i class="bi bi-database-fill"></i> DB 상세 열람</h5>
                     
                     <div class="row g-2 mb-3 bg-light p-3 rounded border">
-
-                        <div class="col-12 mb-2">
-                            <select id="view_branch" class="form-select form-select-sm fw-bold text-primary border-primary">
-                                <option value="전체">🏢 전체 지점</option>
-                                <option value="장지 본점">장지 본점</option>
-                                <option value="명일 직영점">명일 직영점</option>
-                            </select>
-                        </div>
                         
                         <div class="col-6">
                             <label class="form-label-sm fw-bold text-muted">시작일</label>
@@ -756,8 +748,17 @@
                             <label class="form-label-sm fw-bold text-muted">종료일</label>
                             <input type="date" class="form-control form-control-sm" id="view_end">
                         </div>
+
+                        <div class="col-3">
+                            <label class="form-label-sm fw-bold text-muted">지점</label>
+                            <select id="view_branch" class="form-select form-select-sm fw-bold text-primary">
+                                <option value="전체">🏢 전체 지점</option>
+                                <option value="장지 본점">장지 본점</option>
+                                <option value="명일 직영점">명일 직영점</option>
+                            </select>
+                        </div>
             
-                        <div class="col-4">
+                        <div class="col-3">
                             <label class="form-label-sm fw-bold text-muted">통신사</label>
                             <select class="form-select form-select-sm fw-bold" id="view_carrier">
                                 <option value="전체">전체</option>
@@ -767,7 +768,7 @@
                             </select>
                         </div>
             
-                        <div class="col-4">
+                        <div class="col-3">
                             <label class="form-label-sm fw-bold text-muted">개통유형</label>
                             <select class="form-select form-select-sm fw-bold" id="view_act_type">
                                 <option value="전체">전체</option>
@@ -777,7 +778,7 @@
                             </select>
                         </div>
             
-                        <div class="col-4">
+                        <div class="col-3">
                             <label class="form-label-sm fw-bold text-muted">약정유형</label>
                             <select class="form-select form-select-sm fw-bold" id="view_cont_type">
                                 <option value="전체">전체</option>
