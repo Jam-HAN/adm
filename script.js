@@ -322,48 +322,69 @@ function renderDashboard(data) {
     document.getElementById('dash_today_mobile').innerText = data.today.mobile;
     document.getElementById('dash_today_wired').innerText = data.today.wired;
     
-    // 2. 월간 누적 (목표 그래프 추가)
+    // 2. 월간 누적 (디자인 개선: 정렬 및 여백 조정)
     renderHtmlList('dash_month_stats', Object.keys(data.month), b => {
         const item = data.month[b];
         
-        // 목표가 없으면(0이면) 그냥 기존처럼 숫자만 표시
-        if (!item.targetMobile) item.targetMobile = 1; 
-        if (!item.targetWired) item.targetWired = 1;
+        // 목표가 없으면(0이면) 1로 두어 에러 방지
+        const tMobile = item.targetMobile || 1;
+        const tWired = item.targetWired || 1;
         
         const mPct = item.pctMobile || 0;
         const wPct = item.pctWired || 0;
         const mReal = item.realPctMobile || 0;
         const wReal = item.realPctWired || 0;
 
+        // 목표 설정 여부에 따른 텍스트 표시
+        const mGoalText = item.targetMobile ? `목표 ${item.targetMobile}건` : '<span class="text-muted small">목표 미설정</span>';
+        const wGoalText = item.targetWired ? `목표 ${item.targetWired}건` : '<span class="text-muted small">목표 미설정</span>';
+
         return `
         <div class="mb-4">
-            <div class="d-flex justify-content-between align-items-end mb-1">
-                <span class="fw-bold text-dark"><i class="bi bi-shop me-1"></i>${b}</span>
+            <div class="d-flex align-items-center mb-2">
+                <i class="bi bi-shop text-secondary me-2 fs-5"></i>
+                <span class="fw-bold text-dark fs-5">${b}</span>
             </div>
             
-            <div class="mb-2">
-                <div class="d-flex justify-content-between small mb-1">
-                    <span class="text-primary fw-bold">무선 (${item.mobile}건)</span>
-                    <span class="text-muted" style="font-size:0.75rem;">목표 ${item.targetMobile}건 <span class="text-primary fw-bold">(${mReal}%)</span></span>
+            <div class="mb-3">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <div>
+                        <span class="badge bg-primary me-1">무선</span>
+                        <span class="fw-bold text-dark">${item.mobile}건</span>
+                    </div>
+                    <div class="small">
+                        ${mGoalText} <span class="fw-bold text-primary ms-1">(${mReal}%)</span>
+                    </div>
                 </div>
-                <div class="progress" style="height: 8px;">
-                    <div class="progress-bar bg-primary" role="progressbar" style="width: ${mPct}%" aria-valuenow="${mPct}" aria-valuemin="0" aria-valuemax="100"></div>
+                <div class="progress bg-light shadow-sm" style="height: 10px; border-radius: 5px;">
+                    <div class="progress-bar bg-primary" role="progressbar" 
+                         style="width: ${mPct}%; border-radius: 5px; transition: width 1s ease-in-out;" 
+                         aria-valuenow="${mPct}" aria-valuemin="0" aria-valuemax="100">
+                    </div>
                 </div>
             </div>
 
             <div>
-                <div class="d-flex justify-content-between small mb-1">
-                    <span class="text-success fw-bold">유선 (${item.wired}건)</span>
-                    <span class="text-muted" style="font-size:0.75rem;">목표 ${item.targetWired}건 <span class="text-success fw-bold">(${wReal}%)</span></span>
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <div>
+                        <span class="badge bg-success me-1">유선</span>
+                        <span class="fw-bold text-dark">${item.wired}건</span>
+                    </div>
+                    <div class="small">
+                        ${wGoalText} <span class="fw-bold text-success ms-1">(${wReal}%)</span>
+                    </div>
                 </div>
-                <div class="progress" style="height: 8px;">
-                    <div class="progress-bar bg-success" role="progressbar" style="width: ${wPct}%" aria-valuenow="${wPct}" aria-valuemin="0" aria-valuemax="100"></div>
+                <div class="progress bg-light shadow-sm" style="height: 10px; border-radius: 5px;">
+                    <div class="progress-bar bg-success" role="progressbar" 
+                         style="width: ${wPct}%; border-radius: 5px; transition: width 1s ease-in-out;" 
+                         aria-valuenow="${wPct}" aria-valuemin="0" aria-valuemax="100">
+                    </div>
                 </div>
             </div>
         </div>
-        <hr class="my-3 text-muted opacity-25">
+        <hr class="my-4 border-secondary opacity-10">
         `;
-    }, '<div class="text-center text-muted">데이터 없음</div>');
+    }, '<div class="text-center text-muted py-5">데이터 없음</div>');
     
     // 3. 오늘 실시간 개통 리스트 (기존 테이블 유지 - 의도하신 대로)
     renderHtmlList('dash_today_list', data.todayList, item => {
