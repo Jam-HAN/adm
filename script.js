@@ -322,16 +322,48 @@ function renderDashboard(data) {
     document.getElementById('dash_today_mobile').innerText = data.today.mobile;
     document.getElementById('dash_today_wired').innerText = data.today.wired;
     
-    // 2. 월간 누적
-    renderHtmlList('dash_month_stats', Object.keys(data.month), b => `
-        <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
-            <span class="fw-bold small">${b}</span>
-            <div class="text-end">
-                <span class="badge bg-primary me-1">📱 ${data.month[b].mobile}</span>
-                <span class="badge bg-success">📺 ${data.month[b].wired}</span>
+    // 2. 월간 누적 (목표 그래프 추가)
+    renderHtmlList('dash_month_stats', Object.keys(data.month), b => {
+        const item = data.month[b];
+        
+        // 목표가 없으면(0이면) 그냥 기존처럼 숫자만 표시
+        if (!item.targetMobile) item.targetMobile = 1; 
+        if (!item.targetWired) item.targetWired = 1;
+        
+        const mPct = item.pctMobile || 0;
+        const wPct = item.pctWired || 0;
+        const mReal = item.realPctMobile || 0;
+        const wReal = item.realPctWired || 0;
+
+        return `
+        <div class="mb-4">
+            <div class="d-flex justify-content-between align-items-end mb-1">
+                <span class="fw-bold text-dark"><i class="bi bi-shop me-1"></i>${b}</span>
+            </div>
+            
+            <div class="mb-2">
+                <div class="d-flex justify-content-between small mb-1">
+                    <span class="text-primary fw-bold">무선 (${item.mobile}건)</span>
+                    <span class="text-muted" style="font-size:0.75rem;">목표 ${item.targetMobile}건 <span class="text-primary fw-bold">(${mReal}%)</span></span>
+                </div>
+                <div class="progress" style="height: 8px;">
+                    <div class="progress-bar bg-primary" role="progressbar" style="width: ${mPct}%" aria-valuenow="${mPct}" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+            </div>
+
+            <div>
+                <div class="d-flex justify-content-between small mb-1">
+                    <span class="text-success fw-bold">유선 (${item.wired}건)</span>
+                    <span class="text-muted" style="font-size:0.75rem;">목표 ${item.targetWired}건 <span class="text-success fw-bold">(${wReal}%)</span></span>
+                </div>
+                <div class="progress" style="height: 8px;">
+                    <div class="progress-bar bg-success" role="progressbar" style="width: ${wPct}%" aria-valuenow="${wPct}" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
             </div>
         </div>
-    `, '데이터 없음');
+        <hr class="my-3 text-muted opacity-25">
+        `;
+    }, '<div class="text-center text-muted">데이터 없음</div>');
     
     // 3. 오늘 실시간 개통 리스트 (기존 테이블 유지 - 의도하신 대로)
     renderHtmlList('dash_today_list', data.todayList, item => {
@@ -2724,4 +2756,35 @@ function downloadDbPdf() {
 
     win.document.close(); // 문서 작성 완료 신호
     win.focus(); // 윈도우 포커스
+}
+
+// 목표 설정 모달 열기
+function openGoalModal() {
+    new bootstrap.Modal(document.getElementById('modal-set-goal')).show();
+}
+
+// 목표 저장
+function submitGoal() {
+    const branch = document.getElementById('goal_branch').value;
+    const mobile = document.getElementById('goal_mobile').value;
+    const wired = document.getElementById('goal_wired').value;
+
+    if(!mobile || !wired) { alert("목표 수량을 입력해주세요."); return; }
+
+    fetch(GAS_URL, {
+        method: "POST",
+        body: JSON.stringify({
+            action: "set_monthly_goal",
+            branch: branch,
+            mobile: mobile,
+            wired: wired
+        })
+    })
+    .then(r => r.json())
+    .then(d => {
+        alert(d.message);
+        bootstrap.Modal.getInstance(document.getElementById('modal-set-goal')).hide();
+        loadDashboard(); // 대시보드 새로고침 (그래프 반영)
+    })
+    .catch(e => alert("저장 실패"));
 }
