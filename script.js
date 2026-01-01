@@ -338,7 +338,7 @@ function renderDashboard(data) {
         const wGoalText = item.targetWired ? `목표 ${item.targetWired}건` : '<span class="text-muted small">목표 미설정</span>';
 
         return `
-        <div class="mb-4">
+        <div class="mb-2">
             <div class="d-flex align-items-center mb-2">
                 <i class="bi bi-shop text-secondary me-2"></i>
                 <span class="fw-bold text-dark">${b}</span>
