@@ -147,7 +147,7 @@
                                 <h6 class="m-0 fw-bold text-primary text-uppercase text-truncate">오늘 개통 현황 (전체)</h6>
                                 <div></div> 
                             </div>
-                            <div class="card-body p-4 d-flex align-items-center justify-content-center">
+                            <div class="card-body p-4 d-flex align-items-center justify-content-center fixed-h-box">
                                 <div class="row text-center w-100">
                                     <div class="col-6 border-end">
                                         <div class="small text-muted mb-2">📱 무선</div>
@@ -173,8 +173,12 @@
                                     <i class="bi bi-flag-fill me-1"></i> 목표 설정
                                 </button>
                             </div>
-                            <div class="card-body p-4 d-flex flex-column justify-content-center" id="dash_month_stats">
+                            <div class="card-body p-4 d-flex flex-column justify-content-center fixed-h-box" id="dash_month_stats">
+                                <div class="text-center text-muted">
+                                    <div class="spinner-border text-success mb-2"></div>
+                                    <div class="small">데이터 로딩 중...</div>
                                 </div>
+                            </div>
                         </div>
                     </div>
                 </div>
