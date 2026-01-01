@@ -322,11 +322,10 @@ function renderDashboard(data) {
     document.getElementById('dash_today_mobile').innerText = data.today.mobile;
     document.getElementById('dash_today_wired').innerText = data.today.wired;
     
-    // 2. 월간 누적 (디자인 개선: 정렬 및 여백 조정)
+    // 2. 월간 누적 (디자인 수정: 폰트 축소, 구분선 제거)
     renderHtmlList('dash_month_stats', Object.keys(data.month), b => {
         const item = data.month[b];
         
-        // 목표가 없으면(0이면) 1로 두어 에러 방지
         const tMobile = item.targetMobile || 1;
         const tWired = item.targetWired || 1;
         
@@ -335,15 +334,14 @@ function renderDashboard(data) {
         const mReal = item.realPctMobile || 0;
         const wReal = item.realPctWired || 0;
 
-        // 목표 설정 여부에 따른 텍스트 표시
         const mGoalText = item.targetMobile ? `목표 ${item.targetMobile}건` : '<span class="text-muted small">목표 미설정</span>';
         const wGoalText = item.targetWired ? `목표 ${item.targetWired}건` : '<span class="text-muted small">목표 미설정</span>';
 
         return `
         <div class="mb-4">
             <div class="d-flex align-items-center mb-2">
-                <i class="bi bi-shop text-secondary me-2 fs-5"></i>
-                <span class="fw-bold text-dark fs-5">${b}</span>
+                <i class="bi bi-shop text-secondary me-2"></i>
+                <span class="fw-bold text-dark">${b}</span>
             </div>
             
             <div class="mb-3">
@@ -382,7 +380,6 @@ function renderDashboard(data) {
                 </div>
             </div>
         </div>
-        <hr class="my-4 border-secondary opacity-10">
         `;
     }, '<div class="text-center text-muted py-5">데이터 없음</div>');
     
