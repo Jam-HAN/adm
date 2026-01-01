@@ -176,3 +176,18 @@ body {
 .form-label, label {
     margin-bottom: 0.3rem !important;
 }
+
+/* =========================================
+   [대시보드] 리스트 마지막 요소 자동 정리
+   ========================================= */
+
+/* 1. 컨테이너 안의 '마지막 구분선'은 화면에서 숨김 */
+#dash_month_stats .stat-divider:last-child {
+    display: none !important;
+}
+
+/* 2. 컨테이너 안의 '마지막 내용 박스'는 하단 여백 제거 */
+/* (HTML 구조가 [내용] -> [선] -> [내용] -> [선] 순서라 뒤에서 2번째가 마지막 내용임) */
+#dash_month_stats .stat-item:nth-last-child(2) {
+    margin-bottom: 0 !important;
+}
