@@ -336,61 +336,61 @@ function renderDashboard(data) {
     renderHtmlList('dash_month_stats', Object.keys(data.month), b => {
         const item = data.month[b];
         
+        // ... (변수 선언부는 그대로) ...
         const tMobile = item.targetMobile || 1;
         const tWired = item.targetWired || 1;
-        
         const mPct = item.pctMobile || 0;
         const wPct = item.pctWired || 0;
         const mReal = item.realPctMobile || 0;
         const wReal = item.realPctWired || 0;
+        const mGoalText = item.targetMobile ? `목표 ${item.targetMobile}` : '미설정';
+        const wGoalText = item.targetWired ? `목표 ${item.targetWired}` : '미설정';
 
-        const mGoalText = item.targetMobile ? `목표 ${item.targetMobile}건` : '<span class="text-muted small">목표 미설정</span>';
-        const wGoalText = item.targetWired ? `목표 ${item.targetWired}건` : '<span class="text-muted small">목표 미설정</span>';
-
-        // ★ [변경] 복잡한 계산 없이 그냥 클래스(stat-item)만 하나 붙여서 내보냅니다.
         return `
-        <div class="stat-item mb-4">
-            <div class="d-flex align-items-center mb-2">
-                <i class="bi bi-shop text-secondary me-2"></i>
-                <span class="fw-bold text-dark">${b}</span>
+        <div class="stat-item mb-3">
+            
+            <div class="d-flex align-items-center mb-1">
+                <i class="bi bi-shop text-secondary me-2 small"></i>
+                <span class="fw-bold text-dark small">${b}</span>
             </div>
             
-            <div class="mb-3">
-                <div class="d-flex justify-content-between align-items-center mb-1">
+            <div class="mb-1">
+                <div class="d-flex justify-content-between align-items-center mb-0">
                     <div>
-                        <span class="badge bg-primary me-1">무선</span>
-                        <span class="fw-bold text-dark">${item.mobile}건</span>
+                        <span class="badge bg-primary me-1" style="font-size: 0.7rem;">무선</span>
+                        <span class="fw-bold text-dark small">${item.mobile}건</span>
                     </div>
-                    <div class="small">
-                        ${mGoalText} <span class="fw-bold text-primary ms-1">(${mReal}%)</span>
+                    <div class="text-muted" style="font-size: 0.7rem;">
+                        ${mGoalText} <span class="fw-bold text-primary">(${mReal}%)</span>
                     </div>
                 </div>
-                <div class="progress bg-light shadow-sm" style="height: 10px; border-radius: 5px;">
+                <div class="progress bg-light shadow-sm mt-1" style="height: 6px; border-radius: 3px;">
                     <div class="progress-bar bg-primary" role="progressbar" 
-                         style="width: ${mPct}%; border-radius: 5px; transition: width 1s ease-in-out;" 
+                         style="width: ${mPct}%; border-radius: 3px; transition: width 1s ease-in-out;" 
                          aria-valuenow="${mPct}" aria-valuemin="0" aria-valuemax="100">
                     </div>
                 </div>
             </div>
 
             <div>
-                <div class="d-flex justify-content-between align-items-center mb-1">
+                <div class="d-flex justify-content-between align-items-center mb-0">
                     <div>
-                        <span class="badge bg-success me-1">유선</span>
-                        <span class="fw-bold text-dark">${item.wired}건</span>
+                        <span class="badge bg-success me-1" style="font-size: 0.7rem;">유선</span>
+                        <span class="fw-bold text-dark small">${item.wired}건</span>
                     </div>
-                    <div class="small">
-                        ${wGoalText} <span class="fw-bold text-success ms-1">(${wReal}%)</span>
+                    <div class="text-muted" style="font-size: 0.7rem;">
+                        ${wGoalText} <span class="fw-bold text-success">(${wReal}%)</span>
                     </div>
                 </div>
-                <div class="progress bg-light shadow-sm" style="height: 10px; border-radius: 5px;">
+                <div class="progress bg-light shadow-sm mt-1" style="height: 6px; border-radius: 3px;">
                     <div class="progress-bar bg-success" role="progressbar" 
-                         style="width: ${wPct}%; border-radius: 5px; transition: width 1s ease-in-out;" 
+                         style="width: ${wPct}%; border-radius: 3px; transition: width 1s ease-in-out;" 
                          aria-valuenow="${wPct}" aria-valuemin="0" aria-valuemax="100">
                     </div>
                 </div>
             </div>
         </div>
+        <hr class="stat-divider my-2 border-secondary opacity-10">
         `;
     }, '<div class="text-center text-muted py-5">데이터 없음</div>');
     
