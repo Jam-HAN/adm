@@ -167,6 +167,10 @@
                             <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center px-4" 
                                  style="height: 60px; overflow: hidden;">
                                 <h6 class="m-0 fw-bold text-success text-uppercase text-truncate">이번 달 누적 (지점별)</h6>
+
+                                <button class="btn btn-sm btn-outline-primary fw-bold mb-3" onclick="openGoalModal()">
+                                    <i class="bi bi-flag-fill me-1"></i> 목표 설정
+                                </button>
                                 <div></div>
                             </div>
                             <div class="card-body p-4 d-flex flex-column justify-content-center" id="dash_month_stats">
@@ -1085,6 +1089,35 @@
                         <button type="button" class="btn btn-light" data-bs-dismiss="modal">닫기</button>
                         <button type="button" class="btn btn-primary fw-bold" onclick="submitEditHistory()">수정사항 저장</button>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modal-set-goal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-dark text-white">
+                    <h6 class="modal-title fw-bold"><i class="bi bi-flag"></i> 이번 달 목표 설정</h6>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">지점 선택</label>
+                        <select class="form-select form-select-sm" id="goal_branch">
+                            <option value="장지 본점">장지 본점</option>
+                            <option value="명일 직영점">명일 직영점</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-primary">📱 무선 목표 (건)</label>
+                        <input type="number" class="form-control" id="goal_mobile" placeholder="예: 100">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-success">📺 유선 목표 (건)</label>
+                        <input type="number" class="form-control" id="goal_wired" placeholder="예: 20">
+                    </div>
+                    <button class="btn btn-primary w-100 fw-bold" onclick="submitGoal()">저장하기</button>
                 </div>
             </div>
         </div>
