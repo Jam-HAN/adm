@@ -337,8 +337,17 @@ function renderDashboard(data) {
         const mGoalText = item.targetMobile ? `목표 ${item.targetMobile}건` : '<span class="text-muted small">목표 미설정</span>';
         const wGoalText = item.targetWired ? `목표 ${item.targetWired}건` : '<span class="text-muted small">목표 미설정</span>';
 
+        // ★ 수정 포인트 2: 마지막 항목인지 확인
+        const isLast = (index === array.length - 1);
+        
+        // 마지막이면 여백 없음(mb-0), 중간 놈들은 여백 유지(mb-4)
+        const wrapperClass = isLast ? "mb-0" : "mb-4"; 
+        
+        // 마지막이면 구분선 안 그림, 중간 놈들은 그림
+        const hrHtml = isLast ? "" : '<hr class="my-4 border-secondary opacity-10">';
+
         return `
-        <div class="mb-4">
+        <div class="${wrapperClass}">
             <div class="d-flex align-items-center mb-2">
                 <i class="bi bi-shop text-secondary me-2"></i>
                 <span class="fw-bold text-dark">${b}</span>
@@ -380,7 +389,7 @@ function renderDashboard(data) {
                 </div>
             </div>
         </div>
-        `;
+        ${hrHtml} `;
     }, '<div class="text-center text-muted py-5">데이터 없음</div>');
     
     // 3. 오늘 실시간 개통 리스트 (기존 테이블 유지 - 의도하신 대로)
