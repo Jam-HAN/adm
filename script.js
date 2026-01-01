@@ -390,6 +390,7 @@ function renderDashboard(data) {
                 </div>
             </div>
         </div>
+        <hr class="stat-divider my-3 border-secondary opacity-10">
         `;
     }, '<div class="text-center text-muted py-5">데이터 없음</div>');
     
