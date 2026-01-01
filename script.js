@@ -304,6 +304,16 @@ function loadDashboard() {
     // [수정] 높이 확보 및 중앙 정렬
     dashUser.innerHTML = '<div class="d-flex justify-content-center align-items-center" style="height:200px;"><div class="spinner-border text-success"></div></div>';
 
+    // ★ [추가] 상단 누적 현황도 로딩 표시 (이제 여기가 고정 높이라 로딩바 넣기 좋음)
+    const dashMonth = document.getElementById('dash_month_stats');
+    if(dashMonth) {
+        dashMonth.innerHTML = `
+            <div class="text-center w-100">
+                <div class="spinner-border text-success mb-2"></div>
+                <div class="small text-muted">집계 중...</div>
+            </div>`;
+    }
+    
     fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "get_dashboard_data" }) })
     .then(r => r.json())
     .then(d => {
