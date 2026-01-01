@@ -191,3 +191,17 @@ body {
 #dash_month_stats .stat-item:last-of-type {
     margin-bottom: 0 !important;
 }
+
+/* [CSS] 대시보드 상단 카드 높이 고정 (로딩 시 덜컥거림 방지) */
+.fixed-h-box {
+    min-height: 250px; /* 최소 높이 확보 */
+    max-height: 250px; /* 최대 높이 제한 (내용 많으면 스크롤) */
+    overflow-y: auto;  /* 스크롤 허용 */
+    display: flex;
+    flex-direction: column;
+    justify-content: center; /* 내용이 적을 땐 중앙 정렬 */
+}
+
+/* 스크롤바 디자인 (옵션) */
+.fixed-h-box::-webkit-scrollbar { width: 6px; }
+.fixed-h-box::-webkit-scrollbar-thumb { background-color: #dee2e6; border-radius: 3px; }
