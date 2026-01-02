@@ -1348,7 +1348,7 @@ function searchAllHistory() {
                 else if(item.sheetName === '중고개통') badgeClass = 'bg-warning text-white'; 
                 
                 // 데이터 null 처리
-                const contact = item['연락처'] || '-';
+                const contact = item['전화번호'] || '-';
                 const carrier = item['개통처'] || item['통신사'] || '-'; 
                 const type = item['개통유형'] || '-';
                 const contract = item['약정유형'] || '-';
@@ -1374,7 +1374,7 @@ function searchAllHistory() {
                     
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <div class="text-truncate me-2">
-                            <span class="fw-bold text-primary fs-5 me-2">${item['고객명']}</span>
+                            <span class="fw-bold text-primary fs-5 me-2">${item['이름']}</span>
                             <span class="small text-dark">
                                 ${contact} <span class="text-muted mx-1">|</span>
                                 ${carrier} <span class="text-muted mx-1">|</span>
