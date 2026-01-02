@@ -419,8 +419,8 @@ function renderDashboard(data) {
                         <th style="width:20%">매니저</th>
                         <th style="width:15%">📱</th>
                         <th style="width:15%">📺</th>
-                        <th style="width:15%">중고</th>
-                        <th style="width:25%">💰 마진</th> </tr>
+                        <th style="width:15%">♻️</th>
+                        <th style="width:25%">💰</th> </tr>
                 </thead>
                 <tbody>
         `;
