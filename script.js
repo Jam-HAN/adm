@@ -437,7 +437,7 @@ function renderDashboard(data) {
                     <td class="fw-bold text-dark">${u.name}님</td>
                     <td class="text-muted">${u.mobile}</td>
                     <td class="text-muted">${u.wired}</td>
-                    <td class="text-muted">${u.used}</td>
+                    <td class="text-muted">${u.total}</td>
                     <td class="fw-bold text-danger">${marginStr}</td> </tr>
             `;
         });
