@@ -1487,7 +1487,8 @@ function openEditModal(item) {
                             <span class="small text-dark">
                                 ${item['전화번호'] || '-'} <span class="text-muted mx-1">|</span>
                                 ${item['개통처'] || '-'} <span class="text-muted mx-1">|</span>
-                                ${item['개통유형'] || '-'}
+                                ${item['개통유형'] || '-'} <span class="text-muted mx-1">|</span>
+                                ${item['약정유형'] || '-'}
                             </span>
                         </div>
                         <span class="badge bg-white text-primary border rounded-pill px-2 shadow-sm text-nowrap">
