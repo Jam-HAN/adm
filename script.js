@@ -1348,7 +1348,7 @@ function searchAllHistory() {
                 else if(item.sheetName === '중고개통') badgeClass = 'bg-warning text-white'; 
                 
                 // 데이터 null 처리
-                const contact = item['전화번호'] || '-';
+                const contact = item['연락처'] || '-';
                 const carrier = item['개통처'] || item['통신사'] || '-'; 
                 const type = item['개통유형'] || '-';
                 const contract = item['약정유형'] || '-';
@@ -1374,7 +1374,7 @@ function searchAllHistory() {
                     
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <div class="text-truncate me-2">
-                            <span class="fw-bold text-primary fs-5 me-2">${item['이름']}</span>
+                            <span class="fw-bold text-primary fs-5 me-2">${item['고객명']}</span>
                             <span class="small text-dark">
                                 ${contact} <span class="text-muted mx-1">|</span>
                                 ${carrier} <span class="text-muted mx-1">|</span>
@@ -1408,19 +1408,24 @@ function searchAllHistory() {
     });
 }
 
-// [최종 수정] 개통 정보 수정 모달 (DB 헤더명으로 key 통일)
+// [최종 수정] 개통 정보 수정 모달 (상단 모델/요금제 정보 삭제로 심플화)
 function openEditModal(item) {
+    // [안전장치] 데이터 로딩 체크
     if (!globalDropdownData || !globalDropdownData.visitList || globalDropdownData.visitList.length === 0) {
-        Swal.fire({ title: '로딩 중...', didOpen: () => { Swal.showLoading(); } });
+        Swal.fire({
+            title: '데이터 로딩 중...', text: '필수 목록 데이터를 불러오고 있습니다. 잠시만 기다려주세요.',
+            allowOutsideClick: false, didOpen: () => { Swal.showLoading(); }
+        });
         fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "get_dropdown_data" }) })
         .then(r => r.json()).then(d => {
             Swal.close();
             if(d.status === 'success') { globalDropdownData = d; applyDropdownData(d); openEditModal(item); }
             else { alert("데이터 로드 실패: " + d.message); }
-        });
+        }).catch(e => { Swal.close(); alert("서버 통신 오류"); });
         return;
     }
 
+    // 식별자 값 세팅
     document.getElementById('edit_sheet_name').value = item.sheetName;
     document.getElementById('edit_row_index').value = item.rowIndex;
     document.getElementById('edit_branch_name').value = item.branch || item['지점'];
@@ -1428,52 +1433,63 @@ function openEditModal(item) {
     const container = document.getElementById('edit_form_container');
     container.innerHTML = ''; 
 
-    // 헬퍼 함수
+    // --- 헬퍼 함수 (data-original 속성 추가됨) ---
     const makeInput = (label, key, width = 'col-6', type = 'text', isDanger = false, isReadOnly = false) => {
-        let displayVal = item[key];
-        if (displayVal === undefined || displayVal === null) displayVal = '';
-
-        // 날짜 자르기
-        if (typeof displayVal === 'string' && displayVal.includes('T') && label.includes('일')) {
-            displayVal = displayVal.split('T')[0];
+        let val = item[key] || '';
+        
+        // 날짜 자르기 로직
+        const dateKeys = ['요금제변경일', '부가서비스해지일', '대납1요청일', '대납2요청일', '처리일', '개통일'];
+        if (dateKeys.includes(key) && typeof val === 'string' && val.includes('T')) {
+            val = val.split('T')[0];
         }
 
         const labelClass = isDanger ? "form-label-sm text-danger-custom" : "form-label-sm";
         let inputClass = isDanger ? "form-control form-control-sm edit-input border-danger-custom" : "form-control form-control-sm edit-input";
-        if (isReadOnly) inputClass += " bg-light text-muted"; 
+        let readOnlyAttr = "";
+        
+        if (isReadOnly) {
+            inputClass += " bg-light text-muted"; 
+            readOnlyAttr = "readonly tabindex='-1'";
+        }
 
+        // [핵심] data-original="${val}" 추가 -> 나중에 변경 비교용
         return `
             <div class="${width}">
                 <label class="${labelClass}">${label}</label>
-                <input type="${type}" class="${inputClass}" data-key="${key}" value="${displayVal}" data-original="${displayVal}" ${isReadOnly ? 'readonly tabindex="-1"' : ''}>
+                <input type="${type}" class="${inputClass}" data-key="${key}" value="${val}" data-original="${val}" ${readOnlyAttr}>
             </div>`;
     };
 
-    const makeSelect = (label, key, options, width = 'col-6', transformFn = null) => {
-        let val = item[key];
+    const makeSelect = (label, key, options, width = 'col-6') => {
+        const val = item[key] || '';
         const safeOptions = options || [];
-        let optsHtml = safeOptions.map(opt => `<option value="${opt}" ${String(val) === String(opt) ? 'selected' : ''}>${opt}</option>`).join('');
+        let optsHtml = safeOptions.map(opt => `<option value="${opt}" ${val === opt ? 'selected' : ''}>${opt}</option>`).join('');
         if(val && !safeOptions.includes(val)) optsHtml += `<option value="${val}" selected>${val} (기존값)</option>`;
         
+        // [핵심] data-original="${val}" 추가
         return `<div class="${width}"><label class="form-label-sm">${label}</label><select class="form-select form-select-sm edit-input" data-key="${key}" data-original="${val}"><option value="">선택</option>${optsHtml}</select></div>`;
     };
 
+    // 설정 데이터
     const dd = globalDropdownData || {}; 
+    const visitList = dd.visitList || [];
     const usimList = dd.usimList || [];
     const reviewList = dd.reviewList || [];
     const payMethodList = dd.payMethodList || [];
     const colMethodList = dd.colMethodList || [];
-    const visitList = dd.visitList || [];
 
-    // [헤더 생성]
     let badgeClass = 'bg-primary';
     if (item.sheetName === '유선개통') badgeClass = 'bg-success';
     else if (item.sheetName === '중고개통') badgeClass = 'bg-warning text-white';
 
+    // ==========================================
+    // 1. [상단] 요약 정보 (심플 버전)
+    // ==========================================
     let headerHtml = `
         <div class="col-12 mb-2">
             <div class="card border-0 shadow-sm bg-light">
                 <div class="card-body p-3">
+                    
                     <div class="d-flex w-100 justify-content-between align-items-center mb-2 border-bottom pb-2">
                         <div>
                             <span class="badge ${badgeClass} me-1">${item.sheetName}</span>
@@ -1481,11 +1497,12 @@ function openEditModal(item) {
                         </div>
                         <small class="fw-bold text-dark">${item['개통일']}</small>
                     </div>
+
                     <div class="d-flex justify-content-between align-items-center">
                         <div class="text-truncate me-2">
-                            <span class="fw-bold text-primary fs-5 me-2">${item['이름']}</span>
+                            <span class="fw-bold text-primary fs-5 me-2">${item['고객명']}</span>
                             <span class="small text-dark">
-                                ${item['전화번호'] || '-'} <span class="text-muted mx-1">|</span>
+                                ${item['연락처'] || '-'} <span class="text-muted mx-1">|</span>
                                 ${item['개통처'] || '-'} <span class="text-muted mx-1">|</span>
                                 ${item['개통유형'] || '-'} <span class="text-muted mx-1">|</span>
                                 ${item['약정유형'] || '-'}
@@ -1495,88 +1512,126 @@ function openEditModal(item) {
                             <i class="bi bi-person-circle me-1"></i>${item['담당자'] || '미지정'}
                         </span>
                     </div>
-                </div>
+
+                    </div>
             </div>
-        </div>`;
+        </div>
+    `;
     container.innerHTML += headerHtml;
 
-    // ★★★ [핵심 변경] data-key를 DB 헤더 이름(COLUMN_MAP)과 일치시킴 ★★★
-    
-    // 1. 기본 정보
-    container.innerHTML += `
-        <div class="divider"></div><div class="section-header"><i class="bi bi-person-badge"></i> 기본 정보</div>
+    // ==========================================
+    // 2. [기본 정보]
+    // ==========================================
+    let sectionBasic = `
+        <div class="divider"></div>
+        <div class="section-header"><i class="bi bi-person-badge"></i> 기본 정보</div>
         <div class="row g-2">
             ${makeInput('개통유형', '개통유형', 'col-4', 'text', false, true)}
             ${makeInput('약정유형', '약정유형', 'col-4', 'text', false, true)}
             ${makeSelect('방문경로', '방문경로', visitList, 'col-4')}
-            ${makeInput('고객명', '이름', 'col-4')}
+
+            ${makeInput('고객명', '고객명', 'col-4')}
             ${makeInput('생년월일', '생년월일', 'col-4')}
-            ${makeInput('연락처', '전화번호', 'col-4')}
+            ${makeInput('연락처', '연락처', 'col-4')}
+
             ${makeInput('요금제', '요금제', 'col-4')}
             ${makeInput('변경요금제', '변경요금제', 'col-4')}
-            ${makeInput('요금제변경일', '변경일', 'col-4', 'text', false, true)}
-            ${makeInput('부가서비스', '부가서비스', 'col-8')}
-            ${makeInput('부가서비스해지일', '해지일', 'col-4', 'text', false, true)}
-            ${makeInput('제휴카드', '제휴카드', 'col-6')}
-            ${makeSelect('리뷰작성', '리뷰작성', reviewList, 'col-6', (v)=>v===true?'작성':(v===false?'미작성':''))}
-        </div>`;
+            ${makeInput('요금제변경일', '요금제변경일', 'col-4', 'text', false, true)}
 
-    // 2. 정책 및 정산
-    container.innerHTML += `
-        <div class="divider"></div><div class="section-header"><i class="bi bi-calculator"></i> 정책 및 정산</div>
+            ${makeInput('부가서비스', '부가서비스', 'col-8')}
+            ${makeInput('부가서비스해지일', '부가서비스해지일', 'col-4', 'text', false, true)}
+
+            ${makeInput('제휴카드', '제휴카드', 'col-6')}
+            ${makeSelect('리뷰작성', '리뷰작성', reviewList, 'col-6')}
+        </div>
+    `;
+    container.innerHTML += sectionBasic;
+
+    // ==========================================
+    // 3. [정책 및 정산]
+    // ==========================================
+    let sectionPolicy = `
+        <div class="divider"></div>
+        <div class="section-header"><i class="bi bi-calculator"></i> 정책 및 정산</div>
         <div class="row g-2">
             ${makeInput('개통처', '개통처', 'col-6', 'text', false, true)}
-            ${makeInput('정책차수', '정책', 'col-6')}
-            ${makeInput('액면/히든', '정책1', 'col-6', 'number')}
-            ${makeInput('추가정책', '정책2', 'col-6', 'number')}
-            ${makeInput('부가정책', '정책3', 'col-6', 'number')}
+            ${makeInput('정책차수', '정책차수', 'col-6')}
+            
+            ${makeInput('액면/히든', '정책금액(액면)', 'col-6', 'number')}
+            ${makeInput('메모', '메모(액면)', 'col-6')}
+            
+            ${makeInput('추가정책', '추가정책', 'col-6', 'number')}
+            ${makeInput('메모', '메모(추가)', 'col-6')}
+            
+            ${makeInput('부가정책', '부가정책', 'col-6', 'number')}
+            ${makeInput('메모', '메모(부가)', 'col-6')}
+            
             ${makeInput('차감정책', '차감정책', 'col-6', 'number', true)}
+            ${makeInput('메모', '메모(차감)', 'col-6')}
+            
             ${makeInput('프리할인', '프리할인', 'col-6', 'number', true)}
-            ${makeSelect('유심', '유심', usimList, 'col-6')}
-        </div>`;
+            ${makeSelect('유심', '유심비', usimList, 'col-6')}
+        </div>
+    `;
+    container.innerHTML += sectionPolicy;
 
-    // 3. 대납 및 지원
-    container.innerHTML += `
-        <div class="divider"></div><div class="section-header"><i class="bi bi-credit-card"></i> 대납 및 지원</div>
+    // ==========================================
+    // 4. [대납 및 지원]
+    // ==========================================
+    let sectionSupport = `
+        <div class="divider"></div>
+        <div class="section-header"><i class="bi bi-credit-card"></i> 대납 및 지원</div>
         <div class="row g-2">
             ${makeInput('대납1', '대납1', 'col-4', 'number', true)}
-            ${makeSelect('방법', '대납방법1', payMethodList, 'col-4')}
-            ${makeInput('처리일', '처리일1', 'col-4', 'text', false, true)}
+            ${makeSelect('방법', '대납1방법', payMethodList, 'col-4')}
+            ${makeInput('처리일', '대납1요청일', 'col-4', 'text', false, true)}
+            
             ${makeInput('대납2', '대납2', 'col-4', 'number', true)}
-            ${makeSelect('방법', '대납방법2', payMethodList, 'col-4')}
-            ${makeInput('처리일', '처리일2', 'col-4', 'text', false, true)}
+            ${makeSelect('방법', '대납2방법', payMethodList, 'col-4')}
+            ${makeInput('처리일', '대납2요청일', 'col-4', 'text', false, true)}
+            
             ${makeInput('현금지급', '현금지급', 'col-6', 'number', true)}
             ${makeInput('페이백', '페이백', 'col-6', 'number', true)}
-            ${makeInput('은행명', '은행', 'col-4')}
+            
+            ${makeInput('은행명', '은행명', 'col-4')}
             ${makeInput('계좌번호', '계좌번호', 'col-4')}
             ${makeInput('예금주', '예금주', 'col-4')}
-        </div>`;
+        </div>
+    `;
+    container.innerHTML += sectionSupport;
 
-    // 4. 수납 상세 (중고폰/상품권 분기)
-    const isWired = (item.sheetName === '유선개통');
-    const specialKey = isWired ? '상품권' : '중고폰';
-    const specialLabel = isWired ? '상품권/기타' : '중고폰';
-
-    container.innerHTML += `
-        <div class="divider"></div><div class="section-header"><i class="bi bi-wallet2"></i> 수납 상세</div>
+    // ==========================================
+    // 5. [수납 상세]
+    // ==========================================
+    // ★ [핵심] 유선이면 '상품권/기타', 무선이면 '중고폰'으로 이름표 변경
+    let labelSpecial = (item.sheetName === '유선개통') ? '상품권/기타' : '중고폰';
+    
+    let sectionCollect = `
+        <div class="divider"></div>
+        <div class="section-header"><i class="bi bi-wallet2"></i> 수납 상세</div>
         <div class="row g-2">
-            ${makeInput('단말기수납1', '기기대1', 'col-6', 'number')}
-            ${makeSelect('방법', '입금방법1', colMethodList, 'col-6')}
-            ${makeInput('단말기수납2', '기기대2', 'col-6', 'number')}
-            ${makeSelect('방법', '입금방법2', colMethodList, 'col-6')}
-            ${makeInput('요금수납', '요금', 'col-6', 'number')}
-            ${makeSelect('방법', '입금방법3', colMethodList, 'col-6')}
+            ${makeInput('단말기수납1', '단말기수납1', 'col-6', 'number')}
+            ${makeSelect('방법', '단말기수납1방법', colMethodList, 'col-6')}
+
+            ${makeInput('단말기수납2', '단말기수납2', 'col-6', 'number')}
+            ${makeSelect('방법', '단말기수납2방법', colMethodList, 'col-6')}
             
-            ${makeInput(specialLabel, specialKey, 'col-6', 'number')}
+            ${makeInput('요금수납', '요금수납', 'col-6', 'number')}
+            ${makeSelect('방법', '요금수납방법', colMethodList, 'col-6')}
+            
+            ${makeInput(labelSpecial, '중고폰반납', 'col-6', 'number')}
             ${makeInput('메모', '중고폰메모', 'col-6')}
+            
             ${makeInput('기타 특이사항', '특이사항', 'col-12')}
-        </div>`;
+        </div>
+    `;
+    container.innerHTML += sectionCollect;
 
     // [하단 버튼]
     const footer = document.querySelector('#modal-edit-history .modal-footer');
     if(footer) footer.style.display = 'none';
 
-    container.innerHTML += `
+    let buttonSection = `
         <div class="mt-4 pt-3 border-top d-flex justify-content-between align-items-center gap-2">
             <button type="button" class="btn btn-outline-danger py-2 px-3 fw-bold" onclick="deleteHistoryItem()">
                 <i class="bi bi-trash3"></i> 개통 취소
@@ -1591,6 +1646,7 @@ function openEditModal(item) {
             </div>
         </div>
     `;
+    container.innerHTML += buttonSection;
 
     const modal = new bootstrap.Modal(document.getElementById('modal-edit-history'));
     modal.show();
