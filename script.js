@@ -1557,20 +1557,20 @@ function openEditModal(item) {
             ${makeInput('개통처', '개통처', 'col-6', 'text', false, true)}
             ${makeInput('정책차수', '정책차수', 'col-6')}
             
-            ${makeInput('액면/히든', '정책금액(액면)', 'col-6', 'number')}
+            ${makeInput('액면/히든', '정책1', 'col-6', 'number')}
             ${makeInput('메모', '메모(액면)', 'col-6')}
             
-            ${makeInput('추가정책', '추가정책', 'col-6', 'number')}
+            ${makeInput('추가정책', '정책2', 'col-6', 'number')}
             ${makeInput('메모', '메모(추가)', 'col-6')}
             
-            ${makeInput('부가정책', '부가정책', 'col-6', 'number')}
+            ${makeInput('부가정책', '정책3', 'col-6', 'number')}
             ${makeInput('메모', '메모(부가)', 'col-6')}
             
             ${makeInput('차감정책', '차감정책', 'col-6', 'number', true)}
             ${makeInput('메모', '메모(차감)', 'col-6')}
             
             ${makeInput('프리할인', '프리할인', 'col-6', 'number', true)}
-            ${makeSelect('유심', '유심비', usimList, 'col-6')}
+            ${makeSelect('유심', '유심', usimList, 'col-6')}
         </div>
     `;
     container.innerHTML += sectionPolicy;
@@ -1610,13 +1610,13 @@ function openEditModal(item) {
         <div class="divider"></div>
         <div class="section-header"><i class="bi bi-wallet2"></i> 수납 상세</div>
         <div class="row g-2">
-            ${makeInput('단말기수납1', '단말기수납1', 'col-6', 'number')}
+            ${makeInput('단말기수납1', '기기대1', 'col-6', 'number')}
             ${makeSelect('방법', '단말기수납1방법', colMethodList, 'col-6')}
 
-            ${makeInput('단말기수납2', '단말기수납2', 'col-6', 'number')}
+            ${makeInput('단말기수납2', '기기대2', 'col-6', 'number')}
             ${makeSelect('방법', '단말기수납2방법', colMethodList, 'col-6')}
             
-            ${makeInput('요금수납', '요금수납', 'col-6', 'number')}
+            ${makeInput('요금수납', '요금', 'col-6', 'number')}
             ${makeSelect('방법', '요금수납방법', colMethodList, 'col-6')}
             
             ${makeInput(labelSpecial, '중고폰반납', 'col-6', 'number')}
