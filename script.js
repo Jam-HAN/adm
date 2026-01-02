@@ -419,7 +419,7 @@ function renderDashboard(data) {
                         <th style="width:20%">매니저</th>
                         <th style="width:15%">📱</th>
                         <th style="width:15%">📺</th>
-                        <th style="width:15%">♻️</th>
+                        <th style="width:15%">합계</th>
                         <th style="width:25%">💰</th> </tr>
                 </thead>
                 <tbody>
