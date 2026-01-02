@@ -434,7 +434,7 @@ function renderDashboard(data) {
             html += `
                 <tr class="${isMe}">
                     <td>${rankBadge}</td>
-                    <td class="fw-bold text-dark">${u.name}</td>
+                    <td class="fw-bold text-dark">${u.name}님</td>
                     <td class="text-muted">${u.mobile}</td>
                     <td class="text-muted">${u.wired}</td>
                     <td class="text-muted">${u.used}</td>
