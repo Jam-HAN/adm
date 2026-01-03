@@ -2659,7 +2659,7 @@ function renderDbViewList(list) {
 
     // ★ [변경] 테이블 헤더 생성
     let tableHtml = `
-    <div class="table-responsive border rounded shadow-sm bg-white" style="max-height: 60vh;">
+    <div class="table-responsive border rounded shadow-sm bg-white">
         <table class="table table-hover table-striped align-middle text-center small mb-0" style="white-space: nowrap; font-size: 0.85rem;">
             <thead class="table-dark sticky-top">
                 <tr>
