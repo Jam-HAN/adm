@@ -1353,7 +1353,7 @@ function searchAllHistory() {
                 else if(item.sheetName === '중고개통') badgeClass = 'bg-warning text-white'; 
                 
                 // 데이터 null 처리
-                const contact = item['연락처'] || '-';
+                const contact = item['전화번호'] || '-';
                 const carrier = item['개통처'] || item['통신사'] || '-'; 
                 const type = item['개통유형'] || '-';
                 const contract = item['약정유형'] || '-';
@@ -1507,7 +1507,7 @@ function openEditModal(item) {
                         <div class="text-truncate me-2">
                             <span class="fw-bold text-primary fs-5 me-2">${item['이름']}</span>
                             <span class="small text-dark">
-                                ${item['연락처'] || '-'} <span class="text-muted mx-1">|</span>
+                                ${item['전화번호'] || '-'} <span class="text-muted mx-1">|</span>
                                 ${item['개통처'] || '-'} <span class="text-muted mx-1">|</span>
                                 ${item['개통유형'] || '-'} <span class="text-muted mx-1">|</span>
                                 ${item['약정유형'] || '-'}
@@ -1537,7 +1537,7 @@ function openEditModal(item) {
 
             ${makeInput('고객명', '이름', 'col-4')}
             ${makeInput('생년월일', '생년월일', 'col-4')}
-            ${makeInput('연락처', '연락처', 'col-4')}
+            ${makeInput('전화번호', '전화번호', 'col-4')}
 
             ${makeInput('요금제', '요금제', 'col-4')}
             ${makeInput('변경요금제', '변경요금제', 'col-4')}
@@ -1877,7 +1877,7 @@ function renderSpecialCard(item, type) {
             <div class="text-truncate me-2">
                 <span class="fw-bold text-primary fs-5 me-2">${item['이름']}</span>
                 <span class="small text-dark">
-                    ${item['연락처']} <span class="text-muted mx-1">|</span>
+                    ${item['전화번호']} <span class="text-muted mx-1">|</span>
                     ${item['개통처']} <span class="text-muted mx-1">|</span>
                     ${item['개통유형']}
                 </span>
@@ -1900,7 +1900,7 @@ function openSpecialModal(item, type) {
     document.getElementById('sp_type').value = type;
 
     document.getElementById('sp_customer_name').innerText = item['이름'];
-    document.getElementById('sp_customer_info').innerText = `${item['연락처']} | ${item['개통일']}`;
+    document.getElementById('sp_customer_info').innerText = `${item['전화번호']} | ${item['개통일']}`;
 
     const amtLabel = document.getElementById('sp_amt_label');
     const modalTitle = document.getElementById('special-modal-title');
@@ -2670,7 +2670,7 @@ function renderDbViewList(list) {
                     <th>약정</th>
                     <th>고객명</th>
                     <th>생년월일</th>
-                    <th>연락처</th>
+                    <th>전화번호</th>
                     <th>모델명</th>
                 </tr>
             </thead>
