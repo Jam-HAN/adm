@@ -70,12 +70,12 @@ window.handleCredentialResponse = function(response) {
     .then(res => res.json())
     .then(d => {
         if (d.status === 'success') {
-            sessionStorage.setItem('dbphone_user', JSON.stringify({ name: d.name, email: d.user, isAdmin: d.isAdmin }));
+            sessionStorage.setItem('dbphone_user', JSON.stringify({ name: d.name, email: d.user, role: d.role }));
             currentUser = d.name;
             document.getElementById('login-view').style.display = 'none';
             document.getElementById('main-view').style.display = 'block';
             document.getElementById('user-name').innerText = currentUser;
-            checkAdminMenu(); // ★ 메뉴 숨기기 함수 호출
+            checkAuthMenu(); // ★ 메뉴 숨기기 함수 호출
             loadInitData();
             loadDropdownData();
             setupAutoLogout();
@@ -137,7 +137,7 @@ window.onload = function() {
             document.getElementById('main-view').style.display = 'block';
             document.getElementById('user-name').innerText = currentUser;
 
-            checkAdminMenu(); // ★ 새로고침 해도 메뉴 검사 실행
+            checkAuthMenu(); // ★ 새로고침 해도 메뉴 검사 실행
             loadDashboard(); // 대시보드 먼저 실행
             loadInitData();
             loadDropdownData();
@@ -203,26 +203,37 @@ function resetLogoutTimer() {
     }
 }
 
-//  관리자 메뉴 숨김/표시 (기간별 집계 + DB 열람 둘 다 제어)
-function checkAdminMenu() {
+//  3단계 권한 제어 함수
+function checkAuthMenu() {
     const saved = sessionStorage.getItem('dbphone_user');
+    if (!saved) return;
+
+    const u = JSON.parse(saved);
+    const role = u.role || 'STAFF'; // 저장된 등급 가져오기
+
+    // --- 제어할 메뉴 ID 목록 ---
+    const menuDbView = document.getElementById('menu_db_view_item');   // DB 상세 열람 (가장 민감)
+    const menuPeriod = document.getElementById('menu_period_item');    // 기간별 매출 집계 (민감)
+    const menuVendor = document.querySelector('li a[onclick*="section-vendor"]').parentElement; // 거래처 관리
+
+    // --- 초기화: 일단 다 숨김 ---
+    if(menuDbView) menuDbView.style.display = 'none';
+    if(menuPeriod) menuPeriod.style.display = 'none';
     
-    // 제어할 메뉴 ID들 가져오기
-    const menuPeriod = document.getElementById('menu_period_item'); // 기간별 정산
-    const menuDbView = document.getElementById('menu_db_view_item'); // DB 열람
-    
-    if (saved) {
-        const u = JSON.parse(saved);
-        
-        // 관리자면 'block'(보임), 직원이면 'none'(숨김)
-        const displayVal = u.isAdmin ? 'block' : 'none';
-        
-        // 1. 기간별 집계 제어 (직원은 안 보임)
-        if (menuPeriod) menuPeriod.style.display = displayVal;
-        
-        // 2. DB 열람 제어 (직원은 안 보임)
-        if (menuDbView) menuDbView.style.display = displayVal;
+    // --- 등급별 권한 부여 ---
+
+    // 1. 점장(MANAGER) 이상이 볼 수 있는 것
+    if (role === 'MASTER' || role === 'MANAGER') {
+        if(menuPeriod) menuPeriod.style.display = 'block'; // 기간별 집계 보임
     }
+
+    // 2. 대표(MASTER)만 볼 수 있는 것 (최고 권한)
+    if (role === 'MASTER') {
+        if(menuDbView) menuDbView.style.display = 'block'; // DB 열람 보임
+        // 거래처 삭제 버튼 등도 여기서 제어 가능
+    }
+    
+    // (참고) STAFF는 위 if문에 걸리지 않으므로 기본 메뉴만 보게 됩니다.
 }
 
 // 2. 화면 전환
