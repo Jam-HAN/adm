@@ -300,7 +300,7 @@
                                 <div class="col-12" id="div_visit_etc" style="display:none;"><input type="text" class="form-control form-control-sm" id="f_visit_etc" placeholder="상세 경로 입력"></div>
                                 <div class="col-4"><label class="form-label-sm">고객명<span class="required-star">*</span></label><input type="text" class="form-control form-control-sm" id="f_name"></div>
                                 <div class="col-4"><label class="form-label-sm">생년월일</label><input type="number" inputmode="decimal" class="form-control form-control-sm" id="f_birth" placeholder="6자리"></div>
-                                <div class="col-4"><label class="form-label-sm">연락처</label><input type="number" inputmode="decimal" class="form-control form-control-sm" id="f_phone"></div>
+                                <div class="col-4"><label class="form-label-sm">전화번호</label><input type="number" inputmode="decimal" class="form-control form-control-sm" id="f_phone"></div>
                                 <div class="col-6"><label class="form-label-sm">요금제</label><input type="text" class="form-control form-control-sm" id="f_plan"></div>
                                 <div class="col-6"><label class="form-label-sm">변경요금제</label><input type="text" class="form-control form-control-sm" id="f_plan_chg"></div>
                                 <div class="col-12"><label class="form-label-sm">부가서비스</label><div id="div_addon_container" class="border rounded p-3 bg-light" style="min-height: 50px;"></div></div>
@@ -389,7 +389,7 @@
                             <div class="row g-2 mb-3">
                                 <div class="col-4"><label class="form-label-sm">고객명<span class="required-star">*</span></label><input type="text" class="form-control form-control-sm" id="w_name"></div>
                                 <div class="col-4"><label class="form-label-sm">생년월일</label><input type="number" inputmode="decimal" class="form-control form-control-sm" id="w_birth"></div>
-                                <div class="col-4"><label class="form-label-sm">연락처</label><input type="number" inputmode="decimal" class="form-control form-control-sm" id="w_phone"></div>
+                                <div class="col-4"><label class="form-label-sm">전화번호</label><input type="number" inputmode="decimal" class="form-control form-control-sm" id="w_phone"></div>
                             </div>
                             <div class="row g-2 mb-3">
                                 <div class="col-12" id="w_plan_input_area"></div>
@@ -469,7 +469,7 @@
                             <div class="row g-2 mb-3">
                                 <div class="col-4"><label class="form-label-sm">고객명<span class="required-star">*</span></label><input type="text" class="form-control form-control-sm" id="u_name"></div>
                                 <div class="col-4"><label class="form-label-sm">생년월일</label><input type="number" inputmode="decimal" class="form-control form-control-sm" id="u_birth"></div>
-                                <div class="col-4"><label class="form-label-sm">연락처</label><input type="number" inputmode="decimal" class="form-control form-control-sm" id="u_phone"></div>
+                                <div class="col-4"><label class="form-label-sm">전화번호</label><input type="number" inputmode="decimal" class="form-control form-control-sm" id="u_phone"></div>
                             </div>
                             <div class="row g-2 mb-3">
                                 <div class="col-6"><label class="form-label-sm">기기모델명</label><input type="text" class="form-control form-control-sm" id="u_model"></div>
@@ -606,7 +606,7 @@
                         <div class="col-6"><input type="date" class="form-control form-control-sm" id="hist_end_date"></div>
                         <div class="col-12">
                             <div class="input-group">
-                                <input type="text" class="form-control" id="hist_all_keyword" placeholder="고객명, 연락처" onkeydown="if(event.key==='Enter') searchAllHistory()">
+                                <input type="text" class="form-control" id="hist_all_keyword" placeholder="고객명, 전화번호" onkeydown="if(event.key==='Enter') searchAllHistory()">
                                 <button class="btn btn-outline-secondary" onclick="searchAllHistory()">조회</button>
                             </div>
                         </div>
@@ -640,7 +640,7 @@
                         
                         <div class="col-12">
                             <div class="input-group">
-                                <input type="text" class="form-control" id="search_return_keyword" placeholder="고객명, 연락처" onkeydown="if(event.key==='Enter') searchSpecialList('usedphone')">
+                                <input type="text" class="form-control" id="search_return_keyword" placeholder="고객명, 전화번호" onkeydown="if(event.key==='Enter') searchSpecialList('usedphone')">
                                 <button class="btn btn-outline-secondary" onclick="searchSpecialList('usedphone')">조회</button>
                             </div>
                         </div>
@@ -674,7 +674,7 @@
                         
                         <div class="col-12">
                             <div class="input-group">
-                                <input type="text" class="form-control" id="search_gift_keyword" placeholder="고객명, 연락처" onkeydown="if(event.key==='Enter') searchSpecialList('gift')">
+                                <input type="text" class="form-control" id="search_gift_keyword" placeholder="고객명, 전화번호" onkeydown="if(event.key==='Enter') searchSpecialList('gift')">
                                 <button class="btn btn-outline-secondary" onclick="searchSpecialList('gift')">조회</button>
                             </div>
                         </div>
@@ -702,7 +702,7 @@
                         <div class="col-6"><input type="date" class="form-control form-control-sm" id="search_card_end"></div>
                         <div class="col-12">
                             <div class="input-group">
-                                <input type="text" class="form-control" id="search_card_keyword" placeholder="고객명, 연락처" onkeydown="if(event.key==='Enter') searchSetupList('card')">
+                                <input type="text" class="form-control" id="search_card_keyword" placeholder="고객명, 전화번호" onkeydown="if(event.key==='Enter') searchSetupList('card')">
                                 <button class="btn btn-outline-secondary" onclick="searchSetupList('card')">조회</button>
                             </div>
                         </div>
@@ -730,7 +730,7 @@
                         <div class="col-6"><input type="date" class="form-control form-control-sm" id="search_wired_end"></div>
                         <div class="col-12">
                             <div class="input-group">
-                                <input type="text" class="form-control" id="search_wired_keyword" placeholder="고객명, 연락처" onkeydown="if(event.key==='Enter') searchSetupList('wired')">
+                                <input type="text" class="form-control" id="search_wired_keyword" placeholder="고객명, 전화번호" onkeydown="if(event.key==='Enter') searchSetupList('wired')">
                                 <button class="btn btn-outline-secondary" onclick="searchSetupList('wired')">조회</button>
                             </div>
                         </div>
