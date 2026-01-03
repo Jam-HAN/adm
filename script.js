@@ -214,23 +214,17 @@ function checkAuthMenu() {
     // --- 제어할 메뉴 ID 목록 ---
     const menuDbView = document.getElementById('menu_db_view_item');   // DB 상세 열람 (가장 민감)
     const menuPeriod = document.getElementById('menu_period_item');    // 기간별 매출 집계 (민감)
-    const menuVendor = document.querySelector('li a[onclick*="section-vendor"]').parentElement; // 거래처 관리
 
     // --- 초기화: 일단 다 숨김 ---
     if(menuDbView) menuDbView.style.display = 'none';
     if(menuPeriod) menuPeriod.style.display = 'none';
     
-    // --- 등급별 권한 부여 ---
+    // 2. 권한별 노출 설정
 
-    // 1. 점장(MANAGER) 이상이 볼 수 있는 것
-    if (role === 'MASTER' || role === 'MANAGER') {
-        if(menuPeriod) menuPeriod.style.display = 'block'; // 기간별 집계 보임
-    }
-
-    // 2. 대표(MASTER)만 볼 수 있는 것 (최고 권한)
+    // ★ [수정] 기간별 집계는 이제 'MASTER(대표)'만 봅니다.
     if (role === 'MASTER') {
-        if(menuDbView) menuDbView.style.display = 'block'; // DB 열람 보임
-        // 거래처 삭제 버튼 등도 여기서 제어 가능
+        if(menuPeriod) menuPeriod.style.display = 'block'; 
+        if(menuDbView) menuDbView.style.display = 'block'; 
     }
     
     // (참고) STAFF는 위 if문에 걸리지 않으므로 기본 메뉴만 보게 됩니다.
