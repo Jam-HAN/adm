@@ -1609,7 +1609,17 @@ function openEditModal(item) {
     // 5. [수납 상세]
     // ==========================================
     // ★ [핵심] 유선이면 '상품권/기타', 무선이면 '중고폰'으로 이름표 변경
-    let labelSpecial = (item.sheetName === '유선개통') ? '상품권/기타' : '중고폰';
+    // 기본값 (무선/중고폰)
+    let labelSpecial = '중고폰';
+    let keySpecial = '중고폰';
+    let keyMemo = '중고폰메모';
+
+    // 유선개통일 경우 (상품권으로 변경)
+    if (item.sheetName === '유선개통') {
+        labelSpecial = '상품권/기타';
+        keySpecial = '상품권';         // ★ 핵심: 상품권 값을 가져오도록 변경
+        keyMemo = '상품권메모';        // ★ 핵심: 상품권 메모를 가져오도록 변경
+    }
     
     let sectionCollect = `
         <div class="divider"></div>
@@ -1624,8 +1634,8 @@ function openEditModal(item) {
             ${makeInput('요금수납', '요금', 'col-6', 'number')}
             ${makeSelect('결제', '요금결제', colMethodList, 'col-6')}
             
-            ${makeInput(labelSpecial, '중고폰', 'col-6', 'number')}
-            ${makeInput('메모', '중고폰메모', 'col-6')}
+            ${makeInput(labelSpecial, keySpecial, 'col-6', 'number')}
+            ${makeInput('메모', keyMemo, 'col-6')}
             
             ${makeInput('기타 특이사항', '특이사항', 'col-12')}
         </div>
