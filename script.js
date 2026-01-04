@@ -1616,13 +1616,13 @@ function openEditModal(item) {
         <div class="section-header"><i class="bi bi-wallet2"></i> 수납 상세</div>
         <div class="row g-2">
             ${makeInput('단말기수납1', '기기대1', 'col-6', 'number')}
-            ${makeSelect('방법', '단말기수납1방법', colMethodList, 'col-6')}
+            ${makeSelect('결제', '기기대1결제', colMethodList, 'col-6')}
 
             ${makeInput('단말기수납2', '기기대2', 'col-6', 'number')}
-            ${makeSelect('방법', '단말기수납2방법', colMethodList, 'col-6')}
+            ${makeSelect('결제', '기기대2결제', colMethodList, 'col-6')}
             
             ${makeInput('요금수납', '요금', 'col-6', 'number')}
-            ${makeSelect('방법', '요금수납방법', colMethodList, 'col-6')}
+            ${makeSelect('결제', '요금결제', colMethodList, 'col-6')}
             
             ${makeInput(labelSpecial, '중고폰반납', 'col-6', 'number')}
             ${makeInput('메모', '중고폰메모', 'col-6')}
