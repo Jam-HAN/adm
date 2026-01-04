@@ -948,7 +948,7 @@ function handleOpenScan(e) {
 window.submitFullContract = function() {
     const btn = document.getElementById('btn-mobile-save'); const originalText = '<i class="bi bi-save-fill"></i> 개통 및 저장 완료';
     if(!tempOpenStockData) { alert("단말기를 먼저 스캔해야 합니다 (Step 1)."); return; }
-    if (!validateField('f_visit', '방문경로')) return; if (!validateField('f_name', '이름')) return; if (!validateField('f_review', '리뷰작성여부')) return;
+    if (!validateField('f_visit', '방문경로')) return; if (!validateField('f_name', '고객명')) return; if (!validateField('f_review', '리뷰작성여부')) return;
     let visitVal = document.getElementById('f_visit').value; if(visitVal === '기타') { if(!validateField('f_visit_etc', '상세 방문경로')) return; visitVal = "기타: " + document.getElementById('f_visit_etc').value; }
     btn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> 저장 중...`; btn.disabled = true;
     const selectedAddons = []; document.querySelectorAll('#div_addon_container .addon-check:checked').forEach(cb => selectedAddons.push(cb.value));
@@ -1045,7 +1045,7 @@ function resetWiredForm() {
     setTimeout(() => { const firstInput = document.querySelector('#wired_step_1 select'); if(firstInput) firstInput.focus(); }, 100);
 }
 function submitWiredContract(event) {
-    if (!validateField('w_visit', '방문경로')) return; if (!validateField('w_name', '이름')) return; if (!validateField('w_review', '리뷰작성여부')) return;
+    if (!validateField('w_visit', '방문경로')) return; if (!validateField('w_name', '고객명')) return; if (!validateField('w_review', '리뷰작성여부')) return;
     let visitVal = document.getElementById('w_visit').value; if(visitVal === '기타') { if(!validateField('w_visit_etc', '상세 방문경로')) return; visitVal = "기타: " + document.getElementById('w_visit_etc').value; }
     const parts = []; ['w_plan_net','w_plan_tv','w_plan_other'].forEach(id => { const el=document.getElementById(id); if(el && el.value) parts.push(el.value); });
     const pricePlan = parts.join(" / ");
@@ -1076,7 +1076,7 @@ function resetUsedForm() {
     setTimeout(() => { const firstInput = document.querySelector('#used_step_1 select'); if(firstInput) firstInput.focus(); }, 100);
 }
 function submitUsedContract(event) {
-    if (!validateField('u_visit', '방문경로')) return; if (!validateField('u_name', '이름')) return; if (!validateField('u_review', '리뷰작성여부')) return;
+    if (!validateField('u_visit', '방문경로')) return; if (!validateField('u_name', '고객명')) return; if (!validateField('u_review', '리뷰작성여부')) return;
     let visitVal = document.getElementById('u_visit').value; if(visitVal === '기타') { if(!validateField('u_visit_etc', '상세 방문경로')) return; visitVal = "기타: " + document.getElementById('u_visit_etc').value; }
     const selectedAddons = []; document.querySelectorAll('#u_div_addon_container .addon-check:checked').forEach(cb => selectedAddons.push(cb.value));
     const formData = {
@@ -1379,7 +1379,7 @@ function searchAllHistory() {
                     
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <div class="text-truncate me-2">
-                            <span class="fw-bold text-primary fs-5 me-2">${item['이름']}</span>
+                            <span class="fw-bold text-primary fs-5 me-2">${item['고객명']}</span>
                             <span class="small text-dark">
                                 ${contact} <span class="text-muted mx-1">|</span>
                                 ${carrier} <span class="text-muted mx-1">|</span>
@@ -1505,7 +1505,7 @@ function openEditModal(item) {
 
                     <div class="d-flex justify-content-between align-items-center">
                         <div class="text-truncate me-2">
-                            <span class="fw-bold text-primary fs-5 me-2">${item['이름']}</span>
+                            <span class="fw-bold text-primary fs-5 me-2">${item['고객명']}</span>
                             <span class="small text-dark">
                                 ${item['전화번호'] || '-'} <span class="text-muted mx-1">|</span>
                                 ${item['개통처'] || '-'} <span class="text-muted mx-1">|</span>
@@ -1535,7 +1535,7 @@ function openEditModal(item) {
             ${makeInput('약정유형', '약정유형', 'col-4', 'text', false, true)}
             ${makeSelect('방문경로', '방문경로', visitList, 'col-4')}
 
-            ${makeInput('고객명', '이름', 'col-4')}
+            ${makeInput('고객명', '고객명', 'col-4')}
             ${makeInput('생년월일', '생년월일', 'col-4')}
             ${makeInput('전화번호', '전화번호', 'col-4')}
 
@@ -1875,7 +1875,7 @@ function renderSpecialCard(item, type) {
         </div>
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div class="text-truncate me-2">
-                <span class="fw-bold text-primary fs-5 me-2">${item['이름']}</span>
+                <span class="fw-bold text-primary fs-5 me-2">${item['고객명']}</span>
                 <span class="small text-dark">
                     ${item['전화번호']} <span class="text-muted mx-1">|</span>
                     ${item['개통처']} <span class="text-muted mx-1">|</span>
@@ -1899,7 +1899,7 @@ function openSpecialModal(item, type) {
     document.getElementById('sp_branch').value = item.branch;
     document.getElementById('sp_type').value = type;
 
-    document.getElementById('sp_customer_name').innerText = item['이름'];
+    document.getElementById('sp_customer_name').innerText = item['고객명'];
     document.getElementById('sp_customer_info').innerText = `${item['전화번호']} | ${item['개통일']}`;
 
     const amtLabel = document.getElementById('sp_amt_label');
