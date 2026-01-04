@@ -1624,7 +1624,7 @@ function openEditModal(item) {
             ${makeInput('요금수납', '요금', 'col-6', 'number')}
             ${makeSelect('결제', '요금결제', colMethodList, 'col-6')}
             
-            ${makeInput(labelSpecial, '중고폰반납', 'col-6', 'number')}
+            ${makeInput(labelSpecial, '중고폰', 'col-6', 'number')}
             ${makeInput('메모', '중고폰메모', 'col-6')}
             
             ${makeInput('기타 특이사항', '특이사항', 'col-12')}
