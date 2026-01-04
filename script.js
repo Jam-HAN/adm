@@ -1563,7 +1563,7 @@ function openEditModal(item) {
             ${makeInput('정책차수', '정책차수', 'col-6')}
             
             ${makeInput('액면/히든', '기본정책', 'col-6', 'number')}
-            ${makeInput('메모', '메모(액면)', 'col-6')}
+            ${makeInput('메모', '메모(기본)', 'col-6')}
             
             ${makeInput('추가정책', '추가정책', 'col-6', 'number')}
             ${makeInput('메모', '메모(추가)', 'col-6')}
@@ -1588,14 +1588,14 @@ function openEditModal(item) {
         <div class="section-header"><i class="bi bi-credit-card"></i> 대납 및 지원</div>
         <div class="row g-2">
             ${makeInput('대납1', '대납1', 'col-4', 'number', true)}
-            ${makeSelect('방법', '대납1방법', payMethodList, 'col-4')}
-            ${makeInput('처리일', '대납1요청일', 'col-4', 'text', false, true)}
+            ${makeSelect('결제', '대납1결제', payMethodList, 'col-4')}
+            ${makeInput('처리일', '대납1처리일', 'col-4', 'text', false, true)}
             
             ${makeInput('대납2', '대납2', 'col-4', 'number', true)}
-            ${makeSelect('방법', '대납2방법', payMethodList, 'col-4')}
-            ${makeInput('처리일', '대납2요청일', 'col-4', 'text', false, true)}
+            ${makeSelect('결제', '대납2결제', payMethodList, 'col-4')}
+            ${makeInput('처리일', '대납2처리일', 'col-4', 'text', false, true)}
             
-            ${makeInput('현금지급', '현금지급', 'col-6', 'number', true)}
+            ${makeInput('캐시백', '캐시백', 'col-6', 'number', true)}
             ${makeInput('페이백', '페이백', 'col-6', 'number', true)}
             
             ${makeInput('은행명', '은행명', 'col-4')}
