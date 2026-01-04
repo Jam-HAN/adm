@@ -1930,7 +1930,10 @@ function openSpecialModal(item, type) {
     }
 
     // 1. 금액 세팅
-    const existingAmount = (type === 'usedphone') ? (item['중고폰'] || '') : (item['상품권'] || '');
+    const existingAmount = (type === 'usedphone')
+      ? (item['중고폰'] ?? '')
+      : (item['상품권'] ?? '');
+
     document.getElementById('sp_amount').value = existingAmount ? Number(String(existingAmount).replace(/,/g,'')).toLocaleString() : '';
     
     // 2. 체크 상태 세팅
