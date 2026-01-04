@@ -2,7 +2,7 @@
 // script.js (V56.0 - Optimized UI Rendering)
 // ==========================================
 
-const GAS_URL = "https://script.google.com/macros/s/AKfycbyd_prXEX1KffclSnXxUs0iQ2UFBDxArPztGbOy0YRiR5Kr2SLdeivWfR2J03etf27f/exec"; 
+const GAS_URL = "https://script.google.com/macros/s/AKfycbxVfZJV7fS-qrl6pdd-fUduJfpRI1cAdGu9l1eHj1eLYyDQDyNKUgBntbzUTPNKFNK9/exec"; 
 
 // ============================================================
 // [Core] 통신 전용 엔진 (재시도 로직 + 타임아웃 처리 포함)
