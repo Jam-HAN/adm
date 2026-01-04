@@ -230,15 +230,6 @@ function checkAuthMenu() {
     // (참고) STAFF는 위 if문에 걸리지 않으므로 기본 메뉴만 보게 됩니다.
 }
 
-// [로딩창 제어 함수]
-function showLoading() {
-    document.getElementById('loadingOverlay').classList.remove('d-none');
-}
-
-function hideLoading() {
-    document.getElementById('loadingOverlay').classList.add('d-none');
-}
-
 // 2. 화면 전환
 function showSection(id) {
     // 1. 모바일 메뉴 닫기 (기존 코드 유지)
