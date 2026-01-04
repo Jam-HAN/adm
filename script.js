@@ -1443,7 +1443,7 @@ function openEditModal(item) {
         let val = item[key] || '';
         
         // 날짜 자르기 로직
-        const dateKeys = ['요금제변경일', '부가서비스해지일', '대납1요청일', '대납2요청일', '처리일', '개통일'];
+        const dateKeys = ['요금제변경일', '부가서비스해지일', '대납1처리일', '대납2처리일', '처리일', '개통일'];
         if (dateKeys.includes(key) && typeof val === 'string' && val.includes('T')) {
             val = val.split('T')[0];
         }
