@@ -1847,7 +1847,7 @@ function searchSpecialList(type) {
 function renderSpecialCard(item, type) {
     // ★ 수정: 금액이 아니라, 서버에서 보내준 '체크여부(completed)'로 판단
     const isChecked = item.completed === true;
-    const amount = Number(String(item['중고폰'] || 0).replace(/,/g, ''));
+    const amount = Number(String(item['중고폰반납'] || 0).replace(/,/g, ''));
     
     let statusBadge = '';
     if (isChecked) {
