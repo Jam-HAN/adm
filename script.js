@@ -1845,9 +1845,12 @@ function searchSpecialList(type) {
 
 // 2. 카드 렌더링 (체크값 기준 배지 표시)
 function renderSpecialCard(item, type) {
-    // ★ 수정: 금액이 아니라, 서버에서 보내준 '체크여부(completed)'로 판단
+    // ★ [수정 1] 타입에 맞춰서 올바른 금액 키('중고폰' vs '상품권')를 가져옴
+    const targetKey = (type === 'usedphone') ? '중고폰' : '상품권';
+    const amountVal = item[targetKey] || 0;
+    
+    // 체크 여부 (백엔드에서 계산된 값 사용)
     const isChecked = item.completed === true;
-    const amount = Number(String(item['중고폰반납'] || 0).replace(/,/g, ''));
     
     let statusBadge = '';
     if (isChecked) {
