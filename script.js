@@ -1562,13 +1562,13 @@ function openEditModal(item) {
             ${makeInput('개통처', '개통처', 'col-6', 'text', false, true)}
             ${makeInput('정책차수', '정책차수', 'col-6')}
             
-            ${makeInput('액면/히든', '정책1', 'col-6', 'number')}
+            ${makeInput('액면/히든', '기본정책', 'col-6', 'number')}
             ${makeInput('메모', '메모(액면)', 'col-6')}
             
-            ${makeInput('추가정책', '정책2', 'col-6', 'number')}
+            ${makeInput('추가정책', '추가정책', 'col-6', 'number')}
             ${makeInput('메모', '메모(추가)', 'col-6')}
             
-            ${makeInput('부가정책', '정책3', 'col-6', 'number')}
+            ${makeInput('부가정책', '부가정책', 'col-6', 'number')}
             ${makeInput('메모', '메모(부가)', 'col-6')}
             
             ${makeInput('차감정책', '차감정책', 'col-6', 'number', true)}
