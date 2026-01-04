@@ -1547,7 +1547,7 @@ function openEditModal(item) {
             ${makeInput('부가서비스해지일', '부가서비스해지일', 'col-4', 'text', false, true)}
 
             ${makeInput('제휴카드', '제휴카드', 'col-6')}
-            ${makeSelect('리뷰작성', '리뷰작성', reviewList, 'col-6')}
+            ${makeSelect('리뷰작성여부', '리뷰작성여부', reviewList, 'col-6')}
         </div>
     `;
     container.innerHTML += sectionBasic;
