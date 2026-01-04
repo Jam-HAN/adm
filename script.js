@@ -1825,18 +1825,15 @@ function searchSpecialList(type) {
         })
     })
     .then(r => r.json())
-    .then(data => {
-        // 서버가 이미 조건(값 있음 + 미완료)에 맞는 것만 골라서 'data.data'에 담아 보냄
-        if (data.status === 'success' && data.data.length > 0) {
-            
-            // ★ 복잡한 filter 로직 제거하고 바로 렌더링
-            const htmlString = data.data.map(item => renderSpecialCard(item, type)).join('');
-            container.innerHTML = htmlString;
-
-        } else {
-            container.innerHTML = '<div class="text-center text-muted py-5 small">미처리 내역이 없습니다. (모두 완료됨)</div>';
-        }
+    .then(res => {
+      const list = res.data || res.list || [];   // 어떤 형태든 흡수
+      if (res.status === 'success' && list.length > 0) {
+        container.innerHTML = list.map(item => renderSpecialCard(item, type)).join('');
+      } else {
+        container.innerHTML = '<div class="text-center text-muted py-5 small">미처리 내역이 없습니다. (모두 완료됨)</div>';
+      }
     })
+
     .catch(err => {
         console.error(err);
         container.innerHTML = '<div class="text-center text-danger py-5 small">오류 발생</div>';
