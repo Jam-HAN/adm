@@ -1687,7 +1687,7 @@ function submitEditHistory() {
         if (String(currentVal) !== String(originalVal)) {
             
             // [변환] 리뷰작성의 경우: "작성" -> true, "미작성" -> false 로 변환
-            if (key === '리뷰작성') {
+            if (key === '리뷰작성여부') {
                 formData[key] = (currentVal === '작성'); 
             } else {
                 formData[key] = currentVal;
