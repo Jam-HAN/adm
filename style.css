@@ -523,3 +523,103 @@ body {
     box-shadow: 0 10px 22px rgba(67, 97, 238, 0.22);
   }
 }
+
+/* =================================================
+   Mobile UX Patch (HTML 변경 최소)
+   ================================================= */
+
+/* iOS 폼 포커스 시 자동 확대 방지: 입력만 16px */
+@media (max-width: 768px) {
+  input, select, textarea,
+  .form-control, .form-select {
+    font-size: 16px !important;
+  }
+  body { font-size: 13px !important; } /* 본문은 작게 유지 */
+}
+
+/* 컨테이너 패딩: 모바일에서 좌우 여백 살짝 줄이기 */
+@media (max-width: 768px) {
+  .container { padding-left: 12px !important; padding-right: 12px !important; }
+  .container.py-4 { padding-top: 14px !important; padding-bottom: 14px !important; }
+}
+
+/* 카드 헤더 높이 60px 고정: 모바일에서 텍스트 과밀 방지 */
+@media (max-width: 768px) {
+  .card-header[style*="height: 60px"] { padding-left: 14px !important; padding-right: 14px !important; }
+  .card-header h6 { font-size: 0.95rem !important; }
+}
+
+/* fixed-bottom 탭바 + safe-area */
+@media (max-width: 768px) {
+  body {
+    padding-bottom: calc(var(--tabbar-h) + 18px + env(safe-area-inset-bottom)) !important;
+  }
+  .mobile-bottom-nav {
+    height: calc(var(--tabbar-h) + env(safe-area-inset-bottom));
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* FAB 메뉴 컨테이너 위치(탭바+safe-area 고려) */
+@media (max-width: 768px) {
+  #fab-menu-container,
+  #search-menu-container,
+  #manage-menu-container {
+    bottom: calc(var(--tabbar-h) + 20px + env(safe-area-inset-bottom)) !important;
+    width: min(92vw, 240px) !important;
+  }
+}
+
+/* 버튼/셀렉트 터치 타겟 강화 */
+@media (max-width: 768px) {
+  :root { --control-h: 42px; } /* 모바일은 34px보다 42px이 실사용이 편함 */
+  .btn, .form-control, .form-select {
+    height: var(--control-h) !important;
+    min-height: var(--control-h) !important;
+  }
+  .form-select { line-height: var(--control-h) !important; }
+}
+
+/* 폼 “3~4열”을 모바일에서는 자동으로 2열/1열로 흐르게 */
+@media (max-width: 768px) {
+  /* 개통 폼에서 col-4/col-3가 너무 촘촘 → 2열로 */
+  #section-open .row.g-2 > .col-4,
+  #section-used .row.g-2 > .col-4 { flex: 0 0 50% !important; max-width: 50% !important; }
+
+  #section-wired .row.g-2 > .col-3 { flex: 0 0 50% !important; max-width: 50% !important; }
+
+  /* 너무 긴 필드는 모바일에서 1열로 */
+  #section-open .row.g-2 > .col-12,
+  #section-wired .row.g-2 > .col-12,
+  #section-used .row.g-2 > .col-12 { flex: 0 0 100% !important; max-width: 100% !important; }
+
+  /* “생년/전화/고객명”은 1열이 더 안전하면 아래 주석 해제 */
+  /*
+  #section-open #f_name, #section-open #f_birth, #section-open #f_phone { }
+  */
+}
+
+/* input-group 모바일에서 버튼 폭 줄이고 한줄 유지 */
+@media (max-width: 768px) {
+  .input-group > .btn { white-space: nowrap; padding-left: 12px !important; padding-right: 12px !important; }
+}
+
+/* 대시보드 Today 테이블: 모바일은 가로 스크롤 + 최소폭 보장 */
+@media (max-width: 768px) {
+  .dash-table { table-layout: auto !important; }
+  .dash-table th, .dash-table td { width: auto !important; }
+
+  /* 이미 table-responsive(높이 300) 사용 중 → 내부 table에 최소폭만 */
+  .table-responsive table.dash-table { min-width: 520px; }
+}
+
+/* 고정 높이 박스: 모바일에서 살짝 줄여 첫 화면 정보량 ↑ */
+@media (max-width: 768px) {
+  .fixed-h-box { min-height: 210px; max-height: 210px; }
+}
+
+/* 터치 디바이스에서는 hover 효과 과하게 튀지 않게 */
+@media (hover: none) {
+  .glass-card:hover { transform: none; box-shadow: var(--sh-md); }
+  .btn-primary:hover { filter: none; box-shadow: 0 10px 22px rgba(67, 97, 238, 0.22); }
+}
