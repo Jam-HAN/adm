@@ -216,3 +216,54 @@ body {
 /* 스크롤바 디자인 (옵션) */
 .fixed-h-box::-webkit-scrollbar { width: 6px; }
 .fixed-h-box::-webkit-scrollbar-thumb { background-color: #dee2e6; border-radius: 3px; }
+
+/* =========================================
+   [Mobile] 모바일 전용 슬림 모드 (768px 이하)
+   ========================================= */
+@media screen and (max-width: 768px) {
+    
+    /* 1. 전체 기본 글씨 크기 축소 (기본 16px -> 13px) */
+    body {
+        font-size: 13px !important;
+    }
+
+    /* 2. 입력창 & 드롭다운 크기 다이어트 */
+    .form-control, 
+    .form-select {
+        font-size: 13px !important;       /* 글씨 작게 */
+        height: 34px !important;          /* 높이: 38px -> 34px로 축소 */
+        min-height: 34px !important;
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+    }
+
+    /* 3. 버튼 크기 다이어트 */
+    .btn {
+        font-size: 13px !important;       /* 글씨 작게 */
+        height: 34px !important;          /* 버튼 높이도 입력창과 맞춤 */
+        min-height: 34px !important;
+        padding-left: 10px !important;    /* 좌우 여백도 살짝 줄임 */
+        padding-right: 10px !important;
+    }
+
+    /* 4. 라벨(제목) 크기 축소 */
+    .form-label-sm, label {
+        font-size: 11px !important;       /* 라벨은 더 작게 (11~12px) */
+        margin-bottom: 2px !important;    /* 라벨과 입력창 사이 간격 좁힘 */
+    }
+
+    /* 5. 카드 내부 여백 줄이기 (공간 확보) */
+    .glass-card {
+        padding: 15px !important;         /* 카드 안쪽 여백 축소 */
+    }
+    
+    .card-body {
+        padding: 0 !important;
+    }
+
+    /* 6. 행 간격(Gutter) 좁히기 */
+    .row.g-2 {
+        --bs-gutter-y: 0.3rem !important; /* 위아래 간격 좁힘 */
+        --bs-gutter-x: 0.3rem !important; /* 좌우 간격 좁힘 */
+    }
+}
