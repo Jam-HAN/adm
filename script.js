@@ -531,6 +531,10 @@ function applyDropdownData(d) {
 function checkVisitPath() { const val = document.getElementById('f_visit').value; document.getElementById('div_visit_etc').style.display = (val === '기타') ? 'block' : 'none'; }
 function checkWiredVisitPath() { const val = document.getElementById('w_visit').value; document.getElementById('w_div_visit_etc').style.display = (val === '기타') ? 'block' : 'none'; }
 function checkUsedVisitPath() { const val = document.getElementById('u_visit').value; document.getElementById('u_div_visit_etc').style.display = (val === '기타') ? 'block' : 'none'; }
+function checkReviewId() { const val = document.getElementById('f_review_id').value; document.getElementById('div_review_id').style.display = (val === '작성') ? 'block' : 'none'; }
+function checkWiredReviewId() { const val = document.getElementById('w_review_id').value; document.getElementById('w_div_review_id').style.display = (val === '작성') ? 'block' : 'none'; }
+function checkUsedReviewId() { const val = document.getElementById('u_review_id').value; document.getElementById('u_div_review_id').style.display = (val === '작성') ? 'block' : 'none'; }
+
 
 function renderAddonCheckboxes(agencyName, containerId = 'div_addon_container') {
     const container = document.getElementById(containerId);
