@@ -297,7 +297,7 @@
                                 <div class="col-4"><label class="form-label-sm">개통유형<span class="required-star">*</span></label><select class="form-select form-select-sm" id="f_act_type"></select></div>
                                 <div class="col-4"><label class="form-label-sm">약정유형<span class="required-star">*</span></label><select class="form-select form-select-sm" id="f_cont_type"></select></div>
                                 <div class="col-4"><label class="form-label-sm">방문경로<span class="required-star">*</span></label><select class="form-select form-select-sm" id="f_visit" onchange="checkVisitPath()"></select></div>
-                                <div class="col-12" id="div_visit_etc" style="display:none;"><input type="text" class="form-control form-control-sm" id="f_visit_etc" placeholder="상세 경로 입력"></div>
+                                <div class="col-12" id="div_visit_etc" style="display:none;"><label class="form-label-sm"></label><input type="text" class="form-control form-control-sm" id="f_visit_etc" placeholder="상세 경로 입력"></div>
                                 <div class="col-4"><label class="form-label-sm">고객명<span class="required-star">*</span></label><input type="text" class="form-control form-control-sm" id="f_name"></div>
                                 <div class="col-4"><label class="form-label-sm">생년월일<span class="required-star">*</span></label><input type="number" inputmode="decimal" class="form-control form-control-sm" id="f_birth" placeholder="6자리"></div>
                                 <div class="col-4"><label class="form-label-sm">전화번호<span class="required-star">*</span></label><input type="number" inputmode="decimal" class="form-control form-control-sm" id="f_phone"></div>
@@ -306,7 +306,7 @@
                                 <div class="col-12"><label class="form-label-sm">부가서비스</label><div id="div_addon_container" class="border rounded p-3 bg-light" style="min-height: 50px;"></div></div>
                                 <div class="col-4"><label class="form-label-sm">제휴카드</label><input type="text" class="form-control form-control-sm" id="f_card"></div>
                                 <div class="col-4"><label class="form-label-sm">리뷰작성여부 <span class="required-star">*</span></label><select class="form-select form-select-sm" id="f_review" onchange="checkReviewId()"></select></div>
-                                <div class="col-4" id="div_review_id" style="display:none;"><input type="text" class="form-control form-control-sm" id="f_review_id" placeholder="작성자 ID"></div>
+                                <div class="col-4" id="div_review_id" style="display:none;"><label class="form-label-sm"></label><input type="text" class="form-control form-control-sm" id="f_review_id" placeholder="작성자 ID"></div>
                             </div>
                             <div class="divider"></div>
                             <div class="section-header"><i class="bi bi-calculator"></i> 정책 및 정산</div>
@@ -387,7 +387,7 @@
                                 <div class="col-4"><label class="form-label-sm">개통유형<span class="required-star">*</span></label><input type="text" class="form-control form-control-sm" id="w_act_type" readonly></div>
                                 <div class="col-4"><label class="form-label-sm">약정유형<span class="required-star">*</span></label><input type="text" class="form-control form-control-sm" id="w_cont_type" readonly></div>
                                 <div class="col-4"><label class="form-label-sm">방문경로<span class="required-star">*</span></label><select class="form-select form-select-sm" id="w_visit" onchange="checkWiredVisitPath()"></select></div>
-                                <div class="col-12" id="w_div_visit_etc" style="display:none;"><input type="text" class="form-control form-control-sm" id="w_visit_etc" placeholder="상세 경로"></div>
+                                <div class="col-12" id="w_div_visit_etc" style="display:none;"><label class="form-label-sm"></label><input type="text" class="form-control form-control-sm" id="w_visit_etc" placeholder="상세 경로"></div>
                             </div>
                             <div class="row g-2 mb-3">
                                 <div class="col-4"><label class="form-label-sm">고객명<span class="required-star">*</span></label><input type="text" class="form-control form-control-sm" id="w_name"></div>
@@ -398,7 +398,7 @@
                                 <div class="col-12" id="w_plan_input_area"></div>
                                 <div class="col-4"><label class="form-label-sm">제휴카드</label><input type="text" class="form-control form-control-sm" id="w_card"></div>
                                 <div class="col-4"><label class="form-label-sm">리뷰작성여부 <span class="required-star">*</span></label><select class="form-select form-select-sm" id="w_review" onchange="checkWiredReviewId()"></select></div>
-                                <div class="col-4" id="w_div_review_id" style="display:none;"><input type="text" class="form-control form-control-sm" id="w_review_id" placeholder="작성자 ID"></div>
+                                <div class="col-4" id="w_div_review_id" style="display:none;"><label class="form-label-sm"></label><input type="text" class="form-control form-control-sm" id="w_review_id" placeholder="작성자 ID"></div>
                             </div>
                             <div class="divider"></div><div class="section-header"><i class="bi bi-calculator"></i> 정책 및 정산</div>
                             <div class="row g-2 mb-3">
@@ -470,7 +470,7 @@
                                 <div class="col-4"><label class="form-label-sm">개통유형<span class="required-star">*</span></label><input type="text" class="form-control form-control-sm" id="u_act_type" readonly></div>
                                 <div class="col-4"><label class="form-label-sm">약정유형<span class="required-star">*</span></label><input type="text" class="form-control form-control-sm" id="u_cont_type" readonly></div>
                                 <div class="col-4"><label class="form-label-sm">방문경로<span class="required-star">*</span></label><select class="form-select form-select-sm" id="u_visit" onchange="checkUsedVisitPath()"></select></div>
-                                <div class="col-12" id="u_div_visit_etc" style="display:none;"><input type="text" class="form-control form-control-sm" id="u_visit_etc" placeholder="상세 경로"></div>
+                                <div class="col-12" id="u_div_visit_etc" style="display:none;"><label class="form-label-sm"></label><input type="text" class="form-control form-control-sm" id="u_visit_etc" placeholder="상세 경로"></div>
                             </div>
                             <div class="row g-2 mb-3">
                                 <div class="col-4"><label class="form-label-sm">고객명<span class="required-star">*</span></label><input type="text" class="form-control form-control-sm" id="u_name"></div>
@@ -489,7 +489,7 @@
                                 <div class="col-12"><label class="form-label-sm">부가서비스</label><div id="u_div_addon_container" class="border rounded p-2 bg-light" style="min-height: 40px;"></div></div>
                                 <div class="col-4"><label class="form-label-sm">제휴카드</label><input type="text" class="form-control form-control-sm" id="u_card"></div>
                                 <div class="col-4"><label class="form-label-sm">리뷰작성여부<span class="required-star">*</span></label><select class="form-select form-select-sm" id="u_review" onchange="checkUsedReviewId()"></select></div>
-                                <div class="col-4" id="u_div_review_id" style="display:none;"><label class="form-label-sm text-primary">리뷰 ID</label><input type="text" class="form-control form-control-sm" id="u_review_id" placeholder="작성자 ID"></div>
+                                <div class="col-4" id="u_div_review_id" style="display:none;"><label class="form-label-sm"></label><input type="text" class="form-control form-control-sm" id="u_review_id" placeholder="작성자 ID"></div>
                             </div>
                             <div class="divider"></div><div class="section-header"><i class="bi bi-calculator"></i> 정책 및 정산</div>
                             <div class="row g-2 mb-3">
