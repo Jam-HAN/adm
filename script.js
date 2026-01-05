@@ -1589,11 +1589,11 @@ function openEditModal(item) {
         <div class="row g-2">
             ${makeInput('대납1', '대납1', 'col-4', 'number', true)}
             ${makeSelect('결제', '대납1결제', payMethodList, 'col-4')}
-            ${makeInput('처리일', '대납1처리일', 'col-4', 'text', false, true)}
+            ${makeInput('처리일', '대납1처리일', 'col-4', 'date')}
             
             ${makeInput('대납2', '대납2', 'col-4', 'number', true)}
             ${makeSelect('결제', '대납2결제', payMethodList, 'col-4')}
-            ${makeInput('처리일', '대납2처리일', 'col-4', 'text', false, true)}
+            ${makeInput('처리일', '대납2처리일', 'col-4', 'date')}
             
             ${makeInput('캐시백', '캐시백', 'col-6', 'number', true)}
             ${makeInput('페이백', '페이백', 'col-6', 'number', true)}
