@@ -1,269 +1,390 @@
 :root {
-    /* [디자인] 세련된 브랜드 컬러 (딥 블루 & 그라데이션) */
-    --primary-color: #4361ee;
-    --primary-gradient: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%);
-    --success-color: #2ec4b6;
-    --warning-color: #ff9f1c;
-    --danger-color: #e71d36;
-    --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-    --glass-bg: rgba(255, 255, 255, 0.75);
-    --glass-border: rgba(255, 255, 255, 0.6);
-    --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+  /* Brand */
+  --primary: #4361ee;
+  --primary-2: #3a0ca3;
+  --primary-grad: linear-gradient(135deg, var(--primary) 0%, var(--primary-2) 100%);
+  --success: #2ec4b6;
+  --warning: #ff9f1c;
+  --danger: #e71d36;
+
+  /* Surface / background */
+  --bg-grad: radial-gradient(1200px 600px at 20% 0%, rgba(67,97,238,.18), transparent 55%),
+             radial-gradient(900px 500px at 95% 15%, rgba(58,12,163,.14), transparent 55%),
+             linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+
+  --text: #1f2430;
+  --muted: #6b7280;
+  --border: rgba(17, 24, 39, 0.08);
+
+  /* Glass */
+  --glass-bg: rgba(255,255,255,0.62);
+  --glass-bg-strong: rgba(255,255,255,0.78);
+  --glass-border: rgba(255,255,255,0.55);
+  --glass-blur: 14px;
+
+  /* Radius / shadow (통일감의 핵심) */
+  --r-sm: 10px;
+  --r-md: 14px;
+  --r-lg: 18px;
+
+  --sh-sm: 0 6px 18px rgba(17, 24, 39, 0.06);
+  --sh-md: 0 10px 30px rgba(17, 24, 39, 0.08);
+  --sh-glow: 0 10px 30px rgba(67, 97, 238, 0.14);
+
+  /* Controls */
+  --control-h: 38px;
+  --focus-ring: 0 0 0 4px rgba(67, 97, 238, 0.16);
+
+  /* Motion */
+  --ease: cubic-bezier(.2,.8,.2,1);
+  --dur: 180ms;
+
+  /* Layout */
+  --tabbar-h: 65px;
 }
 
+/* =========================
+   Base
+   ========================= */
+html { -webkit-text-size-adjust: 100%; }
 body {
-    background: var(--bg-gradient);
-    background-attachment: fixed; /* 배경 고정 */
-    font-family: 'Noto Sans KR', sans-serif;
-    color: #2b2d42;
-    font-size: 0.95rem;
-    padding-bottom: 80px; /* 하단 탭바 공간 확보 */
+  background: var(--bg-grad);
+  background-attachment: fixed;
+  font-family: "Noto Sans KR", system-ui, -apple-system, Segoe UI, Roboto, "Apple SD Gothic Neo", sans-serif;
+  color: var(--text);
+  font-size: 0.95rem;
+  letter-spacing: -0.2px;
+
+  padding-bottom: calc(80px + env(safe-area-inset-bottom));
 }
 
-/* 1. 리얼 글래스모피즘 카드 */
+/* 텍스트 렌더링 깔끔하게 */
+* { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+
+/* =========================
+   Glass Card (진짜 ‘고급’ 느낌은 여기서 결정)
+   ========================= */
 .glass-card {
-    background: var(--glass-bg);
-    backdrop-filter: blur(12px); /* 뒤가 흐릿하게 보임 */
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid var(--glass-border);
-    border-radius: 16px;
-    box-shadow: var(--glass-shadow);
-    margin-bottom: 20px;
-    overflow: hidden;
+  position: relative;
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--sh-md);
+  overflow: hidden;
+  margin-bottom: 20px;
 }
 
-/* 헤더도 유리 효과 */
+/* 유리 하이라이트 (싸보이는 플라스틱 느낌 제거) */
+.glass-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    rgba(255,255,255,0.55) 0%,
+    rgba(255,255,255,0.18) 35%,
+    rgba(255,255,255,0.05) 100%
+  );
+  opacity: 0.55;
+}
+
+.glass-card.no-clip { overflow: visible; }
+
 .glass-header {
-    background: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(10px);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+  background: var(--glass-bg-strong);
+  backdrop-filter: blur(calc(var(--glass-blur) - 2px));
+  -webkit-backdrop-filter: blur(calc(var(--glass-blur) - 2px));
+  border-bottom: 1px solid rgba(255,255,255,0.35);
 }
 
-/* 2. 섹션 전환 애니메이션 */
+/* 카드 hover에서 은은하게 ‘살아나는’ 느낌 */
+.glass-card:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--sh-md), var(--sh-glow);
+  transition: transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+}
+
+/* =========================
+   Section transition
+   ========================= */
 .section-view { display: none; }
-.active-section { display: block; animation: slideUp 0.3s ease-out; }
-@keyframes slideUp { 
-    from { opacity: 0; transform: translateY(10px); } 
-    to { opacity: 1; transform: translateY(0); } 
+.active-section { display: block; animation: slideUp 220ms var(--ease); }
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
-/* 3. 폼 요소 디자인 (기본) */
-.form-label-sm { font-size: 0.8rem; font-weight: 700; color: #6c757d; margin-bottom: 6px; }
+@media (prefers-reduced-motion: reduce) {
+  .active-section { animation: none !important; }
+  .glass-card:hover { transform: none !important; }
+}
 
-/* 1. 입력창과 드롭다운 (흰색 배경 유지) */
-.form-control, 
+/* =========================
+   Labels
+   ========================= */
+.form-label-sm {
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: var(--muted);
+  margin-bottom: 6px;
+  letter-spacing: -0.1px;
+}
+
+.form-label, label { margin-bottom: 0.3rem !important; }
+
+/* =========================
+   Inputs / Selects (고급스러운 ‘탄성’은 상태값에서 나온다)
+   ========================= */
+.form-control,
 .form-select {
-    border-radius: 10px;
-    border: 1px solid #e0e0e0;
-    font-size: 0.95rem;
-    background-color: rgba(255, 255, 255, 0.9); /* 입력창은 흰색 OK */
-    height: 38px !important; 
-    min-height: 38px !important;
+  border-radius: var(--r-sm);
+  border: 1px solid rgba(17, 24, 39, 0.10);
+  background: rgba(255,255,255,0.92);
+  height: var(--control-h) !important;
+  min-height: var(--control-h) !important;
+  font-size: 0.95rem;
+  transition: border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease), transform var(--dur) var(--ease);
 }
 
-/* 2. 버튼 (배경색 설정 제거 -> 자기 색깔 나오게 둠) */
-.btn {
-    border-radius: 10px;
-    font-size: 0.95rem;
-    /* background-color 삭제함 -> 이제 흰색 안 입음 */
-    
-    height: 38px !important; 
-    min-height: 38px !important;
-    
-    /* 정렬 기능 유지 */
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    padding-top: 0 !important;
-    padding-bottom: 0 !important;
-}
-
-/* 드롭다운(Select) 텍스트 수직 중앙 정렬 해결 */
+/* select 수직 정렬 */
 .form-select {
-    padding-top: 0 !important;      
-    padding-bottom: 0 !important;   
-    line-height: 38px !important;   /* 줄 간격을 높이와 같게 -> 글자 정중앙 */
-    background-position: right 0.75rem center !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  line-height: var(--control-h) !important;
+  background-position: right 0.75rem center !important;
 }
 
-/* 버튼 텍스트 정중앙 정렬 */
+/* hover */
+.form-control:hover,
+.form-select:hover {
+  border-color: rgba(67, 97, 238, 0.35);
+}
+
+/* focus */
+.form-control:focus,
+.form-select:focus {
+  border-color: rgba(67, 97, 238, 0.65);
+  box-shadow: var(--focus-ring);
+}
+
+/* disabled */
+.form-control:disabled,
+.form-select:disabled {
+  background: rgba(255,255,255,0.60);
+  color: rgba(31,36,48,0.45);
+  cursor: not-allowed;
+}
+
+/* =========================
+   Buttons
+   ========================= */
 .btn {
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    padding-top: 0 !important;
-    padding-bottom: 0 !important;
+  border-radius: var(--r-sm);
+  font-size: 0.95rem;
+  height: var(--control-h) !important;
+  min-height: var(--control-h) !important;
+
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  padding: 0 12px !important;
+  gap: 6px;
+
+  transition: transform 120ms var(--ease), box-shadow var(--dur) var(--ease), filter var(--dur) var(--ease);
 }
 
-/* 포커스 효과 */
-.form-control:focus, .form-select:focus {
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15);
-}
+.btn:active { transform: scale(0.985); }
 
-/* 4. 버튼 디자인 (그라데이션) */
+/* Primary */
 .btn-primary {
-    background: var(--primary-gradient) !important; /* !important 추가하여 확실하게 적용 */
-    border: none !important;
-    color: white !important;
-    transition: transform 0.1s;
+  background: var(--primary-grad) !important;
+  border: none !important;
+  color: #fff !important;
+  box-shadow: 0 10px 22px rgba(67, 97, 238, 0.22);
 }
-.btn-primary:active { transform: scale(0.98); }
 
-/* 5. 모바일 하단 탭바 */
+.btn-primary:hover {
+  filter: brightness(1.03);
+  box-shadow: 0 12px 26px rgba(67, 97, 238, 0.28);
+}
+
+/* Secondary(유리톤) - 필요하면 쓰세요 */
+.btn-glass {
+  background: rgba(255,255,255,0.70) !important;
+  border: 1px solid rgba(255,255,255,0.55) !important;
+  color: var(--text) !important;
+  box-shadow: var(--sh-sm);
+}
+.btn-glass:hover { box-shadow: var(--sh-md); }
+
+/* =========================
+   Mobile bottom nav (더 ‘앱’처럼)
+   ========================= */
 .mobile-bottom-nav {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 65px;
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-    border-top: 1px solid rgba(0,0,0,0.05);
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-    z-index: 1000;
-    box-shadow: 0 -5px 20px rgba(0,0,0,0.03);
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: var(--tabbar-h);
+
+  background: rgba(255,255,255,0.86);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+
+  border-top: 1px solid rgba(17,24,39,0.06);
+  box-shadow: 0 -10px 30px rgba(17,24,39,0.06);
+
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  z-index: 1000;
+
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 .mobile-bottom-nav .nav-item {
-    text-decoration: none;
-    color: #9ca3af;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    font-size: 0.7rem;
-    font-weight: 500;
-    width: 20%;
+  text-decoration: none;
+  color: #9ca3af;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 0.7rem;
+  font-weight: 600;
+  width: 20%;
 }
 
 .mobile-bottom-nav .nav-item i {
-    font-size: 1.4rem;
-    margin-bottom: 2px;
-    transition: all 0.2s;
+  font-size: 1.35rem;
+  margin-bottom: 2px;
+  transition: transform var(--dur) var(--ease), color var(--dur) var(--ease);
 }
 
-.mobile-bottom-nav .nav-item.active { color: var(--primary-color); }
+.mobile-bottom-nav .nav-item.active { color: var(--primary); }
 .mobile-bottom-nav .nav-item.active i { transform: translateY(-2px); }
 
-/* 중앙 플로팅 버튼 (개통) */
+/* Center FAB (깊이감 개선) */
 .center-fab .fab-btn {
-    width: 50px;
-    height: 50px;
-    background: var(--primary-gradient);
-    border-radius: 50%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    color: white;
-    box-shadow: 0 4px 15px rgba(67, 97, 238, 0.4);
-    transform: translateY(-15px);
+  width: 52px;
+  height: 52px;
+  background: var(--primary-grad);
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #fff;
+
+  box-shadow: 0 14px 28px rgba(67, 97, 238, 0.35);
+  transform: translateY(-18px);
+  border: 1px solid rgba(255,255,255,0.35);
 }
 .center-fab .fab-btn i { margin: 0; font-size: 1.8rem; }
 
-/* 유틸리티 */
-.divider { border-top: 1px dashed #e0e0e0; margin: 1.5rem 0; }
-.section-header { font-size: 1rem; font-weight: 800; color: var(--primary-color); margin-bottom: 15px; display: flex; align-items: center; }
-.text-danger-custom { color: var(--danger-color) !important; font-weight: bold; }
-.border-danger-custom { border-color: var(--danger-color) !important; }
+/* =========================
+   Utilities
+   ========================= */
+.divider { border-top: 1px dashed rgba(17,24,39,0.12); margin: 1.5rem 0; }
 
-/* 대시보드 테이블 */
-.dash-table th { background: transparent; color: #6c757d; font-size: 0.75rem; border-bottom: 1px solid #eee; }
+.section-header {
+  font-size: 1rem;
+  font-weight: 900;
+  color: var(--primary);
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+  letter-spacing: -0.2px;
+}
+
+.text-danger-custom { color: var(--danger) !important; font-weight: 800; }
+.border-danger-custom { border-color: var(--danger) !important; }
+
+.required-star {
+  color: var(--danger);
+  font-weight: 900;
+  margin-left: 2px;
+}
+
+/* =========================
+   Dashboard
+   ========================= */
+.dash-table th {
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.75rem;
+  border-bottom: 1px solid rgba(17,24,39,0.08);
+}
+
 .dash-table td { padding: 12px 4px; font-size: 0.9rem; }
 
-/* 라벨 간격 미세 조정 */
-.form-label, label {
-    margin-bottom: 0.3rem !important;
-}
+/* 마지막 요소 자동 정리 */
+#dash_month_stats .stat-divider:last-of-type { display: none !important; }
+#dash_month_stats .stat-item:last-of-type { margin-bottom: 0 !important; }
 
-/* =========================================
-   [대시보드] 리스트 마지막 요소 자동 정리
-   ========================================= */
-
-/* 1. 마지막에 있는 구분선(hr)은 무조건 숨김 */
-#dash_month_stats .stat-divider:last-of-type {
-    display: none !important;
-}
-
-/* 2. 마지막에 있는 내용 박스(div)만 여백 제거 */
-/* (:last-of-type은 형제 요소 중 '마지막 div'만 정확히 찝어냅니다) */
-#dash_month_stats .stat-item:last-of-type {
-    margin-bottom: 0 !important;
-}
-
-/* [CSS] 대시보드 상단 카드 높이 고정 (로딩 시 덜컥거림 방지) */
+/* =========================
+   fixed-h-box: 로딩 중앙 / 로드 완료 위정렬
+   ========================= */
 .fixed-h-box {
-    min-height: 250px; /* 최소 높이 확보 */
-    max-height: 250px; /* 최대 높이 제한 (내용 많으면 스크롤) */
-    overflow-y: auto;  /* 스크롤 허용 */
-    display: flex;
-    flex-direction: column;
+  min-height: 250px;
+  max-height: 250px;
+  overflow-y: auto;
+
+  display: flex;
+  flex-direction: column;
+
+  /* 기본: 로딩 중앙 */
+  justify-content: center;
 }
 
-.fixed-h-box > * {
-    margin-top: auto;
-    margin-bottom: auto;
+.fixed-h-box.is-loaded {
+  justify-content: flex-start;
+  padding-top: 6px; /* 살짝 여유 */
 }
 
-/* [추가] 필수 입력 항목 빨간 별표 */
-.required-star {
-    color: var(--danger-color); /* 사장님이 정의한 빨간색 변수 사용 */
-    font-weight: bold;
-    margin-left: 2px;
-}
-
-/* 스크롤바 디자인 (옵션) */
 .fixed-h-box::-webkit-scrollbar { width: 6px; }
-.fixed-h-box::-webkit-scrollbar-thumb { background-color: #dee2e6; border-radius: 3px; }
+.fixed-h-box::-webkit-scrollbar-thumb { background-color: rgba(17,24,39,0.14); border-radius: 3px; }
 
-/* =========================================
-   [Mobile] 모바일 전용 슬림 모드 (768px 이하)
-   ========================================= */
+/* =========================
+   Mobile slim mode (<=768px)
+   ========================= */
 @media screen and (max-width: 768px) {
-    
-    /* 1. 전체 기본 글씨 크기 축소 (기본 16px -> 13px) */
-    body {
-        font-size: 13px !important;
-    }
+  :root { --control-h: 34px; }
 
-    /* 2. 입력창 & 드롭다운 크기 다이어트 */
-    .form-control, 
-    .form-select {
-        font-size: 13px !important;       /* 글씨 작게 */
-        height: 34px !important;          /* 높이: 38px -> 34px로 축소 */
-        min-height: 34px !important;
-        padding-top: 0 !important;
-        padding-bottom: 0 !important;
-    }
+  body { font-size: 13px !important; }
 
-    /* 3. 버튼 크기 다이어트 */
-    .btn {
-        font-size: 13px !important;       /* 글씨 작게 */
-        height: 34px !important;          /* 버튼 높이도 입력창과 맞춤 */
-        min-height: 34px !important;
-        padding-left: 10px !important;    /* 좌우 여백도 살짝 줄임 */
-        padding-right: 10px !important;
-    }
+  .form-control,
+  .form-select {
+    font-size: 13px !important;
+    height: var(--control-h) !important;
+    min-height: var(--control-h) !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+  }
 
-    /* 4. 라벨(제목) 크기 축소 */
-    .form-label-sm, label {
-        font-size: 11px !important;       /* 라벨은 더 작게 (11~12px) */
-        margin-bottom: 2px !important;    /* 라벨과 입력창 사이 간격 좁힘 */
-    }
+  .form-select { line-height: var(--control-h) !important; }
 
-    /* 5. 카드 내부 여백 줄이기 (공간 확보) */
-    .glass-card {
-        padding: 15px !important;         /* 카드 안쪽 여백 축소 */
-    }
-    
-    .card-body {
-        padding: 0 !important;
-    }
+  .btn {
+    font-size: 13px !important;
+    height: var(--control-h) !important;
+    min-height: var(--control-h) !important;
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+  }
 
-    /* 6. 행 간격(Gutter) 좁히기 */
-    .row.g-2 {
-        --bs-gutter-y: 0.3rem !important; /* 위아래 간격 좁힘 */
-        --bs-gutter-x: 0.3rem !important; /* 좌우 간격 좁힘 */
-    }
+  .form-label-sm, label {
+    font-size: 11px !important;
+    margin-bottom: 2px !important;
+  }
+
+  /* 카드 패딩은 body/card-body 레벨에서 관리 */
+  .glass-card { padding: 0 !important; }
+  .glass-card .card-body { padding: 15px !important; }
+
+  .row.g-2 {
+    --bs-gutter-y: 0.3rem !important;
+    --bs-gutter-x: 0.3rem !important;
+  }
 }
