@@ -948,7 +948,14 @@ function handleOpenScan(e) {
 window.submitFullContract = function() {
     const btn = document.getElementById('btn-mobile-save'); const originalText = '<i class="bi bi-save-fill"></i> 개통 및 저장 완료';
     if(!tempOpenStockData) { alert("단말기를 먼저 스캔해야 합니다 (Step 1)."); return; }
-    if (!validateField('f_visit', '방문경로')) return; if (!validateField('f_name', '고객명')) return; if (!validateField('f_review', '리뷰작성여부')) return;
+    
+    if (!validateField('f_act_type', '개통유형')) return; 
+    if (!validateField('f_cont_type', '약정유형')) return; 
+    if (!validateField('f_visit', '방문경로')) return; 
+    if (!validateField('f_name', '고객명')) return; 
+    if (!validateField('f_birth', '생년월일')) return; 
+    if (!validateField('f_phone', '전화번호')) return; 
+    if (!validateField('f_review', '리뷰작성여부')) return;
     let visitVal = document.getElementById('f_visit').value; if(visitVal === '기타') { if(!validateField('f_visit_etc', '상세 방문경로')) return; visitVal = "기타: " + document.getElementById('f_visit_etc').value; }
     btn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> 저장 중...`; btn.disabled = true;
     const selectedAddons = []; document.querySelectorAll('#div_addon_container .addon-check:checked').forEach(cb => selectedAddons.push(cb.value));
@@ -1045,7 +1052,13 @@ function resetWiredForm() {
     setTimeout(() => { const firstInput = document.querySelector('#wired_step_1 select'); if(firstInput) firstInput.focus(); }, 100);
 }
 function submitWiredContract(event) {
-    if (!validateField('w_visit', '방문경로')) return; if (!validateField('w_name', '고객명')) return; if (!validateField('w_review', '리뷰작성여부')) return;
+    if (!validateField('w_act_type', '개통유형')) return; 
+    if (!validateField('w_cont_type', '약정유형')) return; 
+    if (!validateField('w_visit', '방문경로')) return; 
+    if (!validateField('w_name', '고객명')) return; 
+    if (!validateField('w_birth', '생년월일')) return; 
+    if (!validateField('w_phone', '전화번호')) return; 
+    if (!validateField('w_review', '리뷰작성여부')) return;
     let visitVal = document.getElementById('w_visit').value; if(visitVal === '기타') { if(!validateField('w_visit_etc', '상세 방문경로')) return; visitVal = "기타: " + document.getElementById('w_visit_etc').value; }
     const parts = []; ['w_plan_net','w_plan_tv','w_plan_other'].forEach(id => { const el=document.getElementById(id); if(el && el.value) parts.push(el.value); });
     const pricePlan = parts.join(" / ");
@@ -1076,7 +1089,13 @@ function resetUsedForm() {
     setTimeout(() => { const firstInput = document.querySelector('#used_step_1 select'); if(firstInput) firstInput.focus(); }, 100);
 }
 function submitUsedContract(event) {
-    if (!validateField('u_visit', '방문경로')) return; if (!validateField('u_name', '고객명')) return; if (!validateField('u_review', '리뷰작성여부')) return;
+    if (!validateField('u_act_type', '개통유형')) return; 
+    if (!validateField('u_cont_type', '약정유형')) return; 
+    if (!validateField('u_visit', '방문경로')) return; 
+    if (!validateField('u_name', '고객명')) return; 
+    if (!validateField('u_birth', '생년월일')) return; 
+    if (!validateField('u_phone', '전화번호')) return; 
+    if (!validateField('u_review', '리뷰작성여부')) return;
     let visitVal = document.getElementById('u_visit').value; if(visitVal === '기타') { if(!validateField('u_visit_etc', '상세 방문경로')) return; visitVal = "기타: " + document.getElementById('u_visit_etc').value; }
     const selectedAddons = []; document.querySelectorAll('#u_div_addon_container .addon-check:checked').forEach(cb => selectedAddons.push(cb.value));
     const formData = {
