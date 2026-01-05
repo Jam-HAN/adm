@@ -3,50 +3,53 @@
   --primary: #4361ee;
   --primary-2: #3a0ca3;
   --primary-grad: linear-gradient(135deg, var(--primary) 0%, var(--primary-2) 100%);
-
   --success: #2ec4b6;
   --warning: #ff9f1c;
   --danger: #e71d36;
 
-  /* Background (미니멀: 과한 그라데이션 제거) */
-  --bg: #f6f7fb;
-  --bg-2: #eef1f7;
+  /* Surface / background */
+  --bg-grad: radial-gradient(1200px 600px at 20% 0%, rgba(67,97,238,.18), transparent 55%),
+             radial-gradient(900px 500px at 95% 15%, rgba(58,12,163,.14), transparent 55%),
+             linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
 
-  /* Typography */
-  --text: #111827;
+  --text: #1f2430;
   --muted: #6b7280;
-  --muted-2: #9ca3af;
-
-  /* Borders / radius */
   --border: rgba(17, 24, 39, 0.08);
-  --border-strong: rgba(17, 24, 39, 0.12);
+
+  /* Glass */
+  --glass-bg: rgba(255,255,255,0.62);
+  --glass-bg-strong: rgba(255,255,255,0.78);
+  --glass-border: rgba(255,255,255,0.55);
+  --glass-blur: 14px;
+
+  /* Radius / shadow (통일감의 핵심) */
   --r-sm: 10px;
   --r-md: 14px;
-  --r-lg: 16px;
+  --r-lg: 18px;
 
-  /* Shadows (기업형: 절제) */
-  --sh-1: 0 1px 2px rgba(17, 24, 39, 0.06);
-  --sh-2: 0 8px 24px rgba(17, 24, 39, 0.08);
+  --sh-sm: 0 6px 18px rgba(17, 24, 39, 0.06);
+  --sh-md: 0 10px 30px rgba(17, 24, 39, 0.08);
+  --sh-glow: 0 10px 30px rgba(67, 97, 238, 0.14);
 
   /* Controls */
   --control-h: 38px;
-  --focus-ring: 0 0 0 4px rgba(67, 97, 238, 0.14);
+  --focus-ring: 0 0 0 4px rgba(67, 97, 238, 0.16);
 
   /* Motion */
   --ease: cubic-bezier(.2,.8,.2,1);
-  --dur: 160ms;
+  --dur: 180ms;
 
   /* Layout */
   --tabbar-h: 65px;
 }
 
+/* =========================
+   Base
+   ========================= */
 html { -webkit-text-size-adjust: 100%; }
-* { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
-
 body {
-  background: linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 100%);
+  background: var(--bg-grad);
   background-attachment: fixed;
-
   font-family: "Noto Sans KR", system-ui, -apple-system, Segoe UI, Roboto, "Apple SD Gothic Neo", sans-serif;
   color: var(--text);
   font-size: 0.95rem;
@@ -55,44 +58,63 @@ body {
   padding-bottom: calc(80px + env(safe-area-inset-bottom));
 }
 
+/* 텍스트 렌더링 깔끔하게 */
+* { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+
 /* =========================
-   Cards (미니멀 핵심)
+   Glass Card (진짜 ‘고급’ 느낌은 여기서 결정)
    ========================= */
 .glass-card {
-  /* glass → white card */
-  background: rgba(255, 255, 255, 0.96);
-  border: 1px solid var(--border);
+  position: relative;
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
   border-radius: var(--r-lg);
-  box-shadow: var(--sh-1);
-  margin-bottom: 20px;
+  box-shadow: var(--sh-md);
   overflow: hidden;
-
-  transition: box-shadow var(--dur) var(--ease), transform var(--dur) var(--ease), border-color var(--dur) var(--ease);
+  margin-bottom: 20px;
 }
 
-/* hover: “업무툴” 느낌의 미세한 상승만 */
-.glass-card:hover {
-  transform: translateY(-1px);
-  box-shadow: var(--sh-2);
-  border-color: var(--border-strong);
+/* 유리 하이라이트 (싸보이는 플라스틱 느낌 제거) */
+.glass-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    rgba(255,255,255,0.55) 0%,
+    rgba(255,255,255,0.18) 35%,
+    rgba(255,255,255,0.05) 100%
+  );
+  opacity: 0.55;
 }
 
 .glass-card.no-clip { overflow: visible; }
 
-/* 헤더도 과한 유리 효과 제거 */
 .glass-header {
-  background: rgba(255, 255, 255, 0.98);
-  border-bottom: 1px solid var(--border);
+  background: var(--glass-bg-strong);
+  backdrop-filter: blur(calc(var(--glass-blur) - 2px));
+  -webkit-backdrop-filter: blur(calc(var(--glass-blur) - 2px));
+  border-bottom: 1px solid rgba(255,255,255,0.35);
+}
+
+/* 카드 hover에서 은은하게 ‘살아나는’ 느낌 */
+.glass-card:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--sh-md), var(--sh-glow);
+  transition: transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
 }
 
 /* =========================
    Section transition
    ========================= */
 .section-view { display: none; }
-.active-section { display: block; animation: slideUp 200ms var(--ease); }
+.active-section { display: block; animation: slideUp 220ms var(--ease); }
 
 @keyframes slideUp {
-  from { opacity: 0; transform: translateY(8px); }
+  from { opacity: 0; transform: translateY(10px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
@@ -109,37 +131,26 @@ body {
   font-weight: 800;
   color: var(--muted);
   margin-bottom: 6px;
+  letter-spacing: -0.1px;
 }
 
 .form-label, label { margin-bottom: 0.3rem !important; }
 
 /* =========================
-   Inputs / Selects (기업형: 깨끗하고 또렷하게)
+   Inputs / Selects (고급스러운 ‘탄성’은 상태값에서 나온다)
    ========================= */
 .form-control,
 .form-select {
   border-radius: var(--r-sm);
-  border: 1px solid rgba(17, 24, 39, 0.12);
-  background: #fff;
+  border: 1px solid rgba(17, 24, 39, 0.10);
+  background: rgba(255,255,255,0.92);
   height: var(--control-h) !important;
   min-height: var(--control-h) !important;
   font-size: 0.95rem;
-
-  transition: border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+  transition: border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease), transform var(--dur) var(--ease);
 }
 
-.form-control:hover,
-.form-select:hover {
-  border-color: rgba(67, 97, 238, 0.28);
-}
-
-.form-control:focus,
-.form-select:focus {
-  border-color: rgba(67, 97, 238, 0.65);
-  box-shadow: var(--focus-ring);
-}
-
-/* select 수직정렬 */
+/* select 수직 정렬 */
 .form-select {
   padding-top: 0 !important;
   padding-bottom: 0 !important;
@@ -147,19 +158,29 @@ body {
   background-position: right 0.75rem center !important;
 }
 
-/* placeholder: 고급스러운 대비 */
-::placeholder { color: rgba(17, 24, 39, 0.30); }
+/* hover */
+.form-control:hover,
+.form-select:hover {
+  border-color: rgba(67, 97, 238, 0.35);
+}
+
+/* focus */
+.form-control:focus,
+.form-select:focus {
+  border-color: rgba(67, 97, 238, 0.65);
+  box-shadow: var(--focus-ring);
+}
 
 /* disabled */
 .form-control:disabled,
 .form-select:disabled {
-  background: rgba(17, 24, 39, 0.03);
-  color: rgba(17, 24, 39, 0.45);
+  background: rgba(255,255,255,0.60);
+  color: rgba(31,36,48,0.45);
   cursor: not-allowed;
 }
 
 /* =========================
-   Buttons (미니멀: 단색+그라데이션 절제)
+   Buttons
    ========================= */
 .btn {
   border-radius: var(--r-sm);
@@ -174,38 +195,35 @@ body {
   padding: 0 12px !important;
   gap: 6px;
 
-  transition: transform 110ms var(--ease), box-shadow var(--dur) var(--ease), filter var(--dur) var(--ease);
+  transition: transform 120ms var(--ease), box-shadow var(--dur) var(--ease), filter var(--dur) var(--ease);
 }
 
 .btn:active { transform: scale(0.985); }
 
-/* Primary: 단색 중심(기업형), 필요하면 grad로 쉽게 전환 가능 */
+/* Primary */
 .btn-primary {
-  background: var(--primary) !important;
+  background: var(--primary-grad) !important;
   border: none !important;
   color: #fff !important;
-  box-shadow: 0 8px 18px rgba(67, 97, 238, 0.18);
+  box-shadow: 0 10px 22px rgba(67, 97, 238, 0.22);
 }
 
 .btn-primary:hover {
   filter: brightness(1.03);
-  box-shadow: 0 10px 22px rgba(67, 97, 238, 0.22);
+  box-shadow: 0 12px 26px rgba(67, 97, 238, 0.28);
 }
 
-/* Secondary: 깔끔한 라인 버튼 */
-.btn-outline-primary {
-  border: 1px solid rgba(67, 97, 238, 0.35) !important;
-  color: var(--primary) !important;
-  background: #fff !important;
+/* Secondary(유리톤) - 필요하면 쓰세요 */
+.btn-glass {
+  background: rgba(255,255,255,0.70) !important;
+  border: 1px solid rgba(255,255,255,0.55) !important;
+  color: var(--text) !important;
+  box-shadow: var(--sh-sm);
 }
-
-.btn-outline-primary:hover {
-  border-color: rgba(67, 97, 238, 0.55) !important;
-  box-shadow: 0 8px 18px rgba(67, 97, 238, 0.10);
-}
+.btn-glass:hover { box-shadow: var(--sh-md); }
 
 /* =========================
-   Mobile bottom nav (미니멀 앱 느낌)
+   Mobile bottom nav (더 ‘앱’처럼)
    ========================= */
 .mobile-bottom-nav {
   position: fixed;
@@ -214,9 +232,12 @@ body {
   width: 100%;
   height: var(--tabbar-h);
 
-  background: rgba(255, 255, 255, 0.98);
-  border-top: 1px solid var(--border);
-  box-shadow: 0 -10px 24px rgba(17, 24, 39, 0.06);
+  background: rgba(255,255,255,0.86);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+
+  border-top: 1px solid rgba(17,24,39,0.06);
+  box-shadow: 0 -10px 30px rgba(17,24,39,0.06);
 
   display: flex;
   justify-content: space-around;
@@ -228,7 +249,7 @@ body {
 
 .mobile-bottom-nav .nav-item {
   text-decoration: none;
-  color: var(--muted-2);
+  color: #9ca3af;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -246,30 +267,27 @@ body {
 .mobile-bottom-nav .nav-item.active { color: var(--primary); }
 .mobile-bottom-nav .nav-item.active i { transform: translateY(-2px); }
 
-/* Center FAB: 미니멀에서도 “주요 액션”만 강조 */
+/* Center FAB (깊이감 개선) */
 .center-fab .fab-btn {
   width: 52px;
   height: 52px;
-  background: var(--primary);
+  background: var(--primary-grad);
   border-radius: 50%;
   display: flex;
   justify-content: center;
   align-items: center;
   color: #fff;
 
-  box-shadow: 0 14px 26px rgba(67, 97, 238, 0.28);
+  box-shadow: 0 14px 28px rgba(67, 97, 238, 0.35);
   transform: translateY(-18px);
-  border: 1px solid rgba(255, 255, 255, 0.25);
+  border: 1px solid rgba(255,255,255,0.35);
 }
 .center-fab .fab-btn i { margin: 0; font-size: 1.8rem; }
 
 /* =========================
    Utilities
    ========================= */
-.divider {
-  border-top: 1px dashed rgba(17, 24, 39, 0.14);
-  margin: 1.5rem 0;
-}
+.divider { border-top: 1px dashed rgba(17,24,39,0.12); margin: 1.5rem 0; }
 
 .section-header {
   font-size: 1rem;
@@ -278,6 +296,7 @@ body {
   margin-bottom: 15px;
   display: flex;
   align-items: center;
+  letter-spacing: -0.2px;
 }
 
 .text-danger-custom { color: var(--danger) !important; font-weight: 800; }
@@ -290,18 +309,18 @@ body {
 }
 
 /* =========================
-   Dashboard table
+   Dashboard
    ========================= */
 .dash-table th {
   background: transparent;
   color: var(--muted);
   font-size: 0.75rem;
-  border-bottom: 1px solid rgba(17, 24, 39, 0.08);
+  border-bottom: 1px solid rgba(17,24,39,0.08);
 }
 
 .dash-table td { padding: 12px 4px; font-size: 0.9rem; }
 
-/* 마지막 요소 정리 */
+/* 마지막 요소 자동 정리 */
 #dash_month_stats .stat-divider:last-of-type { display: none !important; }
 #dash_month_stats .stat-item:last-of-type { margin-bottom: 0 !important; }
 
@@ -316,16 +335,17 @@ body {
   display: flex;
   flex-direction: column;
 
-  justify-content: center; /* 기본: 로딩 중앙 */
+  /* 기본: 로딩 중앙 */
+  justify-content: center;
 }
 
 .fixed-h-box.is-loaded {
   justify-content: flex-start;
-  padding-top: 6px;
+  padding-top: 6px; /* 살짝 여유 */
 }
 
 .fixed-h-box::-webkit-scrollbar { width: 6px; }
-.fixed-h-box::-webkit-scrollbar-thumb { background-color: rgba(17,24,39,0.16); border-radius: 3px; }
+.fixed-h-box::-webkit-scrollbar-thumb { background-color: rgba(17,24,39,0.14); border-radius: 3px; }
 
 /* =========================
    Mobile slim mode (<=768px)
@@ -359,7 +379,7 @@ body {
     margin-bottom: 2px !important;
   }
 
-  /* 모바일에서 카드 여백 정돈 */
+  /* 카드 패딩은 body/card-body 레벨에서 관리 */
   .glass-card { padding: 0 !important; }
   .glass-card .card-body { padding: 15px !important; }
 
@@ -368,3 +388,5 @@ body {
     --bs-gutter-x: 0.3rem !important;
   }
 }
+
+::placeholder { color: rgba(31,36,48,0.35); }
