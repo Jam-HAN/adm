@@ -305,7 +305,8 @@
                                 <div class="col-6"><label class="form-label-sm">변경요금제</label><input type="text" class="form-control form-control-sm" id="f_plan_chg"></div>
                                 <div class="col-12"><label class="form-label-sm">부가서비스</label><div id="div_addon_container" class="border rounded p-3 bg-light" style="min-height: 50px;"></div></div>
                                 <div class="col-4"><label class="form-label-sm">제휴카드</label><input type="text" class="form-control form-control-sm" id="f_card"></div>
-                                <div class="col-4"><label class="form-label-sm">리뷰작성여부<span class="required-star">*</span></label><select class="form-select form-select-sm" id="f_review"></select></div>
+                                <div class="col-4"><label class="form-label-sm">리뷰작성여부 <span class="required-star">*</span></label><select class="form-select form-select-sm" id="f_review" onchange="checkReviewId()"></select></div>
+                                <div class="col-4" id="div_review_id" style="display:none;"><input type="text" class="form-control form-control-sm" id="f_review_id" placeholder="작성자 ID"></div>
                             </div>
                             <div class="divider"></div>
                             <div class="section-header"><i class="bi bi-calculator"></i> 정책 및 정산</div>
@@ -396,7 +397,8 @@
                             <div class="row g-2 mb-3">
                                 <div class="col-12" id="w_plan_input_area"></div>
                                 <div class="col-4"><label class="form-label-sm">제휴카드</label><input type="text" class="form-control form-control-sm" id="w_card"></div>
-                                <div class="col-4"><label class="form-label-sm">리뷰작성여부<span class="required-star">*</span></label><select class="form-select form-select-sm" id="w_review"></select></div>
+                                <div class="col-4"><label class="form-label-sm">리뷰작성여부 <span class="required-star">*</span></label><select class="form-select form-select-sm" id="w_review" onchange="checkWiredReviewId()"></select></div>
+                                <div class="col-4" id="w_div_review_id" style="display:none;"><input type="text" class="form-control form-control-sm" id="w_review_id" placeholder="작성자 ID"></div>
                             </div>
                             <div class="divider"></div><div class="section-header"><i class="bi bi-calculator"></i> 정책 및 정산</div>
                             <div class="row g-2 mb-3">
@@ -486,7 +488,8 @@
                             <div class="row g-2 mb-3">
                                 <div class="col-12"><label class="form-label-sm">부가서비스</label><div id="u_div_addon_container" class="border rounded p-2 bg-light" style="min-height: 40px;"></div></div>
                                 <div class="col-4"><label class="form-label-sm">제휴카드</label><input type="text" class="form-control form-control-sm" id="u_card"></div>
-                                <div class="col-4"><label class="form-label-sm">리뷰작성여부<span class="required-star">*</span></label><select class="form-select form-select-sm" id="u_review"></select></div>
+                                <div class="col-4"><label class="form-label-sm">리뷰작성여부<span class="required-star">*</span></label><select class="form-select form-select-sm" id="u_review" onchange="checkUsedReviewId()"></select></div>
+                                <div class="col-4" id="u_div_review_id" style="display:none;"><input type="text" class="form-control form-control-sm" id="u_review_id" placeholder="작성자 ID"></div>
                             </div>
                             <div class="divider"></div><div class="section-header"><i class="bi bi-calculator"></i> 정책 및 정산</div>
                             <div class="row g-2 mb-3">
