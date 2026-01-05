@@ -390,3 +390,136 @@ body {
 }
 
 ::placeholder { color: rgba(31,36,48,0.35); }
+
+/* =========================================
+   [Mobile Optimization Patch]
+   - 붙여넣기 위치: CSS 맨 아래 (우선순위 확보)
+   ========================================= */
+
+/* 0) 모바일에서 너무 과한 글래스(blur) 성능/배터리 부담 줄이기 */
+@media (max-width: 768px) {
+  .glass-card {
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+  .mobile-bottom-nav {
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+}
+
+/* 1) iOS 입력창 자동 확대(줌) 방지: 16px 이상 권장
+   - 기존은 13px이라 iPhone Safari에서 포커스 시 화면이 확대될 수 있음 */
+@media (max-width: 768px) {
+  .form-control,
+  .form-select,
+  input,
+  select,
+  textarea {
+    font-size: 16px !important; /* iOS 줌 방지 핵심 */
+  }
+
+  /* 전체 본문은 작게 유지하고, 입력만 16px로 */
+  body { font-size: 13px !important; }
+}
+
+/* 2) 터치 타겟 강화: 손가락 실수 감소 (특히 탭바/버튼/셀렉트) */
+@media (max-width: 768px) {
+  :root { --control-h: 40px; } /* 모바일 컨트롤 높이 살짝 키움 */
+
+  .btn,
+  .form-control,
+  .form-select {
+    height: var(--control-h) !important;
+    min-height: var(--control-h) !important;
+  }
+
+  .form-select { line-height: var(--control-h) !important; }
+}
+
+/* 3) 탭바 안전영역 + 화면 겹침 최소화(더 확실하게) */
+@media (max-width: 768px) {
+  body {
+    padding-bottom: calc(var(--tabbar-h) + 18px + env(safe-area-inset-bottom)) !important;
+  }
+
+  .mobile-bottom-nav {
+    height: calc(var(--tabbar-h) + env(safe-area-inset-bottom));
+  }
+
+  /* FAB 위치도 안전영역 고려 */
+  .center-fab .fab-btn {
+    transform: translateY(calc(-18px - (env(safe-area-inset-bottom) * 0.2)));
+  }
+}
+
+/* 4) 탭바 아이템 터치 영역 넓히기 + 눌림 피드백 */
+@media (max-width: 768px) {
+  .mobile-bottom-nav .nav-item {
+    padding: 8px 0;
+    border-radius: 12px;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .mobile-bottom-nav .nav-item:active {
+    background: rgba(67,97,238,0.08);
+  }
+}
+
+/* 5) 모바일 테이블 가독성: 가로 스크롤 + 스티키 헤더(가능할 때) */
+@media (max-width: 768px) {
+  .dash-table {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 12px;
+  }
+
+  .dash-table table { min-width: 520px; } /* 컬럼 많은 경우 깨짐 방지 */
+
+  /* th가 실제 thead/th 구조일 때만 효과 있음 */
+  .dash-table th {
+    position: sticky;
+    top: 0;
+    background: rgba(255,255,255,0.92);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 2;
+  }
+
+  /* 행 간격 살짝 줄여 정보 밀도 ↑ */
+  .dash-table td { padding: 10px 6px; }
+}
+
+/* 6) 스크롤 체감 개선: iOS에서 fixed 요소와 함께 스크롤 버벅임 완화 */
+@media (max-width: 768px) {
+  body {
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* 7) fixed-h-box: 모바일에서 높이 조금 줄여 첫 화면 정보 노출 ↑ */
+@media (max-width: 768px) {
+  .fixed-h-box {
+    min-height: 210px;
+    max-height: 210px;
+  }
+}
+
+/* 8) 입력 UX: 숫자/전화 입력은 폰 키패드 뜨게 (HTML에 type 지정이 최선)
+   - CSS로는 못 바꾸니, 아래 HTML 권장만 메모:
+   <input type="tel" inputmode="numeric" pattern="[0-9]*">
+*/
+
+/* 9) 터치 디바이스 hover 오작동 방지 (hover 가능한 기기에서만 hover 효과) */
+@media (hover: none) {
+  .glass-card:hover {
+    transform: none;
+    box-shadow: var(--sh-md);
+  }
+  .btn-primary:hover {
+    filter: none;
+    box-shadow: 0 10px 22px rgba(67, 97, 238, 0.22);
+  }
+}
