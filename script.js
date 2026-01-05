@@ -1562,17 +1562,17 @@ function openEditModal(item) {
             ${makeInput('개통처', '개통처', 'col-6', 'text', false, true)}
             ${makeInput('정책차수', '정책차수', 'col-6')}
             
-            ${makeInput('액면/히든', '기본정책', 'col-6', 'number')}
-            ${makeInput('메모', '메모(기본)', 'col-6')}
+            ${makeInput('기본정책', '기본정책', 'col-6', 'number')}
+            ${makeInput('메모', '기본정책메모', 'col-6')}
             
             ${makeInput('추가정책', '추가정책', 'col-6', 'number')}
-            ${makeInput('메모', '메모(추가)', 'col-6')}
+            ${makeInput('메모', '추가정책메모', 'col-6')}
             
             ${makeInput('부가정책', '부가정책', 'col-6', 'number')}
-            ${makeInput('메모', '메모(부가)', 'col-6')}
+            ${makeInput('메모', '부가정책메모', 'col-6')}
             
             ${makeInput('차감정책', '차감정책', 'col-6', 'number', true)}
-            ${makeInput('메모', '메모(차감)', 'col-6')}
+            ${makeInput('메모', '차감정책메모', 'col-6')}
             
             ${makeInput('프리할인', '프리할인', 'col-6', 'number', true)}
             ${makeSelect('유심', '유심', usimList, 'col-6')}
@@ -1590,12 +1590,12 @@ function openEditModal(item) {
             ${makeInput('대납1', '대납1', 'col-4', 'number', true)}
             ${makeSelect('결제', '대납1결제', payMethodList, 'col-4')}
             ${makeInput('처리일', '대납1처리일', 'col-4', 'date')}
-            ${makeInput('사유', '사유(대납1)', 'col-12')}
+            ${makeInput('사유', '대납1사유', 'col-12')}
             
             ${makeInput('대납2', '대납2', 'col-4', 'number', true)}
             ${makeSelect('결제', '대납2결제', payMethodList, 'col-4')}
             ${makeInput('처리일', '대납2처리일', 'col-4', 'date')}
-            ${makeInput('사유', '사유(대납2)', 'col-12')}
+            ${makeInput('사유', '대납2사유', 'col-12')}
             
             ${makeInput('캐시백', '캐시백', 'col-6', 'number', true)}
             ${makeInput('페이백', '페이백', 'col-6', 'number', true)}
