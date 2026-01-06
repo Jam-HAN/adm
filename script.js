@@ -536,16 +536,16 @@ function checkWiredVisitPath() {
     const label = document.getElementById('w_label_visit_etc'); // 라벨 가져오기
 
     // '기타' 또는 '고객소개'일 때 입력창 표시
-    if (val === '기타' || val === '고객소개') {
+    if (val === '고객소개' || val === '기타') {
         div.style.display = 'block';
         input.focus(); // 켜지면 바로 입력할 수 있게 포커스
 
         // 상황에 따라 라벨과 안내문구 변경
         if (val === '고객소개') {
-            label.innerText = "소개자 이름";
+            label.innerText = "소개자";
             input.placeholder = "예: 한재민";
         } else {
-            label.innerText = "기타 상세";
+            label.innerText = "기타";
             input.placeholder = "내용을 입력하세요";
         }
     } else {
