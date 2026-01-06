@@ -556,7 +556,7 @@ function checkWiredVisitPath() {
 }
 function checkUsedVisitPath() { const val = document.getElementById('u_visit').value; document.getElementById('u_div_visit_etc').style.display = (val === '기타') ? 'block' : 'none'; }
 function checkReviewId() { const val = document.getElementById('f_review').value; document.getElementById('div_review_id').style.display = (val === '작성') ? 'block' : 'none'; }
-function checkWiredReviewId() { const val = document.getElementById('w_review').value; document.getElementById('w_div_review_id').style.display = (val === '작성') ? 'block' : 'none'; }
+function checkWiredReviewId() { const val = document.getElementById('w_review').value; document.getElementById('w_div_review_id').style.display = (val === '작성') ? 'block' : 'none'; input.focus(); }
 function checkUsedReviewId() { const val = document.getElementById('u_review').value; document.getElementById('u_div_review_id').style.display = (val === '작성') ? 'block' : 'none'; }
 
 
