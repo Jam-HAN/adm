@@ -128,6 +128,7 @@ body {
   background: #fff;
 }
 
+/* 버튼 */
 .btn {
   border-radius: var(--r-sm);
   font-size: 0.95rem;
@@ -220,68 +221,66 @@ body {
    ★ [Mobile Optimization] 모바일 전용 통합 최적화
    ======================================================= */
 @media screen and (max-width: 768px) {
-  
-  /* 1. 기본 설정 및 폰트 */
+
+  /* 1) 기본 설정 및 폰트 */
   :root { --control-h: 42px; } /* 터치하기 편한 높이로 통일 */
-  
-  body { 
-    font-size: 13px !important; /* 본문은 정보량 확보를 위해 작게 */
+
+  body {
+    font-size: 13px !important; /* 본문은 정보량 확보 */
     padding-bottom: calc(var(--tabbar-h) + 20px + env(safe-area-inset-bottom)) !important;
   }
 
   .container { padding-left: 12px !important; padding-right: 12px !important; }
 
-  /* 2. 입력창 최적화 (iOS 줌 방지 핵심: 16px) */
+  /* 2) 입력창 최적화 (iOS 줌 방지 핵심: 16px) */
   .form-control, .form-select, input, select, textarea {
-    font-size: 16px !important; /* 중요: 16px 미만이면 아이폰에서 확대됨 */
+    font-size: 16px !important; /* 16px 미만이면 아이폰에서 확대됨 */
     height: var(--control-h) !important;
     min-height: var(--control-h) !important;
   }
-  
-  .form-select { 
+
+  .form-select {
     padding-top: 0 !important; padding-bottom: 0 !important;
     line-height: var(--control-h) !important;
   }
 
-  /* 3. 버튼 및 라벨 */
+  /* 3) 버튼 및 라벨 */
   .btn {
-    font-size: 14px !important; /* 버튼 글씨는 살짝 키움 */
+    font-size: 14px !important;
     height: var(--control-h) !important;
     min-height: var(--control-h) !important;
   }
-  
+
   .form-label-sm, label {
-    font-size: 12px !important; /* 라벨 가독성 확보 */
+    font-size: 12px !important;
     margin-bottom: 3px !important;
   }
 
-  /* 4. 카드 및 그리드 여백 축소 */
+  /* 4) 카드 및 그리드 여백 축소 */
   .glass-card { padding: 0 !important; margin-bottom: 15px; }
   .glass-card .card-body { padding: 15px !important; }
-  
+
   .row.g-2 {
-    --bs-gutter-y: 0.4rem !important; /* 상하 간격 살짝 띄움 (터치 미스 방지) */
+    --bs-gutter-y: 0.4rem !important;
     --bs-gutter-x: 0.3rem !important;
   }
 
-  /* 5. 폼 레이아웃 자동 조정 (좁은 칸 방지) */
-  /* 개통 화면 등에서 3열/4열로 된 것을 모바일에서는 2열로 강제 변경 */
+  /* 5) 특정 폼 레이아웃 자동 조정 (기존 유지) */
   #section-open .row.g-2 > .col-4,
   #section-used .row.g-2 > .col-4,
   #section-wired .row.g-2 > .col-3 {
     flex: 0 0 50% !important; max-width: 50% !important;
   }
-  /* 아주 긴 입력필드는 1열로 */
   #section-open .row.g-2 > .col-8 {
     flex: 0 0 100% !important; max-width: 100% !important;
   }
 
-  /* 6. 대시보드 테이블 가로 스크롤 */
+  /* 6) 대시보드 테이블 가로 스크롤 */
   .dash-table { display: block; overflow-x: auto; white-space: nowrap; }
   .dash-table table { min-width: 500px; }
-  .fixed-h-box { min-height: 210px; max-height: 210px; } /* 모바일에서 높이 줄임 */
+  .fixed-h-box { min-height: 210px; max-height: 210px; }
 
-  /* 7. 메뉴 위치 조정 (Safe Area 대응) */
+  /* 7) 메뉴 위치 조정 (Safe Area 대응) */
   #fab-menu-container, #search-menu-container, #manage-menu-container {
     width: 240px !important;
     bottom: calc(var(--tabbar-h) + 20px + env(safe-area-inset-bottom)) !important;
@@ -294,7 +293,21 @@ body {
    ======================================================= */
 @media (max-width: 768px) {
 
-  /* (A) 섹션 헤더/구분선 조금 더 ‘앱’처럼 */
+  /* step2 공간: sticky CTA 자리 확보 */
+  #section-open #open_step_2,
+  #section-wired #wired_step_2,
+  #section-used #used_step_2{
+    padding-bottom: 96px;
+  }
+
+  /* 기존 폼 안에 있던 저장 영역은 모바일에서 숨김(중복 방지) */
+  #section-open #open_step_2 .mt-4.pb-4,
+  #section-wired #wired_step_2 .mt-4.pb-4,
+  #section-used #used_step_2 .mt-4.pb-4{
+    display: none !important;
+  }
+
+  /* 섹션 헤더/구분선 ‘앱’ 느낌 */
   .section-header{
     font-size: 0.95rem;
     font-weight: 900;
@@ -302,14 +315,7 @@ body {
   }
   .divider{ margin: 14px 0; }
 
-  /* (B) Step2 폼을 '카드'처럼 정돈 */
-  #section-open #open_step_2,
-  #section-wired #wired_step_2,
-  #section-used #used_step_2{
-    padding-bottom: 90px; /* sticky CTA 공간 */
-  }
-
-  /* (C) Accordion look: 섹션을 접히는 블록처럼 보이게 */
+  /* Accordion card */
   .m-acc{
     border: 1px solid rgba(17,24,39,0.08);
     border-radius: 14px;
@@ -351,15 +357,10 @@ body {
     transition: transform 160ms var(--ease);
   }
   .m-acc[aria-expanded="true"] .m-acc__chev{ transform: rotate(180deg); }
+  .m-acc__body{ padding: 12px 14px 14px; }
+  .m-acc[aria-expanded="false"] .m-acc__body{ display: none; }
 
-  .m-acc__body{
-    padding: 12px 14px 14px;
-  }
-  .m-acc[aria-expanded="false"] .m-acc__body{
-    display: none;
-  }
-
-  /* (D) 폼 그리드: 기본 2열, col-12는 1열 */
+  /* 폼 그리드: 기본 2열, col-12는 1열 (g-2 폼에만 한정) */
   #section-open .row.g-2 > [class^="col-"],
   #section-wired .row.g-2 > [class^="col-"],
   #section-used .row.g-2 > [class^="col-"]{
@@ -373,89 +374,11 @@ body {
     max-width: 100% !important;
   }
 
-  /* (E) 입력 UX: 필수 필드 강조(아주 은은하게) */
+  /* focus UX */
   .required-star{ margin-left: 3px; }
-  .form-control:focus, .form-select:focus{
-    transform: translateY(-1px);
-  }
+  .form-control:focus, .form-select:focus{ transform: translateY(-1px); }
 
-  /* (F) Sticky CTA (하단 저장 버튼) */
-  .m-sticky-cta{
-    position: fixed;
-    left: 0;
-    right: 0;
-    bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom));
-    padding: 10px 12px;
-    z-index: 1200;
-
-    background: rgba(255,255,255,0.78);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border-top: 1px solid rgba(17,24,39,0.06);
-    box-shadow: 0 -10px 30px rgba(17,24,39,0.08);
-  }
-  .m-sticky-cta__inner{
-    display: flex;
-    gap: 10px;
-    align-items: center;
-  }
-  .m-sticky-cta .btn{
-    height: 46px !important;
-    min-height: 46px !important;
-    border-radius: 14px;
-    font-weight: 900;
-  }
-  .m-sticky-cta .btn-light{
-    background: rgba(255,255,255,0.85) !important;
-    border: 1px solid rgba(17,24,39,0.08) !important;
-  }
-
-  /* (G) 기존 폼 안에 있던 저장 영역은 모바일에서 숨김(중복 방지) */
-  #section-open #open_step_2 .mt-4.pb-4,
-  #section-wired #wired_step_2 .mt-4.pb-4,
-  #section-used #used_step_2 .mt-4.pb-4{
-    display: none !important;
-  }
-}
-
-/* =======================================================
-   Mobile Step2 Accordion + Sticky Save CTA (<=768px)
-   ======================================================= */
-@media (max-width: 768px) {
-
-  /* step2 공간: sticky CTA 들어갈 자리 확보 */
-  #open_step_2, #wired_step_2, #used_step_2 { padding-bottom: 96px; }
-
-  /* 기존 step2 내부 하단 저장 버튼은 모바일에서 숨김(중복 방지) */
-  #open_step_2 .mt-4.pb-4,
-  #wired_step_2 .mt-4.pb-4,
-  #used_step_2 .mt-4.pb-4 { display: none !important; }
-
-  /* Accordion card */
-  .m-acc {
-    border: 1px solid rgba(17,24,39,0.08);
-    border-radius: 14px;
-    overflow: hidden;
-    background: rgba(255,255,255,0.70);
-    box-shadow: 0 10px 26px rgba(17,24,39,0.06);
-    margin-bottom: 12px;
-  }
-  .m-acc__head{
-    display:flex; align-items:center; justify-content:space-between; gap:10px;
-    padding: 12px 14px;
-    background: rgba(255,255,255,0.90);
-    border-bottom: 1px solid rgba(17,24,39,0.06);
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-  }
-  .m-acc__title{ display:flex; align-items:center; gap:8px; font-weight:900; }
-  .m-acc__meta{ font-size: 0.78rem; color: var(--muted); font-weight: 800; white-space: nowrap; }
-  .m-acc__chev{ font-size: 1.05rem; opacity: 0.65; transition: transform 160ms var(--ease); }
-  .m-acc[aria-expanded="true"] .m-acc__chev{ transform: rotate(180deg); }
-  .m-acc__body{ padding: 12px 14px 14px; }
-  .m-acc[aria-expanded="false"] .m-acc__body{ display:none; }
-
-  /* Sticky CTA (탭바 위) */
+  /* Sticky CTA */
   .m-sticky-cta{
     position: fixed;
     left: 0; right: 0;
@@ -469,9 +392,10 @@ body {
     border-top: 1px solid rgba(17,24,39,0.06);
     box-shadow: 0 -10px 30px rgba(17,24,39,0.08);
   }
-  .m-sticky-cta__inner{ display:flex; gap:10px; align-items:center; }
+  .m-sticky-cta__inner{ display: flex; gap: 10px; align-items: center; }
   .m-sticky-cta .btn{
-    height: 46px !important; min-height: 46px !important;
+    height: 46px !important;
+    min-height: 46px !important;
     border-radius: 14px;
     font-weight: 900;
   }
