@@ -1032,7 +1032,8 @@ window.submitFullContract = function() {
     if (!validateField('f_birth', '생년월일')) return; 
     if (!validateField('f_phone', '전화번호')) return; 
     if (!validateField('f_review', '리뷰작성여부')) return;
-    let visitVal = document.getElementById('f_visit').value; if(visitVal === '기타') { if(!validateField('f_visit_etc', '상세 방문경로')) return; visitVal = "기타: " + document.getElementById('f_visit_etc').value; }
+    let visitVal = document.getElementById('f_visit').value; if (visitVal === '고객소개' || visitVal === '기타') { const alertLabel = (visitVal === '고객소개') ? '소개자 이름' : '기타 방문경로'; if (!validateField('f_visit_etc', alertLabel)) return; visitVal = visitVal + ": " + document.getElementById('f_visit_etc').value; }
+    let reviewId = document.getElementById('f_review').value; if (reviewId === '작성') { if (!validateField('f_review_id', '작성자 ID')) return; }
     btn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> 저장 중...`; btn.disabled = true;
     const selectedAddons = []; document.querySelectorAll('#div_addon_container .addon-check:checked').forEach(cb => selectedAddons.push(cb.value));
     const formData = {
@@ -1173,7 +1174,8 @@ function submitUsedContract(event) {
     if (!validateField('u_birth', '생년월일')) return; 
     if (!validateField('u_phone', '전화번호')) return; 
     if (!validateField('u_review', '리뷰작성여부')) return;
-    let visitVal = document.getElementById('u_visit').value; if(visitVal === '기타') { if(!validateField('u_visit_etc', '상세 방문경로')) return; visitVal = "기타: " + document.getElementById('u_visit_etc').value; }
+    let visitVal = document.getElementById('u_visit').value; if (visitVal === '고객소개' || visitVal === '기타') { const alertLabel = (visitVal === '고객소개') ? '소개자 이름' : '기타 방문경로'; if (!validateField('u_visit_etc', alertLabel)) return; visitVal = visitVal + ": " + document.getElementById('u_visit_etc').value; }
+    let reviewId = document.getElementById('u_review').value; if (reviewId === '작성') { if (!validateField('u_review_id', '작성자 ID')) return; }
     const selectedAddons = []; document.querySelectorAll('#u_div_addon_container .addon-check:checked').forEach(cb => selectedAddons.push(cb.value));
     const formData = {
         action: "open_used_full", user: currentUser, branch: document.getElementById('u_branch').value, activationType: document.getElementById('u_act_type').value, contractType: document.getElementById('u_cont_type').value, name: document.getElementById('u_name').value, birth: document.getElementById('u_birth').value, visitPath: visitVal, phoneNumber: document.getElementById('u_phone').value, pricePlan: document.getElementById('u_plan').value, changePlan: document.getElementById('u_plan_chg').value, selectedAddons: selectedAddons, usim: document.getElementById('u_usim').value, card: document.getElementById('u_card').value, review: document.getElementById('u_review').value, reviewId: document.getElementById('u_review_id').value, aValue: document.getElementById('u_avalue').value, policy: document.getElementById('u_policy').value, model: document.getElementById('u_model').value, serial: document.getElementById('u_serial').value,
