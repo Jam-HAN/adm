@@ -528,7 +528,31 @@ function applyDropdownData(d) {
 }
 
 // 5. 유틸리티
-function checkVisitPath() { const val = document.getElementById('f_visit').value; document.getElementById('div_visit_etc').style.display = (val === '기타') ? 'block' : 'none'; }
+function checkVisitPath() { 
+    const val = document.getElementById('f_visit').value;
+    const div = document.getElementById('div_visit_etc');
+    const input = document.getElementById('f_visit_etc');
+    const label = document.getElementById('f_label_visit_etc'); // 라벨 가져오기
+
+    // '기타' 또는 '고객소개'일 때 입력창 표시
+    if (val === '고객소개' || val === '기타') {
+        div.style.display = 'block';
+        input.focus(); // 켜지면 바로 입력할 수 있게 포커스
+
+        // 상황에 따라 라벨과 안내문구 변경
+        if (val === '고객소개') {
+            label.innerHTML = '소개자명<span class="required-star">*</span>';
+            input.placeholder = "예: 한재민";
+        } else {
+            label.innerHTML = '기타<span class="required-star">*</span>';
+            input.placeholder = "내용을 입력하세요";
+        }
+    } else {
+        // 그 외에는 숨기고 값 비우기
+        div.style.display = 'none';
+        input.value = ''; 
+    }
+}   
 function checkWiredVisitPath() { 
     const val = document.getElementById('w_visit').value; 
     const div = document.getElementById('w_div_visit_etc');
