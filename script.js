@@ -542,10 +542,10 @@ function checkWiredVisitPath() {
 
         // 상황에 따라 라벨과 안내문구 변경
         if (val === '고객소개') {
-            label.innerText = '소개자 <span class="required-star">*</span>';
+            label.innerHTML = '소개자 <span class="required-star">*</span>';
             input.placeholder = "예: 한재민";
         } else {
-            label.innerText = '기타 <span class="required-star">*</span>';
+            label.innerHTML = '기타 <span class="required-star">*</span>';
             input.placeholder = "내용을 입력하세요";
         }
     } else {
