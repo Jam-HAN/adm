@@ -270,9 +270,11 @@ function showSection(id) {
     if(id === 'section-vendor') loadVendorsToList();
     if(id === 'section-stock') updateSearchUI();
     
-    // 5. 입력창 포커스
-    const input = document.querySelector(`#${id} input`);
-    if(input) input.focus();
+    // 5. 입력창 포커스 (개통 섹션은 예외: 스크롤 튐 방지)
+    if (!['section-open','section-wired','section-used'].includes(id)) {
+      const input = document.querySelector(`#${id} input`);
+      if(input) input.focus();
+    }
 
     if (id === 'section-db-view') {
     // 오늘 날짜 구하기
@@ -286,6 +288,8 @@ function showSection(id) {
     document.getElementById('view_start').value = first;
     document.getElementById('view_end').value = today;
     }
+
+    syncMobileStickyCta();
 }
 
 function showOpenSection(type) {
@@ -2960,3 +2964,69 @@ function submitGoal() {
     })
     .catch(e => alert("저장 실패"));
 }
+
+
+/* =========================================
+   Mobile Sticky CTA controller
+   ========================================= */
+
+function mobileCtaSave(ev){
+  // 현재 active 섹션 기준으로 저장
+  const isOpen  = document.getElementById('section-open')?.classList.contains('active-section');
+  const isWired = document.getElementById('section-wired')?.classList.contains('active-section');
+  const isUsed  = document.getElementById('section-used')?.classList.contains('active-section');
+
+  if (isOpen)  return submitFullContract(ev);
+  if (isWired) return submitWiredContract(ev);
+  if (isUsed)  return submitUsedContract(ev);
+}
+
+function mobileCtaReset(){
+  const isOpen  = document.getElementById('section-open')?.classList.contains('active-section');
+  const isWired = document.getElementById('section-wired')?.classList.contains('active-section');
+  const isUsed  = document.getElementById('section-used')?.classList.contains('active-section');
+
+  if (isOpen)  return resetOpenForm();
+  if (isWired) return resetWiredForm();
+  if (isUsed)  return resetUsedForm();
+}
+
+/* step2까지 들어왔을 때만 CTA 보이기 */
+function syncMobileStickyCta(){
+  const cta = document.getElementById('mobile_sticky_cta');
+  if (!cta) return;
+
+  const isMobile = window.matchMedia('(max-width: 768px)').matches;
+
+  const secOpen  = document.getElementById('section-open');
+  const secWired = document.getElementById('section-wired');
+  const secUsed  = document.getElementById('section-used');
+
+  const isOpen  = secOpen?.classList.contains('active-section');
+  const isWired = secWired?.classList.contains('active-section');
+  const isUsed  = secUsed?.classList.contains('active-section');
+
+  // Step2 노출 여부
+  const openStep2  = document.getElementById('open_step_2');
+  const wiredStep2 = document.getElementById('wired_step_2');
+  const usedStep2  = document.getElementById('used_step_2');
+
+  const openReady  = isOpen  && openStep2  && openStep2.style.display !== 'none';
+  const wiredReady = isWired && wiredStep2 && wiredStep2.style.display !== 'none';
+  const usedReady  = isUsed  && usedStep2  && usedStep2.style.display !== 'none';
+
+  const shouldShow = isMobile && (openReady || wiredReady || usedReady);
+  cta.style.display = shouldShow ? 'block' : 'none';
+
+  // 버튼 라벨
+  const saveBtn = document.getElementById('mobile_cta_save');
+  if (saveBtn) {
+    if (openReady)  saveBtn.innerHTML = '<i class="bi bi-save-fill"></i> 개통 저장';
+    if (wiredReady) saveBtn.innerHTML = '<i class="bi bi-save-fill"></i> 유선 저장';
+    if (usedReady)  saveBtn.innerHTML = '<i class="bi bi-save-fill"></i> 중고 저장';
+  }
+}
+
+/* step2 진입/이탈, 리사이즈 등에서 자동 갱신 */
+window.addEventListener('resize', syncMobileStickyCta);
+document.addEventListener('DOMContentLoaded', syncMobileStickyCta);
