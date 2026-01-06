@@ -529,7 +529,31 @@ function applyDropdownData(d) {
 
 // 5. 유틸리티
 function checkVisitPath() { const val = document.getElementById('f_visit').value; document.getElementById('div_visit_etc').style.display = (val === '기타') ? 'block' : 'none'; }
-function checkWiredVisitPath() { const val = document.getElementById('w_visit').value; document.getElementById('w_div_visit_etc').style.display = (val === '기타') ? 'block' : 'none'; }
+function checkWiredVisitPath() { 
+    const val = document.getElementById('w_visit').value; 
+    const div = document.getElementById('w_div_visit_etc');
+    const input = document.getElementById('w_visit_etc');
+    const label = document.getElementById('w_label_visit_etc'); // 라벨 가져오기
+
+    // '기타' 또는 '고객소개'일 때 입력창 표시
+    if (val === '기타' || val === '고객소개') {
+        div.style.display = 'block';
+        input.focus(); // 켜지면 바로 입력할 수 있게 포커스
+
+        // 상황에 따라 라벨과 안내문구 변경
+        if (val === '고객소개') {
+            label.innerText = "소개자 이름";
+            input.placeholder = "예: 한재민";
+        } else {
+            label.innerText = "기타 상세";
+            input.placeholder = "내용을 입력하세요";
+        }
+    } else {
+        // 그 외에는 숨기고 값 비우기
+        div.style.display = 'none';
+        input.value = ''; 
+    }
+}
 function checkUsedVisitPath() { const val = document.getElementById('u_visit').value; document.getElementById('u_div_visit_etc').style.display = (val === '기타') ? 'block' : 'none'; }
 function checkReviewId() { const val = document.getElementById('f_review').value; document.getElementById('div_review_id').style.display = (val === '작성') ? 'block' : 'none'; }
 function checkWiredReviewId() { const val = document.getElementById('w_review').value; document.getElementById('w_div_review_id').style.display = (val === '작성') ? 'block' : 'none'; }
