@@ -287,3 +287,133 @@ body {
     bottom: calc(var(--tabbar-h) + 20px + env(safe-area-inset-bottom)) !important;
   }
 }
+
+/* =======================================================
+   Mobile App Form Upgrade (Accordion + Sticky CTA)
+   적용 범위: 모바일(<=768)에서만
+   ======================================================= */
+@media (max-width: 768px) {
+
+  /* (A) 섹션 헤더/구분선 조금 더 ‘앱’처럼 */
+  .section-header{
+    font-size: 0.95rem;
+    font-weight: 900;
+    margin: 10px 0 12px;
+  }
+  .divider{ margin: 14px 0; }
+
+  /* (B) Step2 폼을 '카드'처럼 정돈 */
+  #section-open #open_step_2,
+  #section-wired #wired_step_2,
+  #section-used #used_step_2{
+    padding-bottom: 90px; /* sticky CTA 공간 */
+  }
+
+  /* (C) Accordion look: 섹션을 접히는 블록처럼 보이게 */
+  .m-acc{
+    border: 1px solid rgba(17,24,39,0.08);
+    border-radius: 14px;
+    overflow: hidden;
+    background: rgba(255,255,255,0.70);
+    box-shadow: 0 10px 26px rgba(17,24,39,0.06);
+    margin-bottom: 12px;
+  }
+  .m-acc__head{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 12px 14px;
+    background: rgba(255,255,255,0.88);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(17,24,39,0.06);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .m-acc__title{
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 900;
+    color: var(--text);
+    letter-spacing: -0.2px;
+  }
+  .m-acc__meta{
+    font-size: 0.78rem;
+    color: var(--muted);
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .m-acc__chev{
+    font-size: 1.05rem;
+    color: rgba(31,36,48,0.55);
+    transition: transform 160ms var(--ease);
+  }
+  .m-acc[aria-expanded="true"] .m-acc__chev{ transform: rotate(180deg); }
+
+  .m-acc__body{
+    padding: 12px 14px 14px;
+  }
+  .m-acc[aria-expanded="false"] .m-acc__body{
+    display: none;
+  }
+
+  /* (D) 폼 그리드: 기본 2열, col-12는 1열 */
+  #section-open .row.g-2 > [class^="col-"],
+  #section-wired .row.g-2 > [class^="col-"],
+  #section-used .row.g-2 > [class^="col-"]{
+    flex: 0 0 50%;
+    max-width: 50%;
+  }
+  #section-open .row.g-2 > .col-12,
+  #section-wired .row.g-2 > .col-12,
+  #section-used .row.g-2 > .col-12{
+    flex: 0 0 100% !important;
+    max-width: 100% !important;
+  }
+
+  /* (E) 입력 UX: 필수 필드 강조(아주 은은하게) */
+  .required-star{ margin-left: 3px; }
+  .form-control:focus, .form-select:focus{
+    transform: translateY(-1px);
+  }
+
+  /* (F) Sticky CTA (하단 저장 버튼) */
+  .m-sticky-cta{
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom));
+    padding: 10px 12px;
+    z-index: 1200;
+
+    background: rgba(255,255,255,0.78);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-top: 1px solid rgba(17,24,39,0.06);
+    box-shadow: 0 -10px 30px rgba(17,24,39,0.08);
+  }
+  .m-sticky-cta__inner{
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+  .m-sticky-cta .btn{
+    height: 46px !important;
+    min-height: 46px !important;
+    border-radius: 14px;
+    font-weight: 900;
+  }
+  .m-sticky-cta .btn-light{
+    background: rgba(255,255,255,0.85) !important;
+    border: 1px solid rgba(17,24,39,0.08) !important;
+  }
+
+  /* (G) 기존 폼 안에 있던 저장 영역은 모바일에서 숨김(중복 방지) */
+  #section-open #open_step_2 .mt-4.pb-4,
+  #section-wired #wired_step_2 .mt-4.pb-4,
+  #section-used #used_step_2 .mt-4.pb-4{
+    display: none !important;
+  }
+}
