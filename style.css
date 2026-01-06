@@ -417,3 +417,66 @@ body {
     display: none !important;
   }
 }
+
+/* =======================================================
+   Mobile Step2 Accordion + Sticky Save CTA (<=768px)
+   ======================================================= */
+@media (max-width: 768px) {
+
+  /* step2 공간: sticky CTA 들어갈 자리 확보 */
+  #open_step_2, #wired_step_2, #used_step_2 { padding-bottom: 96px; }
+
+  /* 기존 step2 내부 하단 저장 버튼은 모바일에서 숨김(중복 방지) */
+  #open_step_2 .mt-4.pb-4,
+  #wired_step_2 .mt-4.pb-4,
+  #used_step_2 .mt-4.pb-4 { display: none !important; }
+
+  /* Accordion card */
+  .m-acc {
+    border: 1px solid rgba(17,24,39,0.08);
+    border-radius: 14px;
+    overflow: hidden;
+    background: rgba(255,255,255,0.70);
+    box-shadow: 0 10px 26px rgba(17,24,39,0.06);
+    margin-bottom: 12px;
+  }
+  .m-acc__head{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    padding: 12px 14px;
+    background: rgba(255,255,255,0.90);
+    border-bottom: 1px solid rgba(17,24,39,0.06);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .m-acc__title{ display:flex; align-items:center; gap:8px; font-weight:900; }
+  .m-acc__meta{ font-size: 0.78rem; color: var(--muted); font-weight: 800; white-space: nowrap; }
+  .m-acc__chev{ font-size: 1.05rem; opacity: 0.65; transition: transform 160ms var(--ease); }
+  .m-acc[aria-expanded="true"] .m-acc__chev{ transform: rotate(180deg); }
+  .m-acc__body{ padding: 12px 14px 14px; }
+  .m-acc[aria-expanded="false"] .m-acc__body{ display:none; }
+
+  /* Sticky CTA (탭바 위) */
+  .m-sticky-cta{
+    position: fixed;
+    left: 0; right: 0;
+    bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom));
+    padding: 10px 12px;
+    z-index: 1300;
+
+    background: rgba(255,255,255,0.78);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-top: 1px solid rgba(17,24,39,0.06);
+    box-shadow: 0 -10px 30px rgba(17,24,39,0.08);
+  }
+  .m-sticky-cta__inner{ display:flex; gap:10px; align-items:center; }
+  .m-sticky-cta .btn{
+    height: 46px !important; min-height: 46px !important;
+    border-radius: 14px;
+    font-weight: 900;
+  }
+  .m-sticky-cta .btn-light{
+    background: rgba(255,255,255,0.85) !important;
+    border: 1px solid rgba(17,24,39,0.08) !important;
+  }
+}
