@@ -1088,7 +1088,7 @@ function submitWiredContract(event) {
     if (!validateField('w_phone', '전화번호')) return; 
     if (!validateField('w_review', '리뷰작성여부')) return;
     let visitVal = document.getElementById('w_visit').value; if (visitVal === '고객소개' || visitVal === '기타') { const alertLabel = (visitVal === '고객소개') ? '소개자 이름' : '기타 방문경로'; if (!validateField('w_visit_etc', alertLabel)) return; visitVal = visitVal + ": " + document.getElementById('w_visit_etc').value; }
-    let reviewId = document.getElementById('w_review').value; if (reviewId === '작성') { if (!validateField('w_review_id', '작성자 ID')) return; reviewId = reviewId + ": " + document.getElementById('w_review_id').value; }
+    let reviewId = document.getElementById('w_review').value; if (reviewId === '작성자ID') { if (!validateField('w_review_id', '작성자 ID')) return; reviewId = reviewId + ": " + document.getElementById('w_review_id').value; }
     const parts = []; ['w_plan_net','w_plan_tv','w_plan_other'].forEach(id => { const el=document.getElementById(id); if(el && el.value) parts.push(el.value); });
     const pricePlan = parts.join(" / ");
     const formData = {
