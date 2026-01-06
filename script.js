@@ -553,6 +553,7 @@ function checkVisitPath() {
         input.value = ''; 
     }
 }   
+
 function checkWiredVisitPath() { 
     const val = document.getElementById('w_visit').value; 
     const div = document.getElementById('w_div_visit_etc');
@@ -578,6 +579,7 @@ function checkWiredVisitPath() {
         input.value = ''; 
     }
 }
+
 function checkUsedVisitPath() { 
     const val = document.getElementById('u_visit').value; 
     const div = document.getElementById('u_div_visit_etc');
@@ -603,10 +605,34 @@ function checkUsedVisitPath() {
         input.value = ''; 
     }
 }
-function checkReviewId() { const val = document.getElementById('f_review').value; document.getElementById('div_review_id').style.display = (val === '작성') ? 'block' : 'none'; }
-function checkWiredReviewId() { const val = document.getElementById('w_review').value; document.getElementById('w_div_review_id').style.display = (val === '작성') ? 'block' : 'none'; input.focus(); }
-function checkUsedReviewId() { const val = document.getElementById('u_review').value; document.getElementById('u_div_review_id').style.display = (val === '작성') ? 'block' : 'none'; }
 
+// [수정] 리뷰 ID 토글 함수들 (안전한 버전)
+function checkReviewId() { 
+    const val = document.getElementById('f_review').value; 
+    const div = document.getElementById('div_review_id');
+    const el = document.getElementById('f_review_id');
+    
+    if(val === '작성') { div.style.display = 'block'; el.focus(); }
+    else { div.style.display = 'none'; el.value = ''; }
+}
+
+function checkWiredReviewId() { 
+    const val = document.getElementById('w_review').value; 
+    const div = document.getElementById('w_div_review_id');
+    const el = document.getElementById('w_review_id');
+
+    if(val === '작성') { div.style.display = 'block'; el.focus(); }
+    else { div.style.display = 'none'; el.value = ''; }
+}
+
+function checkUsedReviewId() { 
+    const val = document.getElementById('u_review').value; 
+    const div = document.getElementById('u_div_review_id');
+    const el = document.getElementById('u_review_id');
+
+    if(val === '작성') { div.style.display = 'block'; el.focus(); }
+    else { div.style.display = 'none'; el.value = ''; }
+}
 
 function renderAddonCheckboxes(agencyName, containerId = 'div_addon_container') {
     const container = document.getElementById(containerId);
