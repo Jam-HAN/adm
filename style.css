@@ -1,3 +1,6 @@
+/* =========================================================
+   THEME TOKENS
+   ========================================================= */
 :root {
   /* Brand */
   --primary: #4361ee;
@@ -8,9 +11,10 @@
   --danger: #e71d36;
 
   /* Surface / background */
-  --bg-grad: radial-gradient(1200px 600px at 20% 0%, rgba(67,97,238,.18), transparent 55%),
-             radial-gradient(900px 500px at 95% 15%, rgba(58,12,163,.14), transparent 55%),
-             linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  --bg-grad:
+    radial-gradient(1200px 600px at 20% 0%, rgba(67,97,238,.18), transparent 55%),
+    radial-gradient(900px 500px at 95% 15%, rgba(58,12,163,.14), transparent 55%),
+    linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
 
   --text: #1f2430;
   --muted: #6b7280;
@@ -22,7 +26,7 @@
   --glass-border: rgba(255,255,255,0.55);
   --glass-blur: 14px;
 
-  /* Radius / shadow (통일감의 핵심) */
+  /* Radius / shadow */
   --r-sm: 10px;
   --r-md: 14px;
   --r-lg: 18px;
@@ -43,10 +47,12 @@
   --tabbar-h: 65px;
 }
 
-/* =========================
-   Base
-   ========================= */
+/* =========================================================
+   BASE
+   ========================================================= */
 html { -webkit-text-size-adjust: 100%; }
+* { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+
 body {
   background: var(--bg-grad);
   background-attachment: fixed;
@@ -54,16 +60,19 @@ body {
   color: var(--text);
   font-size: 0.95rem;
   letter-spacing: -0.2px;
-
-  padding-bottom: calc(80px + env(safe-area-inset-bottom));
+  padding-bottom: 0; /* 탭바는 has-tabbar로만 관리 */
 }
 
-/* 텍스트 렌더링 깔끔하게 */
-* { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+/* 탭바 있는 페이지에서만 하단 여백 확보 */
+body.has-tabbar {
+  padding-bottom: calc(var(--tabbar-h) + 18px + env(safe-area-inset-bottom));
+}
 
-/* =========================
-   Glass Card (진짜 ‘고급’ 느낌은 여기서 결정)
-   ========================= */
+::placeholder { color: rgba(31,36,48,0.35); }
+
+/* =========================================================
+   GLASS CARD
+   ========================================================= */
 .glass-card {
   position: relative;
   background: var(--glass-bg);
@@ -74,9 +83,14 @@ body {
   box-shadow: var(--sh-md);
   overflow: hidden;
   margin-bottom: 20px;
+
+  /* hover/out 모두 부드럽게 */
+  transition: transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
 }
 
-/* 유리 하이라이트 (싸보이는 플라스틱 느낌 제거) */
+.glass-card.no-clip { overflow: visible; }
+
+/* 유리 하이라이트 */
 .glass-card::before {
   content: "";
   position: absolute;
@@ -91,8 +105,6 @@ body {
   opacity: 0.55;
 }
 
-.glass-card.no-clip { overflow: visible; }
-
 .glass-header {
   background: var(--glass-bg-strong);
   backdrop-filter: blur(calc(var(--glass-blur) - 2px));
@@ -100,16 +112,17 @@ body {
   border-bottom: 1px solid rgba(255,255,255,0.35);
 }
 
-/* 카드 hover에서 은은하게 ‘살아나는’ 느낌 */
-.glass-card:hover {
-  transform: translateY(-1px);
-  box-shadow: var(--sh-md), var(--sh-glow);
-  transition: transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+/* hover(마우스 가능한 환경에서만) */
+@media (hover: hover) {
+  .glass-card:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--sh-md), var(--sh-glow);
+  }
 }
 
-/* =========================
-   Section transition
-   ========================= */
+/* =========================================================
+   SECTION TRANSITION
+   ========================================================= */
 .section-view { display: none; }
 .active-section { display: block; animation: slideUp 220ms var(--ease); }
 
@@ -120,12 +133,12 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   .active-section { animation: none !important; }
-  .glass-card:hover { transform: none !important; }
+  .glass-card { transition: none !important; }
 }
 
-/* =========================
-   Labels
-   ========================= */
+/* =========================================================
+   LABELS
+   ========================================================= */
 .form-label-sm {
   font-size: 0.78rem;
   font-weight: 800;
@@ -133,12 +146,11 @@ body {
   margin-bottom: 6px;
   letter-spacing: -0.1px;
 }
-
 .form-label, label { margin-bottom: 0.3rem !important; }
 
-/* =========================
-   Inputs / Selects (고급스러운 ‘탄성’은 상태값에서 나온다)
-   ========================= */
+/* =========================================================
+   INPUTS / SELECTS
+   ========================================================= */
 .form-control,
 .form-select {
   border-radius: var(--r-sm);
@@ -175,13 +187,13 @@ body {
 .form-control:disabled,
 .form-select:disabled {
   background: rgba(255,255,255,0.60);
-  color: rgba(31,36,48,0.45);
+  color: rgba(31,36,48,0.55);
   cursor: not-allowed;
 }
 
-/* =========================
-   Buttons
-   ========================= */
+/* =========================================================
+   BUTTONS
+   ========================================================= */
 .btn {
   border-radius: var(--r-sm);
   font-size: 0.95rem;
@@ -197,7 +209,6 @@ body {
 
   transition: transform 120ms var(--ease), box-shadow var(--dur) var(--ease), filter var(--dur) var(--ease);
 }
-
 .btn:active { transform: scale(0.985); }
 
 /* Primary */
@@ -207,24 +218,27 @@ body {
   color: #fff !important;
   box-shadow: 0 10px 22px rgba(67, 97, 238, 0.22);
 }
-
-.btn-primary:hover {
-  filter: brightness(1.03);
-  box-shadow: 0 12px 26px rgba(67, 97, 238, 0.28);
+@media (hover: hover) {
+  .btn-primary:hover {
+    filter: brightness(1.03);
+    box-shadow: 0 12px 26px rgba(67, 97, 238, 0.28);
+  }
 }
 
-/* Secondary(유리톤) - 필요하면 쓰세요 */
+/* Secondary glass */
 .btn-glass {
   background: rgba(255,255,255,0.70) !important;
   border: 1px solid rgba(255,255,255,0.55) !important;
   color: var(--text) !important;
   box-shadow: var(--sh-sm);
 }
-.btn-glass:hover { box-shadow: var(--sh-md); }
+@media (hover: hover) {
+  .btn-glass:hover { box-shadow: var(--sh-md); }
+}
 
-/* =========================
-   Mobile bottom nav (더 ‘앱’처럼)
-   ========================= */
+/* =========================================================
+   MOBILE BOTTOM NAV
+   ========================================================= */
 .mobile-bottom-nav {
   position: fixed;
   left: 0;
@@ -256,6 +270,10 @@ body {
   font-size: 0.7rem;
   font-weight: 600;
   width: 20%;
+
+  padding: 8px 0;
+  border-radius: 12px;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .mobile-bottom-nav .nav-item i {
@@ -267,7 +285,11 @@ body {
 .mobile-bottom-nav .nav-item.active { color: var(--primary); }
 .mobile-bottom-nav .nav-item.active i { transform: translateY(-2px); }
 
-/* Center FAB (깊이감 개선) */
+.mobile-bottom-nav .nav-item:active {
+  background: rgba(67,97,238,0.08);
+}
+
+/* Center FAB */
 .center-fab .fab-btn {
   width: 52px;
   height: 52px;
@@ -284,9 +306,9 @@ body {
 }
 .center-fab .fab-btn i { margin: 0; font-size: 1.8rem; }
 
-/* =========================
-   Utilities
-   ========================= */
+/* =========================================================
+   UTILITIES
+   ========================================================= */
 .divider { border-top: 1px dashed rgba(17,24,39,0.12); margin: 1.5rem 0; }
 
 .section-header {
@@ -308,25 +330,42 @@ body {
   margin-left: 2px;
 }
 
-/* =========================
-   Dashboard
-   ========================= */
+/* =========================================================
+   DASHBOARD TABLE (안정적 방식: wrapper 스크롤)
+   - 사용법: <div class="table-scroll"><table class="dash-table">...</table></div>
+   ========================================================= */
 .dash-table th {
   background: transparent;
   color: var(--muted);
   font-size: 0.75rem;
   border-bottom: 1px solid rgba(17,24,39,0.08);
 }
-
 .dash-table td { padding: 12px 4px; font-size: 0.9rem; }
 
-/* 마지막 요소 자동 정리 */
-#dash_month_stats .stat-divider:last-of-type { display: none !important; }
-#dash_month_stats .stat-item:last-of-type { margin-bottom: 0 !important; }
+/* 스크롤 wrapper */
+.table-scroll {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 12px;
+}
 
-/* =========================
-   fixed-h-box: 로딩 중앙 / 로드 완료 위정렬
-   ========================= */
+/* 컬럼 많은 경우 깨짐 방지 */
+.table-scroll > table { min-width: 520px; }
+
+/* sticky header (thead/th 구조일 때) */
+.table-scroll thead th {
+  position: sticky;
+  top: 0;
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 2;
+}
+
+/* =========================================================
+   fixed-h-box
+   ========================================================= */
 .fixed-h-box {
   min-height: 250px;
   max-height: 250px;
@@ -334,292 +373,86 @@ body {
 
   display: flex;
   flex-direction: column;
-
-  /* 기본: 로딩 중앙 */
-  justify-content: center;
+  justify-content: center; /* 로딩 중앙 */
 }
 
 .fixed-h-box.is-loaded {
   justify-content: flex-start;
-  padding-top: 6px; /* 살짝 여유 */
+  padding-top: 6px;
 }
 
 .fixed-h-box::-webkit-scrollbar { width: 6px; }
 .fixed-h-box::-webkit-scrollbar-thumb { background-color: rgba(17,24,39,0.14); border-radius: 3px; }
 
-/* =========================
-   Mobile slim mode (<=768px)
-   ========================= */
-@media screen and (max-width: 768px) {
-  :root { --control-h: 34px; }
+/* 마지막 요소 자동 정리 */
+#dash_month_stats .stat-divider:last-of-type { display: none !important; }
+#dash_month_stats .stat-item:last-of-type { margin-bottom: 0 !important; }
+
+/* =========================================================
+   MOBILE (<=768px) — 단 한 번만!
+   ========================================================= */
+@media (max-width: 768px) {
+  /* 모바일 UX 정책 */
+  :root {
+    --control-h: 42px;    /* 터치 타겟 강화 */
+    --glass-blur: 10px;  /* 성능/배터리 */
+    --glass-bg: rgba(255,255,255,0.72);         /* blur 의존도↓ */
+    --glass-bg-strong: rgba(255,255,255,0.84);  /* 헤더는 조금 더 진하게 */
+  }
 
   body { font-size: 13px !important; }
-
-  .form-control,
-  .form-select {
-    font-size: 13px !important;
-    height: var(--control-h) !important;
-    min-height: var(--control-h) !important;
-    padding-top: 0 !important;
-    padding-bottom: 0 !important;
+  body.has-tabbar {
+    padding-bottom: calc(var(--tabbar-h) + 18px + env(safe-area-inset-bottom)) !important;
   }
 
-  .form-select { line-height: var(--control-h) !important; }
-
-  .btn {
-    font-size: 13px !important;
-    height: var(--control-h) !important;
-    min-height: var(--control-h) !important;
-    padding-left: 10px !important;
-    padding-right: 10px !important;
+  /* iOS 포커스 줌 방지: 입력만 16px */
+  input, select, textarea,
+  .form-control, .form-select {
+    font-size: 16px !important;
   }
 
+  /* 컨테이너 여백 */
+  .container { padding-left: 12px !important; padding-right: 12px !important; }
+  .container.py-4 { padding-top: 14px !important; padding-bottom: 14px !important; }
+
+  /* 카드 패딩 */
+  .glass-card { padding: 0 !important; }
+  .glass-card .card-body { padding: 15px !important; }
+
+  /* 레이블 */
   .form-label-sm, label {
     font-size: 11px !important;
     margin-bottom: 2px !important;
   }
 
-  /* 카드 패딩은 body/card-body 레벨에서 관리 */
-  .glass-card { padding: 0 !important; }
-  .glass-card .card-body { padding: 15px !important; }
-
+  /* 부트스트랩 gutter */
   .row.g-2 {
     --bs-gutter-y: 0.3rem !important;
     --bs-gutter-x: 0.3rem !important;
   }
-}
 
-::placeholder { color: rgba(31,36,48,0.35); }
+  /* input-group 버튼 줄바꿈 방지 */
+  .input-group > .btn { white-space: nowrap; padding-left: 12px !important; padding-right: 12px !important; }
 
-/* =========================================
-   [Mobile Optimization Patch]
-   - 붙여넣기 위치: CSS 맨 아래 (우선순위 확보)
-   ========================================= */
-
-/* 0) 모바일에서 너무 과한 글래스(blur) 성능/배터리 부담 줄이기 */
-@media (max-width: 768px) {
-  .glass-card {
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-  }
-  .mobile-bottom-nav {
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-  }
-}
-
-/* 1) iOS 입력창 자동 확대(줌) 방지: 16px 이상 권장
-   - 기존은 13px이라 iPhone Safari에서 포커스 시 화면이 확대될 수 있음 */
-@media (max-width: 768px) {
-  .form-control,
-  .form-select,
-  input,
-  select,
-  textarea {
-    font-size: 16px !important; /* iOS 줌 방지 핵심 */
-  }
-
-  /* 전체 본문은 작게 유지하고, 입력만 16px로 */
-  body { font-size: 13px !important; }
-}
-
-/* 2) 터치 타겟 강화: 손가락 실수 감소 (특히 탭바/버튼/셀렉트) */
-@media (max-width: 768px) {
-  :root { --control-h: 40px; } /* 모바일 컨트롤 높이 살짝 키움 */
-
-  .btn,
-  .form-control,
-  .form-select {
-    height: var(--control-h) !important;
-    min-height: var(--control-h) !important;
-  }
-
-  .form-select { line-height: var(--control-h) !important; }
-}
-
-/* 3) 탭바 안전영역 + 화면 겹침 최소화(더 확실하게) */
-@media (max-width: 768px) {
-  body {
-    padding-bottom: calc(var(--tabbar-h) + 18px + env(safe-area-inset-bottom)) !important;
-  }
-
-  .mobile-bottom-nav {
-    height: calc(var(--tabbar-h) + env(safe-area-inset-bottom));
-  }
-
-  /* FAB 위치도 안전영역 고려 */
-  .center-fab .fab-btn {
-    transform: translateY(calc(-18px - (env(safe-area-inset-bottom) * 0.2)));
-  }
-}
-
-/* 4) 탭바 아이템 터치 영역 넓히기 + 눌림 피드백 */
-@media (max-width: 768px) {
-  .mobile-bottom-nav .nav-item {
-    padding: 8px 0;
-    border-radius: 12px;
-    -webkit-tap-highlight-color: transparent;
-  }
-
-  .mobile-bottom-nav .nav-item:active {
-    background: rgba(67,97,238,0.08);
-  }
-}
-
-/* 5) 모바일 테이블 가독성: 가로 스크롤 + 스티키 헤더(가능할 때) */
-@media (max-width: 768px) {
-  .dash-table {
-    display: block;
-    width: 100%;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    border-radius: 12px;
-  }
-
-  .dash-table table { min-width: 520px; } /* 컬럼 많은 경우 깨짐 방지 */
-
-  /* th가 실제 thead/th 구조일 때만 효과 있음 */
-  .dash-table th {
-    position: sticky;
-    top: 0;
-    background: rgba(255,255,255,0.92);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    z-index: 2;
-  }
-
-  /* 행 간격 살짝 줄여 정보 밀도 ↑ */
-  .dash-table td { padding: 10px 6px; }
-}
-
-/* 6) 스크롤 체감 개선: iOS에서 fixed 요소와 함께 스크롤 버벅임 완화 */
-@media (max-width: 768px) {
-  body {
-    -webkit-overflow-scrolling: touch;
-  }
-}
-
-/* 7) fixed-h-box: 모바일에서 높이 조금 줄여 첫 화면 정보 노출 ↑ */
-@media (max-width: 768px) {
-  .fixed-h-box {
-    min-height: 210px;
-    max-height: 210px;
-  }
-}
-
-/* 8) 입력 UX: 숫자/전화 입력은 폰 키패드 뜨게 (HTML에 type 지정이 최선)
-   - CSS로는 못 바꾸니, 아래 HTML 권장만 메모:
-   <input type="tel" inputmode="numeric" pattern="[0-9]*">
-*/
-
-/* 9) 터치 디바이스 hover 오작동 방지 (hover 가능한 기기에서만 hover 효과) */
-@media (hover: none) {
-  .glass-card:hover {
-    transform: none;
-    box-shadow: var(--sh-md);
-  }
-  .btn-primary:hover {
-    filter: none;
-    box-shadow: 0 10px 22px rgba(67, 97, 238, 0.22);
-  }
-}
-
-/* =================================================
-   Mobile UX Patch (HTML 변경 최소)
-   ================================================= */
-
-/* iOS 폼 포커스 시 자동 확대 방지: 입력만 16px */
-@media (max-width: 768px) {
-  input, select, textarea,
-  .form-control, .form-select {
-    font-size: 16px !important;
-  }
-  body { font-size: 13px !important; } /* 본문은 작게 유지 */
-}
-
-/* 컨테이너 패딩: 모바일에서 좌우 여백 살짝 줄이기 */
-@media (max-width: 768px) {
-  .container { padding-left: 12px !important; padding-right: 12px !important; }
-  .container.py-4 { padding-top: 14px !important; padding-bottom: 14px !important; }
-}
-
-/* 카드 헤더 높이 60px 고정: 모바일에서 텍스트 과밀 방지 */
-@media (max-width: 768px) {
-  .card-header[style*="height: 60px"] { padding-left: 14px !important; padding-right: 14px !important; }
-  .card-header h6 { font-size: 0.95rem !important; }
-}
-
-/* fixed-bottom 탭바 + safe-area */
-@media (max-width: 768px) {
-  body {
-    padding-bottom: calc(var(--tabbar-h) + 18px + env(safe-area-inset-bottom)) !important;
-  }
-  .mobile-bottom-nav {
-    height: calc(var(--tabbar-h) + env(safe-area-inset-bottom));
-    padding-bottom: env(safe-area-inset-bottom);
-  }
-}
-
-/* FAB 메뉴 컨테이너 위치(탭바+safe-area 고려) */
-@media (max-width: 768px) {
+  /* FAB 메뉴 컨테이너: 탭바+safe-area 고려 */
   #fab-menu-container,
   #search-menu-container,
   #manage-menu-container {
     bottom: calc(var(--tabbar-h) + 20px + env(safe-area-inset-bottom)) !important;
     width: min(92vw, 240px) !important;
   }
-}
 
-/* 버튼/셀렉트 터치 타겟 강화 */
-@media (max-width: 768px) {
-  :root { --control-h: 42px; } /* 모바일은 34px보다 42px이 실사용이 편함 */
-  .btn, .form-control, .form-select {
-    height: var(--control-h) !important;
-    min-height: var(--control-h) !important;
-  }
-  .form-select { line-height: var(--control-h) !important; }
-}
-
-/* 폼 “3~4열”을 모바일에서는 자동으로 2열/1열로 흐르게 */
-@media (max-width: 768px) {
-  /* 개통 폼에서 col-4/col-3가 너무 촘촘 → 2열로 */
+  /* 폼 3~4열 → 2열로 */
   #section-open .row.g-2 > .col-4,
   #section-used .row.g-2 > .col-4 { flex: 0 0 50% !important; max-width: 50% !important; }
 
   #section-wired .row.g-2 > .col-3 { flex: 0 0 50% !important; max-width: 50% !important; }
 
-  /* 너무 긴 필드는 모바일에서 1열로 */
+  /* 긴 필드 1열 */
   #section-open .row.g-2 > .col-12,
   #section-wired .row.g-2 > .col-12,
   #section-used .row.g-2 > .col-12 { flex: 0 0 100% !important; max-width: 100% !important; }
 
-  /* “생년/전화/고객명”은 1열이 더 안전하면 아래 주석 해제 */
-  /*
-  #section-open #f_name, #section-open #f_birth, #section-open #f_phone { }
-  */
-}
-
-/* input-group 모바일에서 버튼 폭 줄이고 한줄 유지 */
-@media (max-width: 768px) {
-  .input-group > .btn { white-space: nowrap; padding-left: 12px !important; padding-right: 12px !important; }
-}
-
-/* 대시보드 Today 테이블: 모바일은 가로 스크롤 + 최소폭 보장 */
-@media (max-width: 768px) {
-  .dash-table { table-layout: auto !important; }
-  .dash-table th, .dash-table td { width: auto !important; }
-
-  /* 이미 table-responsive(높이 300) 사용 중 → 내부 table에 최소폭만 */
-  .table-responsive table.dash-table { min-width: 520px; }
-}
-
-/* 고정 높이 박스: 모바일에서 살짝 줄여 첫 화면 정보량 ↑ */
-@media (max-width: 768px) {
+  /* fixed-h-box: 모바일에서 높이 줄여 첫 화면 정보량↑ */
   .fixed-h-box { min-height: 210px; max-height: 210px; }
-}
-
-/* 터치 디바이스에서는 hover 효과 과하게 튀지 않게 */
-@media (hover: none) {
-  .glass-card:hover { transform: none; box-shadow: var(--sh-md); }
-  .btn-primary:hover { filter: none; box-shadow: 0 10px 22px rgba(67, 97, 238, 0.22); }
 }
