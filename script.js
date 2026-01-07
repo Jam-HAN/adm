@@ -2359,6 +2359,7 @@ function renderDailySalesUI(list, total) {
     
     // 1. 상단 요약 카드 업데이트
     document.getElementById('ds_total_cnt').innerText = total.cnt + "건";
+    document.getElementById('ds_total_set').innerText = fmt(total.set);
     document.getElementById('ds_total_rev').innerText = fmt(total.rev);
     document.getElementById('ds_total_mar').innerText = fmt(total.mar);
 
@@ -2392,6 +2393,7 @@ function renderDailySalesUI(list, total) {
             <td class="text-primary ${item.mobile > 0 ? 'fw-bold' : ''}">${item.mobile > 0 ? item.mobile : '-'}</td>
             <td class="text-success ${item.wired > 0 ? 'fw-bold' : ''}">${item.wired > 0 ? item.wired : '-'}</td>
             <td class="bg-light fw-bold">${item.totalCnt > 0 ? item.totalCnt : '-'}</td>
+            <td class="text-end pe-3 text-secondary small">${item.revenue > 0 ? fmt(item.settle) : '-'}</td>
             <td class="text-end pe-3 text-secondary small">${item.revenue > 0 ? fmt(item.revenue) : '-'}</td>
             <td class="text-end pe-3 fw-bold text-danger">${item.margin > 0 ? fmt(item.margin) : '-'}</td>
         </tr>`;
