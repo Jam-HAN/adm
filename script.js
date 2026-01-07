@@ -2354,12 +2354,14 @@ function renderDailySalesUI(list, total) {
     // 2. 테이블 렌더링
     let html = "";
     
-    // 오늘 날짜 구하기 (강조용)
+    // ★ [변수 선언부] 순서 중요!
+    const today = new Date(); // 1. today를 가장 먼저 정의
     const yyyy = today.getFullYear();
     const mm = String(today.getMonth() + 1).padStart(2, '0');
-    const currentMonth = `${yyyy}-${mm}`;
+    const currentMonth = `${yyyy}-${mm}`; // 2. 그 다음 currentMonth 정의
+    const todayDate = today.getDate();    // 3. 그 다음 todayDate 정의
+
     const selectedMonth = document.getElementById('ds_month').value;
-    const todayDate = today.getDate();
 
     list.forEach(item => {
         // 데이터 없는 날은 흐리게
@@ -2368,8 +2370,9 @@ function renderDailySalesUI(list, total) {
         
         // 오늘 날짜 하이라이트 (배경색)
         let bgClass = "";
+        // 선택한 달이 '이번 달'이고, 리스트의 날짜가 '오늘'이면 노란색
         if (selectedMonth === currentMonth && item.day === todayDate) {
-            bgClass = "table-warning border-2 border-warning"; // 기존 스타일 활용
+            bgClass = "table-warning border-2 border-warning"; 
         }
 
         html += `
