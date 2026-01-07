@@ -3250,13 +3250,14 @@ function loadExpiryList() {
     });
 }
 
+// [script.js] renderCrmTable 수정 (상세 정보 + 마스킹)
 function renderCrmTable(list) {
     const tbody = document.getElementById('crm_tbody');
     let html = "";
 
     if (list.length === 0) {
-        html = `<tr><td colspan="6" class="py-5 text-muted">
-            조회된 기간(18, 21, 24개월 전)에 개통한 고객이 없습니다.<br>
+        html = `<tr><td colspan="12" class="py-5 text-muted">
+            해당 날짜(18, 21, 24개월 전) 조회 결과가 없습니다.<br>
             <small>다른 날짜를 선택해보세요.</small>
         </td></tr>`;
         tbody.innerHTML = html;
@@ -3264,44 +3265,47 @@ function renderCrmTable(list) {
     }
 
     list.forEach(item => {
-        // 1. 날짜 포맷
-        let dateStr = "";
-        try {
-            const d = new Date(item.fullDate);
-            dateStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-        } catch(e) { dateStr = item.date; }
-
-        // 2. ★ [핵심] 전화번호 마스킹 처리 (010-1234-5678 -> 010-****-5678)
+        // 1. 전화번호 마스킹 (010-1234-5678 -> 010-****-5678)
         let displayPhone = item.phone || '-';
         if (displayPhone.length >= 10) {
-            // 정규식으로 가운데 3~4자리 추출해서 별표(*)로 교체
             displayPhone = displayPhone.replace(/^(\d{2,3})-?(\d{3,4})-?(\d{4})$/, "$1-****-$3");
         }
 
-        // 3. 전화 걸기 버튼 (여기에는 실제 번호가 숨어있음)
-        // 버튼을 눌러야만 전화가 걸리므로 보안과 편의성 모두 잡음
-        const callBtn = item.phone ? 
-            `<a href="tel:${item.phone}" class="btn btn-outline-success btn-sm border-0">
-                <i class="bi bi-telephone-fill"></i>
-             </a>` : '-';
-
-        // 4. 배지 디자인
-        let badge = "";
-        if (item.targetType === 24) {
-            badge = `<span class="badge bg-danger">24개월(만기)</span>`;
-        } else if (item.targetType === 21) {
-            badge = `<span class="badge bg-warning text-dark">21개월</span>`;
-        } else {
-            badge = `<span class="badge bg-success">18개월</span>`;
+        // 2. 생년월일 마스킹 (800101-1234567 -> 800101-*******)
+        let displayBirth = item.birth || '-';
+        if (String(displayBirth).includes('-')) {
+             // 주민번호 형식인 경우 뒤를 가림
+             displayBirth = displayBirth.split('-')[0] + "-*******";
+        } else if (String(displayBirth).length === 6) {
+             // 생년월일 6자리만 있는 경우 그대로 둠 (이미 개인정보 최소화)
+             displayBirth = displayBirth; 
         }
+
+        // 3. 배지 디자인
+        let badge = "";
+        if (item.targetType === 24) badge = `<span class="badge bg-danger">24개월</span>`;
+        else if (item.targetType === 21) badge = `<span class="badge bg-warning text-dark">21개월</span>`;
+        else badge = `<span class="badge bg-success">18개월</span>`;
+
+        // 4. 전화 걸기 버튼 (실제 번호 숨김)
+        const callBtn = item.phone ? 
+            `<a href="tel:${item.phone}" class="btn btn-primary btn-sm rounded-pill px-3">
+                <i class="bi bi-telephone-fill me-1"></i> 통화
+             </a>` : '-';
 
         html += `
         <tr>
             <td>${badge}</td>
-            <td class="small text-secondary">${dateStr}</td>
+            <td class="fw-bold text-secondary">${item.branch}</td>
+            <td>${item.openDate}</td>
+            <td>${item.openPlace}</td>
+            <td>${item.openType}</td>
+            <td>${item.contractType}</td>
             <td class="fw-bold">${item.name}</td>
-            <td class="small text-muted">${item.model}</td>
-            <td class="fw-bold text-dark">${displayPhone}</td> 
+            <td class="fw-bold text-dark">${displayPhone}</td>
+            <td class="text-secondary">${displayBirth}</td>
+            <td class="text-primary fw-bold small">${item.model}</td>
+            <td class="small">${item.plan}</td>
             <td>${callBtn}</td>
         </tr>`;
     });
