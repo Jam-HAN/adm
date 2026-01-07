@@ -2355,8 +2355,9 @@ function renderDailySalesUI(list, total) {
     let html = "";
     
     // 오늘 날짜 구하기 (강조용)
-    const today = new Date();
-    const currentMonthStr = today.toISOString().slice(0, 7); // "2024-05"
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const currentMonth = `${yyyy}-${mm}`;
     const selectedMonth = document.getElementById('ds_month').value;
     const todayDate = today.getDate();
 
