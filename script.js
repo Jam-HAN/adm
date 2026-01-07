@@ -3233,7 +3233,7 @@ function loadExpiryList() {
         body: JSON.stringify({
             action: "get_expiry_candidates",
             branch: branch,
-            month: month // YYYY-MM 형태로 전송
+            targetDate: dateVal // ★ 이름도 targetDate로 변경 (예: "2026-01-07")
         })
     })
     .then(r => r.json())
