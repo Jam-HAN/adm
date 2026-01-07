@@ -102,6 +102,7 @@
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">💰 정산 관리</a>
                             <ul class="dropdown-menu shadow-sm border-0">
+                                <li><a class="dropdown-item" href="#" onclick="showDailySalesSection()">📅 일별 매출/추이</a></li>
                                 <li id="menu_period_item"><a class="dropdown-item" href="#" onclick="showSection('section-settlement-period')">📅 기간별 집계</a></li>
                                 <li><a class="dropdown-item" href="#" onclick="showSection('section-settlement-staff')">👥 직원별 집계</a></li>
                             </ul>
@@ -869,6 +870,80 @@
                                 </button>
                             </div>
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="section-daily-sales" class="section-view">
+                <div class="glass-card p-4">
+                    <h5 class="fw-bold mb-4 text-primary"><i class="bi bi-graph-up-arrow"></i> 일별 매출 및 추이</h5>
+            
+                    <div class="row g-2 mb-4 bg-light p-3 rounded border align-items-end">
+                        <div class="col-5">
+                            <label class="form-label-sm fw-bold text-muted">지점</label>
+                            <select id="ds_branch" class="form-select form-select-sm fw-bold text-primary">
+                                <option value="전체">전체 지점</option>
+                                <option value="장지 본점">장지 본점</option>
+                                <option value="명일 직영점">명일 직영점</option>
+                            </select>
+                        </div>
+                        <div class="col-5">
+                            <label class="form-label-sm fw-bold text-muted">조회 월</label>
+                            <input type="month" id="ds_month" class="form-control form-control-sm fw-bold">
+                        </div>
+                        <div class="col-2">
+                            <button class="btn btn-primary btn-sm w-100 fw-bold" onclick="loadDailySales()">조회</button>
+                        </div>
+                    </div>
+            
+                    <div class="row g-3 mb-4">
+                        <div class="col-4">
+                            <div class="bg-white p-3 rounded border text-center shadow-sm">
+                                <div class="small text-muted fw-bold mb-1">총 실적</div>
+                                <h4 class="fw-bold text-dark m-0" id="ds_total_cnt">-</h4>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="bg-white p-3 rounded border text-center shadow-sm">
+                                <div class="small text-muted fw-bold mb-1">총 매출(정산)</div>
+                                <h5 class="fw-bold text-primary m-0" id="ds_total_rev">-</h5>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="bg-white p-3 rounded border text-center shadow-sm">
+                                <div class="small text-muted fw-bold mb-1">총 순수익</div>
+                                <h5 class="fw-bold text-danger m-0" id="ds_total_mar">-</h5>
+                            </div>
+                        </div>
+                    </div>
+            
+                    <div class="card border-0 shadow-sm mb-4">
+                        <div class="card-header bg-white fw-bold small text-secondary border-bottom">
+                            <i class="bi bi-bar-chart-line-fill me-1"></i> 일별 실적(선) vs 순수익(막대)
+                        </div>
+                        <div class="card-body">
+                            <div style="height: 300px; position: relative;">
+                                <canvas id="dailySalesChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+            
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle text-center small border mb-0" style="font-size: 0.9rem;">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>일자</th>
+                                    <th>📱무선</th>
+                                    <th>📺유선</th>
+                                    <th>합계</th>
+                                    <th>매출(정산)</th>
+                                    <th>순수익(마진)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ds_tbody">
+                                <tr><td colspan="6" class="text-muted py-5">조회 버튼을 눌러주세요.</td></tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
