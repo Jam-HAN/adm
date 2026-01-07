@@ -49,7 +49,6 @@ let currentOpenType = "";
 let logoutTimer;
 let tempOpenStockData = null;
 let tempInStockData = null; 
-let myChartInstance = null; // 차트 인스턴스 저장용
 
 // --- [3단계] UI 렌더링 최적화 헬퍼 ---
 // HTML을 += 로 붙이지 않고 배열로 모아 한 번에 join하여 렌더링
@@ -2968,96 +2967,4 @@ function submitGoal() {
         loadDashboard(); // 대시보드 새로고침 (그래프 반영)
     })
     .catch(e => alert("저장 실패"));
-}
-
-// [신규] Chart.js 렌더링 함수
-function renderTrendChart(trendData) {
-    const ctx = document.getElementById('trendChart').getContext('2d');
-
-    // 기존 차트가 있으면 삭제 (중복 방지)
-    if (myChartInstance) {
-        myChartInstance.destroy();
-    }
-
-    // 그라데이션 효과 생성 (고급스러움 UP)
-    const gradientMobile = ctx.createLinearGradient(0, 0, 0, 400);
-    gradientMobile.addColorStop(0, 'rgba(67, 97, 238, 0.5)'); // 위쪽 (진함)
-    gradientMobile.addColorStop(1, 'rgba(67, 97, 238, 0.0)'); // 아래쪽 (투명)
-
-    const gradientWired = ctx.createLinearGradient(0, 0, 0, 400);
-    gradientWired.addColorStop(0, 'rgba(46, 196, 182, 0.5)');
-    gradientWired.addColorStop(1, 'rgba(46, 196, 182, 0.0)');
-
-    myChartInstance = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: trendData.labels, // ['1일', '2일', ...]
-            datasets: [
-                {
-                    label: '무선',
-                    data: trendData.mobile,
-                    borderColor: '#4361ee', // Primary Color
-                    backgroundColor: gradientMobile,
-                    borderWidth: 2,
-                    tension: 0.4, // 곡선 효과
-                    pointRadius: 2, // 포인트 크기
-                    fill: true // 하단 채우기
-                },
-                {
-                    label: '유선',
-                    data: trendData.wired,
-                    borderColor: '#2ec4b6', // Success Color
-                    backgroundColor: gradientWired,
-                    borderWidth: 2,
-                    tension: 0.4,
-                    pointRadius: 2,
-                    fill: true
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false, // 컨테이너 높이에 맞춤
-            plugins: {
-                legend: {
-                    position: 'top',
-                    align: 'end',
-                    labels: {
-                        boxWidth: 10,
-                        usePointStyle: true,
-                        font: { size: 11, family: "'Noto Sans KR', sans-serif" }
-                    }
-                },
-                tooltip: {
-                    mode: 'index',
-                    intersect: false,
-                    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                    titleColor: '#1f2430',
-                    bodyColor: '#1f2430',
-                    borderColor: 'rgba(0,0,0,0.1)',
-                    borderWidth: 1,
-                    padding: 10
-                }
-            },
-            scales: {
-                x: {
-                    grid: { display: false }, // 세로선 숨김 (깔끔하게)
-                    ticks: {
-                        maxTicksLimit: 7, // 날짜가 많으면 적당히 건너뛰며 표시
-                        font: { size: 10 }
-                    }
-                },
-                y: {
-                    beginAtZero: true,
-                    grid: { borderDash: [5, 5], color: '#f0f0f0' }, // 가로선 점선 처리
-                    ticks: { stepSize: 1, font: { size: 10 } } // 정수 단위 표시
-                }
-            },
-            interaction: {
-                mode: 'nearest',
-                axis: 'x',
-                intersect: false
-            }
-        }
-    });
 }
