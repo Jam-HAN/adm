@@ -2335,7 +2335,7 @@ function loadDailySales() {
         body: JSON.stringify({
             action: "get_daily_sales_report",
             branch: branch,
-            month: month
+            month: month,
             role: userRole // ★ [핵심] 여기에 role을 실어서 보냅니다!
         })
     })
