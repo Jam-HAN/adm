@@ -3181,3 +3181,113 @@ function submitGoal() {
     })
     .catch(e => alert("저장 실패"));
 }
+
+// ==========================================
+// [신규] 약정 만료(CRM) 관리
+// ==========================================
+
+function showCrmSection() {
+    // 1. 기본값 세팅 (다음 달로 자동 세팅 -> 미리 연락해야 하니까)
+    const now = new Date();
+    now.setMonth(now.getMonth() + 1); // 다음 달
+    const yyyy = now.getFullYear();
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    
+    const monthInput = document.getElementById('crm_month');
+    if(monthInput && !monthInput.value) {
+        monthInput.value = `${yyyy}-${mm}`;
+    }
+
+    // 2. 화면 전환
+    showSection('section-crm-expiry');
+}
+
+function loadExpiryList() {
+    const branch = document.getElementById('crm_branch').value;
+    const month = document.getElementById('crm_month').value;
+
+    if(!month) { alert("월을 선택해주세요."); return; }
+
+    // 로딩
+    document.getElementById('crm_tbody').innerHTML = `
+        <tr style="height: 300px;">
+            <td colspan="5" class="align-middle text-center">
+                <div class="spinner-border text-success" role="status"></div>
+                <div class="mt-2 small text-muted">고객 명단 조회 중...</div>
+            </td>
+        </tr>`;
+
+    // API 호출
+    fetch(GAS_URL, {
+        method: "POST",
+        body: JSON.stringify({
+            action: "get_expiry_candidates",
+            branch: branch,
+            month: month
+        })
+    })
+    .then(r => r.json())
+    .then(d => {
+        if(d.status === 'success') {
+            renderCrmTable(d.list, d.searchMonth);
+        } else {
+            alert("조회 실패: " + d.message);
+        }
+    })
+    .catch(e => {
+        console.error(e);
+        alert("통신 오류");
+    });
+}
+
+// [script.js] renderCrmTable 수정 (배지 추가)
+function renderCrmTable(list) {
+    const tbody = document.getElementById('crm_tbody');
+    let html = "";
+
+    if (list.length === 0) {
+        html = `<tr><td colspan="6" class="py-5 text-muted">
+            해당 기간(18, 21, 24개월 전)에 개통한 고객이 없습니다.<br>
+            <small>다른 달을 검색해보세요.</small>
+        </td></tr>`;
+        tbody.innerHTML = html;
+        return;
+    }
+
+    list.forEach(item => {
+        // 1. 날짜 포맷
+        let dateStr = "";
+        try {
+            const d = new Date(item.fullDate);
+            dateStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        } catch(e) { dateStr = item.date; }
+
+        // 2. 전화 버튼
+        const callBtn = item.phone ? 
+            `<a href="tel:${item.phone}" class="btn btn-outline-success btn-sm border-0">
+                <i class="bi bi-telephone-fill"></i>
+             </a>` : '-';
+
+        // 3. ★ [핵심] 개월 수 별 배지 디자인
+        let badge = "";
+        if (item.targetType === 24) {
+            badge = `<span class="badge bg-danger">24개월(만기)</span>`;
+        } else if (item.targetType === 21) {
+            badge = `<span class="badge bg-warning text-dark">21개월</span>`;
+        } else {
+            badge = `<span class="badge bg-success">18개월</span>`;
+        }
+
+        html += `
+        <tr>
+            <td>${badge}</td>
+            <td class="small text-secondary">${dateStr}</td>
+            <td class="fw-bold">${item.name}</td>
+            <td class="small text-muted">${item.model}</td>
+            <td>${item.phone || '-'}</td>
+            <td>${callBtn}</td>
+        </tr>`;
+    });
+
+    tbody.innerHTML = html;
+}
