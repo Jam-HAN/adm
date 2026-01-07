@@ -2324,7 +2324,7 @@ function loadDailySales() {
     
     // 로딩 표시 (기존 스타일)
     document.getElementById('ds_tbody').innerHTML = `
-        <tr><td colspan="6" class="py-5">
+        <tr><td colspan="7" class="py-5">
             <div class="spinner-border text-primary"></div>
             <div class="mt-2 small text-muted">데이터 분석 중...</div>
         </td></tr>`;
