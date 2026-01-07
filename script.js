@@ -3183,59 +3183,63 @@ function submitGoal() {
 }
 
 // ==========================================
-// [신규] 약정 만료(CRM) 관리
+// [업그레이드] 약정 만료(CRM) 관리 (날짜기반 + 마스킹)
 // ==========================================
 
 function showCrmSection() {
-    // 1. 날짜 자동 세팅 (기본값: 다음 달)
-    // "매일 조회"하신다고 하니, 들어올 때마다 자동으로 '다음 달'로 맞춰드립니다.
+    // 1. 오늘 날짜 자동 세팅 (YYYY-MM-DD 포맷)
     const now = new Date();
-    now.setMonth(now.getMonth() + 1); // 현재 1월이면 -> 2월로 세팅 (선제 영업용)
-    
     const yyyy = now.getFullYear();
     const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const dd = String(now.getDate()).padStart(2, '0');
     
-    const monthInput = document.getElementById('crm_month');
-    if(monthInput) {
-        monthInput.value = `${yyyy}-${mm}`;
+    const dateInput = document.getElementById('crm_date');
+    if(dateInput) {
+        dateInput.value = `${yyyy}-${mm}-${dd}`; // 예: 2026-01-07
     }
 
     // 2. 화면 보여주기
     showSection('section-crm-expiry');
     
-    // 3. ★ [자동 실행] 들어오자마자 조회 함수를 바로 호출합니다!
-    // 사장님이 버튼을 누르지 않아도, 리스트가 바로 쫙 뜹니다.
+    // 3. 자동 조회 시작
     loadExpiryList();
 }
 
 function loadExpiryList() {
     const branch = document.getElementById('crm_branch').value;
-    const month = document.getElementById('crm_month').value;
+    const dateVal = document.getElementById('crm_date').value; // "2026-01-07"
 
-    if(!month) { alert("월을 선택해주세요."); return; }
+    if(!dateVal) { alert("날짜를 선택해주세요."); return; }
 
-    // 로딩
+    // ★ 날짜에서 '월(Month)' 정보만 추출해서 백엔드로 보냄
+    // (이유: 개통은 보통 '월 단위'로 관리하므로, 해당 날짜가 속한 달을 조회하는 게 정확합니다)
+    const month = dateVal.substring(0, 7); // "2026-01"
+
+    // 로딩 표시
     document.getElementById('crm_tbody').innerHTML = `
         <tr style="height: 300px;">
             <td colspan="6" class="align-middle text-center">
                 <div class="spinner-border text-success" role="status"></div>
-                <div class="mt-2 small text-muted">고객 명단 조회 중...</div>
+                <div class="mt-2 small text-muted">
+                    기준일: ${dateVal}<br>
+                    고객 명단 분석 중...
+                </div>
             </td>
         </tr>`;
 
-    // API 호출
+    // API 호출 (기존 백엔드 그대로 사용 가능)
     fetch(GAS_URL, {
         method: "POST",
         body: JSON.stringify({
             action: "get_expiry_candidates",
             branch: branch,
-            month: month
+            month: month // YYYY-MM 형태로 전송
         })
     })
     .then(r => r.json())
     .then(d => {
         if(d.status === 'success') {
-            renderCrmTable(d.list, d.searchMonth);
+            renderCrmTable(d.list);
         } else {
             alert("조회 실패: " + d.message);
         }
@@ -3246,15 +3250,14 @@ function loadExpiryList() {
     });
 }
 
-// [script.js] renderCrmTable 수정 (배지 추가)
 function renderCrmTable(list) {
     const tbody = document.getElementById('crm_tbody');
     let html = "";
 
     if (list.length === 0) {
         html = `<tr><td colspan="6" class="py-5 text-muted">
-            해당 기간(18, 21, 24개월 전)에 개통한 고객이 없습니다.<br>
-            <small>다른 달을 검색해보세요.</small>
+            조회된 기간(18, 21, 24개월 전)에 개통한 고객이 없습니다.<br>
+            <small>다른 날짜를 선택해보세요.</small>
         </td></tr>`;
         tbody.innerHTML = html;
         return;
@@ -3268,13 +3271,21 @@ function renderCrmTable(list) {
             dateStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
         } catch(e) { dateStr = item.date; }
 
-        // 2. 전화 버튼
+        // 2. ★ [핵심] 전화번호 마스킹 처리 (010-1234-5678 -> 010-****-5678)
+        let displayPhone = item.phone || '-';
+        if (displayPhone.length >= 10) {
+            // 정규식으로 가운데 3~4자리 추출해서 별표(*)로 교체
+            displayPhone = displayPhone.replace(/^(\d{2,3})-?(\d{3,4})-?(\d{4})$/, "$1-****-$3");
+        }
+
+        // 3. 전화 걸기 버튼 (여기에는 실제 번호가 숨어있음)
+        // 버튼을 눌러야만 전화가 걸리므로 보안과 편의성 모두 잡음
         const callBtn = item.phone ? 
             `<a href="tel:${item.phone}" class="btn btn-outline-success btn-sm border-0">
                 <i class="bi bi-telephone-fill"></i>
              </a>` : '-';
 
-        // 3. ★ [핵심] 개월 수 별 배지 디자인
+        // 4. 배지 디자인
         let badge = "";
         if (item.targetType === 24) {
             badge = `<span class="badge bg-danger">24개월(만기)</span>`;
@@ -3290,7 +3301,7 @@ function renderCrmTable(list) {
             <td class="small text-secondary">${dateStr}</td>
             <td class="fw-bold">${item.name}</td>
             <td class="small text-muted">${item.model}</td>
-            <td>${item.phone || '-'}</td>
+            <td class="fw-bold text-dark">${displayPhone}</td> 
             <td>${callBtn}</td>
         </tr>`;
     });
