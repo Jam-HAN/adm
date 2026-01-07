@@ -3250,7 +3250,6 @@ function loadExpiryList() {
     });
 }
 
-// [script.js] renderCrmTable 수정 (상세 정보 + 마스킹)
 function renderCrmTable(list) {
     const tbody = document.getElementById('crm_tbody');
     let html = "";
@@ -3271,14 +3270,15 @@ function renderCrmTable(list) {
             displayPhone = displayPhone.replace(/^(\d{2,3})-?(\d{3,4})-?(\d{4})$/, "$1-****-$3");
         }
 
-        // 2. 생년월일 마스킹 (800101-1234567 -> 800101-*******)
-        let displayBirth = item.birth || '-';
-        if (String(displayBirth).includes('-')) {
-             // 주민번호 형식인 경우 뒤를 가림
-             displayBirth = displayBirth.split('-')[0] + "-*******";
-        } else if (String(displayBirth).length === 6) {
-             // 생년월일 6자리만 있는 경우 그대로 둠 (이미 개인정보 최소화)
-             displayBirth = displayBirth; 
+        // 2. ★ [수정] 생년월일 마스킹 (뒤 3자리 가리기)
+        // 백엔드에서 이미 6자리("020101")로 만들어 보냈음
+        let displayBirth = String(item.birth || '-');
+        
+        // 주민번호 풀버전(XXXXXX-XXXXXXX)이든 6자리든 앞 6자리만 끊어서 처리
+        if (displayBirth.length >= 6) {
+             const front6 = displayBirth.substring(0, 6); // 앞 6자리 추출
+             // 앞 3자리 + *** (예: 020***)
+             displayBirth = front6.substring(0, 3) + "***";
         }
 
         // 3. 배지 디자인
@@ -3287,10 +3287,10 @@ function renderCrmTable(list) {
         else if (item.targetType === 21) badge = `<span class="badge bg-warning text-dark">21개월</span>`;
         else badge = `<span class="badge bg-success">18개월</span>`;
 
-        // 4. 전화 걸기 버튼 (실제 번호 숨김)
+        // 4. ★ [복구] 전화 걸기 버튼 (아이콘만 깔끔하게)
         const callBtn = item.phone ? 
-            `<a href="tel:${item.phone}" class="btn btn-primary btn-sm rounded-pill px-3">
-                <i class="bi bi-telephone-fill me-1"></i> 통화
+            `<a href="tel:${item.phone}" class="btn btn-outline-success btn-sm border-0">
+                <i class="bi bi-telephone-fill"></i>
              </a>` : '-';
 
         html += `
