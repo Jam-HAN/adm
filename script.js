@@ -453,10 +453,6 @@ function renderDashboard(data) {
         html += `</tbody></table>`;
         rankArea.innerHTML = html;
     }
-    // ★ [추가] 차트 그리기 함수 호출
-    if (data.trend) {
-        renderTrendChart(data.trend);
-    }
 }
 
 // [수정] 초기 데이터 로드 (LocalStorage 캐싱 적용으로 속도 10배 향상)
