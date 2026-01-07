@@ -2312,6 +2312,16 @@ function loadDailySales() {
     
     if(!month) { alert("조회할 월을 선택해주세요."); return; }
 
+    // ★ [추가] 현재 로그인한 사람의 권한 가져오기
+    let userRole = 'STAFF'; // 기본값
+    try {
+        const saved = sessionStorage.getItem('dbphone_user');
+        if(saved) {
+            const u = JSON.parse(saved);
+            userRole = u.role || 'STAFF';
+        }
+    } catch(e) {}
+    
     // 로딩 표시 (기존 스타일)
     document.getElementById('ds_tbody').innerHTML = `
         <tr><td colspan="6" class="py-5">
@@ -2326,6 +2336,7 @@ function loadDailySales() {
             action: "get_daily_sales_report",
             branch: branch,
             month: month
+            role: userRole // ★ [핵심] 여기에 role을 실어서 보냅니다!
         })
     })
     .then(r => r.json())
