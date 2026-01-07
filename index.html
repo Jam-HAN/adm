@@ -1082,6 +1082,52 @@
                     </div>
                 </div>
             </div>
+
+            <div id="section-crm-expiry" class="section-view">
+                <div class="glass-card p-4">
+                    <h5 class="fw-bold mb-4 text-success"><i class="bi bi-people-fill"></i> 약정 만료 예정 고객 (24개월)</h5>
+            
+                    <div class="row g-2 mb-4 bg-light p-3 rounded border align-items-end">
+                        <div class="col-5">
+                            <label class="form-label-sm fw-bold text-muted">지점</label>
+                            <select id="crm_branch" class="form-select form-select-sm fw-bold text-success">
+                                <option value="전체">전체 지점</option>
+                                <option value="장지 본점">장지 본점</option>
+                                <option value="명일 직영점">명일 직영점</option>
+                            </select>
+                        </div>
+                        <div class="col-5">
+                            <label class="form-label-sm fw-bold text-muted">만료 예정 월</label>
+                            <input type="month" id="crm_month" class="form-control form-control-sm fw-bold">
+                        </div>
+                        <div class="col-2">
+                            <button class="btn btn-success btn-sm w-100 fw-bold" onclick="loadExpiryList()">조회</button>
+                        </div>
+                    </div>
+            
+                    <div class="alert alert-info small py-2 fw-bold">
+                        <i class="bi bi-info-circle me-1"></i>
+                        선택한 달로부터 <span class="text-danger">정확히 24개월 전</span>에 개통한 고객 목록입니다.
+                    </div>
+            
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle text-center small border mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>대상</th> <th>개통일</th>
+                                    <th>고객명</th>
+                                    <th>모델</th>
+                                    <th>연락처</th>
+                                    <th>액션</th>
+                                </tr>
+                            </thead>
+                            <tbody id="crm_tbody">
+                                <tr><td colspan="6" class="text-muted py-5">조회 버튼을 눌러주세요.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
             
         </div>
     </div>
