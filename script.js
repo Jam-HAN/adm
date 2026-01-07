@@ -2284,6 +2284,205 @@ async function loadSettlement(type) {
     }
 }
 
+// ==========================================
+// [신규] 일별 매출/추이 분석 (기존 스타일 준수)
+// ==========================================
+
+let dailySalesChartInstance = null; // 차트 중복 생성 방지용
+
+function showDailySalesSection() {
+    // 1. 날짜 기본값 세팅 (이번 달)
+    const now = new Date();
+    const yyyy = now.getFullYear();
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    
+    const monthInput = document.getElementById('ds_month');
+    if(monthInput && !monthInput.value) {
+        monthInput.value = `${yyyy}-${mm}`;
+    }
+    
+    // 2. 섹션 이동 (기존 함수 사용)
+    showSection('section-daily-sales');
+    
+    // 3. 자동 조회 (UX 편의성)
+    loadDailySales();
+}
+
+function loadDailySales() {
+    const branch = document.getElementById('ds_branch').value;
+    const month = document.getElementById('ds_month').value;
+    
+    if(!month) { alert("조회할 월을 선택해주세요."); return; }
+
+    // 로딩 표시 (기존 스타일)
+    document.getElementById('ds_tbody').innerHTML = `
+        <tr><td colspan="6" class="py-5">
+            <div class="spinner-border text-primary"></div>
+            <div class="mt-2 small text-muted">데이터 분석 중...</div>
+        </td></tr>`;
+
+    // ★ requestAPI 사용 (기존 코드 일관성 유지)
+    fetch(GAS_URL, {
+        method: "POST",
+        body: JSON.stringify({
+            action: "get_daily_sales_report",
+            branch: branch,
+            month: month
+        })
+    })
+    .then(r => r.json())
+    .then(d => {
+        if(d.status === 'success') {
+            renderDailySalesUI(d.list, d.total);
+        } else {
+            document.getElementById('ds_tbody').innerHTML = `<tr><td colspan="6" class="text-danger py-4">${d.message}</td></tr>`;
+        }
+    })
+    .catch(e => {
+        console.error(e);
+        document.getElementById('ds_tbody').innerHTML = `<tr><td colspan="6" class="text-danger py-4">통신 오류 발생</td></tr>`;
+    });
+}
+
+function renderDailySalesUI(list, total) {
+    const tbody = document.getElementById('ds_tbody');
+    const fmt = (n) => Number(n).toLocaleString();
+    
+    // 1. 상단 요약 카드 업데이트
+    document.getElementById('ds_total_cnt').innerText = total.cnt + "건";
+    document.getElementById('ds_total_rev').innerText = fmt(total.rev);
+    document.getElementById('ds_total_mar').innerText = fmt(total.mar);
+
+    // 2. 테이블 렌더링
+    let html = "";
+    
+    // 오늘 날짜 구하기 (강조용)
+    const today = new Date();
+    const currentMonthStr = today.toISOString().slice(0, 7); // "2024-05"
+    const selectedMonth = document.getElementById('ds_month').value;
+    const todayDate = today.getDate();
+
+    list.forEach(item => {
+        // 데이터 없는 날은 흐리게
+        const isDataEmpty = (item.totalCnt === 0 && item.margin === 0);
+        const rowClass = isDataEmpty ? "text-muted opacity-50" : "fw-bold text-dark";
+        
+        // 오늘 날짜 하이라이트 (배경색)
+        let bgClass = "";
+        if (selectedMonth === currentMonth && item.day === todayDate) {
+            bgClass = "table-warning border-2 border-warning"; // 기존 스타일 활용
+        }
+
+        html += `
+        <tr class="${bgClass}">
+            <td class="${rowClass}">${item.day}일</td>
+            <td class="text-primary ${item.mobile > 0 ? 'fw-bold' : ''}">${item.mobile > 0 ? item.mobile : '-'}</td>
+            <td class="text-success ${item.wired > 0 ? 'fw-bold' : ''}">${item.wired > 0 ? item.wired : '-'}</td>
+            <td class="bg-light fw-bold">${item.totalCnt > 0 ? item.totalCnt : '-'}</td>
+            <td class="text-end pe-3 text-secondary small">${item.revenue > 0 ? fmt(item.revenue) : '-'}</td>
+            <td class="text-end pe-3 fw-bold text-danger">${item.margin > 0 ? fmt(item.margin) : '-'}</td>
+        </tr>`;
+    });
+    tbody.innerHTML = html;
+
+    // 3. 차트 그리기
+    renderMixedChart(list);
+}
+
+function renderMixedChart(list) {
+    const ctx = document.getElementById('dailySalesChart').getContext('2d');
+    
+    if (dailySalesChartInstance) {
+        dailySalesChartInstance.destroy();
+    }
+
+    const labels = list.map(i => i.day + '일');
+    const dataMargin = list.map(i => i.margin); // 막대 (돈)
+    const dataCount = list.map(i => i.totalCnt); // 선 (개수)
+
+    dailySalesChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: '순수익(마진)',
+                    data: dataMargin,
+                    type: 'bar',
+                    backgroundColor: 'rgba(231, 29, 54, 0.2)', // Danger color 투명도
+                    borderColor: 'rgba(231, 29, 54, 0.8)',
+                    borderWidth: 1,
+                    borderRadius: 2,
+                    order: 2,
+                    yAxisID: 'y_money' // 왼쪽 축 사용
+                },
+                {
+                    label: '총 실적(건)',
+                    data: dataCount,
+                    type: 'line',
+                    borderColor: '#4361ee', // Primary color
+                    backgroundColor: '#4361ee',
+                    borderWidth: 2,
+                    pointRadius: 2,
+                    tension: 0.3, // 부드러운 곡선
+                    order: 1,
+                    yAxisID: 'y_count' // 오른쪽 축 사용
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+                legend: { position: 'top' },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.dataset.label || '';
+                            if (label) label += ': ';
+                            if (context.parsed.y !== null) {
+                                if (context.dataset.type === 'bar') {
+                                    label += context.parsed.y.toLocaleString() + '원';
+                                } else {
+                                    label += context.parsed.y + '건';
+                                }
+                            }
+                            return label;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: { 
+                    grid: { display: false },
+                    ticks: { maxTicksLimit: 10, font: { size: 10 } }
+                },
+                // [왼쪽 축] 돈 (마진)
+                y_money: {
+                    type: 'linear',
+                    display: true,
+                    position: 'left',
+                    grid: { borderDash: [4, 4] },
+                    ticks: {
+                        callback: function(value) { return value >= 10000 ? (value/10000) + '만' : value; },
+                        font: { size: 10 }
+                    }
+                },
+                // [오른쪽 축] 건수
+                y_count: {
+                    type: 'linear',
+                    display: true,
+                    position: 'right',
+                    grid: { display: false },
+                    ticks: { stepSize: 1, font: { size: 10 } },
+                    suggestedMax: 5 // 건수가 적어도 그래프가 안 눌리게
+                }
+            }
+        }
+    });
+}
+
 // [script.js 수정] 3. [기간별 집계] 렌더링 (지점별 그룹화 + 소계)
 function renderPeriodStats(data) {
     const tbody = document.getElementById('sp_tbody');
