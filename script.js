@@ -214,17 +214,20 @@ function checkAuthMenu() {
     // --- 제어할 메뉴 ID 목록 ---
     const menuDbView = document.getElementById('menu_db_view_item');   // DB 상세 열람 (가장 민감)
     const menuPeriod = document.getElementById('menu_period_item');    // 기간별 매출 집계 (민감)
+    const menuDaily = document.getElementById('menu_daily_sales');
 
     // --- 초기화: 일단 다 숨김 ---
     if(menuDbView) menuDbView.style.display = 'none';
     if(menuPeriod) menuPeriod.style.display = 'none';
+    if(menuDaily) menuDaily.style.display = 'none';
     
     // 2. 권한별 노출 설정
 
     // ★ [수정] 기간별 집계는 이제 'MASTER(대표)'만 봅니다.
     if (role === 'MASTER') {
         if(menuPeriod) menuPeriod.style.display = 'block'; 
-        if(menuDbView) menuDbView.style.display = 'block'; 
+        if(menuDbView) menuDbView.style.display = 'block';
+        if(menuDaily) menuDaily.style.display = 'block';
     }
     
     // (참고) STAFF는 위 if문에 걸리지 않으므로 기본 메뉴만 보게 됩니다.
