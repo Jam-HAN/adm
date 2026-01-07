@@ -3187,19 +3187,25 @@ function submitGoal() {
 // ==========================================
 
 function showCrmSection() {
-    // 1. 기본값 세팅 (다음 달로 자동 세팅 -> 미리 연락해야 하니까)
+    // 1. 날짜 자동 세팅 (기본값: 다음 달)
+    // "매일 조회"하신다고 하니, 들어올 때마다 자동으로 '다음 달'로 맞춰드립니다.
     const now = new Date();
-    now.setMonth(now.getMonth() + 1); // 다음 달
+    now.setMonth(now.getMonth() + 1); // 현재 1월이면 -> 2월로 세팅 (선제 영업용)
+    
     const yyyy = now.getFullYear();
     const mm = String(now.getMonth() + 1).padStart(2, '0');
     
     const monthInput = document.getElementById('crm_month');
-    if(monthInput && !monthInput.value) {
+    if(monthInput) {
         monthInput.value = `${yyyy}-${mm}`;
     }
 
-    // 2. 화면 전환
+    // 2. 화면 보여주기
     showSection('section-crm-expiry');
+    
+    // 3. ★ [자동 실행] 들어오자마자 조회 함수를 바로 호출합니다!
+    // 사장님이 버튼을 누르지 않아도, 리스트가 바로 쫙 뜹니다.
+    loadExpiryList();
 }
 
 function loadExpiryList() {
