@@ -3211,7 +3211,7 @@ function loadExpiryList() {
     // 로딩
     document.getElementById('crm_tbody').innerHTML = `
         <tr style="height: 300px;">
-            <td colspan="5" class="align-middle text-center">
+            <td colspan="6" class="align-middle text-center">
                 <div class="spinner-border text-success" role="status"></div>
                 <div class="mt-2 small text-muted">고객 명단 조회 중...</div>
             </td>
