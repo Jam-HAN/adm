@@ -288,8 +288,6 @@ function showSection(id) {
     document.getElementById('view_start').value = first;
     document.getElementById('view_end').value = today;
     }
-
-    syncMobileStickyCta();
 }
 
 function showOpenSection(type) {
