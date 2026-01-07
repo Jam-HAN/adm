@@ -2421,7 +2421,7 @@ function renderMixedChart(list) {
             labels: labels,
             datasets: [
                 {
-                    label: '순수익(마진)',
+                    label: '총 수익(마진)',
                     data: dataMargin,
                     type: 'bar',
                     backgroundColor: 'rgba(231, 29, 54, 0.2)', // Danger color 투명도
