@@ -2392,21 +2392,19 @@ function loadDailyReport() {
     });
 }
 
-// 3. 일일 상세 보고 렌더링 (모바일: 한눈에 보이는 오픈형 카드)
+// 3. 일일 상세 보고 렌더링 (모바일: 타임라인 피드형 - 가독성 최적화)
 function renderDailyReportTable(list, summary) {
     const tbodyPc = document.getElementById('dr_tbody_pc');
     const listMobile = document.getElementById('dr_list_mobile');
     const fmt = (n) => Number(n).toLocaleString();
 
-    // 1. 상단 요약 업데이트 (여기는 유지 - 총계는 중요하니까요)
+    // 상단 요약 업데이트
     document.getElementById('dr_sum_total').innerText = summary.total + "건";
-    document.getElementById('dr_sum_detail').innerText = `(📱${summary.mobile} / 📺${summary.wired} / ♻️${summary.used})`;
-    
+    document.getElementById('dr_sum_detail').innerText = `(📱${summary.mobile} / ♻️${summary.used} / 📺${summary.wired})`;
     document.getElementById('dr_sum_settle').innerText = fmt(summary.settle);
     document.getElementById('dr_sum_revenue').innerText = fmt(summary.revenue);
     document.getElementById('dr_sum_margin').innerText = fmt(summary.margin);
 
-    // 데이터 없음 처리
     if (list.length === 0) {
         if(tbodyPc) tbodyPc.innerHTML = `<tr><td colspan="17" class="text-muted py-5 text-center">해당 날짜에 내역이 없습니다.</td></tr>`;
         if(listMobile) listMobile.innerHTML = `<div class="text-center text-muted py-5">내역이 없습니다.</div>`;
@@ -2416,34 +2414,28 @@ function renderDailyReportTable(list, summary) {
     let pcHtml = "";
     let mobileHtml = "";
 
-    // ★ 모바일용 리스트 헤더 (항목 설명)
-    mobileHtml += `
-    <div class="card border-0 shadow-sm">
-        <div class="card-header bg-white border-bottom py-2">
-            <div class="row text-center small fw-bold text-muted">
-                <div class="col-5 text-start ps-3">고객 / 모델</div>
-                <div class="col-3">구분</div>
-                <div class="col-4 text-end pe-3">수익 / 정산</div>
-            </div>
-        </div>
-        <div class="card-body p-0">
-    `;
+    // ★ 모바일 헤더: 날짜/지점 같은 불필요한 정보 빼고 '돈'에 집중
+    mobileHtml += `<div class="d-flex justify-content-between px-2 mb-2 small text-muted fw-bold"><span>판매 내역</span><span>수익(마진)</span></div>`;
 
     list.forEach((item) => {
         // 공통 변수
         const showMoney = (val) => val === 0 ? '-' : fmt(val);
         const reviewIcon = (item.review === 'true' || item.review === true) 
-            ? '<i class="bi bi-check-circle-fill text-success small ms-1"></i>' 
-            : '';
+            ? '<i class="bi bi-check-circle-fill text-success small ms-1"></i>' : '';
         
-        // 뱃지 색상
-        let typeClass = "text-secondary";
-        if(item.type.includes("신규") || item.type.includes("이동") || item.type.includes("기변")) typeClass = "text-primary";
-        else if(item.type.includes("중고")) typeClass = "text-warning";
-        else if(item.type.includes("유선") || item.type.includes("인터넷")) typeClass = "text-success";
+        let typeClass = "bg-secondary";
+        let borderClass = "border-secondary";
+        
+        if(item.type.includes("신규") || item.type.includes("이동") || item.type.includes("기변")) {
+            typeClass = "bg-primary"; borderClass = "border-primary";
+        } else if(item.type.includes("중고")) {
+            typeClass = "bg-warning text-dark"; borderClass = "border-warning";
+        } else if(item.type.includes("유선")) {
+            typeClass = "bg-success"; borderClass = "border-success";
+        }
 
         // =================================================
-        // [A] PC용 HTML (기존 유지)
+        // [A] PC용 HTML (유지)
         // =================================================
         pcHtml += `
         <tr>
@@ -2467,42 +2459,41 @@ function renderDailyReportTable(list, summary) {
         </tr>`;
 
         // =================================================
-        // [B] 모바일용 HTML (압축 리스트 형태)
+        // [B] 모바일용 HTML (피드형 디자인)
         // =================================================
-        // 한 줄 한 줄이 좁고 긴 리스트로 들어갑니다.
         mobileHtml += `
-        <div class="border-bottom p-2">
-            <div class="row align-items-center g-0">
-                <div class="col-5 text-start ps-1 overflow-hidden">
-                    <div class="fw-bold text-dark text-truncate">
-                        ${item.name} <span class="small fw-normal text-muted">(${item.manager})</span>
-                    </div>
-                    <div class="small text-secondary text-truncate" style="font-size: 0.8rem;">
-                        ${item.model || '-'}
+        <div class="card shadow-sm mb-2 border-0">
+            <div class="card-body p-3 d-flex justify-content-between align-items-center">
+                
+                <div class="d-flex align-items-center" style="width: 65%;">
+                    <div class="${typeClass} rounded-pill me-3" style="width: 4px; height: 40px;"></div>
+                    
+                    <div class="overflow-hidden">
+                        <div class="d-flex align-items-center mb-1">
+                            <span class="badge ${typeClass} me-2" style="font-size:0.7rem">${item.type}</span>
+                            <span class="fw-bold text-dark text-truncate">${item.name}</span>
+                        </div>
+                        <div class="text-secondary small text-truncate" style="font-size: 0.85rem;">
+                            ${item.model || '모델미지정'}
+                            <span class="text-muted ms-1" style="font-size:0.75rem">(${item.manager})</span>
+                        </div>
+                        <div class="text-muted" style="font-size: 0.7rem;">
+                           ${item.branch} · ${item.carrier}
+                           ${item.support > 0 ? `<span class="text-danger ms-1">대납 ${fmt(item.support)}</span>` : ''}
+                        </div>
                     </div>
                 </div>
 
-                <div class="col-3 text-center">
-                    <div class="fw-bold ${typeClass}" style="font-size: 0.85rem;">${item.type}</div>
-                    <div class="badge bg-light text-secondary border" style="font-size: 0.7rem;">${item.branch.substring(0,2)}</div>
+                <div class="text-end" style="width: 35%;">
+                    <div class="fw-bold text-danger fs-5">${fmt(item.margin)}</div>
+                    <div class="text-muted small" style="font-size: 0.75rem;">매출 ${fmt(item.revenue)}</div>
+                    <div class="text-primary small" style="font-size: 0.75rem;">정산 ${fmt(item.settle)}</div>
                 </div>
 
-                <div class="col-4 text-end pe-1">
-                    <div class="fw-bold text-danger" style="font-size: 0.95rem;">${fmt(item.margin)}</div>
-                    <div class="small text-primary" style="font-size: 0.8rem;">${fmt(item.settle)}</div>
-                </div>
-            </div>
-            <div class="d-flex justify-content-between mt-1 px-1" style="font-size: 0.7rem; color: #aaa;">
-                <span>${item.carrier} ${reviewIcon}</span>
-                <span>(대납: ${fmt(item.support)})</span>
             </div>
         </div>`;
     });
 
-    // 모바일 리스트 닫기
-    mobileHtml += `</div></div>`;
-
-    // 렌더링
     if(tbodyPc) tbodyPc.innerHTML = pcHtml;
     if(listMobile) listMobile.innerHTML = mobileHtml;
 }
