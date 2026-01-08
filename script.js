@@ -3250,6 +3250,16 @@ function loadExpiryList() {
     });
 }
 
+// 1. 상태별 색상/텍스트 매핑 (관리하기 쉽게 분리)
+const STATUS_CONFIG = {
+    '대기': { class: 'bg-light text-secondary border-secondary', label: '대기' },
+    '부재중': { class: 'bg-warning text-dark border-warning', label: '부재중' },
+    '내방예약': { class: 'bg-primary text-white border-primary', label: '내방예약' },
+    '보류': { class: 'bg-info text-dark border-info', label: '보류' },
+    '거절': { class: 'bg-danger text-white border-danger', label: '거절' },
+    '개통완료': { class: 'bg-success text-white border-success', label: '개통완료' }
+};
+
 function renderCrmTable(list) {
     const tbody = document.getElementById('crm_tbody');
     let html = "";
@@ -3290,32 +3300,29 @@ function renderCrmTable(list) {
                 <i class="bi bi-telephone-fill"></i>
              </a>` : '-';
 
-        // 5. ★ [수정] 상태 선택 박스 로직
-        // "보류" 상태 추가 (하늘색 bg-info)
-        let statusClass = "bg-light text-secondary border-0"; 
-        if(item.crmStatus === '개통완료') statusClass = "bg-success text-white border-0 shadow-sm";
-        else if(item.crmStatus === '부재중') statusClass = "bg-warning text-dark border-0 shadow-sm";
-        else if(item.crmStatus === '내방예약') statusClass = "bg-primary text-white border-0 shadow-sm";
-        else if(item.crmStatus === '보류') statusClass = "bg-info text-dark border-0 shadow-sm"; // ★ 추가됨
-        else if(item.crmStatus === '거절') statusClass = "bg-danger text-white border-0 shadow-sm";
+        // 5. ★ [핵심] 드롭다운 버튼 생성
+        // 현재 상태 가져오기 (없으면 '대기')
+        const currentStatus = item.crmStatus || '대기';
+        const config = STATUS_CONFIG[currentStatus] || STATUS_CONFIG['대기'];
+        
+        // 고유 ID 생성 (이벤트 처리용)
+        const dropdownId = `dropdown_${index}`;
 
-        // ★ [핵심] 정중앙 정렬 CSS
-        // text-align-last: center; -> 크롬/엣지 강제 중앙 정렬
-        // background-image: none !important; -> 화살표 공간 삭제
-        // padding: 0 !important; -> 여백 삭제로 정중앙 유도
-        const selectHtml = `
-            <div style="position: relative; display: inline-block;">
-                <select class="form-select form-select-sm fw-bold small rounded-pill ${statusClass}" 
-                    style="width: 85px; font-size: 0.8rem; cursor: pointer; appearance: none; -webkit-appearance: none; 
-                           text-align: center; text-align-last: center; padding: 0.25rem 0 !important; background-image: none !important;"
-                    onchange="changeCrmStatus(this, '${item.branch}', '${item.phone}', '${item.openDate}')">
-                    <option value="대기" ${item.crmStatus === '대기' ? 'selected' : ''}>대기</option>
-                    <option value="부재중" ${item.crmStatus === '부재중' ? 'selected' : ''}>부재중</option>
-                    <option value="내방예약" ${item.crmStatus === '내방예약' ? 'selected' : ''}>내방예약</option>
-                    <option value="보류" ${item.crmStatus === '보류' ? 'selected' : ''}>보류</option>
-                    <option value="거절" ${item.crmStatus === '거절' ? 'selected' : ''}>거절</option>
-                    <option value="개통완료" ${item.crmStatus === '개통완료' ? 'selected' : ''}>개통완료</option>
-                </select>
+        const dropdownHtml = `
+            <div class="dropdown">
+                <button class="btn btn-sm dropdown-toggle rounded-pill fw-bold small shadow-sm w-100 ${config.class}" 
+                        type="button" id="${dropdownId}" data-bs-toggle="dropdown" aria-expanded="false"
+                        style="min-width: 85px; height: 26px; padding: 0; line-height: 24px; font-size: 0.8rem;">
+                    ${config.label}
+                </button>
+                <ul class="dropdown-menu text-center" aria-labelledby="${dropdownId}" style="min-width: 85px;">
+                    ${Object.keys(STATUS_CONFIG).map(status => `
+                        <li><a class="dropdown-item small fw-bold" href="#" 
+                            onclick="changeCrmStatus('${dropdownId}', '${status}', '${item.branch}', '${item.phone}', '${item.openDate}')">
+                            ${status}
+                        </a></li>
+                    `).join('')}
+                </ul>
             </div>
         `;
 
@@ -3333,35 +3340,25 @@ function renderCrmTable(list) {
             <td class="text-primary fw-bold small">${item.model}</td>
             <td class="small">${item.plan}</td>
             <td>${callBtn}</td>
-            <td style="vertical-align: middle;">${selectHtml}</td>
+            <td style="vertical-align: middle;">${dropdownHtml}</td>
         </tr>`;
     });
     tbody.innerHTML = html;
 }
 
 // ★ [신규] 상태 변경 시 자동 저장 함수
-function changeCrmStatus(selectElem, branch, phone, date) {
-    const newStatus = selectElem.value;
-    
-    // 기본 스타일 (화살표 제거, 중앙 정렬 유지)
-    const baseClass = "form-select form-select-sm fw-bold small rounded-pill shadow-sm border-0";
-    selectElem.className = baseClass; 
-    
-    // 강제 중앙 정렬 스타일 주입 (JS로 클래스 변경시 style은 유지되지만 확실하게)
-    selectElem.style.textAlign = "center";
-    selectElem.style.textAlignLast = "center";
-    selectElem.style.backgroundImage = "none";
-    selectElem.style.padding = "0.25rem 0";
+function changeCrmStatus(btnId, newStatus, branch, phone, date) {
+    const btn = document.getElementById(btnId);
+    if (!btn) return;
 
-    // 색상 변경 로직
-    if(newStatus === '개통완료') selectElem.classList.add('bg-success', 'text-white');
-    else if(newStatus === '부재중') selectElem.classList.add('bg-warning', 'text-dark');
-    else if(newStatus === '내방예약') selectElem.classList.add('bg-primary', 'text-white');
-    else if(newStatus === '보류') selectElem.classList.add('bg-info', 'text-dark');
-    else if(newStatus === '거절') selectElem.classList.add('bg-danger', 'text-white');
-    else selectElem.classList.add('bg-light', 'text-secondary'); 
+    // 1. UI 즉시 반영 (버튼 텍스트 및 클래스 변경)
+    const config = STATUS_CONFIG[newStatus];
+    
+    // 기존 클래스 제거 후 기본 클래스 세팅
+    btn.className = `btn btn-sm dropdown-toggle rounded-pill fw-bold small shadow-sm w-100 ${config.class}`;
+    btn.innerText = config.label;
 
-    // 서버 저장
+    // 2. 서버 저장 요청
     fetch(GAS_URL, {
         method: "POST",
         body: JSON.stringify({
