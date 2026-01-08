@@ -209,28 +209,36 @@ function checkAuthMenu() {
     if (!saved) return;
 
     const u = JSON.parse(saved);
-    const role = u.role || 'STAFF'; // 저장된 등급 가져오기
+    const role = u.role || 'STAFF'; // 기본값 STAFF
 
-    // --- 제어할 메뉴 ID 목록 ---
-    const menuDbView = document.getElementById('menu_db_view_item');   // DB 상세 열람 (가장 민감)
-    const menuPeriod = document.getElementById('menu_period_item');    // 기간별 매출 집계 (민감)
-    const menuDaily = document.getElementById('menu_daily_sales');
+    // --- [PC 메뉴 ID] ---
+    const pcDbView = document.getElementById('menu_db_view_item');   // DB열람
+    const pcPeriod = document.getElementById('menu_period_item');    // 기간별
+    const pcDaily  = document.getElementById('menu_daily_sales');    // 일별
 
-    // --- 초기화: 일단 다 숨김 ---
-    if(menuDbView) menuDbView.style.display = 'none';
-    if(menuPeriod) menuPeriod.style.display = 'none';
-    if(menuDaily) menuDaily.style.display = 'none';
+    // --- [모바일 메뉴 ID] ---
+    const mbDaily  = document.getElementById('mobile_btn_daily');    // 모바일 일별
+    const mbPeriod = document.getElementById('mobile_btn_period');   // 모바일 기간별
+
+    // 1. 초기화: 일단 중요 메뉴는 다 숨김 (보안)
+    if(pcDbView) pcDbView.style.display = 'none';
+    if(pcPeriod) pcPeriod.style.display = 'none';
+    if(pcDaily)  pcDaily.style.display = 'none';
     
-    // 2. 권한별 노출 설정
-
-    // ★ [수정] 기간별 집계는 이제 'MASTER(대표)'만 봅니다.
+    if(mbDaily)  mbDaily.style.display = 'none';
+    if(mbPeriod) mbPeriod.style.display = 'none';
+    
+    // 2. 권한 확인: 사장님(MASTER)만 보여줌
     if (role === 'MASTER') {
-        if(menuPeriod) menuPeriod.style.display = 'block'; 
-        if(menuDbView) menuDbView.style.display = 'block';
-        if(menuDaily) menuDaily.style.display = 'block';
+        // PC 보이기
+        if(pcPeriod) pcPeriod.style.display = 'block'; 
+        if(pcDbView) pcDbView.style.display = 'block';
+        if(pcDaily)  pcDaily.style.display = 'block';
+
+        // 모바일 보이기
+        if(mbDaily)  mbDaily.style.display = 'block';
+        if(mbPeriod) mbPeriod.style.display = 'block';
     }
-    
-    // (참고) STAFF는 위 if문에 걸리지 않으므로 기본 메뉴만 보게 됩니다.
 }
 
 // 2. 화면 전환
@@ -2658,13 +2666,33 @@ function renderStaffStats(data) {
     tbody.innerHTML = "";
     tfoot.innerHTML = "";
 
-    // 데이터 없음
-    if (!data.staffData || data.staffData.length === 0) {
+    // -----------------------------------------------------------
+    // ★ [핵심] 권한 필터링 로직 추가
+    // -----------------------------------------------------------
+    let displayList = data.staffData || [];
+    
+    // 현재 로그인 정보 가져오기
+    let myName = "";
+    let myRole = "STAFF";
+    try {
+        const u = JSON.parse(sessionStorage.getItem('dbphone_user'));
+        myName = u.name;
+        myRole = u.role;
+    } catch(e) {}
+
+    // 사장님(MASTER)이 아니면, 내 이름과 같은 데이터만 남김
+    if (myRole !== 'MASTER') {
+        displayList = displayList.filter(item => item.name === myName);
+    }
+    // -----------------------------------------------------------
+
+    // 데이터 없음 처리
+    if (displayList.length === 0) {
         tbody.innerHTML = `
             <tr style="height: 450px;">
                 <td colspan="7" class="text-muted align-middle">
                     <i class="bi bi-exclamation-circle fs-1 d-block mb-3 opacity-25"></i>
-                    실적이 없습니다.
+                    조회된 실적이 없습니다.
                 </td>
             </tr>`;
         return;
@@ -2675,7 +2703,7 @@ function renderStaffStats(data) {
     // 항목별 합계 변수
     let sumMobile = 0, sumUsed = 0, sumCopper = 0, sumRenew = 0, sumSingle = 0, sumMargin = 0;
 
-    data.staffData.forEach(item => {
+    displayList.forEach(item => {
         sumMobile += item.cnt_mobile;
         sumUsed += item.cnt_used;
         sumCopper += item.cnt_copper;
@@ -2683,14 +2711,16 @@ function renderStaffStats(data) {
         sumSingle += item.cnt_single;
         sumMargin += item.margin;
 
-        // 마진 표시
+        // 마진 표시 (0원일때는 빈칸)
         let marginDisplay = (item.margin === 0) 
             ? "" 
             : `<span class="text-danger fw-bold">${fmt(item.margin)}</span>`;
 
-        // ★ [핵심 수정] 배경색(bg-opacity)과 글자색(text-primary/success) 복구
+        // 내 데이터인 경우 배경색 살짝 강조
+        const rowClass = (item.name === myName) ? "bg-warning bg-opacity-10" : "";
+
         tbody.insertAdjacentHTML('beforeend', `
-            <tr>
+            <tr class="${rowClass}">
                 <td class="fw-bold">${item.name}</td>
                 
                 <td class="fw-bold text-primary bg-primary bg-opacity-10">${item.cnt_mobile}</td>
@@ -2706,7 +2736,7 @@ function renderStaffStats(data) {
         `);
     });
 
-    // 하단 합계 (합계 줄도 색상 깔맞춤)
+    // 하단 합계
     tfoot.innerHTML = `
         <tr class="border-top border-success text-success bg-light">
             <td class="fw-bold text-dark">합계</td>
