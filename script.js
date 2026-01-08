@@ -3332,7 +3332,7 @@ function renderCrmTable(list) {
             <td class="text-primary fw-bold small">${item.model}</td>
             <td class="small">${item.plan}</td>
             <td>${callBtn}</td>
-            <td style="vertical-align: middle;">${selectHtml}</td> </tr>`;
+            <td style="vertical-align: middle;">${selectHtml}</td>
         </tr>`;
     });
     tbody.innerHTML = html;
