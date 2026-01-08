@@ -214,8 +214,9 @@ function checkAuthMenu() {
     // --- [PC 메뉴 ID] ---
     const pcDbView = document.getElementById('menu_db_view_item');   // DB열람
     const pcPeriod = document.getElementById('menu_period_item');    // 기간별
-    const pcDaily  = document.getElementById('menu_daily_sales');    // 일별
-
+    const pcDaily  = document.getElementById('menu_daily_sales');    // 일별집계
+    const pcReport = document.getElementById('menu_daily_report');   // 일일보고
+    
     // --- [모바일 메뉴 ID] ---
     const mbDaily  = document.getElementById('mobile_btn_daily');    // 모바일 일별
     const mbPeriod = document.getElementById('mobile_btn_period');   // 모바일 기간별
@@ -224,6 +225,7 @@ function checkAuthMenu() {
     if(pcDbView) pcDbView.style.display = 'none';
     if(pcPeriod) pcPeriod.style.display = 'none';
     if(pcDaily)  pcDaily.style.display = 'none';
+    if(pcReport) pcReport.style.display = 'none';
     
     if(mbDaily)  mbDaily.style.display = 'none';
     if(mbPeriod) mbPeriod.style.display = 'none';
@@ -234,6 +236,7 @@ function checkAuthMenu() {
         if(pcPeriod) pcPeriod.style.display = 'block'; 
         if(pcDbView) pcDbView.style.display = 'block';
         if(pcDaily)  pcDaily.style.display = 'block';
+        if(pcReport) pcReport.style.display = 'block';
 
         // 모바일 보이기
         if(mbDaily)  mbDaily.style.display = 'block';
@@ -2318,6 +2321,95 @@ async function loadSettlement(type) {
                 </tr>`;
         }
     }
+}
+
+// ==========================================
+// [신규] 일일 보고
+// ==========================================
+// 1. 화면 전환 및 초기화
+function showDailyReportSection() {
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    
+    const dateInput = document.getElementById('dr_date');
+    if(dateInput && !dateInput.value) {
+        dateInput.value = `${yyyy}-${mm}-${dd}`; // 오늘 날짜 자동 세팅
+    }
+    
+    showSection('section-daily-report');
+    loadDailyReport(); // 자동 조회
+}
+
+// 2. 데이터 조회 요청
+function loadDailyReport() {
+    const branch = document.getElementById('dr_branch').value;
+    const date = document.getElementById('dr_date').value;
+    
+    if(!date) { alert("날짜를 선택해주세요."); return; }
+
+    const tbody = document.getElementById('dr_tbody');
+    tbody.innerHTML = `<tr><td colspan="8" class="py-5"><div class="spinner-border text-primary"></div><div class="mt-2 small text-muted">데이터를 불러오는 중...</div></td></tr>`;
+
+    fetch(GAS_URL, {
+        method: "POST",
+        body: JSON.stringify({
+            action: "get_daily_report_detail",
+            branch: branch,
+            date: date
+        })
+    })
+    .then(r => r.json())
+    .then(d => {
+        if(d.status === 'success') {
+            renderDailyReportTable(d.list, d.summary);
+        } else {
+            tbody.innerHTML = `<tr><td colspan="8" class="text-danger py-4">${d.message}</td></tr>`;
+        }
+    })
+    .catch(e => {
+        console.error(e);
+        tbody.innerHTML = `<tr><td colspan="8" class="text-danger py-4">통신 오류 발생</td></tr>`;
+    });
+}
+
+// 3. 테이블 및 요약 렌더링
+function renderDailyReportTable(list, summary) {
+    const tbody = document.getElementById('dr_tbody');
+    const fmt = (n) => Number(n).toLocaleString();
+
+    // 요약 업데이트
+    document.getElementById('dr_sum_count').innerText = summary.count + "건";
+    document.getElementById('dr_sum_settle').innerText = fmt(summary.settle);
+    document.getElementById('dr_sum_margin').innerText = fmt(summary.margin);
+
+    if (list.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" class="text-muted py-5">해당 날짜에 내역이 없습니다.</td></tr>`;
+        return;
+    }
+
+    // 상세 내역 그리기
+    let html = "";
+    list.forEach(item => {
+        let typeBadge = "bg-secondary";
+        if(item.type.includes("신규") || item.type.includes("이동") || item.type.includes("기변")) typeBadge = "bg-primary";
+        else if(item.type.includes("중고")) typeBadge = "bg-warning text-dark";
+        else if(item.type.includes("유선") || item.type.includes("인터넷")) typeBadge = "bg-success";
+
+        html += `
+        <tr>
+            <td><span class="badge bg-light text-secondary border">${item.branch}</span></td>
+            <td><span class="badge ${typeBadge}">${item.type}</span></td>
+            <td class="fw-bold">${item.name}</td>
+            <td class="small text-start text-truncate" style="max-width: 150px;">${item.model}</td>
+            <td class="small text-muted">${item.plan}</td>
+            <td><span class="badge bg-white text-dark border rounded-pill"><i class="bi bi-person me-1"></i>${item.manager}</span></td>
+            <td class="text-end pe-3 text-secondary">${fmt(item.settle)}</td>
+            <td class="text-end pe-3 fw-bold text-danger">${fmt(item.margin)}</td>
+        </tr>`;
+    });
+    tbody.innerHTML = html;
 }
 
 // ==========================================
