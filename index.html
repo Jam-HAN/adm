@@ -1361,10 +1361,10 @@
     </div>
 
     <div id="stats-menu-container" class="d-none flex-column gap-2" style="position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); z-index: 1060; width: 200px;">
-        <button onclick="showDailySalesSection(); toggleStatsMenu();" class="btn btn-light shadow-lg fw-bold py-3 text-primary border-0 rounded-4">
+        <button id="mobile_btn_daily" onclick="showDailySalesSection(); toggleStatsMenu();" class="btn btn-light shadow-lg fw-bold py-3 text-primary border-0 rounded-4">
             <i class="bi bi-graph-up me-2"></i> 일별 매출
         </button>
-        <button onclick="showSection('section-settlement-period'); toggleStatsMenu();" class="btn btn-light shadow-lg fw-bold py-3 text-dark border-0 rounded-4">
+        <button id="mobile_btn_period" onclick="showSection('section-settlement-period'); toggleStatsMenu();" class="btn btn-light shadow-lg fw-bold py-3 text-dark border-0 rounded-4">
             <i class="bi bi-calendar-check me-2 text-success"></i> 기간별 집계
         </button>
         <button onclick="showSection('section-settlement-staff'); toggleStatsMenu();" class="btn btn-light shadow-lg fw-bold py-3 text-dark border-0 rounded-4">
