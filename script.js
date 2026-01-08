@@ -2536,6 +2536,129 @@ function renderMixedChart(list) {
     });
 }
 
+// [script.js] 판매 분석 (파이 차트) 로직
+// 탭 전환 시 조회 함수 분기
+function refreshAnalysis() {
+    const activeTab = document.querySelector('#pills-tab .active').id;
+    if (activeTab === 'pills-trend-tab') loadDailySales();
+    else loadSalesAnalysis();
+}
+
+let chartModelInstance = null;
+let chartCarrierInstance = null;
+
+function loadSalesAnalysis() {
+    const branch = document.getElementById('ds_branch').value;
+    const month = document.getElementById('ds_month').value;
+    
+    if(!month) { alert("조회할 월을 선택해주세요."); return; }
+
+    // 기존 차트 초기화 (잔상 방지)
+    if (chartModelInstance) { chartModelInstance.destroy(); chartModelInstance = null; }
+    if (chartCarrierInstance) { chartCarrierInstance.destroy(); chartCarrierInstance = null; }
+
+    // 로딩 중 표시 (캔버스 위에 글씨 쓰기 어려우니 비동기로 처리)
+    
+    fetch(GAS_URL, {
+        method: "POST",
+        body: JSON.stringify({
+            action: "get_sales_analysis",
+            branch: branch,
+            month: month
+        })
+    })
+    .then(r => r.json())
+    .then(d => {
+        if(d.status === 'success') {
+            renderPieCharts(d.models, d.carriers);
+        } else {
+            alert("데이터 로드 실패: " + d.message);
+        }
+    })
+    .catch(e => console.error(e));
+}
+
+function renderPieCharts(modelData, carrierData) {
+    // 1. 모델별 차트 (상위 5개 + 기타)
+    const modelCtx = document.getElementById('chartModelShare').getContext('2d');
+    
+    // 데이터 정렬 및 가공
+    const sortedModels = Object.entries(modelData).sort((a, b) => b[1] - a[1]);
+    let modelLabels = [];
+    let modelValues = [];
+    
+    // 상위 5개만 보여주고 나머지는 '기타'로 합침 (가독성 위해)
+    if (sortedModels.length > 6) {
+        modelLabels = sortedModels.slice(0, 5).map(i => i[0]);
+        modelValues = sortedModels.slice(0, 5).map(i => i[1]);
+        const otherSum = sortedModels.slice(5).reduce((acc, cur) => acc + cur[1], 0);
+        modelLabels.push("기타");
+        modelValues.push(otherSum);
+    } else {
+        modelLabels = sortedModels.map(i => i[0]);
+        modelValues = sortedModels.map(i => i[1]);
+    }
+
+    // 데이터 없음 처리
+    if (modelValues.length === 0) {
+        modelLabels = ["데이터 없음"]; modelValues = [1]; // 회색 원 하나 그림
+    }
+
+    chartModelInstance = new Chart(modelCtx, {
+        type: 'doughnut', // 도넛 모양이 더 세련됨
+        data: {
+            labels: modelLabels,
+            datasets: [{
+                data: modelValues,
+                backgroundColor: [
+                    '#4361ee', '#3a0ca3', '#7209b7', '#f72585', '#4cc9f0', '#ced4da' // 예쁜 컬러 팔레트
+                ],
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'right', labels: { boxWidth: 12, font: {size: 11} } },
+                title: { display: true, text: `총 판매량: ${modelValues.reduce((a,b)=>a+b,0)}대`, position: 'bottom' }
+            }
+        }
+    });
+
+    // 2. 통신사별 차트
+    const carrierCtx = document.getElementById('chartCarrierShare').getContext('2d');
+    const carrierLabels = Object.keys(carrierData);
+    const carrierValues = Object.values(carrierData);
+
+    // SKT, KT, LG 색상 지정
+    const carrierColors = carrierLabels.map(c => {
+        if(c.includes('SK')) return '#e60012'; // SK 레드
+        if(c.includes('KT')) return '#000000'; // KT 블랙/화이트
+        if(c.includes('LG') || c.includes('U+')) return '#ec008c'; // LG 핑크
+        return '#6c757d'; // 기타 회색
+    });
+
+    chartCarrierInstance = new Chart(carrierCtx, {
+        type: 'pie',
+        data: {
+            labels: carrierLabels,
+            datasets: [{
+                data: carrierValues,
+                backgroundColor: carrierColors,
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'right' }
+            }
+        }
+    });
+}
+
 // [script.js 수정] 3. [기간별 집계] 렌더링 (지점별 그룹화 + 소계)
 function renderPeriodStats(data) {
     const tbody = document.getElementById('sp_tbody');
