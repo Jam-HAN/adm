@@ -3273,11 +3273,8 @@ function renderCrmTable(list) {
         // 2. ★ [수정] 생년월일 마스킹 (뒤 3자리 가리기)
         // 백엔드에서 이미 6자리("020101")로 만들어 보냈음
         let displayBirth = String(item.birth || '-');
-        
-        // 주민번호 풀버전(XXXXXX-XXXXXXX)이든 6자리든 앞 6자리만 끊어서 처리
         if (displayBirth.length >= 6) {
-             const front6 = displayBirth.substring(0, 6); // 앞 6자리 추출
-             // 앞 3자리 + *** (예: 020***)
+             const front6 = displayBirth.substring(0, 6);
              displayBirth = front6.substring(0, 3) + "***";
         }
 
@@ -3300,22 +3297,19 @@ function renderCrmTable(list) {
         else if(item.crmStatus === '내방예약') statusClass = "bg-primary text-white border-0 shadow-sm";
         else if(item.crmStatus === '거절') statusClass = "bg-danger text-white border-0 shadow-sm";
         
-        // ★ [디자인 수정] 드롭다운을 '배지'처럼 보이게 커스텀
-        // rounded-pill: 양옆이 둥근 알약 모양
-        // text-center: 글자 가운데 정렬
-        // cursor: pointer: 마우스 올리면 손가락 모양
+        // ★ [수정] 이모티콘 제거 / 너비 85px로 축소 / 패딩 조절로 텍스트 정중앙 배치
         const selectHtml = `
             <div style="position: relative; display: inline-block;">
                 <select class="form-select form-select-sm fw-bold small rounded-pill text-center ${statusClass}" 
-                    style="width: 110px; font-size: 0.8rem; cursor: pointer; appearance: none; -webkit-appearance: none; background-position: right 10px center;"
+                    style="width: 85px; font-size: 0.8rem; cursor: pointer; appearance: none; -webkit-appearance: none; padding-top: 0.25rem; padding-bottom: 0.25rem;"
                     onchange="changeCrmStatus(this, '${item.branch}', '${item.phone}', '${item.openDate}')">
-                    <option value="대기" ${item.crmStatus === '대기' ? 'selected' : ''} style="background:white; color:black;">⏳ 대기</option>
-                    <option value="부재중" ${item.crmStatus === '부재중' ? 'selected' : ''} style="background:white; color:black;">📞 부재중</option>
-                    <option value="내방예약" ${item.crmStatus === '내방예약' ? 'selected' : ''} style="background:white; color:black;">📅 내방예약</option>
-                    <option value="거절" ${item.crmStatus === '거절' ? 'selected' : ''} style="background:white; color:black;">🚫 거절</option>
-                    <option value="완료" ${item.crmStatus === '완료' ? 'selected' : ''} style="background:white; color:black;">✅ 완료</option>
+                    <option value="대기" ${item.crmStatus === '대기' ? 'selected' : ''}>대기</option>
+                    <option value="부재중" ${item.crmStatus === '부재중' ? 'selected' : ''}>부재중</option>
+                    <option value="내방예약" ${item.crmStatus === '내방예약' ? 'selected' : ''}>내방예약</option>
+                    <option value="거절" ${item.crmStatus === '거절' ? 'selected' : ''}>거절</option>
+                    <option value="완료" ${item.crmStatus === '완료' ? 'selected' : ''}>완료</option>
                 </select>
-                </div>
+            </div>
         `;
 
         html += `
