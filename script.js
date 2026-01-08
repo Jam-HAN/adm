@@ -3290,24 +3290,31 @@ function renderCrmTable(list) {
                 <i class="bi bi-telephone-fill"></i>
              </a>` : '-';
 
-        // 상태 선택 박스 색상 로직
-        let statusClass = "bg-light text-secondary border-0"; // 기본 (대기)
-        if(item.crmStatus === '완료') statusClass = "bg-success text-white border-0 shadow-sm";
+        // 5. ★ [수정] 상태 선택 박스 로직
+        // "보류" 상태 추가 (하늘색 bg-info)
+        let statusClass = "bg-light text-secondary border-0"; 
+        if(item.crmStatus === '개통완료') statusClass = "bg-success text-white border-0 shadow-sm";
         else if(item.crmStatus === '부재중') statusClass = "bg-warning text-dark border-0 shadow-sm";
         else if(item.crmStatus === '내방예약') statusClass = "bg-primary text-white border-0 shadow-sm";
+        else if(item.crmStatus === '보류') statusClass = "bg-info text-dark border-0 shadow-sm"; // ★ 추가됨
         else if(item.crmStatus === '거절') statusClass = "bg-danger text-white border-0 shadow-sm";
-        
-        // ★ [수정] 이모티콘 제거 / 너비 85px로 축소 / 패딩 조절로 텍스트 정중앙 배치
+
+        // ★ [핵심] 정중앙 정렬 CSS
+        // text-align-last: center; -> 크롬/엣지 강제 중앙 정렬
+        // background-image: none !important; -> 화살표 공간 삭제
+        // padding: 0 !important; -> 여백 삭제로 정중앙 유도
         const selectHtml = `
             <div style="position: relative; display: inline-block;">
-                <select class="form-select form-select-sm fw-bold small rounded-pill text-center ${statusClass}" 
-                    style="width: 85px; font-size: 0.8rem; cursor: pointer; appearance: none; -webkit-appearance: none; padding-top: 0.25rem; padding-bottom: 0.25rem;"
+                <select class="form-select form-select-sm fw-bold small rounded-pill ${statusClass}" 
+                    style="width: 85px; font-size: 0.8rem; cursor: pointer; appearance: none; -webkit-appearance: none; 
+                           text-align: center; text-align-last: center; padding: 0.25rem 0 !important; background-image: none !important;"
                     onchange="changeCrmStatus(this, '${item.branch}', '${item.phone}', '${item.openDate}')">
                     <option value="대기" ${item.crmStatus === '대기' ? 'selected' : ''}>대기</option>
                     <option value="부재중" ${item.crmStatus === '부재중' ? 'selected' : ''}>부재중</option>
                     <option value="내방예약" ${item.crmStatus === '내방예약' ? 'selected' : ''}>내방예약</option>
+                    <option value="보류" ${item.crmStatus === '보류' ? 'selected' : ''}>보류</option>
                     <option value="거절" ${item.crmStatus === '거절' ? 'selected' : ''}>거절</option>
-                    <option value="완료" ${item.crmStatus === '완료' ? 'selected' : ''}>완료</option>
+                    <option value="개통완료" ${item.crmStatus === '개통완료' ? 'selected' : ''}>개통완료</option>
                 </select>
             </div>
         `;
@@ -3334,39 +3341,41 @@ function renderCrmTable(list) {
 
 // ★ [신규] 상태 변경 시 자동 저장 함수
 function changeCrmStatus(selectElem, branch, phone, date) {
-    const newStatus = selectElem.value;// 기본 클래스셋 (둥근 모양 + 중앙 정렬 + 포인터 + 그림자)
+    const newStatus = selectElem.value;
     
-    const baseClass = "form-select form-select-sm fw-bold small rounded-pill text-center shadow-sm border-0";
+    // 기본 스타일 (화살표 제거, 중앙 정렬 유지)
+    const baseClass = "form-select form-select-sm fw-bold small rounded-pill shadow-sm border-0";
+    selectElem.className = baseClass; 
+    
+    // 강제 중앙 정렬 스타일 주입 (JS로 클래스 변경시 style은 유지되지만 확실하게)
+    selectElem.style.textAlign = "center";
+    selectElem.style.textAlignLast = "center";
+    selectElem.style.backgroundImage = "none";
+    selectElem.style.padding = "0.25rem 0";
 
-    selectElem.className = baseClass; // 초기화
-    
-    // 상태별 색상 적용
-    if(newStatus === '완료') selectElem.classList.add('bg-success', 'text-white');
+    // 색상 변경 로직
+    if(newStatus === '개통완료') selectElem.classList.add('bg-success', 'text-white');
     else if(newStatus === '부재중') selectElem.classList.add('bg-warning', 'text-dark');
     else if(newStatus === '내방예약') selectElem.classList.add('bg-primary', 'text-white');
+    else if(newStatus === '보류') selectElem.classList.add('bg-info', 'text-dark');
     else if(newStatus === '거절') selectElem.classList.add('bg-danger', 'text-white');
-    else selectElem.classList.add('bg-light', 'text-secondary'); // 대기
+    else selectElem.classList.add('bg-light', 'text-secondary'); 
 
-    // 2. 서버 저장 요청
+    // 서버 저장
     fetch(GAS_URL, {
         method: "POST",
         body: JSON.stringify({
             action: "update_crm_status",
             branch: branch,
-            phone: phone, // 원본 전화번호 전송 (마스킹 안 된 데이터여야 함 - 위에서 item.phone 그대로 씀)
+            phone: phone,
             date: date,
             status: newStatus
         })
     })
     .then(r => r.json())
     .then(d => {
-        if(d.status !== 'success') {
-            alert("저장 실패: " + d.message);
-            // 실패 시 대기로 롤백하는 로직 추가 가능
-        } else {
-            // 성공 시 조용히 넘어가거나, 토스트 메시지 띄우기
-            console.log("상태 저장 완료");
-        }
+        if(d.status !== 'success') alert("저장 실패: " + d.message);
+        else console.log("상태 저장 완료");
     })
     .catch(e => console.error(e));
 }
