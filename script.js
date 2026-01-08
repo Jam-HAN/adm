@@ -2346,18 +2346,25 @@ function showDailyReportSection() {
 }
 
 // 2. 데이터 조회 요청
+// [script.js] 데이터 조회 요청 (헤더까지 초기화)
 function loadDailyReport() {
     const branch = document.getElementById('dr_branch').value;
     const date = document.getElementById('dr_date').value;
     
     if(!date) { alert("날짜를 선택해주세요."); return; }
 
-    // ID를 dr_tbody 하나만 찾습니다.
+    const headerRow = document.getElementById('dr_header_row'); // ★ 헤더 ID 가져오기
     const tbody = document.getElementById('dr_tbody');
     
-    // 로딩 표시 (중앙 정렬 클래스 포함)
+    // 1. 본문(tbody)에 로딩바 표시
     if(tbody) {
-        tbody.innerHTML = `<tr><td colspan="17" class="text-center align-middle py-5"><div class="spinner-border text-primary"></div><div class="mt-2 small text-muted">데이터를 불러오는 중...</div></td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="100%" class="text-center align-middle py-5"><div class="spinner-border text-primary"></div><div class="mt-2 small text-muted">데이터를 불러오는 중...</div></td></tr>`;
+    }
+
+    // 2. ★ [추가된 부분] 헤더(thead)도 싹 비우기
+    // 이 줄이 들어가면 조회 버튼 누를 때 헤더가 사라집니다.
+    if(headerRow) {
+        headerRow.innerHTML = ""; 
     }
 
     fetch(GAS_URL, {
@@ -2371,14 +2378,14 @@ function loadDailyReport() {
     .then(r => r.json())
     .then(d => {
         if(d.status === 'success') {
-            renderDailyReportTable(d.list, d.summary);
+            renderDailyReportTable(d.list, d.summary); // 여기서 헤더와 본문을 다시 그립니다.
         } else {
-            if(tbody) tbody.innerHTML = `<tr><td colspan="17" class="text-danger text-center py-4">${d.message}</td></tr>`;
+            if(tbody) tbody.innerHTML = `<tr><td colspan="100%" class="text-danger text-center py-4">${d.message}</td></tr>`;
         }
     })
     .catch(e => {
         console.error(e);
-        if(tbody) tbody.innerHTML = `<tr><td colspan="17" class="text-danger text-center py-4">통신 오류 발생</td></tr>`;
+        if(tbody) tbody.innerHTML = `<tr><td colspan="100%" class="text-danger text-center py-4">통신 오류 발생</td></tr>`;
     });
 }
 
