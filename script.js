@@ -2350,7 +2350,7 @@ function loadDailyReport() {
     if(!date) { alert("날짜를 선택해주세요."); return; }
 
     const tbody = document.getElementById('dr_tbody');
-    tbody.innerHTML = `<tr><td colspan="8" class="py-5"><div class="spinner-border text-primary"></div><div class="mt-2 small text-muted">데이터를 불러오는 중...</div></td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="17" class="py-5"><div class="spinner-border text-primary"></div><div class="mt-2 small text-muted">데이터를 불러오는 중...</div></td></tr>`;
 
     fetch(GAS_URL, {
         method: "POST",
@@ -2365,12 +2365,12 @@ function loadDailyReport() {
         if(d.status === 'success') {
             renderDailyReportTable(d.list, d.summary);
         } else {
-            tbody.innerHTML = `<tr><td colspan="8" class="text-danger py-4">${d.message}</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="17" class="text-danger py-4">${d.message}</td></tr>`;
         }
     })
     .catch(e => {
         console.error(e);
-        tbody.innerHTML = `<tr><td colspan="8" class="text-danger py-4">통신 오류 발생</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="17" class="text-danger py-4">통신 오류 발생</td></tr>`;
     });
 }
 
