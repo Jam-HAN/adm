@@ -2379,34 +2379,54 @@ function renderDailyReportTable(list, summary) {
     const tbody = document.getElementById('dr_tbody');
     const fmt = (n) => Number(n).toLocaleString();
 
-    // 요약 업데이트
-    document.getElementById('dr_sum_count').innerText = summary.count + "건";
+    // 1. 상단 요약 업데이트
+    document.getElementById('dr_sum_total').innerText = summary.total + "건";
+    // (무선 3 / 유선 1) 형식 표시
+    document.getElementById('dr_sum_detail').innerText = `(📱${summary.mobile} / 📺${summary.wired})`;
+    
     document.getElementById('dr_sum_settle').innerText = fmt(summary.settle);
+    document.getElementById('dr_sum_revenue').innerText = fmt(summary.revenue);
     document.getElementById('dr_sum_margin').innerText = fmt(summary.margin);
 
     if (list.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="8" class="text-muted py-5">해당 날짜에 내역이 없습니다.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="17" class="text-muted py-5">해당 날짜에 내역이 없습니다.</td></tr>`;
         return;
     }
 
-    // 상세 내역 그리기
+    // 2. 리스트 렌더링
     let html = "";
     list.forEach(item => {
-        let typeBadge = "bg-secondary";
-        if(item.type.includes("신규") || item.type.includes("이동") || item.type.includes("기변")) typeBadge = "bg-primary";
-        else if(item.type.includes("중고")) typeBadge = "bg-warning text-dark";
-        else if(item.type.includes("유선") || item.type.includes("인터넷")) typeBadge = "bg-success";
+        // 금액 0원은 '-'로 표시해서 가독성 높임
+        const showMoney = (val) => val === 0 ? '<span class="text-muted opacity-25">-</span>' : fmt(val);
+        
+        // 리뷰: true/false -> O/X
+        const reviewIcon = (item.review === 'true' || item.review === true) 
+            ? '<i class="bi bi-check-circle-fill text-success"></i>' 
+            : '<span class="text-muted opacity-25">-</span>';
 
         html += `
         <tr>
-            <td><span class="badge bg-light text-secondary border">${item.branch}</span></td>
-            <td><span class="badge ${typeBadge}">${item.type}</span></td>
+            <td>${item.branch}</td>
+            <td class="text-truncate" style="max-width:80px;">${item.visit}</td>
+            <td>${item.carrier}</td>
+            <td><span class="badge bg-light text-dark border">${item.type}</span></td>
             <td class="fw-bold">${item.name}</td>
-            <td class="small text-start text-truncate" style="max-width: 150px;">${item.model}</td>
-            <td class="small text-muted">${item.plan}</td>
-            <td><span class="badge bg-white text-dark border rounded-pill"><i class="bi bi-person me-1"></i>${item.manager}</span></td>
-            <td class="text-end pe-3 text-secondary">${fmt(item.settle)}</td>
-            <td class="text-end pe-3 fw-bold text-danger">${fmt(item.margin)}</td>
+            <td>${item.manager}</td>
+            
+            <td class="table-primary bg-opacity-10 fw-bold text-primary text-end">${showMoney(item.settle)}</td>
+            
+            <td class="text-end text-secondary">${showMoney(item.support)}</td>
+            <td class="text-end text-secondary">${showMoney(item.cash)}</td>
+            <td class="text-end text-secondary">${showMoney(item.payback)}</td>
+            <td class="text-end text-secondary">${showMoney(item.device)}</td>
+            <td class="text-end text-secondary">${showMoney(item.fee)}</td>
+            <td class="text-end text-secondary">${showMoney(item.used)}</td>
+            <td class="text-end text-secondary">${showMoney(item.gift)}</td>
+            
+            <td class="table-success bg-opacity-10 fw-bold text-success text-end">${showMoney(item.revenue)}</td>
+            <td class="table-danger bg-opacity-10 fw-bold text-danger text-end">${showMoney(item.margin)}</td>
+            
+            <td>${reviewIcon}</td>
         </tr>`;
     });
     tbody.innerHTML = html;
