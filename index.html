@@ -1045,7 +1045,8 @@
                         <div class="card-header bg-white border-bottom fw-bold small text-secondary">
                             <i class="bi bi-list-task me-1"></i> 판매 상세 내역
                         </div>
-                        <div class="table-responsive">
+                    
+                        <div class="table-responsive d-none d-lg-block">
                             <table class="table table-hover align-middle text-center small border mb-0" style="font-size: 0.8rem; white-space: nowrap;">
                                 <thead class="table-light">
                                     <tr>
@@ -1068,10 +1069,16 @@
                                         <th>리뷰</th>
                                     </tr>
                                 </thead>
-                                <tbody id="dr_tbody">
-                                    <tr><td colspan="17" class="text-muted py-5">날짜를 선택하고 조회하세요.</td></tr>
+                                <tbody id="dr_tbody_pc">
+                                    <tr><td colspan="17" class="text-muted py-5">조회 버튼을 눌러주세요.</td></tr>
                                 </tbody>
                             </table>
+                        </div>
+                    
+                        <div class="d-block d-lg-none bg-light p-3" id="dr_list_mobile">
+                            <div class="text-center text-muted py-5 small">
+                                데이터를 조회해주세요.
+                            </div>
                         </div>
                     </div>
             
