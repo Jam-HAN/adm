@@ -1330,14 +1330,18 @@ function closeAllMobileMenus() {
     const searchMenu = document.getElementById('search-menu-container');
     if (searchMenu) { searchMenu.classList.add('d-none'); searchMenu.classList.remove('d-flex'); }
     
-    // 3. ★ [신규 추가] 관리 메뉴 닫기
+    // 3. 관리 메뉴 닫기
     const manageMenu = document.getElementById('manage-menu-container');
     if (manageMenu) { manageMenu.classList.add('d-none'); manageMenu.classList.remove('d-flex'); }
 
-    // 4. 오버레이(배경) 숨기기
+    // 4. ★ [신규 추가] 집계 메뉴 닫기 (이게 있어야 합니다!)
+    const statsMenu = document.getElementById('stats-menu-container');
+    if (statsMenu) { statsMenu.classList.add('d-none'); statsMenu.classList.remove('d-flex'); }
+
+    // 5. 오버레이(배경) 숨기기
     if (overlay) overlay.classList.add('d-none');
     
-    // 5. 더하기 아이콘 복구
+    // 6. 더하기 아이콘 복구 (X -> +)
     const fabIcon = document.querySelector('.center-fab .bi');
     if(fabIcon) { fabIcon.classList.remove('bi-x-lg'); fabIcon.classList.add('bi-plus-lg'); }
 }
@@ -1427,6 +1431,29 @@ function toggleManageMenu() {
         menu.classList.add('d-none');
         menu.classList.remove('d-flex');
         overlay.classList.add('d-none'); // 배경 끄기
+    }
+}
+
+// ★ 집계 메뉴 토글 기능
+function toggleStatsMenu() {
+    const statsMenu = document.getElementById('stats-menu-container');
+    const overlay = document.getElementById('fab-menu-overlay');
+    
+    // 다른 메뉴들은 다 닫기 (겹침 방지)
+    document.getElementById('fab-menu-container').classList.add('d-none');
+    document.getElementById('search-menu-container').classList.add('d-none');
+    document.getElementById('manage-menu-container').classList.add('d-none');
+    
+    if (statsMenu.classList.contains('d-none')) {
+        // 열기
+        statsMenu.classList.remove('d-none');
+        statsMenu.classList.add('d-flex');
+        overlay.classList.remove('d-none'); // 배경 어둡게
+    } else {
+        // 닫기
+        statsMenu.classList.add('d-none');
+        statsMenu.classList.remove('d-flex');
+        overlay.classList.add('d-none');
     }
 }
 
