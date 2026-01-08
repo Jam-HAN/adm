@@ -3294,25 +3294,35 @@ function renderCrmTable(list) {
              </a>` : '-';
 
         // 상태 선택 박스 색상 로직
-        let statusClass = "bg-light text-dark border-secondary";
-        if(item.crmStatus === '완료') statusClass = "bg-success text-white border-success";
-        else if(item.crmStatus === '부재중') statusClass = "bg-warning text-dark border-warning";
-        else if(item.crmStatus === '내방예약') statusClass = "bg-primary text-white border-primary";
-        else if(item.crmStatus === '거절') statusClass = "bg-danger text-white border-danger";
-
-        // ★ [핵심] 상태 변경 드롭다운 (onchange 이벤트로 즉시 저장)
-        // 주의: item.phone, item.openDate 등 원본 데이터가 필요함
+        let statusClass = "bg-light text-secondary border-0"; // 기본 (대기)
+        if(item.crmStatus === '완료') statusClass = "bg-success text-white border-0 shadow-sm";
+        else if(item.crmStatus === '부재중') statusClass = "bg-warning text-dark border-0 shadow-sm";
+        else if(item.crmStatus === '내방예약') statusClass = "bg-primary text-white border-0 shadow-sm";
+        else if(item.crmStatus === '거절') statusClass = "bg-danger text-white border-0 shadow-sm";
+        
+        // ★ [디자인 수정] 드롭다운을 '배지'처럼 보이게 커스텀
+        // rounded-pill: 양옆이 둥근 알약 모양
+        // text-center: 글자 가운데 정렬
+        // cursor: pointer: 마우스 올리면 손가락 모양
         const selectHtml = `
-            <select class="form-select form-select-sm fw-bold small ${statusClass}" 
-                style="width: 100px; font-size: 0.8rem;"
-                onchange="changeCrmStatus(this, '${item.branch}', '${item.phone}', '${item.openDate}')">
-                <option value="대기" ${item.crmStatus === '대기' ? 'selected' : ''}>대기</option>
-                <option value="부재중" ${item.crmStatus === '부재중' ? 'selected' : ''}>부재중</option>
-                <option value="내방예약" ${item.crmStatus === '내방예약' ? 'selected' : ''}>내방예약</option>
-                <option value="거절" ${item.crmStatus === '거절' ? 'selected' : ''}>거절</option>
-                <option value="완료" ${item.crmStatus === '완료' ? 'selected' : ''}>완료</option>
-            </select>
+            <div style="position: relative; display: inline-block;">
+                <select class="form-select form-select-sm fw-bold small rounded-pill text-center ${statusClass}" 
+                    style="width: 110px; font-size: 0.8rem; cursor: pointer; appearance: none; -webkit-appearance: none; background-position: right 10px center;"
+                    onchange="changeCrmStatus(this, '${item.branch}', '${item.phone}', '${item.openDate}')">
+                    <option value="대기" ${item.crmStatus === '대기' ? 'selected' : ''} style="background:white; color:black;">⏳ 대기</option>
+                    <option value="부재중" ${item.crmStatus === '부재중' ? 'selected' : ''} style="background:white; color:black;">📞 부재중</option>
+                    <option value="내방예약" ${item.crmStatus === '내방예약' ? 'selected' : ''} style="background:white; color:black;">📅 내방예약</option>
+                    <option value="거절" ${item.crmStatus === '거절' ? 'selected' : ''} style="background:white; color:black;">🚫 거절</option>
+                    <option value="완료" ${item.crmStatus === '완료' ? 'selected' : ''} style="background:white; color:black;">✅ 완료</option>
+                </select>
+                </div>
         `;
+
+        // 배지 (대상)
+        let badge = "";
+        if (item.targetType === 24) badge = `<span class="badge rounded-pill bg-danger">24개월</span>`;
+        else if (item.targetType === 21) badge = `<span class="badge rounded-pill bg-warning text-dark">21개월</span>`;
+        else badge = `<span class="badge rounded-pill bg-success">18개월</span>`;
 
         html += `
         <tr>
@@ -3328,7 +3338,7 @@ function renderCrmTable(list) {
             <td class="text-primary fw-bold small">${item.model}</td>
             <td class="small">${item.plan}</td>
             <td>${callBtn}</td>
-            <td>${selectHtml}</td>
+            <td style="vertical-align: middle;">${selectHtml}</td> </tr>`;
         </tr>`;
     });
     tbody.innerHTML = html;
@@ -3336,15 +3346,18 @@ function renderCrmTable(list) {
 
 // ★ [신규] 상태 변경 시 자동 저장 함수
 function changeCrmStatus(selectElem, branch, phone, date) {
-    const newStatus = selectElem.value;
+    const newStatus = selectElem.value;// 기본 클래스셋 (둥근 모양 + 중앙 정렬 + 포인터 + 그림자)
     
-    // 1. UI 즉시 반영 (색상 변경)
-    selectElem.className = "form-select form-select-sm fw-bold small"; // 초기화
-    if(newStatus === '완료') selectElem.classList.add('bg-success', 'text-white', 'border-success');
-    else if(newStatus === '부재중') selectElem.classList.add('bg-warning', 'text-dark', 'border-warning');
-    else if(newStatus === '내방예약') selectElem.classList.add('bg-primary', 'text-white', 'border-primary');
-    else if(newStatus === '거절') selectElem.classList.add('bg-danger', 'text-white', 'border-danger');
-    else selectElem.classList.add('bg-light', 'text-dark', 'border-secondary');
+    const baseClass = "form-select form-select-sm fw-bold small rounded-pill text-center shadow-sm border-0";
+
+    selectElem.className = baseClass; // 초기화
+    
+    // 상태별 색상 적용
+    if(newStatus === '완료') selectElem.classList.add('bg-success', 'text-white');
+    else if(newStatus === '부재중') selectElem.classList.add('bg-warning', 'text-dark');
+    else if(newStatus === '내방예약') selectElem.classList.add('bg-primary', 'text-white');
+    else if(newStatus === '거절') selectElem.classList.add('bg-danger', 'text-white');
+    else selectElem.classList.add('bg-light', 'text-secondary'); // 대기
 
     // 2. 서버 저장 요청
     fetch(GAS_URL, {
