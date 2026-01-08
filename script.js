@@ -3318,12 +3318,6 @@ function renderCrmTable(list) {
                 </div>
         `;
 
-        // 배지 (대상)
-        let badge = "";
-        if (item.targetType === 24) badge = `<span class="badge rounded-pill bg-danger">24개월</span>`;
-        else if (item.targetType === 21) badge = `<span class="badge rounded-pill bg-warning text-dark">21개월</span>`;
-        else badge = `<span class="badge rounded-pill bg-success">18개월</span>`;
-
         html += `
         <tr>
             <td>${badge}</td>
