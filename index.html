@@ -884,110 +884,151 @@
             </div>
 
             <div id="section-daily-sales" class="section-view">
-                <div class="glass-card p-4">
-                    <h5 class="fw-bold mb-4 text-primary"><i class="bi bi-graph-up-arrow"></i> 일별 매출 및 추이</h5>
+            	<div class="glass-card p-4">
+            		<h5 class="fw-bold mb-4 text-primary">
+            			<i class="bi bi-graph-up-arrow"></i> 일별 매출 및 추이
+            		</h5>
             
-                    <div class="row g-2 mb-4 bg-light p-3 rounded border align-items-end">
-                        <div class="col-5">
-                            <label class="form-label-sm fw-bold text-muted">지점</label>
-                            <select id="ds_branch" class="form-select form-select-sm fw-bold text-primary">
-                                <option value="전체">전체 지점</option>
-                                <option value="장지 본점">장지 본점</option>
-                                <option value="명일 직영점">명일 직영점</option>
-                            </select>
-                        </div>
-                        <div class="col-5">
-                            <label class="form-label-sm fw-bold text-muted">조회 월</label>
-                            <input type="month" id="ds_month" class="form-control form-control-sm fw-bold">
-                        </div>
-                        <div class="col-2">
-                            <button class="btn btn-primary btn-sm w-100 fw-bold" onclick="refreshAnalysis()">조회</button>
-                        </div>
-                    </div>
-
-                    <ul class="nav nav-pills nav-fill mb-4 p-1 bg-light rounded-pill border" id="pills-tab" role="tablist">
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link active rounded-pill fw-bold small py-2" id="pills-trend-tab" data-bs-toggle="pill" data-bs-target="#pills-trend" type="button" role="tab" onclick="loadDailySales()">📈 일별 추이</button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link rounded-pill fw-bold small py-2" id="pills-analysis-tab" data-bs-toggle="pill" data-bs-target="#pills-analysis" type="button" role="tab" onclick="loadSalesAnalysis()">🥧 판매 분석</button>
-                        </li>
-                    </ul>
-                    
-                    <div class="tab-content" id="pills-tabContent">
-                        <div class="tab-pane fade show active" id="pills-trend" role="tabpanel">
+            		<div class="row g-2 mb-4 bg-light p-3 rounded border align-items-end">
+            			<div class="col-5">
+            				<label class="form-label-sm fw-bold text-muted">지점</label>
+            				<select id="ds_branch" class="form-select form-select-sm fw-bold text-primary">
+            					<option value="전체">전체 지점</option>
+            					<option value="장지 본점">장지 본점</option>
+            					<option value="명일 직영점">명일 직영점</option>
+            				</select>
+            			</div>
+            			<div class="col-5">
+            				<label class="form-label-sm fw-bold text-muted">조회 월</label>
+            				<input type="month" id="ds_month" class="form-control form-control-sm fw-bold">
+            			</div>
+            			<div class="col-2">
+            				<button class="btn btn-primary btn-sm w-100 fw-bold" onclick="refreshAnalysis()">조회</button>
+            			</div>
+            		</div>
             
-                            <div class="row g-3 mb-4">
-                                <div class="col-3">
-                                    <div class="bg-white p-3 rounded border text-center shadow-sm">
-                                        <div class="small text-muted fw-bold mb-1">총 실적</div>
-                                        <h4 class="fw-bold text-dark m-0" id="ds_total_cnt">-</h4>
-                                    </div>
-                                </div>
-                                <div class="col-3">
-                                    <div class="bg-white p-3 rounded border text-center shadow-sm">
-                                        <div class="small text-muted fw-bold mb-1">총 정산</div>
-                                        <h5 class="fw-bold text-primary m-0" id="ds_total_set">-</h5>
-                                    </div>
-                                </div>
-                                <div class="col-3">
-                                    <div class="bg-white p-3 rounded border text-center shadow-sm">
-                                        <div class="small text-muted fw-bold mb-1">총 매출</div>
-                                        <h5 class="fw-bold text-primary m-0" id="ds_total_rev">-</h5>
-                                    </div>
-                                </div>
-                                <div class="col-3">
-                                    <div class="bg-white p-3 rounded border text-center shadow-sm">
-                                        <div class="small text-muted fw-bold mb-1">총 수익</div>
-                                        <h5 class="fw-bold text-danger m-0" id="ds_total_mar">-</h5>
-                                    </div>
-                                </div>
-                            </div>
-                    
-                            <div class="card border-0 shadow-sm mb-4">
-                                <div class="card-header bg-white fw-bold small text-secondary border-bottom">
-                                    <i class="bi bi-bar-chart-line-fill me-1"></i> 일별 실적(선) vs 수익(막대)
-                                </div>
-                                <div class="card-body">
-                                    <div style="height: 300px; position: relative;">
-                                        <canvas id="dailySalesChart"></canvas>
-                                    </div>
-                                </div>
-                            </div>
-                    
-                            <div class="table-responsive">
-                                <table class="table table-hover align-middle text-center small border mb-0" style="font-size: 0.9rem;">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th>일자</th>
-                                            <th>📱무선</th>
-                                            <th>📺유선</th>
-                                            <th>합계</th>
-                                            <th>정산</th>
-                                            <th>매출</th>
-                                            <th>수익</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="ds_tbody">
-                                        <tr><td colspan="6" class="text-muted py-5">조회 버튼을 눌러주세요.</td></tr>
-                                    </tbody>
-                                </table>
-                            </div>
+            		<ul class="nav nav-pills nav-fill mb-4 p-1 bg-light rounded-pill border" id="pills-tab" role="tablist">
+            			<li class="nav-item" role="presentation">
+            				<button
+            					class="nav-link active rounded-pill fw-bold small py-2"
+            					id="pills-trend-tab"
+            					data-bs-toggle="pill"
+            					data-bs-target="#pills-trend"
+            					type="button"
+            					role="tab"
+            					onclick="loadDailySales()"
+            				>
+            					📈 일별 추이
+            				</button>
+            			</li>
+            			<li class="nav-item" role="presentation">
+            				<button
+            					class="nav-link rounded-pill fw-bold small py-2"
+            					id="pills-analysis-tab"
+            					data-bs-toggle="pill"
+            					data-bs-target="#pills-analysis"
+            					type="button"
+            					role="tab"
+            					onclick="loadSalesAnalysis()"
+            				>
+            					🥧 판매 분석
+            				</button>
+            			</li>
+            		</ul>
+            
+            		<div class="tab-content" id="pills-tabContent">
+            
+            			<!-- TAB 1: 일별 추이 -->
+            			<div class="tab-pane fade show active" id="pills-trend" role="tabpanel">
+            				<div class="row g-3 mb-4">
+            					<div class="col-3">
+            						<div class="bg-white p-3 rounded border text-center shadow-sm">
+            							<div class="small text-muted fw-bold mb-1">총 실적</div>
+            							<h4 class="fw-bold text-dark m-0" id="ds_total_cnt">-</h4>
+            						</div>
+            					</div>
+            					<div class="col-3">
+            						<div class="bg-white p-3 rounded border text-center shadow-sm">
+            							<div class="small text-muted fw-bold mb-1">총 정산</div>
+            							<h5 class="fw-bold text-primary m-0" id="ds_total_set">-</h5>
+            						</div>
+            					</div>
+            					<div class="col-3">
+            						<div class="bg-white p-3 rounded border text-center shadow-sm">
+            							<div class="small text-muted fw-bold mb-1">총 매출</div>
+            							<h5 class="fw-bold text-primary m-0" id="ds_total_rev">-</h5>
+            						</div>
+            					</div>
+            					<div class="col-3">
+            						<div class="bg-white p-3 rounded border text-center shadow-sm">
+            							<div class="small text-muted fw-bold mb-1">총 수익</div>
+            							<h5 class="fw-bold text-danger m-0" id="ds_total_mar">-</h5>
+            						</div>
+            					</div>
+            				</div>
+            
+            				<div class="card border-0 shadow-sm mb-4">
+            					<div class="card-header bg-white fw-bold small text-secondary border-bottom">
+            						<i class="bi bi-bar-chart-line-fill me-1"></i> 일별 실적(선) vs 수익(막대)
+            					</div>
+            					<div class="card-body">
+            						<div style="height: 300px; position: relative;">
+            							<canvas id="dailySalesChart"></canvas>
+            						</div>
+            					</div>
+            				</div>
+            
+            				<div class="table-responsive">
+            					<table class="table table-hover align-middle text-center small border mb-0" style="font-size: 0.9rem;">
+            						<thead class="table-light">
+            							<tr>
+            								<th>일자</th>
+            								<th>📱무선</th>
+            								<th>📺유선</th>
+            								<th>합계</th>
+            								<th>정산</th>
+            								<th>매출</th>
+            								<th>수익</th>
+            							</tr>
+            						</thead>
+            						<tbody id="ds_tbody">
+            							<tr>
+            								<td colspan="7" class="text-muted py-5">조회 버튼을 눌러주세요.</td>
+            							</tr>
+            						</tbody>
+            					</table>
+            				</div>
+            			</div>
+            
+            			<!-- TAB 2: 판매 분석 -->
+            			<div class="tab-pane fade" id="pills-analysis" role="tabpanel">
+            				<div class="card border-0 shadow-sm mb-3">
+            					<div class="card-header bg-white border-bottom fw-bold text-primary">
+            						<i class="bi bi-phone-fill me-1"></i> 모델별 판매 비중
+            					</div>
+            					<div class="card-body">
+            						<div style="height: 300px; position: relative;">
+            							<canvas id="chartModelShare"></canvas>
+            						</div>
+            					</div>
+            				</div>
+            
+            				<div class="card border-0 shadow-sm mb-3">
+            					<div class="card-header bg-white border-bottom fw-bold text-success">
+            						<i class="bi bi-broadcast me-1"></i> 거래처별 점유율
+            					</div>
+            					<div class="card-body">
+            						<div style="height: 300px; position: relative;">
+            							<canvas id="chartCarrierShare"></canvas>
+            						</div>
+            					</div>
+            				</div>
+            			</div>
+            
+            		</div><!-- /tab-content -->
+            	</div><!-- /glass-card -->
+            </div><!-- /section-daily-sales -->
 
-                            </div> <div class="tab-pane fade" id="pills-analysis" role="tabpanel">
-                                <div class="card border-0 shadow-sm mb-3">
-                                    <div class="card-header bg-white border-bottom fw-bold text-primary"><i class="bi bi-phone-fill me-1"></i> 모델별 판매 비중</div>
-                                    <div class="card-body"><div style="height: 300px; position: relative;"><canvas id="chartModelShare"></canvas></div></div>
-                                </div>
-                                <div class="card border-0 shadow-sm mb-3">
-                                    <div class="card-header bg-white border-bottom fw-bold text-success"><i class="bi bi-broadcast me-1"></i> 거래처별 점유율</div>
-                                    <div class="card-body"><div style="height: 300px; position: relative;"><canvas id="chartCarrierShare"></canvas></div></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
 
             <div id="section-daily-report" class="section-view">
                 <div class="glass-card p-4">
