@@ -3266,7 +3266,7 @@ function renderCrmTable(list) {
 
     if (list.length === 0) {
         html = `<tr><td colspan="13" class="py-5 text-muted">
-            해당 날짜 조회 결과가 없습니다.<br>
+            해당 날짜(18, 21, 24개월 전) 조회 결과가 없습니다.<br>
             <small>다른 날짜를 선택해보세요.</small>
         </td></tr>`;
         tbody.innerHTML = html;
@@ -3351,14 +3351,32 @@ function changeCrmStatus(btnId, newStatus, branch, phone, date) {
     const btn = document.getElementById(btnId);
     if (!btn) return;
 
-    // 1. UI 즉시 반영 (버튼 텍스트 및 클래스 변경)
-    const config = STATUS_CONFIG[newStatus];
+    // 1. UI 즉시 반영 (버튼 텍스트 및 색상 변경)
+    // STATUS_CONFIG가 함수 밖 전역 변수로 선언되어 있어야 합니다.
+    const config = STATUS_CONFIG[newStatus] || { class: 'bg-light text-secondary', label: newStatus };
     
-    // 기존 클래스 제거 후 기본 클래스 세팅
+    // 기존 클래스 싹 지우고 새로 세팅
     btn.className = `btn btn-sm dropdown-toggle rounded-pill fw-bold small shadow-sm w-100 ${config.class}`;
     btn.innerText = config.label;
 
-    // 2. 서버 저장 요청
+    // 2. ★ [핵심 해결] 드롭다운 강제로 닫기
+    // Bootstrap의 공식 명령어를 사용하여 해당 버튼의 드롭다운을 숨깁니다.
+    try {
+        const dropdownInstance = bootstrap.Dropdown.getOrCreateInstance(btn);
+        dropdownInstance.hide();
+    } catch(e) {
+        // 혹시라도 위 코드가 안 먹히면 원시적인 방법으로 클래스를 제거해서 닫습니다.
+        btn.classList.remove('show');
+        btn.setAttribute('aria-expanded', 'false');
+        if (btn.nextElementSibling) {
+            btn.nextElementSibling.classList.remove('show');
+        }
+    }
+    
+    // 3. 포커스 해제 (선택 후 버튼에 남아있는 테두리 잔상 제거)
+    btn.blur();
+
+    // 4. 서버 저장 요청
     fetch(GAS_URL, {
         method: "POST",
         body: JSON.stringify({
