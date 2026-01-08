@@ -2398,7 +2398,7 @@ function renderDailyReportTable(list, summary) {
     const listMobile = document.getElementById('dr_list_mobile');
     const fmt = (n) => Number(n).toLocaleString();
 
-    // 1. 상단 요약 업데이트
+    // 1. 상단 요약 업데이트 (여기는 유지 - 총계는 중요하니까요)
     document.getElementById('dr_sum_total').innerText = summary.total + "건";
     document.getElementById('dr_sum_detail').innerText = `(📱${summary.mobile} / 📺${summary.wired} / ♻️${summary.used})`;
     
@@ -2406,6 +2406,7 @@ function renderDailyReportTable(list, summary) {
     document.getElementById('dr_sum_revenue').innerText = fmt(summary.revenue);
     document.getElementById('dr_sum_margin').innerText = fmt(summary.margin);
 
+    // 데이터 없음 처리
     if (list.length === 0) {
         if(tbodyPc) tbodyPc.innerHTML = `<tr><td colspan="17" class="text-muted py-5 text-center">해당 날짜에 내역이 없습니다.</td></tr>`;
         if(listMobile) listMobile.innerHTML = `<div class="text-center text-muted py-5">내역이 없습니다.</div>`;
@@ -2415,27 +2416,41 @@ function renderDailyReportTable(list, summary) {
     let pcHtml = "";
     let mobileHtml = "";
 
+    // ★ 모바일용 리스트 헤더 (항목 설명)
+    mobileHtml += `
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white border-bottom py-2">
+            <div class="row text-center small fw-bold text-muted">
+                <div class="col-5 text-start ps-3">고객 / 모델</div>
+                <div class="col-3">구분</div>
+                <div class="col-4 text-end pe-3">수익 / 정산</div>
+            </div>
+        </div>
+        <div class="card-body p-0">
+    `;
+
     list.forEach((item) => {
         // 공통 변수
-        const showMoney = (val) => val === 0 ? '<span class="text-muted opacity-25">-</span>' : fmt(val);
+        const showMoney = (val) => val === 0 ? '-' : fmt(val);
         const reviewIcon = (item.review === 'true' || item.review === true) 
-            ? '<i class="bi bi-check-circle-fill text-success"></i>' 
-            : '<span class="text-muted opacity-25">-</span>';
+            ? '<i class="bi bi-check-circle-fill text-success small ms-1"></i>' 
+            : '';
         
-        let typeBadge = "bg-secondary";
-        if(item.type.includes("신규") || item.type.includes("이동") || item.type.includes("기변")) typeBadge = "bg-primary";
-        else if(item.type.includes("중고")) typeBadge = "bg-warning text-dark";
-        else if(item.type.includes("유선") || item.type.includes("인터넷")) typeBadge = "bg-success";
+        // 뱃지 색상
+        let typeClass = "text-secondary";
+        if(item.type.includes("신규") || item.type.includes("이동") || item.type.includes("기변")) typeClass = "text-primary";
+        else if(item.type.includes("중고")) typeClass = "text-warning";
+        else if(item.type.includes("유선") || item.type.includes("인터넷")) typeClass = "text-success";
 
         // =================================================
-        // [A] PC용 HTML (테이블) - 기존과 동일
+        // [A] PC용 HTML (기존 유지)
         // =================================================
         pcHtml += `
         <tr>
             <td>${item.branch}</td>
             <td class="text-truncate" style="max-width:80px;">${item.visit}</td>
             <td>${item.carrier}</td>
-            <td><span class="badge ${typeBadge} bg-opacity-75">${item.type}</span></td>
+            <td><span class="badge bg-light text-dark border">${item.type}</span></td>
             <td class="fw-bold">${item.name}</td>
             <td>${item.manager}</td>
             <td class="table-primary bg-opacity-10 fw-bold text-primary text-end">${showMoney(item.settle)}</td>
@@ -2452,69 +2467,40 @@ function renderDailyReportTable(list, summary) {
         </tr>`;
 
         // =================================================
-        // [B] 모바일용 HTML (오픈형 카드: 한눈에 보기)
+        // [B] 모바일용 HTML (압축 리스트 형태)
         // =================================================
+        // 한 줄 한 줄이 좁고 긴 리스트로 들어갑니다.
         mobileHtml += `
-        <div class="card border-0 shadow-sm mb-3">
-            <div class="card-body p-3">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <div class="d-flex align-items-center gap-2">
-                        <span class="badge ${typeBadge}">${item.type}</span>
-                        <span class="fw-bold text-dark fs-5">${item.name}</span>
-                        <span class="small text-muted border-start ps-2">${item.manager}</span>
+        <div class="border-bottom p-2">
+            <div class="row align-items-center g-0">
+                <div class="col-5 text-start ps-1 overflow-hidden">
+                    <div class="fw-bold text-dark text-truncate">
+                        ${item.name} <span class="small fw-normal text-muted">(${item.manager})</span>
                     </div>
-                    <span class="badge bg-light text-secondary border">${item.branch}</span>
-                </div>
-                
-                <div class="d-flex justify-content-between small text-secondary mb-3">
-                    <div><i class="bi bi-phone me-1"></i>${item.model || '-'}</div>
-                    <div>${item.carrier}</div>
-                </div>
-
-                <div class="row g-0 bg-light rounded border mb-3 text-center py-2">
-                    <div class="col-4 border-end">
-                        <div class="text-muted" style="font-size:0.7rem;">매출</div>
-                        <div class="fw-bold text-success">${fmt(item.revenue)}</div>
-                    </div>
-                    <div class="col-4 border-end">
-                        <div class="text-muted" style="font-size:0.7rem;">수익</div>
-                        <div class="fw-bold text-danger">${fmt(item.margin)}</div>
-                    </div>
-                    <div class="col-4">
-                        <div class="text-muted" style="font-size:0.7rem;">정산</div>
-                        <div class="fw-bold text-primary">${fmt(item.settle)}</div>
+                    <div class="small text-secondary text-truncate" style="font-size: 0.8rem;">
+                        ${item.model || '-'}
                     </div>
                 </div>
 
-                <div class="row row-cols-3 g-2 small text-secondary text-center" style="font-size: 0.75rem;">
-                    <div class="bg-white border rounded p-1">
-                        <div class="opacity-50" style="font-size:0.65rem">대납</div>
-                        <div class="text-dark fw-bold">${showMoney(item.support)}</div>
-                    </div>
-                    <div class="bg-white border rounded p-1">
-                        <div class="opacity-50" style="font-size:0.65rem">기기불출</div>
-                        <div class="text-dark fw-bold">${showMoney(item.device)}</div>
-                    </div>
-                    <div class="bg-white border rounded p-1">
-                        <div class="opacity-50" style="font-size:0.65rem">요금수납</div>
-                        <div class="text-dark fw-bold">${showMoney(item.fee)}</div>
-                    </div>
-                    <div class="bg-white border rounded p-1">
-                        <div class="opacity-50" style="font-size:0.65rem">캐시/페이</div>
-                        <div class="text-dark fw-bold">${fmt(item.cash + item.payback)}</div>
-                    </div>
-                    <div class="bg-white border rounded p-1">
-                        <div class="opacity-50" style="font-size:0.65rem">중고/상품</div>
-                        <div class="text-dark fw-bold">${fmt(item.used + item.gift)}</div>
-                    </div>
-                    <div class="bg-white border rounded p-1 d-flex align-items-center justify-content-center">
-                        ${item.review ? '<span class="text-success"><i class="bi bi-check-circle-fill me-1"></i>리뷰</span>' : '<span class="text-muted opacity-50">리뷰X</span>'}
-                    </div>
+                <div class="col-3 text-center">
+                    <div class="fw-bold ${typeClass}" style="font-size: 0.85rem;">${item.type}</div>
+                    <div class="badge bg-light text-secondary border" style="font-size: 0.7rem;">${item.branch.substring(0,2)}</div>
                 </div>
 
+                <div class="col-4 text-end pe-1">
+                    <div class="fw-bold text-danger" style="font-size: 0.95rem;">${fmt(item.margin)}</div>
+                    <div class="small text-primary" style="font-size: 0.8rem;">${fmt(item.settle)}</div>
+                </div>
+            </div>
+            <div class="d-flex justify-content-between mt-1 px-1" style="font-size: 0.7rem; color: #aaa;">
+                <span>${item.carrier} ${reviewIcon}</span>
+                <span>(대납: ${fmt(item.support)})</span>
             </div>
         </div>`;
     });
+
+    // 모바일 리스트 닫기
+    mobileHtml += `</div></div>`;
 
     // 렌더링
     if(tbodyPc) tbodyPc.innerHTML = pcHtml;
