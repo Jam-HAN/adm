@@ -3265,49 +3265,48 @@ function renderCrmTable(list) {
     let html = "";
 
     if (list.length === 0) {
-        html = `<tr><td colspan="12" class="py-5 text-muted">
-            해당 날짜(18, 21, 24개월 전) 조회 결과가 없습니다.<br>
+        html = `<tr><td colspan="13" class="py-5 text-muted">
+            해당 날짜 조회 결과가 없습니다.<br>
             <small>다른 날짜를 선택해보세요.</small>
         </td></tr>`;
         tbody.innerHTML = html;
         return;
     }
 
-    list.forEach((item, index) => {
-        // 1. 전화번호 마스킹 (010-1234-5678 -> 010-****-5678)
-        let displayPhone = item.phone || '-';
-        if (displayPhone.length >= 10) {
-            displayPhone = displayPhone.replace(/^(\d{2,3})-?(\d{3,4})-?(\d{4})$/, "$1-****-$3");
-        }
-
-        // 2. ★ [수정] 생년월일 마스킹 (뒤 3자리 가리기)
-        // 백엔드에서 이미 6자리("020101")로 만들어 보냈음
+    list.forEach((item, index) => { // index 포함됨 (OK)
+        
+        // 1. 전화번호 마스킹
+        let displayPhone = item.phone ? item.phone.replace(/^(\d{2,3})-?(\d{3,4})-?(\d{4})$/, "$1-****-$3") : '-';
+        
+        // 2. 생년월일 마스킹
         let displayBirth = String(item.birth || '-');
         if (displayBirth.length >= 6) {
-             const front6 = displayBirth.substring(0, 6);
-             displayBirth = front6.substring(0, 3) + "***";
+             displayBirth = displayBirth.substring(0, 3) + "***";
         }
 
         // 3. 배지 디자인
         let badge = "";
-        if (item.targetType === 24) badge = `<span class="badge bg-danger">24개월</span>`;
-        else if (item.targetType === 21) badge = `<span class="badge bg-warning text-dark">21개월</span>`;
-        else badge = `<span class="badge bg-success">18개월</span>`;
+        if (item.targetType === 24) badge = `<span class="badge rounded-pill bg-danger">24개월</span>`;
+        else if (item.targetType === 21) badge = `<span class="badge rounded-pill bg-warning text-dark">21개월</span>`;
+        else badge = `<span class="badge rounded-pill bg-success">18개월</span>`;
 
-        // 4. ★ [복구] 전화 걸기 버튼 (아이콘만 깔끔하게)
+        // 4. 통화 버튼
         const callBtn = item.phone ? 
             `<a href="tel:${item.phone}" class="btn btn-outline-success btn-sm border-0">
                 <i class="bi bi-telephone-fill"></i>
              </a>` : '-';
 
-        // 5. ★ [핵심] 드롭다운 버튼 생성
-        // 현재 상태 가져오기 (없으면 '대기')
+        // 5. 드롭다운 버튼 설정
         const currentStatus = item.crmStatus || '대기';
-        const config = STATUS_CONFIG[currentStatus] || STATUS_CONFIG['대기'];
+        // STATUS_CONFIG가 없으면 안전하게 기본값 처리
+        const config = (typeof STATUS_CONFIG !== 'undefined' && STATUS_CONFIG[currentStatus]) 
+                       ? STATUS_CONFIG[currentStatus] 
+                       : { class: 'bg-light text-secondary border-secondary', label: currentStatus };
         
-        // 고유 ID 생성 (이벤트 처리용)
         const dropdownId = `dropdown_${index}`;
+        const statusKeys = (typeof STATUS_CONFIG !== 'undefined') ? Object.keys(STATUS_CONFIG) : ['대기', '완료'];
 
+        // ★ [핵심] data-bs-dismiss="dropdown" 속성 추가 (이게 있어야 클릭 시 닫힘)
         const dropdownHtml = `
             <div class="dropdown">
                 <button class="btn btn-sm dropdown-toggle rounded-pill fw-bold small shadow-sm w-100 ${config.class}" 
@@ -3315,9 +3314,10 @@ function renderCrmTable(list) {
                         style="min-width: 85px; height: 26px; padding: 0; line-height: 24px; font-size: 0.8rem;">
                     ${config.label}
                 </button>
-                <ul class="dropdown-menu text-center" aria-labelledby="${dropdownId}" style="min-width: 85px;">
-                    ${Object.keys(STATUS_CONFIG).map(status => `
+                <ul class="dropdown-menu text-center shadow-sm border-0" aria-labelledby="${dropdownId}" style="min-width: 85px;">
+                    ${statusKeys.map(status => `
                         <li><a class="dropdown-item small fw-bold" href="#" 
+                            data-bs-dismiss="dropdown"
                             onclick="changeCrmStatus('${dropdownId}', '${status}', '${item.branch}', '${item.phone}', '${item.openDate}')">
                             ${status}
                         </a></li>
