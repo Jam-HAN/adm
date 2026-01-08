@@ -1012,21 +1012,30 @@
                     </div>
             
                     <div class="row g-3 mb-4">
-                        <div class="col-4">
+                        <div class="col-3">
                             <div class="bg-white p-3 rounded border text-center shadow-sm">
                                 <div class="small text-muted fw-bold mb-1">총 건수</div>
-                                <h4 class="fw-bold text-dark m-0" id="dr_sum_count">-</h4>
+                                <h5 class="fw-bold text-dark m-0">
+                                    <span id="dr_sum_total">-</span>
+                                    <span class="fs-6 text-secondary ms-1 fw-normal" id="dr_sum_detail">(- / -)</span>
+                                </h5>
                             </div>
                         </div>
-                        <div class="col-4">
+                        <div class="col-3">
                             <div class="bg-white p-3 rounded border text-center shadow-sm">
                                 <div class="small text-muted fw-bold mb-1">총 정산</div>
                                 <h5 class="fw-bold text-primary m-0" id="dr_sum_settle">-</h5>
                             </div>
                         </div>
-                        <div class="col-4">
+                        <div class="col-3">
                             <div class="bg-white p-3 rounded border text-center shadow-sm">
-                                <div class="small text-muted fw-bold mb-1">총 수익(마진)</div>
+                                <div class="small text-muted fw-bold mb-1">총 매출</div>
+                                <h5 class="fw-bold text-success m-0" id="dr_sum_revenue">-</h5>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="bg-white p-3 rounded border text-center shadow-sm">
+                                <div class="small text-muted fw-bold mb-1">총 수익</div>
                                 <h5 class="fw-bold text-danger m-0" id="dr_sum_margin">-</h5>
                             </div>
                         </div>
@@ -1034,24 +1043,33 @@
             
                     <div class="card border-0 shadow-sm">
                         <div class="card-header bg-white border-bottom fw-bold small text-secondary">
-                            <i class="bi bi-list-task me-1"></i> 상세 판매 내역
+                            <i class="bi bi-list-task me-1"></i> 판매 상세 내역
                         </div>
                         <div class="table-responsive">
-                            <table class="table table-hover align-middle text-center small border mb-0" style="font-size: 0.85rem; white-space: nowrap;">
+                            <table class="table table-hover align-middle text-center small border mb-0" style="font-size: 0.8rem; white-space: nowrap;">
                                 <thead class="table-light">
                                     <tr>
                                         <th>지점</th>
-                                        <th>구분</th>
+                                        <th>방문경로</th>
+                                        <th>개통처</th>
+                                        <th>유형</th>
                                         <th>고객명</th>
-                                        <th>모델명</th>
-                                        <th>요금제</th>
                                         <th>담당자</th>
-                                        <th class="text-end pe-3">정산</th>
-                                        <th class="text-end pe-3 text-danger">마진</th>
+                                        <th class="table-primary bg-opacity-10">정산</th>
+                                        <th>대납</th>
+                                        <th>캐시백</th>
+                                        <th>페이백</th>
+                                        <th>기기대</th>
+                                        <th>요금</th>
+                                        <th>중고폰</th>
+                                        <th>상품권</th>
+                                        <th class="table-success bg-opacity-10">매출</th>
+                                        <th class="table-danger bg-opacity-10 fw-bold">마진</th>
+                                        <th>리뷰</th>
                                     </tr>
                                 </thead>
                                 <tbody id="dr_tbody">
-                                    <tr><td colspan="8" class="text-muted py-5">날짜를 선택하고 조회하세요.</td></tr>
+                                    <tr><td colspan="17" class="text-muted py-5">날짜를 선택하고 조회하세요.</td></tr>
                                 </tbody>
                             </table>
                         </div>
