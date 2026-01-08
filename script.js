@@ -2392,13 +2392,13 @@ function loadDailyReport() {
     });
 }
 
-// 3. 일일 상세 보고 렌더링 (모바일: 타임라인 피드형 - 가독성 최적화)
+// 3. 일일 상세 보고 렌더링 (모바일: 블록형 그리드 - 모든 정보 포함)
 function renderDailyReportTable(list, summary) {
     const tbodyPc = document.getElementById('dr_tbody_pc');
     const listMobile = document.getElementById('dr_list_mobile');
     const fmt = (n) => Number(n).toLocaleString();
 
-    // 상단 요약 업데이트
+    // 상단 요약 (유지)
     document.getElementById('dr_sum_total').innerText = summary.total + "건";
     document.getElementById('dr_sum_detail').innerText = `(📱${summary.mobile} / ♻️${summary.used} / 📺${summary.wired})`;
     document.getElementById('dr_sum_settle').innerText = fmt(summary.settle);
@@ -2414,35 +2414,26 @@ function renderDailyReportTable(list, summary) {
     let pcHtml = "";
     let mobileHtml = "";
 
-    // ★ 모바일 헤더: 날짜/지점 같은 불필요한 정보 빼고 '돈'에 집중
-    mobileHtml += `<div class="d-flex justify-content-between px-2 mb-2 small text-muted fw-bold"><span>판매 내역</span><span>수익(마진)</span></div>`;
-
     list.forEach((item) => {
         // 공통 변수
-        const showMoney = (val) => val === 0 ? '-' : fmt(val);
+        const showMoney = (val) => val === 0 ? '<span class="text-muted opacity-25">-</span>' : fmt(val);
         const reviewIcon = (item.review === 'true' || item.review === true) 
-            ? '<i class="bi bi-check-circle-fill text-success small ms-1"></i>' : '';
+            ? '<i class="bi bi-check-circle-fill text-success small"></i>' : '<span class="text-muted opacity-25">-</span>';
         
-        let typeClass = "bg-secondary";
-        let borderClass = "border-secondary";
-        
-        if(item.type.includes("신규") || item.type.includes("이동") || item.type.includes("기변")) {
-            typeClass = "bg-primary"; borderClass = "border-primary";
-        } else if(item.type.includes("중고")) {
-            typeClass = "bg-warning text-dark"; borderClass = "border-warning";
-        } else if(item.type.includes("유선")) {
-            typeClass = "bg-success"; borderClass = "border-success";
-        }
+        let typeBadge = "bg-secondary";
+        if(item.type.includes("신규") || item.type.includes("이동") || item.type.includes("기변")) typeBadge = "bg-primary";
+        else if(item.type.includes("중고")) typeBadge = "bg-warning text-dark";
+        else if(item.type.includes("유선")) typeBadge = "bg-success";
 
         // =================================================
-        // [A] PC용 HTML (유지)
+        // [A] PC용 HTML (기존 유지)
         // =================================================
         pcHtml += `
         <tr>
             <td>${item.branch}</td>
             <td class="text-truncate" style="max-width:80px;">${item.visit}</td>
             <td>${item.carrier}</td>
-            <td><span class="badge bg-light text-dark border">${item.type}</span></td>
+            <td><span class="badge ${typeBadge} bg-opacity-75">${item.type}</span></td>
             <td class="fw-bold">${item.name}</td>
             <td>${item.manager}</td>
             <td class="table-primary bg-opacity-10 fw-bold text-primary text-end">${showMoney(item.settle)}</td>
@@ -2459,37 +2450,72 @@ function renderDailyReportTable(list, summary) {
         </tr>`;
 
         // =================================================
-        // [B] 모바일용 HTML (피드형 디자인)
+        // [B] 모바일용 HTML (블록형 그리드: PC 정보 100% 반영)
         // =================================================
         mobileHtml += `
-        <div class="card shadow-sm mb-2 border-0">
-            <div class="card-body p-3 d-flex justify-content-between align-items-center">
-                
-                <div class="d-flex align-items-center" style="width: 65%;">
-                    <div class="${typeClass} rounded-pill me-3" style="width: 4px; height: 40px;"></div>
-                    
-                    <div class="overflow-hidden">
-                        <div class="d-flex align-items-center mb-1">
-                            <span class="badge ${typeClass} me-2" style="font-size:0.7rem">${item.type}</span>
-                            <span class="fw-bold text-dark text-truncate">${item.name}</span>
-                        </div>
-                        <div class="text-secondary small text-truncate" style="font-size: 0.85rem;">
-                            ${item.model || '모델미지정'}
-                            <span class="text-muted ms-1" style="font-size:0.75rem">(${item.manager})</span>
-                        </div>
-                        <div class="text-muted" style="font-size: 0.7rem;">
-                           ${item.branch} · ${item.carrier}
-                           ${item.support > 0 ? `<span class="text-danger ms-1">대납 ${fmt(item.support)}</span>` : ''}
-                        </div>
+        <div class="card shadow-sm mb-3 border border-opacity-25">
+            <div class="card-header bg-white border-bottom py-2">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge ${typeBadge}">${item.type}</span>
+                        <span class="fw-bold text-dark">${item.name}</span>
+                        <span class="small text-secondary">(${item.manager})</span>
+                    </div>
+                    <div class="small fw-bold text-muted">${item.branch}</div>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mt-1 small text-secondary">
+                    <div>${item.model || '-'} · ${item.carrier}</div>
+                    <div>${item.visit}</div>
+                </div>
+            </div>
+
+            <div class="card-body p-0">
+                <div class="row g-0 text-center border-bottom">
+                    <div class="col-4 p-2 border-end bg-primary bg-opacity-10">
+                        <div class="text-primary opacity-75" style="font-size:0.7rem">정산</div>
+                        <div class="fw-bold text-primary">${fmt(item.settle)}</div>
+                    </div>
+                    <div class="col-4 p-2 border-end bg-success bg-opacity-10">
+                        <div class="text-success opacity-75" style="font-size:0.7rem">매출</div>
+                        <div class="fw-bold text-success">${fmt(item.revenue)}</div>
+                    </div>
+                    <div class="col-4 p-2 bg-danger bg-opacity-10">
+                        <div class="text-danger opacity-75" style="font-size:0.7rem">수익(마진)</div>
+                        <div class="fw-bold text-danger fs-6">${fmt(item.margin)}</div>
                     </div>
                 </div>
 
-                <div class="text-end" style="width: 35%;">
-                    <div class="fw-bold text-danger fs-5">${fmt(item.margin)}</div>
-                    <div class="text-muted small" style="font-size: 0.75rem;">매출 ${fmt(item.revenue)}</div>
-                    <div class="text-primary small" style="font-size: 0.75rem;">정산 ${fmt(item.settle)}</div>
+                <div class="row row-cols-3 g-0 small text-center text-secondary">
+                    <div class="col p-2 border-end border-bottom">
+                        <div class="opacity-50" style="font-size:0.65rem">대납</div>
+                        <div class="fw-bold text-dark">${showMoney(item.support)}</div>
+                    </div>
+                    <div class="col p-2 border-end border-bottom">
+                        <div class="opacity-50" style="font-size:0.65rem">캐시백</div>
+                        <div class="fw-bold text-dark">${showMoney(item.cash)}</div>
+                    </div>
+                    <div class="col p-2 border-bottom">
+                        <div class="opacity-50" style="font-size:0.65rem">페이백</div>
+                        <div class="fw-bold text-dark">${showMoney(item.payback)}</div>
+                    </div>
+                    
+                    <div class="col p-2 border-end">
+                        <div class="opacity-50" style="font-size:0.65rem">기기불출</div>
+                        <div class="fw-bold text-dark">${showMoney(item.device)}</div>
+                    </div>
+                    <div class="col p-2 border-end">
+                        <div class="opacity-50" style="font-size:0.65rem">요금수납</div>
+                        <div class="fw-bold text-dark">${showMoney(item.fee)}</div>
+                    </div>
+                    <div class="col p-2">
+                        <div class="opacity-50" style="font-size:0.65rem">중고/상품</div>
+                        <div class="fw-bold text-dark">${fmt(item.used + item.gift)}</div>
+                    </div>
                 </div>
-
+                
+                <div class="bg-light p-1 text-end small pe-2 border-top">
+                   <span class="me-2" style="font-size:0.7rem; color:#aaa;">리뷰: ${reviewIcon}</span>
+                </div>
             </div>
         </div>`;
     });
