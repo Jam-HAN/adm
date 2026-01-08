@@ -2352,12 +2352,18 @@ function loadDailyReport() {
     
     if(!date) { alert("날짜를 선택해주세요."); return; }
 
-    // ID를 dr_tbody 하나만 찾습니다.
-    const tbody = document.getElementById('dr_tbody');
-    
-    // 로딩 표시 (중앙 정렬 클래스 포함)
-    if(tbody) {
-        tbody.innerHTML = `<tr><td colspan="17" class="text-center align-middle py-5"><div class="spinner-border text-primary"></div><div class="mt-2 small text-muted">데이터를 불러오는 중...</div></td></tr>`;
+    // ★ [수정] 변경된 ID 2개를 모두 가져옵니다.
+    const tbodyPc = document.getElementById('dr_tbody_pc');
+    const listMobile = document.getElementById('dr_list_mobile');
+
+    // 1. PC용 로딩바 표시
+    if (tbodyPc) {
+        tbodyPc.innerHTML = `<tr><td colspan="17" class="text-center align-middle py-5"><div class="spinner-border text-primary"></div><div class="mt-2 small text-muted">데이터를 불러오는 중...</div></td></tr>`;
+    }
+
+    // 2. 모바일용 로딩바 표시
+    if (listMobile) {
+        listMobile.innerHTML = `<div class="text-center py-5"><div class="spinner-border text-primary"></div><div class="mt-2 small text-muted">조회 중...</div></div>`;
     }
 
     fetch(GAS_URL, {
@@ -2373,47 +2379,58 @@ function loadDailyReport() {
         if(d.status === 'success') {
             renderDailyReportTable(d.list, d.summary);
         } else {
-            if(tbody) tbody.innerHTML = `<tr><td colspan="17" class="text-danger text-center py-4">${d.message}</td></tr>`;
+            // 에러 메시지 표시
+            if(tbodyPc) tbodyPc.innerHTML = `<tr><td colspan="17" class="text-danger text-center py-4">${d.message}</td></tr>`;
+            if(listMobile) listMobile.innerHTML = `<div class="text-center text-danger py-4">${d.message}</div>`;
         }
     })
     .catch(e => {
         console.error(e);
-        if(tbody) tbody.innerHTML = `<tr><td colspan="17" class="text-danger text-center py-4">통신 오류 발생</td></tr>`;
+        const errMsg = "통신 오류 발생";
+        if(tbodyPc) tbodyPc.innerHTML = `<tr><td colspan="17" class="text-danger text-center py-4">${errMsg}</td></tr>`;
+        if(listMobile) listMobile.innerHTML = `<div class="text-center text-danger py-4">${errMsg}</div>`;
     });
 }
 
-// 3. 일일 상세 보고 렌더링 (단일 테이블 방식)
+// 3. 일일 상세 보고 렌더링 (모바일: 한눈에 보이는 오픈형 카드)
 function renderDailyReportTable(list, summary) {
-    const tbody = document.getElementById('dr_tbody');
+    const tbodyPc = document.getElementById('dr_tbody_pc');
+    const listMobile = document.getElementById('dr_list_mobile');
     const fmt = (n) => Number(n).toLocaleString();
 
-    // 상단 요약 업데이트
+    // 1. 상단 요약 업데이트
     document.getElementById('dr_sum_total').innerText = summary.total + "건";
-    // 모바일에서 줄바꿈이 일어날 수 있으므로 폰트 크기 조정
-    document.getElementById('dr_sum_detail').innerText = `(📱${summary.mobile} / ♻️${summary.used} / 📺${summary.wired})`;
+    document.getElementById('dr_sum_detail').innerText = `(📱${summary.mobile} / 📺${summary.wired} / ♻️${summary.used})`;
     
     document.getElementById('dr_sum_settle').innerText = fmt(summary.settle);
     document.getElementById('dr_sum_revenue').innerText = fmt(summary.revenue);
     document.getElementById('dr_sum_margin').innerText = fmt(summary.margin);
 
     if (list.length === 0) {
-        if(tbody) tbody.innerHTML = `<tr><td colspan="17" class="text-muted py-5 text-center">해당 날짜에 내역이 없습니다.</td></tr>`;
+        if(tbodyPc) tbodyPc.innerHTML = `<tr><td colspan="17" class="text-muted py-5 text-center">해당 날짜에 내역이 없습니다.</td></tr>`;
+        if(listMobile) listMobile.innerHTML = `<div class="text-center text-muted py-5">내역이 없습니다.</div>`;
         return;
     }
 
-    let html = "";
-    list.forEach(item => {
+    let pcHtml = "";
+    let mobileHtml = "";
+
+    list.forEach((item) => {
+        // 공통 변수
         const showMoney = (val) => val === 0 ? '<span class="text-muted opacity-25">-</span>' : fmt(val);
         const reviewIcon = (item.review === 'true' || item.review === true) 
             ? '<i class="bi bi-check-circle-fill text-success"></i>' 
             : '<span class="text-muted opacity-25">-</span>';
-
+        
         let typeBadge = "bg-secondary";
         if(item.type.includes("신규") || item.type.includes("이동") || item.type.includes("기변")) typeBadge = "bg-primary";
         else if(item.type.includes("중고")) typeBadge = "bg-warning text-dark";
         else if(item.type.includes("유선") || item.type.includes("인터넷")) typeBadge = "bg-success";
 
-        html += `
+        // =================================================
+        // [A] PC용 HTML (테이블) - 기존과 동일
+        // =================================================
+        pcHtml += `
         <tr>
             <td>${item.branch}</td>
             <td class="text-truncate" style="max-width:80px;">${item.visit}</td>
@@ -2421,9 +2438,7 @@ function renderDailyReportTable(list, summary) {
             <td><span class="badge ${typeBadge} bg-opacity-75">${item.type}</span></td>
             <td class="fw-bold">${item.name}</td>
             <td>${item.manager}</td>
-            
             <td class="table-primary bg-opacity-10 fw-bold text-primary text-end">${showMoney(item.settle)}</td>
-            
             <td class="text-end text-secondary">${showMoney(item.support)}</td>
             <td class="text-end text-secondary">${showMoney(item.cash)}</td>
             <td class="text-end text-secondary">${showMoney(item.payback)}</td>
@@ -2431,15 +2446,79 @@ function renderDailyReportTable(list, summary) {
             <td class="text-end text-secondary">${showMoney(item.fee)}</td>
             <td class="text-end text-secondary">${showMoney(item.used)}</td>
             <td class="text-end text-secondary">${showMoney(item.gift)}</td>
-            
             <td class="table-success bg-opacity-10 fw-bold text-success text-end">${showMoney(item.revenue)}</td>
             <td class="table-danger bg-opacity-10 fw-bold text-danger text-end">${showMoney(item.margin)}</td>
-            
             <td>${reviewIcon}</td>
         </tr>`;
+
+        // =================================================
+        // [B] 모바일용 HTML (오픈형 카드: 한눈에 보기)
+        // =================================================
+        mobileHtml += `
+        <div class="card border-0 shadow-sm mb-3">
+            <div class="card-body p-3">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge ${typeBadge}">${item.type}</span>
+                        <span class="fw-bold text-dark fs-5">${item.name}</span>
+                        <span class="small text-muted border-start ps-2">${item.manager}</span>
+                    </div>
+                    <span class="badge bg-light text-secondary border">${item.branch}</span>
+                </div>
+                
+                <div class="d-flex justify-content-between small text-secondary mb-3">
+                    <div><i class="bi bi-phone me-1"></i>${item.model || '-'}</div>
+                    <div>${item.carrier}</div>
+                </div>
+
+                <div class="row g-0 bg-light rounded border mb-3 text-center py-2">
+                    <div class="col-4 border-end">
+                        <div class="text-muted" style="font-size:0.7rem;">매출</div>
+                        <div class="fw-bold text-success">${fmt(item.revenue)}</div>
+                    </div>
+                    <div class="col-4 border-end">
+                        <div class="text-muted" style="font-size:0.7rem;">수익</div>
+                        <div class="fw-bold text-danger">${fmt(item.margin)}</div>
+                    </div>
+                    <div class="col-4">
+                        <div class="text-muted" style="font-size:0.7rem;">정산</div>
+                        <div class="fw-bold text-primary">${fmt(item.settle)}</div>
+                    </div>
+                </div>
+
+                <div class="row row-cols-3 g-2 small text-secondary text-center" style="font-size: 0.75rem;">
+                    <div class="bg-white border rounded p-1">
+                        <div class="opacity-50" style="font-size:0.65rem">대납</div>
+                        <div class="text-dark fw-bold">${showMoney(item.support)}</div>
+                    </div>
+                    <div class="bg-white border rounded p-1">
+                        <div class="opacity-50" style="font-size:0.65rem">기기불출</div>
+                        <div class="text-dark fw-bold">${showMoney(item.device)}</div>
+                    </div>
+                    <div class="bg-white border rounded p-1">
+                        <div class="opacity-50" style="font-size:0.65rem">요금수납</div>
+                        <div class="text-dark fw-bold">${showMoney(item.fee)}</div>
+                    </div>
+                    <div class="bg-white border rounded p-1">
+                        <div class="opacity-50" style="font-size:0.65rem">캐시/페이</div>
+                        <div class="text-dark fw-bold">${fmt(item.cash + item.payback)}</div>
+                    </div>
+                    <div class="bg-white border rounded p-1">
+                        <div class="opacity-50" style="font-size:0.65rem">중고/상품</div>
+                        <div class="text-dark fw-bold">${fmt(item.used + item.gift)}</div>
+                    </div>
+                    <div class="bg-white border rounded p-1 d-flex align-items-center justify-content-center">
+                        ${item.review ? '<span class="text-success"><i class="bi bi-check-circle-fill me-1"></i>리뷰</span>' : '<span class="text-muted opacity-50">리뷰X</span>'}
+                    </div>
+                </div>
+
+            </div>
+        </div>`;
     });
 
-    if(tbody) tbody.innerHTML = html;
+    // 렌더링
+    if(tbodyPc) tbodyPc.innerHTML = pcHtml;
+    if(listMobile) listMobile.innerHTML = mobileHtml;
 }
 
 // ==========================================
