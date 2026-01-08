@@ -2382,7 +2382,8 @@ function renderDailyReportTable(list, summary) {
     // 1. 상단 요약 업데이트
     document.getElementById('dr_sum_total').innerText = summary.total + "건";
     // (무선 3 / 유선 1) 형식 표시
-    document.getElementById('dr_sum_detail').innerText = `(📱${summary.mobile} / 📺${summary.wired})`;
+    document.getElementById('dr_sum_detail').innerText = 
+        `(📱${summary.mobile} / ♻️${summary.used} / 📺${summary.wired})`;
     
     document.getElementById('dr_sum_settle').innerText = fmt(summary.settle);
     document.getElementById('dr_sum_revenue').innerText = fmt(summary.revenue);
@@ -2394,12 +2395,9 @@ function renderDailyReportTable(list, summary) {
     }
 
     // 2. 리스트 렌더링
-    let html = "";
+let html = "";
     list.forEach(item => {
-        // 금액 0원은 '-'로 표시해서 가독성 높임
         const showMoney = (val) => val === 0 ? '<span class="text-muted opacity-25">-</span>' : fmt(val);
-        
-        // 리뷰: true/false -> O/X
         const reviewIcon = (item.review === 'true' || item.review === true) 
             ? '<i class="bi bi-check-circle-fill text-success"></i>' 
             : '<span class="text-muted opacity-25">-</span>';
