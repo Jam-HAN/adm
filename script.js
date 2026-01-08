@@ -3273,7 +3273,7 @@ function renderCrmTable(list) {
         return;
     }
 
-    list.forEach(item => {
+    list.forEach((item, index) => {
         // 1. 전화번호 마스킹 (010-1234-5678 -> 010-****-5678)
         let displayPhone = item.phone || '-';
         if (displayPhone.length >= 10) {
