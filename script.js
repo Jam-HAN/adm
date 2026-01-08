@@ -2578,82 +2578,159 @@ function loadSalesAnalysis() {
     .catch(e => console.error(e));
 }
 
+// [script.js] 파이 차트 렌더링 함수 (색상 자동화 + 퍼센트 표시 + 기타 분류 완화)
 function renderPieCharts(modelData, carrierData) {
-    // 1. 모델별 차트 (상위 5개 + 기타)
+    // 🎨 예쁜 색상 팔레트 (20가지 색상 준비)
+    const palette = [
+        '#4361ee', '#3a0ca3', '#7209b7', '#f72585', '#4cc9f0', 
+        '#f94144', '#f3722c', '#f8961e', '#f9844a', '#90be6d', 
+        '#43aa8b', '#577590', '#277da1', '#6d597a', '#b56576',
+        '#e56b6f', '#eaac8b', '#0081a7', '#00afb9', '#fdfcdc'
+    ];
+
+    // -----------------------------------------------------------
+    // 1. 모델별 차트 (도넛)
+    // -----------------------------------------------------------
     const modelCtx = document.getElementById('chartModelShare').getContext('2d');
     
-    // 데이터 정렬 및 가공
+    // 데이터 정렬 (판매량 많은 순)
     const sortedModels = Object.entries(modelData).sort((a, b) => b[1] - a[1]);
-    let modelLabels = [];
-    let modelValues = [];
     
-    // 상위 5개만 보여주고 나머지는 '기타'로 합침 (가독성 위해)
-    if (sortedModels.length > 6) {
-        modelLabels = sortedModels.slice(0, 5).map(i => i[0]);
-        modelValues = sortedModels.slice(0, 5).map(i => i[1]);
-        const otherSum = sortedModels.slice(5).reduce((acc, cur) => acc + cur[1], 0);
-        modelLabels.push("기타");
-        modelValues.push(otherSum);
+    let mLabels = [], mValues = [];
+    let mColors = [];
+
+    // ★ [수정] 상위 15개까지 보여줌 (기존 5개 -> 15개로 확장하여 '기타' 줄임)
+    const LIMIT = 15; 
+
+    // 총합 계산 (퍼센트 구하기용)
+    const totalModelCount = sortedModels.reduce((acc, cur) => acc + cur[1], 0);
+
+    if (sortedModels.length > LIMIT) {
+        // 상위 N개
+        for(let i=0; i<LIMIT; i++) {
+            const name = sortedModels[i][0];
+            const count = sortedModels[i][1];
+            const pct = ((count / totalModelCount) * 100).toFixed(1); // 소수점 1자리
+            
+            mLabels.push(`${name} (${pct}%)`); // ★ 라벨에 % 추가
+            mValues.push(count);
+            mColors.push(palette[i % palette.length]); // 색상 순환
+        }
+        // 나머지 기타 처리
+        const otherSum = sortedModels.slice(LIMIT).reduce((acc, cur) => acc + cur[1], 0);
+        const otherPct = ((otherSum / totalModelCount) * 100).toFixed(1);
+        mLabels.push(`기타 (${otherPct}%)`);
+        mValues.push(otherSum);
+        mColors.push('#ced4da'); // 기타는 회색
     } else {
-        modelLabels = sortedModels.map(i => i[0]);
-        modelValues = sortedModels.map(i => i[1]);
+        // 개수가 적으면 다 보여줌
+        sortedModels.forEach((item, index) => {
+            const name = item[0];
+            const count = item[1];
+            const pct = ((count / totalModelCount) * 100).toFixed(1);
+            
+            mLabels.push(`${name} (${pct}%)`);
+            mValues.push(count);
+            mColors.push(palette[index % palette.length]);
+        });
     }
 
-    // 데이터 없음 처리
-    if (modelValues.length === 0) {
-        modelLabels = ["데이터 없음"]; modelValues = [1]; // 회색 원 하나 그림
-    }
+    // 데이터 없음 예외처리
+    if (mValues.length === 0) { mLabels=["데이터 없음"]; mValues=[1]; mColors=['#e9ecef']; }
 
     chartModelInstance = new Chart(modelCtx, {
-        type: 'doughnut', // 도넛 모양이 더 세련됨
+        type: 'doughnut',
         data: {
-            labels: modelLabels,
+            labels: mLabels,
             datasets: [{
-                data: modelValues,
-                backgroundColor: [
-                    '#4361ee', '#3a0ca3', '#7209b7', '#f72585', '#4cc9f0', '#ced4da' // 예쁜 컬러 팔레트
-                ],
-                borderWidth: 2
+                data: mValues,
+                backgroundColor: mColors,
+                borderWidth: 2,
+                borderColor: '#ffffff'
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                legend: { position: 'right', labels: { boxWidth: 12, font: {size: 11} } },
-                title: { display: true, text: `총 판매량: ${modelValues.reduce((a,b)=>a+b,0)}대`, position: 'bottom' }
+                legend: { 
+                    position: 'right', 
+                    labels: { 
+                        boxWidth: 12, 
+                        font: { size: 11 },
+                        usePointStyle: true // 동그라미 아이콘
+                    } 
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            // 툴팁에는 '15대' 처럼 실제 개수 표시
+                            let label = context.label.split(' (')[0]; 
+                            let value = context.raw;
+                            return `${label}: ${value}대`;
+                        }
+                    }
+                }
             }
         }
     });
 
-    // 2. 통신사별 차트
+    // -----------------------------------------------------------
+    // 2. 통신사(개통처)별 차트 (파이)
+    // -----------------------------------------------------------
     const carrierCtx = document.getElementById('chartCarrierShare').getContext('2d');
-    const carrierLabels = Object.keys(carrierData);
-    const carrierValues = Object.values(carrierData);
+    
+    // 개통처도 많은 순으로 정렬
+    const sortedCarriers = Object.entries(carrierData).sort((a, b) => b[1] - a[1]);
+    
+    let cLabels = [], cValues = [];
+    let cColors = [];
+    const totalCarrierCount = sortedCarriers.reduce((acc, cur) => acc + cur[1], 0);
 
-    // SKT, KT, LG 색상 지정
-    const carrierColors = carrierLabels.map(c => {
-        if(c.includes('SK')) return '#e60012'; // SK 레드
-        if(c.includes('KT')) return '#000000'; // KT 블랙/화이트
-        if(c.includes('LG') || c.includes('U+')) return '#ec008c'; // LG 핑크
-        return '#6c757d'; // 기타 회색
+    sortedCarriers.forEach((item, index) => {
+        const name = item[0];
+        const count = item[1];
+        const pct = ((count / totalCarrierCount) * 100).toFixed(1);
+
+        cLabels.push(`${name} (${pct}%)`); // ★ 라벨에 % 추가
+        cValues.push(count);
+        cColors.push(palette[index % palette.length]); // ★ 자동 색상 할당 (회색 탈출!)
     });
+
+    if (cValues.length === 0) { cLabels=["데이터 없음"]; cValues=[1]; cColors=['#e9ecef']; }
 
     chartCarrierInstance = new Chart(carrierCtx, {
         type: 'pie',
         data: {
-            labels: carrierLabels,
+            labels: cLabels,
             datasets: [{
-                data: carrierValues,
-                backgroundColor: carrierColors,
-                borderWidth: 1
+                data: cValues,
+                backgroundColor: cColors,
+                borderWidth: 1,
+                borderColor: '#ffffff'
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                legend: { position: 'right' }
+                legend: { 
+                    position: 'right',
+                    labels: { 
+                        boxWidth: 12, 
+                        font: { size: 11 },
+                        usePointStyle: true 
+                    } 
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.label.split(' (')[0];
+                            let value = context.raw;
+                            return `${label}: ${value}건`;
+                        }
+                    }
+                }
             }
         }
     });
