@@ -2352,8 +2352,19 @@ function loadDailyReport() {
     
     if(!date) { alert("날짜를 선택해주세요."); return; }
 
-    const tbody = document.getElementById('dr_tbody');
-    tbody.innerHTML = `<tr><td colspan="17" class="text-center align-middle py-5"><div class="spinner-border text-primary"></div><div class="mt-2 small text-muted">데이터를 불러오는 중...</div></td></tr>`;
+    // ★ [수정] 변경된 ID 2개를 모두 가져옵니다.
+    const tbodyPc = document.getElementById('dr_tbody_pc');
+    const listMobile = document.getElementById('dr_list_mobile');
+
+    // 1. PC용 로딩바 표시
+    if (tbodyPc) {
+        tbodyPc.innerHTML = `<tr><td colspan="17" class="text-center align-middle py-5"><div class="spinner-border text-primary"></div><div class="mt-2 small text-muted">데이터를 불러오는 중...</div></td></tr>`;
+    }
+
+    // 2. 모바일용 로딩바 표시
+    if (listMobile) {
+        listMobile.innerHTML = `<div class="text-center py-5"><div class="spinner-border text-primary"></div><div class="mt-2 small text-muted">조회 중...</div></div>`;
+    }
 
     fetch(GAS_URL, {
         method: "POST",
@@ -2368,12 +2379,16 @@ function loadDailyReport() {
         if(d.status === 'success') {
             renderDailyReportTable(d.list, d.summary);
         } else {
-            tbody.innerHTML = `<tr><td colspan="17" class="text-danger py-4">${d.message}</td></tr>`;
+            // 에러 메시지 표시
+            if(tbodyPc) tbodyPc.innerHTML = `<tr><td colspan="17" class="text-danger text-center py-4">${d.message}</td></tr>`;
+            if(listMobile) listMobile.innerHTML = `<div class="text-center text-danger py-4">${d.message}</div>`;
         }
     })
     .catch(e => {
         console.error(e);
-        tbody.innerHTML = `<tr><td colspan="17" class="text-danger py-4">통신 오류 발생</td></tr>`;
+        const errMsg = "통신 오류 발생";
+        if(tbodyPc) tbodyPc.innerHTML = `<tr><td colspan="17" class="text-danger text-center py-4">${errMsg}</td></tr>`;
+        if(listMobile) listMobile.innerHTML = `<div class="text-center text-danger py-4">${errMsg}</div>`;
     });
 }
 
