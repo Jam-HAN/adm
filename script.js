@@ -2400,7 +2400,7 @@ function renderDailyReportTable(list, summary) {
 
     // 1. 상단 요약 업데이트
     document.getElementById('dr_sum_total').innerText = summary.total + "건";
-    document.getElementById('dr_sum_detail').innerText = `(📱${summary.mobile} / ♻️${summary.used} / 📺${summary.wired})`;
+    document.getElementById('dr_sum_detail').innerText = `(📱${summary.mobile} / 📺${summary.wired} / ♻️${summary.used})`;
     
     document.getElementById('dr_sum_settle').innerText = fmt(summary.settle);
     document.getElementById('dr_sum_revenue').innerText = fmt(summary.revenue);
