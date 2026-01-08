@@ -3218,7 +3218,7 @@ function loadExpiryList() {
     // 로딩 표시
     document.getElementById('crm_tbody').innerHTML = `
         <tr style="height: 300px;">
-            <td colspan="12" class="align-middle text-center">
+            <td colspan="13" class="align-middle text-center">
                 <div class="spinner-border text-success" role="status"></div>
                 <div class="mt-2 small text-muted">
                     기준일: ${dateVal}<br>
