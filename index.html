@@ -104,6 +104,7 @@
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">💰 정산 관리</a>
                             <ul class="dropdown-menu shadow-sm border-0">
+                                <li id="menu_daily_report"><a class="dropdown-item" href="#" onclick="showDailyReportSection()">📈 일일 보고</a></li>
                                 <li id="menu_daily_sales"><a class="dropdown-item" href="#" onclick="showDailySalesSection()">📈 일별 집계</a></li>
                                 <li id="menu_period_item"><a class="dropdown-item" href="#" onclick="showSection('section-settlement-period')">📅 기간별 집계</a></li>
                                 <li><a class="dropdown-item" href="#" onclick="showSection('section-settlement-staff')">👥 직원별 집계</a></li>
@@ -985,6 +986,77 @@
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            <div id="section-daily-report" class="section-view">
+                <div class="glass-card p-4">
+                    <h5 class="fw-bold mb-4 text-primary"><i class="bi bi-file-earmark-spreadsheet-fill"></i> 일일 상세 보고</h5>
+            
+                    <div class="row g-2 mb-4 bg-light p-3 rounded border align-items-end">
+                        <div class="col-5">
+                            <label class="form-label-sm fw-bold text-muted">지점</label>
+                            <select id="dr_branch" class="form-select form-select-sm fw-bold text-primary">
+                                <option value="전체">전체 지점</option>
+                                <option value="장지 본점">장지 본점</option>
+                                <option value="명일 직영점">명일 직영점</option>
+                            </select>
+                        </div>
+                        <div class="col-5">
+                            <label class="form-label-sm fw-bold text-muted">조회 일자</label>
+                            <input type="date" id="dr_date" class="form-control form-control-sm fw-bold">
+                        </div>
+                        <div class="col-2">
+                            <button class="btn btn-primary btn-sm w-100 fw-bold" onclick="loadDailyReport()">조회</button>
+                        </div>
+                    </div>
+            
+                    <div class="row g-3 mb-4">
+                        <div class="col-4">
+                            <div class="bg-white p-3 rounded border text-center shadow-sm">
+                                <div class="small text-muted fw-bold mb-1">총 건수</div>
+                                <h4 class="fw-bold text-dark m-0" id="dr_sum_count">-</h4>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="bg-white p-3 rounded border text-center shadow-sm">
+                                <div class="small text-muted fw-bold mb-1">총 정산</div>
+                                <h5 class="fw-bold text-primary m-0" id="dr_sum_settle">-</h5>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="bg-white p-3 rounded border text-center shadow-sm">
+                                <div class="small text-muted fw-bold mb-1">총 수익(마진)</div>
+                                <h5 class="fw-bold text-danger m-0" id="dr_sum_margin">-</h5>
+                            </div>
+                        </div>
+                    </div>
+            
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-white border-bottom fw-bold small text-secondary">
+                            <i class="bi bi-list-task me-1"></i> 상세 판매 내역
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle text-center small border mb-0" style="font-size: 0.85rem; white-space: nowrap;">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>지점</th>
+                                        <th>구분</th>
+                                        <th>고객명</th>
+                                        <th>모델명</th>
+                                        <th>요금제</th>
+                                        <th>담당자</th>
+                                        <th class="text-end pe-3">정산</th>
+                                        <th class="text-end pe-3 text-danger">마진</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="dr_tbody">
+                                    <tr><td colspan="8" class="text-muted py-5">날짜를 선택하고 조회하세요.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+            
                 </div>
             </div>
 
