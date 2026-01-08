@@ -3293,6 +3293,27 @@ function renderCrmTable(list) {
                 <i class="bi bi-telephone-fill"></i>
              </a>` : '-';
 
+        // 상태 선택 박스 색상 로직
+        let statusClass = "bg-light text-dark border-secondary";
+        if(item.crmStatus === '완료') statusClass = "bg-success text-white border-success";
+        else if(item.crmStatus === '부재중') statusClass = "bg-warning text-dark border-warning";
+        else if(item.crmStatus === '내방예약') statusClass = "bg-primary text-white border-primary";
+        else if(item.crmStatus === '거절') statusClass = "bg-danger text-white border-danger";
+
+        // ★ [핵심] 상태 변경 드롭다운 (onchange 이벤트로 즉시 저장)
+        // 주의: item.phone, item.openDate 등 원본 데이터가 필요함
+        const selectHtml = `
+            <select class="form-select form-select-sm fw-bold small ${statusClass}" 
+                style="width: 100px; font-size: 0.8rem;"
+                onchange="changeCrmStatus(this, '${item.branch}', '${item.phone}', '${item.openDate}')">
+                <option value="대기" ${item.crmStatus === '대기' ? 'selected' : ''}>대기</option>
+                <option value="부재중" ${item.crmStatus === '부재중' ? 'selected' : ''}>부재중</option>
+                <option value="내방예약" ${item.crmStatus === '내방예약' ? 'selected' : ''}>내방예약</option>
+                <option value="거절" ${item.crmStatus === '거절' ? 'selected' : ''}>거절</option>
+                <option value="완료" ${item.crmStatus === '완료' ? 'selected' : ''}>완료</option>
+            </select>
+        `;
+
         html += `
         <tr>
             <td>${badge}</td>
@@ -3307,8 +3328,44 @@ function renderCrmTable(list) {
             <td class="text-primary fw-bold small">${item.model}</td>
             <td class="small">${item.plan}</td>
             <td>${callBtn}</td>
+            <td>${selectHtml}</td>
         </tr>`;
     });
-
     tbody.innerHTML = html;
+}
+
+// ★ [신규] 상태 변경 시 자동 저장 함수
+function changeCrmStatus(selectElem, branch, phone, date) {
+    const newStatus = selectElem.value;
+    
+    // 1. UI 즉시 반영 (색상 변경)
+    selectElem.className = "form-select form-select-sm fw-bold small"; // 초기화
+    if(newStatus === '완료') selectElem.classList.add('bg-success', 'text-white', 'border-success');
+    else if(newStatus === '부재중') selectElem.classList.add('bg-warning', 'text-dark', 'border-warning');
+    else if(newStatus === '내방예약') selectElem.classList.add('bg-primary', 'text-white', 'border-primary');
+    else if(newStatus === '거절') selectElem.classList.add('bg-danger', 'text-white', 'border-danger');
+    else selectElem.classList.add('bg-light', 'text-dark', 'border-secondary');
+
+    // 2. 서버 저장 요청
+    fetch(GAS_URL, {
+        method: "POST",
+        body: JSON.stringify({
+            action: "update_crm_status",
+            branch: branch,
+            phone: phone, // 원본 전화번호 전송 (마스킹 안 된 데이터여야 함 - 위에서 item.phone 그대로 씀)
+            date: date,
+            status: newStatus
+        })
+    })
+    .then(r => r.json())
+    .then(d => {
+        if(d.status !== 'success') {
+            alert("저장 실패: " + d.message);
+            // 실패 시 대기로 롤백하는 로직 추가 가능
+        } else {
+            // 성공 시 조용히 넘어가거나, 토스트 메시지 띄우기
+            console.log("상태 저장 완료");
+        }
+    })
+    .catch(e => console.error(e));
 }
