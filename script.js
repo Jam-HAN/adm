@@ -2379,43 +2379,52 @@ function loadDailyReport() {
 
 // 3. 테이블 및 요약 렌더링
 function renderDailyReportTable(list, summary) {
-    const tbody = document.getElementById('dr_tbody');
+    const tbodyPc = document.getElementById('dr_tbody_pc');
+    const listMobile = document.getElementById('dr_list_mobile');
     const fmt = (n) => Number(n).toLocaleString();
 
     // 1. 상단 요약 업데이트
     document.getElementById('dr_sum_total').innerText = summary.total + "건";
-    // (무선 3 / 유선 1) 형식 표시
-    document.getElementById('dr_sum_detail').innerText = 
-        `(📱${summary.mobile} / ♻️${summary.used} / 📺${summary.wired})`;
+    document.getElementById('dr_sum_detail').innerText = `(📱${summary.mobile} / ♻️${summary.used} / 📺${summary.wired})`;
     
     document.getElementById('dr_sum_settle').innerText = fmt(summary.settle);
     document.getElementById('dr_sum_revenue').innerText = fmt(summary.revenue);
     document.getElementById('dr_sum_margin').innerText = fmt(summary.margin);
 
     if (list.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="17" class="text-muted py-5">해당 날짜에 내역이 없습니다.</td></tr>`;
+        tbodyPc.innerHTML = `<tr><td colspan="17" class="text-muted py-5 text-center">해당 날짜에 내역이 없습니다.</td></tr>`;
+        listMobile.innerHTML = `<div class="text-center text-muted py-5">내역이 없습니다.</div>`;
         return;
     }
 
-    // 2. 리스트 렌더링
-let html = "";
-    list.forEach(item => {
+    let pcHtml = "";
+    let mobileHtml = "";
+
+    list.forEach((item, index) => {
+        // 공통 변수
         const showMoney = (val) => val === 0 ? '<span class="text-muted opacity-25">-</span>' : fmt(val);
         const reviewIcon = (item.review === 'true' || item.review === true) 
             ? '<i class="bi bi-check-circle-fill text-success"></i>' 
             : '<span class="text-muted opacity-25">-</span>';
+        
+        // 뱃지 색상
+        let typeBadge = "bg-secondary";
+        if(item.type.includes("신규") || item.type.includes("이동") || item.type.includes("기변")) typeBadge = "bg-primary";
+        else if(item.type.includes("중고")) typeBadge = "bg-warning text-dark";
+        else if(item.type.includes("유선") || item.type.includes("인터넷")) typeBadge = "bg-success";
 
-        html += `
+        // =================================================
+        // [A] PC용 HTML (테이블 행)
+        // =================================================
+        pcHtml += `
         <tr>
             <td>${item.branch}</td>
             <td class="text-truncate" style="max-width:80px;">${item.visit}</td>
             <td>${item.carrier}</td>
-            <td><span class="badge bg-light text-dark border">${item.type}</span></td>
+            <td><span class="badge ${typeBadge} bg-opacity-75">${item.type}</span></td>
             <td class="fw-bold">${item.name}</td>
             <td>${item.manager}</td>
-            
             <td class="table-primary bg-opacity-10 fw-bold text-primary text-end">${showMoney(item.settle)}</td>
-            
             <td class="text-end text-secondary">${showMoney(item.support)}</td>
             <td class="text-end text-secondary">${showMoney(item.cash)}</td>
             <td class="text-end text-secondary">${showMoney(item.payback)}</td>
@@ -2423,14 +2432,73 @@ let html = "";
             <td class="text-end text-secondary">${showMoney(item.fee)}</td>
             <td class="text-end text-secondary">${showMoney(item.used)}</td>
             <td class="text-end text-secondary">${showMoney(item.gift)}</td>
-            
             <td class="table-success bg-opacity-10 fw-bold text-success text-end">${showMoney(item.revenue)}</td>
             <td class="table-danger bg-opacity-10 fw-bold text-danger text-end">${showMoney(item.margin)}</td>
-            
             <td>${reviewIcon}</td>
         </tr>`;
+
+        // =================================================
+        // [B] 모바일용 HTML (카드 형태) - 아코디언 적용
+        // =================================================
+        // 상세정보 펼치기용 고유 ID
+        const collapseId = `collapseDetail_${index}`;
+
+        mobileHtml += `
+        <div class="card border-0 shadow-sm mb-3">
+            <div class="card-body p-3">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <div>
+                        <span class="badge ${typeBadge} me-1">${item.type}</span>
+                        <span class="badge bg-light text-secondary border">${item.branch}</span>
+                    </div>
+                    <div class="fw-bold fs-5 text-dark">${item.name}</div>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mb-3 text-secondary small">
+                    <div><i class="bi bi-shop me-1"></i>${item.carrier}</div>
+                    <div><i class="bi bi-person-circle me-1"></i>${item.manager}</div>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center bg-light p-2 rounded mb-2">
+                    <div class="text-center w-50 border-end">
+                        <div class="text-muted" style="font-size:0.7rem;">매출</div>
+                        <div class="fw-bold text-success">${fmt(item.revenue)}</div>
+                    </div>
+                    <div class="text-center w-50">
+                        <div class="text-muted" style="font-size:0.7rem;">수익(마진)</div>
+                        <div class="fw-bold text-danger">${fmt(item.margin)}</div>
+                    </div>
+                </div>
+
+                <div class="text-center">
+                    <button class="btn btn-sm btn-link text-decoration-none text-secondary p-0" type="button" data-bs-toggle="collapse" data-bs-target="#${collapseId}">
+                        <i class="bi bi-chevron-down me-1"></i>상세 금액 보기
+                    </button>
+                </div>
+
+                <div class="collapse mt-2" id="${collapseId}">
+                    <div class="card card-body bg-light border-0 p-2 small">
+                        <div class="d-flex justify-content-between mb-1"><span>정산금</span> <span class="fw-bold text-primary">${fmt(item.settle)}</span></div>
+                        <hr class="my-1 border-secondary opacity-25">
+                        <div class="d-flex justify-content-between"><span>대납합계</span> <span>${fmt(item.support)}</span></div>
+                        <div class="d-flex justify-content-between"><span>캐시백</span> <span>${fmt(item.cash)}</span></div>
+                        <div class="d-flex justify-content-between"><span>페이백</span> <span>${fmt(item.payback)}</span></div>
+                        <div class="d-flex justify-content-between"><span>기기대납</span> <span>${fmt(item.device)}</span></div>
+                        <div class="d-flex justify-content-between"><span>요금수납</span> <span>${fmt(item.fee)}</span></div>
+                        <div class="d-flex justify-content-between"><span>중고폰</span> <span>${fmt(item.used)}</span></div>
+                        <div class="d-flex justify-content-between"><span>상품권</span> <span>${fmt(item.gift)}</span></div>
+                        <hr class="my-1 border-secondary opacity-25">
+                        <div class="d-flex justify-content-between"><span>방문경로</span> <span class="text-muted">${item.visit}</span></div>
+                        <div class="d-flex justify-content-between"><span>리뷰작성</span> <span>${item.review ? '작성완료' : '-'}</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>`;
     });
-    tbody.innerHTML = html;
+
+    // 렌더링
+    tbodyPc.innerHTML = pcHtml;
+    listMobile.innerHTML = mobileHtml;
 }
 
 // ==========================================
