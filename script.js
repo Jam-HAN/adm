@@ -2409,22 +2409,22 @@ function renderDailyReportTable(list, summary) {
         { label: "담당자",  width: "50px",   cls: "" },
         
         // 핵심 금액 (배경색 강조)
-        { label: "정산",    width: "",   cls: "table-primary bg-opacity-10 text-primary fw-bold" },
+        { label: "정산",    width: "70px",   cls: "table-primary bg-opacity-10 text-primary fw-bold" },
         
         // 상세 자금
-        { label: "대납",    width: "",   cls: "text-secondary" },
-        { label: "캐시백",  width: "",   cls: "text-secondary" },
-        { label: "페이백",  width: "",   cls: "text-secondary" },
-        { label: "기기대",  width: "",   cls: "text-secondary" },
-        { label: "요금",    width: "",   cls: "text-secondary" },
-        { label: "중고폰",  width: "",   cls: "text-secondary" },
-        { label: "상품권",  width: "",   cls: "text-secondary" },
+        { label: "대납",    width: "70px",   cls: "text-secondary" },
+        { label: "캐시백",  width: "70px",   cls: "text-secondary" },
+        { label: "페이백",  width: "70px",   cls: "text-secondary" },
+        { label: "기기대",  width: "70px",   cls: "text-secondary" },
+        { label: "요금",    width: "70px",   cls: "text-secondary" },
+        { label: "중고폰",  width: "70px",   cls: "text-secondary" },
+        { label: "상품권",  width: "70px",   cls: "text-secondary" },
 
         // 결과 지표 (배경색 강조)
-        { label: "매출",    width: "",   cls: "table-success bg-opacity-10 text-success fw-bold" },
-        { label: "마진",    width: "",   cls: "table-danger bg-opacity-10 text-danger fw-bold" },
+        { label: "매출",    width: "70px",   cls: "table-success bg-opacity-10 text-success fw-bold" },
+        { label: "마진",    width: "70px",   cls: "table-danger bg-opacity-10 text-danger fw-bold" },
         
-        { label: "리뷰",    width: "",   cls: "" }
+        { label: "리뷰",    width: "50px",   cls: "" }
     ];
     // ============================================================
 
