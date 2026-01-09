@@ -2342,15 +2342,10 @@ const fmtMoney = (n) => n === 0 ? '<span class="text-muted opacity-25">-</span>'
 const getReviewIcon = (v) => (v === 'true' || v === true) ? '<i class="bi bi-check-circle-fill text-success"></i>' : '<span class="text-muted opacity-25">-</span>';
 
 function getTypeBadge(t) {
-    let c = "bg-secondary"; // 기본값 (회색)
-    if (t.includes("유선") || t.includes("인터넷") || t.includes("동판") || t.includes("단품") || t.includes("약정갱신")) {
-        c = "bg-success";
-    }
-    else if (t.includes("중고")) {
-        c = "bg-warning text-dark";
-    else if (t.includes("신규") || t.includes("이동") || t.includes("기변")) {
-        c = "bg-primary";
-    }
+    let c = "bg-secondary";
+    if (t.includes("유선") || t.includes("동판") || t.includes("단품") || t.includes("약정갱신")) c = "bg-success"; // 초록
+    else if (t.includes("중고")) c = "bg-warning text-dark"; // 노랑
+    else if (t.includes("신규") || t.includes("이동") || t.includes("기변")) c = "bg-primary"; // 파랑
     return `<span class="badge ${c} bg-opacity-75">${t}</span>`;
 }
 
