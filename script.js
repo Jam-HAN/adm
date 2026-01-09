@@ -1333,7 +1333,7 @@ function searchHistory() {
 
 function updateSearchUI() { const criteria = document.getElementById('search_criteria').value; const area = document.getElementById('search_input_area'); area.innerHTML = ""; if(criteria === 'supplier') { const sel = document.createElement('select'); sel.className = "form-select"; sel.id = "search_value"; globalVendorList.forEach(v => { const opt = document.createElement('option'); opt.value=v; opt.innerText=v; sel.appendChild(opt); }); area.appendChild(sel); } else if(criteria === 'branch') { const sel = document.createElement('select'); sel.className = "form-select"; sel.id = "search_value"; ["장지 본점", "명일 직영점"].forEach(v => { const opt = document.createElement('option'); opt.value=v; opt.innerText=v; sel.appendChild(opt); }); area.appendChild(sel); } else if(criteria === 'model') { const sel = document.createElement('select'); sel.className = "form-select"; sel.id = "search_value"; globalModelList.forEach(v => { const opt = document.createElement('option'); opt.value=v; opt.innerText=v; sel.appendChild(opt); }); area.appendChild(sel); } else { const inp = document.createElement('input'); inp.className = "form-control"; inp.id = "search_value"; inp.placeholder = "입력하세요"; inp.onkeydown = function(e){ if(e.key==='Enter') searchStock(); }; area.appendChild(inp); inp.focus(); } }
 
-// [script.js] 모든 모바일 메뉴 닫기 (excludeId 파라미터 추가됨)
+// [script.js] 모든 모바일 메뉴 닫기 (excludeId 파라미터 적용 필수!)
 function closeAllMobileMenus(excludeId) {
   const ids = [
     "fab-menu-container",
@@ -1343,13 +1343,13 @@ function closeAllMobileMenus(excludeId) {
   ];
 
   ids.forEach(id => {
-    // ★ [핵심 수정] 지금 열려고 하는 메뉴(excludeId)는 닫지 않고 건너뜁니다.
+    // ★ [핵심] 지금 열려는 메뉴(excludeId)는 닫기 목록에서 제외!
     if (id === excludeId) return; 
 
     const el = document.getElementById(id);
     if(!el) return;
 
-    // 나머지 메뉴들은 닫기 처리
+    // 나머지 메뉴들은 닫기
     el.classList.remove("open");
     setTimeout(() => {
         // 타이머가 돌 때, 혹시 그 사이에 다시 열렸는지 확인 (안전장치)
@@ -1379,13 +1379,15 @@ function setOverlay(open) {
   document.body.classList.toggle("no-scroll", open);
 }
 
+// [script.js] Fab 메뉴 토글 (ID 넘겨주도록 수정)
 function toggleFabMenu(){
   const menu = document.getElementById("fab-menu-container");
   if(!menu) return;
 
   const isOpen = menu.classList.contains("open");
 
-  closeAllMobileMenus(); // 다른 메뉴 전부 닫기
+  // ★ [수정] 내 ID를 넘겨줘서 나는 닫지 말라고 함
+  closeAllMobileMenus("fab-menu-container");
 
   if(!isOpen){
     menu.classList.remove("d-none");
@@ -1393,6 +1395,11 @@ function toggleFabMenu(){
       menu.classList.add("open");
     });
     setOverlay(true);
+  } else {
+    // 열려있었다면 닫기 동작 수행 (이미 closeAllMobileMenus가 닫지는 않으므로 명시적 처리)
+    menu.classList.remove("open");
+    setTimeout(() => menu.classList.add("d-none"), 160);
+    setOverlay(false);
   }
 }
 
