@@ -1333,33 +1333,25 @@ function searchHistory() {
 
 function updateSearchUI() { const criteria = document.getElementById('search_criteria').value; const area = document.getElementById('search_input_area'); area.innerHTML = ""; if(criteria === 'supplier') { const sel = document.createElement('select'); sel.className = "form-select"; sel.id = "search_value"; globalVendorList.forEach(v => { const opt = document.createElement('option'); opt.value=v; opt.innerText=v; sel.appendChild(opt); }); area.appendChild(sel); } else if(criteria === 'branch') { const sel = document.createElement('select'); sel.className = "form-select"; sel.id = "search_value"; ["장지 본점", "명일 직영점"].forEach(v => { const opt = document.createElement('option'); opt.value=v; opt.innerText=v; sel.appendChild(opt); }); area.appendChild(sel); } else if(criteria === 'model') { const sel = document.createElement('select'); sel.className = "form-select"; sel.id = "search_value"; globalModelList.forEach(v => { const opt = document.createElement('option'); opt.value=v; opt.innerText=v; sel.appendChild(opt); }); area.appendChild(sel); } else { const inp = document.createElement('input'); inp.className = "form-control"; inp.id = "search_value"; inp.placeholder = "입력하세요"; inp.onkeydown = function(e){ if(e.key==='Enter') searchStock(); }; area.appendChild(inp); inp.focus(); } }
 
-// [script.js] 모든 모바일 메뉴 닫기 (excludeId 파라미터 적용 필수!)
+// [script.js] 모든 모바일 메뉴 닫기 (수정됨: excludeId 적용)
 function closeAllMobileMenus(excludeId) {
-  const ids = [
-    "fab-menu-container",
-    "search-menu-container",
-    "manage-menu-container",
-    "stats-menu-container"
-  ];
-
+  const ids = ["fab-menu-container", "search-menu-container", "manage-menu-container", "stats-menu-container"];
   ids.forEach(id => {
-    // ★ [핵심] 지금 열려는 메뉴(excludeId)는 닫기 목록에서 제외!
+    // ★ 여기가 핵심입니다. 지금 누른 메뉴는 닫지 않고 건너뜀
     if (id === excludeId) return; 
 
     const el = document.getElementById(id);
     if(!el) return;
 
-    // 나머지 메뉴들은 닫기
     el.classList.remove("open");
     setTimeout(() => {
-        // 타이머가 돌 때, 혹시 그 사이에 다시 열렸는지 확인 (안전장치)
+        // 타이머가 돌 때, 혹시 그 사이에 다시 열렸는지 확인
         if (!el.classList.contains("open")) {
             el.classList.add("d-none");
         }
     }, 160);
   });
 
-  // 제외할 아이디가 없다면(배경 클릭 등) 오버레이도 끕니다.
   if (!excludeId) setOverlay(false);
 }
 
@@ -1379,24 +1371,20 @@ function setOverlay(open) {
   document.body.classList.toggle("no-scroll", open);
 }
 
-// [script.js] Fab 메뉴 토글 (ID 넘겨주도록 수정)
+// [script.js] Fab 메뉴 토글 (수정됨: ID 넘겨주기)
 function toggleFabMenu(){
   const menu = document.getElementById("fab-menu-container");
   if(!menu) return;
-
   const isOpen = menu.classList.contains("open");
 
-  // ★ [수정] 내 ID를 넘겨줘서 나는 닫지 말라고 함
+  // ★ 나 빼고 다 닫아라!
   closeAllMobileMenus("fab-menu-container");
 
   if(!isOpen){
     menu.classList.remove("d-none");
-    requestAnimationFrame(() => {
-      menu.classList.add("open");
-    });
+    requestAnimationFrame(() => menu.classList.add("open"));
     setOverlay(true);
   } else {
-    // 열려있었다면 닫기 동작 수행 (이미 closeAllMobileMenus가 닫지는 않으므로 명시적 처리)
     menu.classList.remove("open");
     setTimeout(() => menu.classList.add("d-none"), 160);
     setOverlay(false);
@@ -2325,166 +2313,94 @@ function showDailyReportSection() {
     loadDailyReport(); // 자동 조회
 }
 
-// 2. 데이터 조회 요청
-// [script.js] 데이터 조회 요청 (헤더까지 초기화)
+// ==========================================
+// [설정] 일일 보고 테이블 컬럼 정의
+// ==========================================
+const REPORT_COLUMNS = [
+    { label: "지점",    key: "branch",  width: "80px" },
+    { label: "방문경로", key: "visit",   width: "80px",  formatter: (v) => `<span class="text-truncate d-block" style="max-width:80px">${v}</span>` },
+    { label: "개통처",  key: "carrier", width: "80px" },
+    { label: "유형",    key: "type",    width: "80px",  formatter: (v) => getTypeBadge(v) },
+    { label: "고객명",  key: "name",    width: "80px",  className: "fw-bold" },
+    { label: "담당자",  key: "manager", width: "80px" },
+    { label: "정산",    key: "settle",  width: "100px", className: "table-primary bg-opacity-10 text-primary fw-bold text-end", formatter: (v) => fmt(v) },
+    { label: "대납",    key: "support", width: "70px",  className: "text-end text-secondary", formatter: (v) => fmtMoney(v) },
+    { label: "캐시백",  key: "cash",    width: "70px",  className: "text-end text-secondary", formatter: (v) => fmtMoney(v) },
+    { label: "페이백",  key: "payback", width: "70px",  className: "text-end text-secondary", formatter: (v) => fmtMoney(v) },
+    { label: "기기대",  key: "device",  width: "70px",  className: "text-end text-secondary", formatter: (v) => fmtMoney(v) },
+    { label: "요금",    key: "fee",     width: "70px",  className: "text-end text-secondary", formatter: (v) => fmtMoney(v) },
+    { label: "중고폰",  key: "used",    width: "70px",  className: "text-end text-secondary", formatter: (v) => fmtMoney(v) },
+    { label: "상품권",  key: "gift",    width: "70px",  className: "text-end text-secondary", formatter: (v) => fmtMoney(v) },
+    { label: "매출",    key: "revenue", width: "100px", className: "table-success bg-opacity-10 text-success fw-bold text-end", formatter: (v) => fmt(v) },
+    { label: "마진",    key: "margin",  width: "100px", className: "table-danger bg-opacity-10 text-danger fw-bold text-end", formatter: (v) => fmt(v) },
+    { label: "리뷰",    key: "review",  width: "50px",  formatter: (v) => getReviewIcon(v) }
+];
+
+// [도구] 포맷팅 헬퍼 함수
+const fmt = (n) => Number(n).toLocaleString();
+const fmtMoney = (n) => n === 0 ? '<span class="text-muted opacity-25">-</span>' : fmt(n);
+const getReviewIcon = (v) => (v === 'true' || v === true) ? '<i class="bi bi-check-circle-fill text-success"></i>' : '<span class="text-muted opacity-25">-</span>';
+function getTypeBadge(t) {
+    let c = "bg-secondary";
+    if (t.includes("신규")||t.includes("이동")||t.includes("기변")) c="bg-primary";
+    else if (t.includes("중고")) c="bg-warning text-dark";
+    else if (t.includes("유선")||t.includes("인터넷")) c="bg-success";
+    return `<span class="badge ${c} bg-opacity-75">${t}</span>`;
+}
+
+// [실행] 일일 보고 조회 (헤더 초기화 추가)
 function loadDailyReport() {
     const branch = document.getElementById('dr_branch').value;
     const date = document.getElementById('dr_date').value;
-    
     if(!date) { alert("날짜를 선택해주세요."); return; }
 
-    const headerRow = document.getElementById('dr_header_row'); // ★ 헤더 ID 가져오기
+    const headerRow = document.getElementById('dr_header_row');
     const tbody = document.getElementById('dr_tbody');
     
-    // 1. 본문(tbody)에 로딩바 표시
-    if(tbody) {
-        tbody.innerHTML = `<tr><td colspan="100%" class="text-center align-middle py-5"><div class="spinner-border text-primary"></div><div class="mt-2 small text-muted">데이터를 불러오는 중...</div></td></tr>`;
-    }
+    if(tbody) tbody.innerHTML = `<tr><td colspan="100%" class="text-center align-middle py-5"><div class="spinner-border text-primary"></div><div class="mt-2 small text-muted">로딩 중...</div></td></tr>`;
+    if(headerRow) headerRow.innerHTML = ""; // ★ 헤더 비우기
 
-    // 2. ★ [추가된 부분] 헤더(thead)도 싹 비우기
-    // 이 줄이 들어가면 조회 버튼 누를 때 헤더가 사라집니다.
-    if(headerRow) {
-        headerRow.innerHTML = ""; 
-    }
-
-    fetch(GAS_URL, {
-        method: "POST",
-        body: JSON.stringify({
-            action: "get_daily_report_detail",
-            branch: branch,
-            date: date
-        })
-    })
-    .then(r => r.json())
-    .then(d => {
-        if(d.status === 'success') {
-            renderDailyReportTable(d.list, d.summary); // 여기서 헤더와 본문을 다시 그립니다.
-        } else {
-            if(tbody) tbody.innerHTML = `<tr><td colspan="100%" class="text-danger text-center py-4">${d.message}</td></tr>`;
-        }
-    })
-    .catch(e => {
-        console.error(e);
-        if(tbody) tbody.innerHTML = `<tr><td colspan="100%" class="text-danger text-center py-4">통신 오류 발생</td></tr>`;
+    fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "get_daily_report_detail", branch, date }) })
+    .then(r => r.json()).then(d => {
+        if(d.status === 'success') renderDailyReportTable(d.list, d.summary);
+        else if(tbody) tbody.innerHTML = `<tr><td colspan="100%" class="text-danger text-center py-4">${d.message}</td></tr>`;
+    }).catch(e => {
+        if(tbody) tbody.innerHTML = `<tr><td colspan="100%" class="text-danger text-center py-4">통신 오류</td></tr>`;
     });
 }
 
-// 3. 일일 상세 보고 렌더링 (모바일: 한눈에 보이는 오픈형 카드)
-// [script.js] 일일 상세 보고 렌더링 (헤더/본문 모두 JS 생성)
+// [실행] 일일 보고 렌더링 (리팩토링 버전)
 function renderDailyReportTable(list, summary) {
     const headerRow = document.getElementById('dr_header_row');
     const tbody = document.getElementById('dr_tbody');
-    const fmt = (n) => Number(n).toLocaleString();
 
-    // ============================================================
-    // ★ [설정] 컬럼 정의 (여기만 수정하면 표 전체가 바뀝니다!)
-    // label: 헤더 이름 / key: 데이터 키 / class: 스타일 클래스
-    // ============================================================
-    const columns = [
-        { label: "지점",    width: "",   cls: "" },
-        { label: "방문경로", width: "",   cls: "" },
-        { label: "개통처",  width: "",   cls: "" },
-        { label: "유형",    width: "",   cls: "" },
-        { label: "고객명",  width: "",   cls: "fw-bold" },
-        { label: "담당자",  width: "",   cls: "" },
-        
-        // 핵심 금액 (배경색 강조)
-        { label: "정산",    width: "",   cls: "table-primary bg-opacity-10 text-primary fw-bold" },
-        
-        // 상세 자금
-        { label: "대납",    width: "",   cls: "text-secondary" },
-        { label: "캐시백",  width: "",   cls: "text-secondary" },
-        { label: "페이백",  width: "",   cls: "text-secondary" },
-        { label: "기기대",  width: "",   cls: "text-secondary" },
-        { label: "요금",    width: "",   cls: "text-secondary" },
-        { label: "중고폰",  width: "",   cls: "text-secondary" },
-        { label: "상품권",  width: "",   cls: "text-secondary" },
-
-        // 결과 지표 (배경색 강조)
-        { label: "매출",    width: "",   cls: "table-success bg-opacity-10 text-success fw-bold" },
-        { label: "마진",    width: "",   cls: "table-danger bg-opacity-10 text-danger fw-bold" },
-        
-        { label: "리뷰",    width: "",   cls: "" }
-    ];
-    // ============================================================
-
-    // 1. 상단 요약 업데이트
     document.getElementById('dr_sum_total').innerText = summary.total + "건";
     document.getElementById('dr_sum_detail').innerText = `(📱${summary.mobile} / 📺${summary.wired} / ♻️${summary.used})`;
     document.getElementById('dr_sum_settle').innerText = fmt(summary.settle);
     document.getElementById('dr_sum_revenue').innerText = fmt(summary.revenue);
     document.getElementById('dr_sum_margin').innerText = fmt(summary.margin);
 
-
-    // 2. [헤더 그리기] (최초 1회 혹은 매번 갱신)
-    if(headerRow) {
-        let thHtml = "";
-        columns.forEach(col => {
-            // cls(클래스)가 있으면 적용, 없으면 기본값
-            // 헤더 자체에는 배경색 효과를 덜 주기 위해 cls에서 'text-' 등만 상속받거나 별도 처리 가능
-            // 여기서는 심플하게 cls를 그대로 헤더 class에 넣되, 'text-end' 같은 정렬만 추가 고려
-            thHtml += `<th class="${col.cls.replace('text-end','').replace('fw-bold','')}">${col.label}</th>`;
-        });
-        headerRow.innerHTML = thHtml;
+    if (headerRow) {
+        headerRow.innerHTML = REPORT_COLUMNS.map(col => {
+            const style = col.width ? `style="min-width:${col.width}; width:${col.width}"` : "";
+            const cls = (col.className || "").replace(/text-(end|start|center)/g, "").replace("fw-bold", ""); 
+            return `<th ${style} class="${cls}">${col.label}</th>`;
+        }).join('');
     }
 
-
-    // 3. [본문 그리기]
     if (list.length === 0) {
-        if(tbody) tbody.innerHTML = `<tr><td colspan="${columns.length}" class="text-muted py-5 text-center">해당 날짜에 내역이 없습니다.</td></tr>`;
+        if(tbody) tbody.innerHTML = `<tr><td colspan="${REPORT_COLUMNS.length}" class="text-muted py-5 text-center">내역이 없습니다.</td></tr>`;
         return;
     }
 
-    let html = "";
-    list.forEach(item => {
-        const showMoney = (val) => val === 0 ? '<span class="text-muted opacity-25">-</span>' : fmt(val);
-        const reviewIcon = (item.review === 'true' || item.review === true) 
-            ? '<i class="bi bi-check-circle-fill text-success"></i>' 
-            : '<span class="text-muted opacity-25">-</span>';
-
-        // 뱃지 처리
-        let typeBadge = "badge bg-secondary bg-opacity-75";
-        if(item.type.includes("신규") || item.type.includes("이동") || item.type.includes("기변")) typeBadge = "badge bg-primary bg-opacity-75";
-        else if(item.type.includes("중고")) typeBadge = "badge bg-warning text-dark bg-opacity-75";
-        else if(item.type.includes("유선") || item.type.includes("인터넷")) typeBadge = "badge bg-success bg-opacity-75";
-
-        html += `<tr>`;
-        
-        // ★ columns 배열 순서대로 데이터 매핑 (하드코딩 제거)
-        // 단, 데이터 포맷팅(뱃지, 콤마 등)이 각자 다르므로 
-        // 여기서는 가독성을 위해 순서대로 직접 작성하되, 위 columns 배열 순서와 일치시킵니다.
-        
-        // 1. 지점 ~ 담당자
-        html += `<td>${item.branch}</td>`;
-        html += `<td class="text-truncate" style="max-width:80px;">${item.visit}</td>`;
-        html += `<td>${item.carrier}</td>`;
-        html += `<td><span class="${typeBadge}">${item.type}</span></td>`;
-        html += `<td class="fw-bold">${item.name}</td>`;
-        html += `<td>${item.manager}</td>`;
-
-        // 2. 정산 (강조)
-        html += `<td class="table-primary bg-opacity-10 fw-bold text-primary text-end">${showMoney(item.settle)}</td>`;
-
-        // 3. 상세 금액들 (우측 정렬)
-        html += `<td class="text-end text-secondary">${showMoney(item.support)}</td>`;
-        html += `<td class="text-end text-secondary">${showMoney(item.cash)}</td>`;
-        html += `<td class="text-end text-secondary">${showMoney(item.payback)}</td>`;
-        html += `<td class="text-end text-secondary">${showMoney(item.device)}</td>`;
-        html += `<td class="text-end text-secondary">${showMoney(item.fee)}</td>`;
-        html += `<td class="text-end text-secondary">${showMoney(item.used)}</td>`;
-        html += `<td class="text-end text-secondary">${showMoney(item.gift)}</td>`;
-
-        // 4. 결과 지표 (강조)
-        html += `<td class="table-success bg-opacity-10 fw-bold text-success text-end">${showMoney(item.revenue)}</td>`;
-        html += `<td class="table-danger bg-opacity-10 fw-bold text-danger text-end">${showMoney(item.margin)}</td>`;
-
-        // 5. 리뷰
-        html += `<td>${reviewIcon}</td>`;
-
-        html += `</tr>`;
-    });
-
-    if(tbody) tbody.innerHTML = html;
+    tbody.innerHTML = list.map(item => {
+        const tds = REPORT_COLUMNS.map(col => {
+            const raw = item[col.key]; 
+            const val = col.formatter ? col.formatter(raw) : (raw || "");
+            return `<td class="${col.className || ""}">${val}</td>`;
+        }).join('');
+        return `<tr>${tds}</tr>`;
+    }).join('');
 }
 
 // ==========================================
