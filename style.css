@@ -364,32 +364,6 @@ body.has-tabbar {
 }
 
 /* =========================================================
-   일일 보고 TABLE
-   ========================================================= */
-
-#dr_table {
-	table-layout: fixed;
-	width: 100%;
-}
-
-#dr_table th,
-#dr_table td {
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
-}
-
-#dr_table .money-col {
-	text-align: right;
-	font-variant-numeric: tabular-nums;
-	font-feature-settings: "tnum";
-}
-
-#dr_table .hide-col {
-	display: none;
-}
-
-/* =========================================================
    fixed-h-box
    ========================================================= */
 .fixed-h-box {
