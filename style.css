@@ -298,15 +298,30 @@ body {
   min-height: 100vh;
 }
 
-/* iOS에서 overlay가 메뉴보다 위에 올라오는 문제 강제 해결 */
-#fab-menu-overlay {
-  z-index: 1990 !important;
+/* ---------- Floating Menus (모바일 하단 팝업 메뉴) ---------- */
+.floating-menu {
+    position: fixed !important;
+    bottom: 90px;           /* 하단 네비게이션 위쪽에 위치 */
+    left: 50%;              /* 좌우 중앙 정렬 */
+    transform: translateX(-50%) translateY(20px); /* 살짝 아래에서 시작하는 애니메이션 효과 */
+    width: 200px;           /* 기본 너비 */
+    display: flex;
+    flex-direction: column; /* 버튼 세로 정렬 */
+    gap: 8px;               /* 버튼 사이 간격 */
+    z-index: 2000 !important;
+    opacity: 0;             /* 처음엔 투명하게 */
+    transition: opacity 0.2s ease, transform 0.2s ease; /* 부드러운 전환 효과 */
+    pointer-events: none;   /* 숨겨져 있을 때 클릭 방지 */
 }
 
-#fab-menu-container,
-#search-menu-container,
-#manage-menu-container,
-#stats-menu-container {
-  position: fixed !important;
-  z-index: 2000 !important;
+/* 메뉴가 열렸을 때 스타일 (.open 클래스는 JS가 붙여줌) */
+.floating-menu.open {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0); /* 제자리로 이동 */
+    pointer-events: auto;   /* 클릭 가능하게 변경 */
+}
+
+/* 관리 메뉴만 너비를 조금 더 넓게 설정 */
+#manage-menu-container {
+    width: 220px;
 }
