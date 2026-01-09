@@ -2392,123 +2392,207 @@ function loadDailyReport() {
 // 3. 일일 상세 보고 렌더링 (모바일: 한눈에 보이는 오픈형 카드)
 // [script.js] 일일 상세 보고 렌더링 (헤더/본문 모두 JS 생성)
 function renderDailyReportTable(list, summary) {
-    const headerRow = document.getElementById('dr_header_row');
-    const tbody = document.getElementById('dr_tbody');
-    const fmt = (n) => Number(n).toLocaleString();
+	const table = document.getElementById('dr_table');
+	if (!table) return;
 
-    // ============================================================
-    // ★ [설정] 컬럼 정의 (여기만 수정하면 표 전체가 바뀝니다!)
-    // label: 헤더 이름 / key: 데이터 키 / class: 스타일 클래스
-    // ============================================================
-    const columns = [
-        { label: "지점",    width: "50px",   cls: "" },
-        { label: "방문경로", width: "50px",   cls: "" },
-        { label: "개통처",  width: "50px",   cls: "" },
-        { label: "유형",    width: "50px",   cls: "" },
-        { label: "고객명",  width: "50px",   cls: "fw-bold" },
-        { label: "담당자",  width: "50px",   cls: "" },
-        
-        // 핵심 금액 (배경색 강조)
-        { label: "정산",    width: "70px",   cls: "table-primary bg-opacity-10 text-primary fw-bold" },
-        
-        // 상세 자금
-        { label: "대납",    width: "70px",   cls: "text-secondary" },
-        { label: "캐시백",  width: "70px",   cls: "text-secondary" },
-        { label: "페이백",  width: "70px",   cls: "text-secondary" },
-        { label: "기기대",  width: "70px",   cls: "text-secondary" },
-        { label: "요금",    width: "70px",   cls: "text-secondary" },
-        { label: "중고폰",  width: "70px",   cls: "text-secondary" },
-        { label: "상품권",  width: "70px",   cls: "text-secondary" },
+	const fmt = (n) => Number(n || 0).toLocaleString();
+	const showMoney = (val) => Number(val || 0) === 0 ? '<span class="text-muted opacity-25">-</span>' : fmt(val);
 
-        // 결과 지표 (배경색 강조)
-        { label: "매출",    width: "70px",   cls: "table-success bg-opacity-10 text-success fw-bold" },
-        { label: "마진",    width: "70px",   cls: "table-danger bg-opacity-10 text-danger fw-bold" },
-        
-        { label: "리뷰",    width: "50px",   cls: "" }
-    ];
-    // ============================================================
+	const reviewIcon = (v) => (v === 'true' || v === true)
+		? '<i class="bi bi-check-circle-fill text-success"></i>'
+		: '<span class="text-muted opacity-25">-</span>';
 
-    // 1. 상단 요약 업데이트
-    document.getElementById('dr_sum_total').innerText = summary.total + "건";
-    document.getElementById('dr_sum_detail').innerText = `(📱${summary.mobile} / 📺${summary.wired} / ♻️${summary.used})`;
-    document.getElementById('dr_sum_settle').innerText = fmt(summary.settle);
-    document.getElementById('dr_sum_revenue').innerText = fmt(summary.revenue);
-    document.getElementById('dr_sum_margin').innerText = fmt(summary.margin);
+	const typeBadgeClass = (type) => {
+		const t = String(type || '');
+		if (t.includes('신규') || t.includes('이동') || t.includes('기변')) return 'badge bg-primary bg-opacity-75';
+		if (t.includes('중고')) return 'badge bg-warning text-dark bg-opacity-75';
+		if (t.includes('유선') || t.includes('인터넷')) return 'badge bg-success bg-opacity-75';
+		return 'badge bg-secondary bg-opacity-75';
+	};
 
+	// ============================================================
+	// ★ [설정] 컬럼 정의 (여기만 수정하면 표 전체가 바뀜)
+	// label: 헤더 / width: col 폭 / thCls: 헤더 클래스 / tdCls: 셀 클래스 / render: 셀 렌더러
+	// ============================================================
+	const columns = [
+		{
+			label: '지점',
+			width: '80px',
+			thCls: '',
+			tdCls: '',
+			render: (item) => item.branch ?? ''
+		},
+		{
+			label: '방문경로',
+			width: '90px',
+			thCls: '',
+			tdCls: 'text-truncate',
+			render: (item) => item.visit ?? ''
+		},
+		{
+			label: '개통처',
+			width: '90px',
+			thCls: '',
+			tdCls: '',
+			render: (item) => item.carrier ?? ''
+		},
+		{
+			label: '유형',
+			width: '90px',
+			thCls: '',
+			tdCls: '',
+			render: (item) => `<span class="${typeBadgeClass(item.type)}">${item.type ?? ''}</span>`
+		},
+		{
+			label: '고객명',
+			width: '90px',
+			thCls: '',
+			tdCls: 'fw-bold',
+			render: (item) => item.name ?? ''
+		},
+		{
+			label: '담당자',
+			width: '90px',
+			thCls: '',
+			tdCls: '',
+			render: (item) => item.manager ?? ''
+		},
 
-    // 2. [헤더 그리기] (최초 1회 혹은 매번 갱신)
-    if(headerRow) {
-        let thHtml = "";
-        columns.forEach(col => {
-            // width 값이 있으면 style 속성 추가, 없으면 빈 값
-            const styleAttr = col.width ? `style="min-width: ${col.width}; width: ${col.width};"` : "";
-            
-            // 기존 클래스 처리 로직 유지
-            const classAttr = col.cls.replace('text-end','').replace('fw-bold','');
-            
-            // <th> 태그 생성
-            thHtml += `<th ${styleAttr} class="${classAttr}">${col.label}</th>`;
-        });
-        headerRow.innerHTML = thHtml;
-    }
+		// 정산 (강조)
+		{
+			label: '정산',
+			width: '90px',
+			thCls: 'table-primary bg-opacity-10 text-primary fw-bold',
+			tdCls: 'table-primary bg-opacity-10 text-primary fw-bold money-col',
+			render: (item) => showMoney(item.settle)
+		},
 
+		// 상세 자금
+		{
+			label: '대납',
+			width: '85px',
+			thCls: 'text-secondary',
+			tdCls: 'text-secondary money-col',
+			render: (item) => showMoney(item.support)
+		},
+		{
+			label: '캐시백',
+			width: '85px',
+			thCls: 'text-secondary',
+			tdCls: 'text-secondary money-col',
+			render: (item) => showMoney(item.cash)
+		},
+		{
+			label: '페이백',
+			width: '85px',
+			thCls: 'text-secondary',
+			tdCls: 'text-secondary money-col',
+			render: (item) => showMoney(item.payback)
+		},
+		{
+			label: '기기대',
+			width: '85px',
+			thCls: 'text-secondary',
+			tdCls: 'text-secondary money-col',
+			render: (item) => showMoney(item.device)
+		},
+		{
+			label: '요금',
+			width: '85px',
+			thCls: 'text-secondary',
+			tdCls: 'text-secondary money-col',
+			render: (item) => showMoney(item.fee)
+		},
+		{
+			label: '중고폰',
+			width: '85px',
+			thCls: 'text-secondary',
+			tdCls: 'text-secondary money-col',
+			render: (item) => showMoney(item.used)
+		},
+		{
+			label: '상품권',
+			width: '85px',
+			thCls: 'text-secondary',
+			tdCls: 'text-secondary money-col',
+			render: (item) => showMoney(item.gift)
+		},
 
-    // 3. [본문 그리기]
-    if (list.length === 0) {
-        if(tbody) tbody.innerHTML = `<tr><td colspan="${columns.length}" class="text-muted py-5 text-center">해당 날짜에 내역이 없습니다.</td></tr>`;
-        return;
-    }
+		// 결과 지표 (강조)
+		{
+			label: '매출',
+			width: '90px',
+			thCls: 'table-success bg-opacity-10 text-success fw-bold',
+			tdCls: 'table-success bg-opacity-10 text-success fw-bold money-col',
+			render: (item) => showMoney(item.revenue)
+		},
+		{
+			label: '마진',
+			width: '90px',
+			thCls: 'table-danger bg-opacity-10 text-danger fw-bold',
+			tdCls: 'table-danger bg-opacity-10 text-danger fw-bold money-col',
+			render: (item) => showMoney(item.margin)
+		},
 
-    let html = "";
-    list.forEach(item => {
-        const showMoney = (val) => val === 0 ? '<span class="text-muted opacity-25">-</span>' : fmt(val);
-        const reviewIcon = (item.review === 'true' || item.review === true) 
-            ? '<i class="bi bi-check-circle-fill text-success"></i>' 
-            : '<span class="text-muted opacity-25">-</span>';
+		{
+			label: '리뷰',
+			width: '60px',
+			thCls: '',
+			tdCls: '',
+			render: (item) => reviewIcon(item.review)
+		}
+	];
+	// ============================================================
 
-        // 뱃지 처리
-        let typeBadge = "badge bg-secondary bg-opacity-75";
-        if(item.type.includes("신규") || item.type.includes("이동") || item.type.includes("기변")) typeBadge = "badge bg-primary bg-opacity-75";
-        else if(item.type.includes("중고")) typeBadge = "badge bg-warning text-dark bg-opacity-75";
-        else if(item.type.includes("유선") || item.type.includes("인터넷")) typeBadge = "badge bg-success bg-opacity-75";
+	// 1) 상단 요약 업데이트
+	document.getElementById('dr_sum_total').innerText = (summary?.total ?? 0) + '건';
+	document.getElementById('dr_sum_detail').innerText = `(📱${summary?.mobile ?? 0} / 📺${summary?.wired ?? 0} / ♻️${summary?.used ?? 0})`;
+	document.getElementById('dr_sum_settle').innerText = fmt(summary?.settle ?? 0);
+	document.getElementById('dr_sum_revenue').innerText = fmt(summary?.revenue ?? 0);
+	document.getElementById('dr_sum_margin').innerText = fmt(summary?.margin ?? 0);
 
-        html += `<tr>`;
-        
-        // ★ columns 배열 순서대로 데이터 매핑 (하드코딩 제거)
-        // 단, 데이터 포맷팅(뱃지, 콤마 등)이 각자 다르므로 
-        // 여기서는 가독성을 위해 순서대로 직접 작성하되, 위 columns 배열 순서와 일치시킵니다.
-        
-        // 1. 지점 ~ 담당자
-        html += `<td>${item.branch}</td>`;
-        html += `<td class="text-truncate" style="max-width:80px;">${item.visit}</td>`;
-        html += `<td>${item.carrier}</td>`;
-        html += `<td><span class="${typeBadge}">${item.type}</span></td>`;
-        html += `<td class="fw-bold">${item.name}</td>`;
-        html += `<td>${item.manager}</td>`;
+	// 2) 테이블 “스켈레톤”이 없으면 1회 생성 (colgroup + thead + tbody)
+	if (!table.dataset.inited) {
+		let colgroupHtml = '<colgroup>';
+		columns.forEach(col => {
+			colgroupHtml += `<col style="width:${col.width}; min-width:${col.width};">`;
+		});
+		colgroupHtml += '</colgroup>';
 
-        // 2. 정산 (강조)
-        html += `<td class="table-primary bg-opacity-10 fw-bold text-primary text-end">${showMoney(item.settle)}</td>`;
+		let theadHtml = '<thead class="table-light"><tr>';
+		columns.forEach(col => {
+			const thCls = col.thCls ? ` class="${col.thCls}"` : '';
+			theadHtml += `<th${thCls}>${col.label}</th>`;
+		});
+		theadHtml += '</tr></thead>';
 
-        // 3. 상세 금액들 (우측 정렬)
-        html += `<td class="text-end text-secondary">${showMoney(item.support)}</td>`;
-        html += `<td class="text-end text-secondary">${showMoney(item.cash)}</td>`;
-        html += `<td class="text-end text-secondary">${showMoney(item.payback)}</td>`;
-        html += `<td class="text-end text-secondary">${showMoney(item.device)}</td>`;
-        html += `<td class="text-end text-secondary">${showMoney(item.fee)}</td>`;
-        html += `<td class="text-end text-secondary">${showMoney(item.used)}</td>`;
-        html += `<td class="text-end text-secondary">${showMoney(item.gift)}</td>`;
+		table.innerHTML = `${colgroupHtml}${theadHtml}<tbody id="dr_tbody"></tbody>`;
+		table.dataset.inited = '1';
+	} else {
+		// 컬럼 구성(폭/개수)이 바뀌는 경우를 대비해 colgroup/thead를 매번 재구성하려면
+		// 위 inited 로직을 제거하고 항상 갱신하도록 바꾸면 됩니다.
+	}
 
-        // 4. 결과 지표 (강조)
-        html += `<td class="table-success bg-opacity-10 fw-bold text-success text-end">${showMoney(item.revenue)}</td>`;
-        html += `<td class="table-danger bg-opacity-10 fw-bold text-danger text-end">${showMoney(item.margin)}</td>`;
+	const tbody = table.querySelector('#dr_tbody');
+	if (!tbody) return;
 
-        // 5. 리뷰
-        html += `<td>${reviewIcon}</td>`;
+	// 3) 본문 렌더링
+	if (!Array.isArray(list) || list.length === 0) {
+		tbody.innerHTML = `<tr><td colspan="${columns.length}" class="text-muted py-5 text-center">해당 날짜에 내역이 없습니다.</td></tr>`;
+		return;
+	}
 
-        html += `</tr>`;
-    });
+	let rowsHtml = '';
+	list.forEach(item => {
+		rowsHtml += '<tr>';
+		columns.forEach(col => {
+			const tdCls = col.tdCls ? ` class="${col.tdCls}"` : '';
+			rowsHtml += `<td${tdCls}>${col.render(item)}</td>`;
+		});
+		rowsHtml += '</tr>';
+	});
 
-    if(tbody) tbody.innerHTML = html;
+	tbody.innerHTML = rowsHtml;
 }
 
 // ==========================================
