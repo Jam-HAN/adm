@@ -353,23 +353,3 @@ html, body {
 body {
   min-height: 100vh;
 }
-
-/* ✅ 하단탭은 항상 최상단 */
-.mobile-bottom-nav{
-  position: fixed; 
-  bottom: 0; left: 0; right: 0;
-  z-index: 3000;
-}
-
-/* ✅ FAB/메뉴는 하단탭보다 위 */
-#fab-menu-container,
-#search-menu-container,
-#manage-menu-container,
-#stats-menu-container{
-  z-index: 3100 !important;
-}
-
-/* ✅ 오버레이는 메뉴보다 아래(또는 위) 일관되게 */
-#fab-menu-overlay{
-  z-index: 3050 !important;
-}
