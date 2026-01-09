@@ -1333,7 +1333,8 @@ function searchHistory() {
 
 function updateSearchUI() { const criteria = document.getElementById('search_criteria').value; const area = document.getElementById('search_input_area'); area.innerHTML = ""; if(criteria === 'supplier') { const sel = document.createElement('select'); sel.className = "form-select"; sel.id = "search_value"; globalVendorList.forEach(v => { const opt = document.createElement('option'); opt.value=v; opt.innerText=v; sel.appendChild(opt); }); area.appendChild(sel); } else if(criteria === 'branch') { const sel = document.createElement('select'); sel.className = "form-select"; sel.id = "search_value"; ["장지 본점", "명일 직영점"].forEach(v => { const opt = document.createElement('option'); opt.value=v; opt.innerText=v; sel.appendChild(opt); }); area.appendChild(sel); } else if(criteria === 'model') { const sel = document.createElement('select'); sel.className = "form-select"; sel.id = "search_value"; globalModelList.forEach(v => { const opt = document.createElement('option'); opt.value=v; opt.innerText=v; sel.appendChild(opt); }); area.appendChild(sel); } else { const inp = document.createElement('input'); inp.className = "form-control"; inp.id = "search_value"; inp.placeholder = "입력하세요"; inp.onkeydown = function(e){ if(e.key==='Enter') searchStock(); }; area.appendChild(inp); inp.focus(); } }
 
-function closeAllMobileMenus(){
+// [script.js] 모든 모바일 메뉴 닫기 (excludeId 파라미터 추가됨)
+function closeAllMobileMenus(excludeId) {
   const ids = [
     "fab-menu-container",
     "search-menu-container",
@@ -1342,14 +1343,24 @@ function closeAllMobileMenus(){
   ];
 
   ids.forEach(id => {
+    // ★ [핵심 수정] 지금 열려고 하는 메뉴(excludeId)는 닫지 않고 건너뜁니다.
+    if (id === excludeId) return; 
+
     const el = document.getElementById(id);
     if(!el) return;
 
+    // 나머지 메뉴들은 닫기 처리
     el.classList.remove("open");
-    setTimeout(() => el.classList.add("d-none"), 160);
+    setTimeout(() => {
+        // 타이머가 돌 때, 혹시 그 사이에 다시 열렸는지 확인 (안전장치)
+        if (!el.classList.contains("open")) {
+            el.classList.add("d-none");
+        }
+    }, 160);
   });
 
-  setOverlay(false);
+  // 제외할 아이디가 없다면(배경 클릭 등) 오버레이도 끕니다.
+  if (!excludeId) setOverlay(false);
 }
 
 function anyMobileMenuOpen() {
