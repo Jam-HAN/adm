@@ -2401,7 +2401,7 @@ function renderDailyReportTable(list, summary) {
     // label: 헤더 이름 / key: 데이터 키 / class: 스타일 클래스
     // ============================================================
     const columns = [
-        { label: "지점",    width: "",   cls: "" },
+        { label: "지점",    width: "80px",   cls: "" },
         { label: "방문경로", width: "",   cls: "" },
         { label: "개통처",  width: "",   cls: "" },
         { label: "유형",    width: "",   cls: "" },
@@ -2440,10 +2440,14 @@ function renderDailyReportTable(list, summary) {
     if(headerRow) {
         let thHtml = "";
         columns.forEach(col => {
-            // cls(클래스)가 있으면 적용, 없으면 기본값
-            // 헤더 자체에는 배경색 효과를 덜 주기 위해 cls에서 'text-' 등만 상속받거나 별도 처리 가능
-            // 여기서는 심플하게 cls를 그대로 헤더 class에 넣되, 'text-end' 같은 정렬만 추가 고려
-            thHtml += `<th class="${col.cls.replace('text-end','').replace('fw-bold','')}">${col.label}</th>`;
+            // width 값이 있으면 style 속성 추가, 없으면 빈 값
+            const styleAttr = col.width ? `style="min-width: ${col.width}; width: ${col.width};"` : "";
+            
+            // 기존 클래스 처리 로직 유지
+            const classAttr = col.cls.replace('text-end','').replace('fw-bold','');
+            
+            // <th> 태그 생성
+            thHtml += `<th ${styleAttr} class="${classAttr}">${col.label}</th>`;
         });
         headerRow.innerHTML = thHtml;
     }
