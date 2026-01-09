@@ -340,3 +340,16 @@ body.no-scroll { overflow: hidden; touch-action: none; }
 .mobile-bottom-nav .nav-item:active{
   transform: translateY(1px);
 }
+
+/* ✅ 배경 단차(끊김) 방지: html/body 동일 배경 + 고정 */
+html, body {
+  height: 100%;
+  margin: 0;
+  background: var(--bg, #f4f7ff);     /* var(--bg) 없으면 기본값 사용 */
+  background-attachment: fixed;
+}
+
+/* body가 콘텐츠 높이까지만 칠해지는 경우 방지 */
+body {
+  min-height: 100vh;
+}
