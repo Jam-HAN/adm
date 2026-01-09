@@ -1458,9 +1458,9 @@
         
     </nav>
 
-    <div id="fab-menu-overlay" class="d-none" style="position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index: 1050;" onclick="closeAllMobileMenus()"></div>
+    <div id="fab-menu-overlay" class="d-none" onclick="closeAllMobileMenus()"></div>
     
-    <div id="fab-menu-container" class="d-none flex-column gap-2" style="position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); z-index: 1060; width: 200px;">
+    <div id="fab-menu-container" class="d-none floating-menu">
         <button onclick="showOpenSection('무선개통'); toggleFabMenu();" class="btn btn-light shadow-lg fw-bold py-3 text-primary border-0 rounded-4">
             <i class="bi bi-phone me-2"></i> 무선 개통
         </button>
@@ -1472,7 +1472,7 @@
         </button>
     </div>
 
-    <div id="search-menu-container" class="d-none flex-column gap-2" style="position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); z-index: 1060; width: 200px;">
+    <div id="search-menu-container" class="d-none floating-menu">
         <button onclick="showSection('section-search-all'); initHistoryDates(); toggleSearchMenu();" class="btn btn-light shadow-lg fw-bold py-3 text-dark border-0 rounded-4">
             <i class="bi bi-card-list me-2 text-primary"></i> 개통 조회
         </button>
@@ -1481,7 +1481,7 @@
         </button>
     </div>
 
-    <div id="manage-menu-container" class="d-none flex-column gap-2" style="position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); z-index: 1060; width: 220px;">
+    <div id="manage-menu-container" class="d-none floating-menu">
         <button onclick="showSection('section-return-usedphone'); toggleManageMenu();" class="btn btn-light shadow-lg fw-bold py-3 text-primary border-0 rounded-4">
             <i class="bi bi-phone me-2"></i> 중고폰 반납
         </button>
@@ -1499,7 +1499,7 @@
         </button>
     </div>
 
-    <div id="stats-menu-container" class="d-none flex-column gap-2" style="position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); z-index: 1060; width: 200px;">
+    <div id="stats-menu-container" class="d-none floating-menu">
         <button id="mobile_btn_daily_report" onclick="showDailyReportSection(); toggleStatsMenu();" class="btn btn-light shadow-lg fw-bold py-3 text-info border-0 rounded-4">
             <i class="bi bi-file-earmark-spreadsheet-fill me-2"></i> 일일 보고
         </button>
