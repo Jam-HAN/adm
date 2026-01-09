@@ -385,6 +385,9 @@ body.has-tabbar {
 	font-feature-settings: "tnum";
 }
 
+#dr_table .hide-col {
+	display: none;
+}
 
 /* =========================================================
    fixed-h-box
