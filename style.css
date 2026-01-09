@@ -229,7 +229,7 @@ a { text-decoration: none; }
 .mobile-bottom-nav .fab-btn{
   width: 54px;
   height: 54px;
-  border-radius: 18px;
+  border-radius: 50%;
   background: linear-gradient(135deg, var(--brand) 0%, var(--brand-2) 100%);
   display:flex;
   align-items:center;
