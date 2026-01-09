@@ -1,0 +1,309 @@
+/* =========================================================
+   DABAK Admin UI - Unified Tone / Cards / Form Density (v3)
+   - Bootstrap 5 compatible (override-friendly)
+   - Mobile-first, glass-ish but clean (less blur, more clarity)
+   ========================================================= */
+
+:root{
+  /* Brand */
+  --primary:#4361ee;
+  --primary-2:#3a0ca3;
+  --success:#2ec4b6;
+  --warning:#ff9f1c;
+  --danger:#e71d36;
+
+  /* Neutrals */
+  --bg-0:#f7f9fc;
+  --bg-1:#eef2ff;
+  --text:#111827;
+  --muted:#6b7280;
+  --muted-2:#94a3b8;
+
+  /* Surfaces */
+  --surface:#ffffff;
+  --surface-2:rgba(255,255,255,.86);
+  --border:rgba(17,24,39,.10);
+
+  /* Effects */
+  --shadow-sm:0 6px 18px rgba(17,24,39,.08);
+  --shadow-md:0 10px 30px rgba(17,24,39,.10);
+  --ring:0 0 0 .2rem rgba(67,97,238,.18);
+
+  /* Radius */
+  --r-lg:18px;
+  --r-md:14px;
+  --r-sm:12px;
+
+  /* Spacing */
+  --pad-card:18px;
+  --pad-card-lg:22px;
+}
+
+/* ---------- Base ---------- */
+html,body{height:100%;}
+body{
+  font-family:"Noto Sans KR", system-ui, -apple-system, Segoe UI, Roboto, "Apple SD Gothic Neo", sans-serif;
+  color:var(--text);
+  background:
+    radial-gradient(900px 520px at 15% -10%, rgba(67,97,238,.18), transparent 60%),
+    radial-gradient(760px 480px at 100% 10%, rgba(58,12,163,.14), transparent 55%),
+    linear-gradient(180deg, var(--bg-0) 0%, #f3f5ff 100%);
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+
+a{color:inherit;}
+/* reduce accidental zoom on iOS form focus */
+input, select, textarea { font-size: 16px; }
+
+/* ---------- Layout helpers ---------- */
+.section-view{display:none;}
+.section-view.active-section{display:block;}
+
+.divider{
+  height:1px;
+  background:linear-gradient(90deg, transparent, rgba(17,24,39,.12), transparent);
+  margin:18px 0;
+}
+
+.section-header{
+  font-weight:800;
+  color:#0f172a;
+  font-size:0.95rem;
+  letter-spacing:-.2px;
+  margin:6px 0 10px;
+  padding:10px 12px;
+  border-radius:12px;
+  background:rgba(67,97,238,.06);
+  border:1px solid rgba(67,97,238,.10);
+}
+.section-header i{margin-right:6px; opacity:.9;}
+
+.required-star{color:var(--danger); font-weight:800; margin-left:2px;}
+
+/* ---------- Cards (tone unification) ---------- */
+.glass-card{
+  background:var(--surface-2);
+  border:1px solid var(--border);
+  border-radius:var(--r-lg);
+  box-shadow:var(--shadow-sm);
+  backdrop-filter:saturate(150%) blur(10px);
+  -webkit-backdrop-filter:saturate(150%) blur(10px);
+}
+.glass-card.p-0{overflow:hidden;}
+.glass-card .card-header{
+  background:transparent !important;
+  border-bottom:1px solid rgba(17,24,39,.08) !important;
+}
+.glass-card .card-body{border-radius:inherit;}
+.glass-card:hover{box-shadow:var(--shadow-md); transition:box-shadow .18s ease;}
+
+.fixed-h-box{min-height:120px;}
+@media (min-width:992px){
+  .fixed-h-box{min-height:140px;}
+}
+
+/* ---------- Header (mobile) ---------- */
+.glass-header{
+  background:rgba(255,255,255,.78);
+  border-bottom:1px solid rgba(17,24,39,.08);
+  backdrop-filter:saturate(150%) blur(10px);
+  -webkit-backdrop-filter:saturate(150%) blur(10px);
+}
+
+/* ---------- Form density / focus ring ---------- */
+.form-label-sm{
+  font-size:.78rem;
+  color:var(--muted);
+  font-weight:700;
+  margin-bottom:4px;
+}
+
+.form-control,
+.form-select{
+  border-radius:14px;
+  border:1px solid rgba(17,24,39,.14);
+  background:rgba(255,255,255,.92);
+  box-shadow:none;
+}
+.form-control:focus,
+.form-select:focus{
+  border-color:rgba(67,97,238,.55);
+  box-shadow:var(--ring);
+}
+.form-control::placeholder{color:rgba(107,114,128,.75);}
+
+.form-control-sm, .form-select-sm{
+  border-radius:12px;
+}
+.form-control-lg{
+  border-radius:16px;
+}
+
+.input-group > .form-control{border-top-right-radius:0; border-bottom-right-radius:0;}
+.input-group > .btn{border-top-left-radius:0; border-bottom-left-radius:0;}
+
+.border-danger-custom{border-color:rgba(231,29,54,.55) !important;}
+.text-danger-custom{color:var(--danger) !important;}
+
+/* tighter grid for heavy forms (keeps readability) */
+@media (max-width: 576px){
+  .glass-card{border-radius:16px;}
+  .glass-card.p-4{padding:16px !important;}
+  .row.g-2{--bs-gutter-x:.6rem; --bs-gutter-y:.55rem;}
+  .row.g-3{--bs-gutter-x:.75rem; --bs-gutter-y:.75rem;}
+  .section-header{font-size:.92rem;}
+}
+
+/* ---------- Buttons (cohesive) ---------- */
+.btn{
+  border-radius:14px;
+  font-weight:800;
+}
+.btn-outline-secondary{font-weight:700;}
+.btn-primary{
+  background:linear-gradient(135deg, var(--primary) 0%, var(--primary-2) 100%);
+  border:none;
+}
+.btn-primary:hover{filter:brightness(.98);}
+.btn-success{border:none;}
+.btn-warning{border:none;}
+.btn-danger{border:none;}
+
+.btn-xs{
+  padding:.18rem .5rem;
+  font-size:.78rem;
+  border-radius:999px;
+}
+.btn-light{
+  background:rgba(255,255,255,.92);
+}
+
+/* ---------- Tables ---------- */
+.table{
+  --bs-table-bg:transparent;
+}
+.table thead th{
+  font-weight:900;
+  color:#0f172a;
+}
+.table-hover tbody tr:hover{
+  background:rgba(67,97,238,.05);
+}
+.table-responsive{
+  border-radius:16px;
+}
+
+/* Dashboard today table fixed layout (keeps ellipsis clean) */
+.dash-table{table-layout:fixed !important; width:100% !important;}
+.dash-table th, .dash-table td{
+  text-align:center !important;
+  vertical-align:middle !important;
+  white-space:nowrap !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+}
+
+/* ---------- Scan inputs (intake/move/out) ---------- */
+.scan-wrapper{
+  border-radius:var(--r-lg);
+  padding:14px;
+  background:rgba(67,97,238,.07);
+  border:1px dashed rgba(67,97,238,.28);
+}
+.scan-wrapper.bg-danger{background:rgba(231,29,54,.10) !important; border-color:rgba(231,29,54,.35) !important;}
+.scan-input{
+  border-radius:16px !important;
+  text-align:center;
+  font-weight:900;
+  letter-spacing:.3px;
+}
+
+/* ---------- Mobile bottom nav (tone match) ---------- */
+.mobile-bottom-nav{
+  position:fixed;
+  left:0; right:0; bottom:0;
+  height:72px;
+  padding:10px 12px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:8px;
+  background:rgba(255,255,255,.88);
+  border-top:1px solid rgba(17,24,39,.10);
+  backdrop-filter:saturate(160%) blur(12px);
+  -webkit-backdrop-filter:saturate(160%) blur(12px);
+  z-index:1040;
+}
+
+.mobile-bottom-nav .nav-item{
+  flex:1;
+  text-decoration:none;
+  color:var(--muted);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:4px;
+  padding:8px 6px;
+  border-radius:16px;
+  transition:transform .12s ease, background .12s ease, color .12s ease;
+}
+.mobile-bottom-nav .nav-item i{font-size:1.15rem;}
+.mobile-bottom-nav .nav-item span{font-size:.72rem; font-weight:800; letter-spacing:-.2px;}
+
+.mobile-bottom-nav .nav-item.active{
+  color:var(--primary);
+  background:rgba(67,97,238,.10);
+}
+.mobile-bottom-nav .nav-item:active{transform:scale(.98);}
+
+.mobile-bottom-nav .center-fab{
+  flex:0 0 56px;
+  background:transparent;
+}
+.mobile-bottom-nav .fab-btn{
+  width:56px; height:56px;
+  border-radius:18px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#fff;
+  background:linear-gradient(135deg, var(--primary) 0%, var(--primary-2) 100%);
+  box-shadow:0 12px 28px rgba(67,97,238,.28);
+}
+.mobile-bottom-nav .center-fab i{font-size:1.25rem;}
+
+/* Give content space above bottom nav on mobile */
+@media (max-width: 991.98px){
+  .container{padding-bottom:92px;}
+}
+
+/* ---------- Modals ---------- */
+.modal-content{
+  border-radius:22px;
+}
+.modal-header{
+  border-top-left-radius:22px;
+  border-top-right-radius:22px;
+}
+.modal-body{background:rgba(255,255,255,.96);}
+
+/* ---------- List group tone ---------- */
+.list-group-item{
+  border-color:rgba(17,24,39,.08);
+}
+#vendor_list_ui .list-group-item{
+  padding:14px 14px;
+}
+#vendor_list_ui .small{
+  display:block !important;
+  color:var(--muted) !important;
+  font-size:.83rem;
+  margin-top:4px;
+}
+
+/* ---------- Accessibility / motion ---------- */
+@media (prefers-reduced-motion: reduce){
+  *{scroll-behavior:auto !important; transition:none !important;}
+}
