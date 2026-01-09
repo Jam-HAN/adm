@@ -1333,25 +1333,23 @@ function searchHistory() {
 
 function updateSearchUI() { const criteria = document.getElementById('search_criteria').value; const area = document.getElementById('search_input_area'); area.innerHTML = ""; if(criteria === 'supplier') { const sel = document.createElement('select'); sel.className = "form-select"; sel.id = "search_value"; globalVendorList.forEach(v => { const opt = document.createElement('option'); opt.value=v; opt.innerText=v; sel.appendChild(opt); }); area.appendChild(sel); } else if(criteria === 'branch') { const sel = document.createElement('select'); sel.className = "form-select"; sel.id = "search_value"; ["장지 본점", "명일 직영점"].forEach(v => { const opt = document.createElement('option'); opt.value=v; opt.innerText=v; sel.appendChild(opt); }); area.appendChild(sel); } else if(criteria === 'model') { const sel = document.createElement('select'); sel.className = "form-select"; sel.id = "search_value"; globalModelList.forEach(v => { const opt = document.createElement('option'); opt.value=v; opt.innerText=v; sel.appendChild(opt); }); area.appendChild(sel); } else { const inp = document.createElement('input'); inp.className = "form-control"; inp.id = "search_value"; inp.placeholder = "입력하세요"; inp.onkeydown = function(e){ if(e.key==='Enter') searchStock(); }; area.appendChild(inp); inp.focus(); } }
 
-function closeAllMobileMenus(exceptId = "") {
-  const overlay = document.getElementById("fab-menu-overlay");
-  const ids = ["fab-menu-container", "search-menu-container", "manage-menu-container", "stats-menu-container"];
+function closeAllMobileMenus(){
+  const ids = [
+    "fab-menu-container",
+    "search-menu-container",
+    "manage-menu-container",
+    "stats-menu-container"
+  ];
 
   ids.forEach(id => {
     const el = document.getElementById(id);
-    if (!el) return;
+    if(!el) return;
 
-    if (id === exceptId) return;
-
-    // 닫기 애니메이션
     el.classList.remove("open");
-    if (!el.classList.contains("d-none")) {
-      setTimeout(() => el.classList.add("d-none"), 160);
-    }
+    setTimeout(() => el.classList.add("d-none"), 160);
   });
 
-  // exceptId가 있으면 “그 메뉴만” 토글 함수에서 overlay를 켜니까 여기선 끄지 않음
-  if (!exceptId) setOverlay(false);
+  setOverlay(false);
 }
 
 function anyMobileMenuOpen() {
@@ -1370,20 +1368,21 @@ function setOverlay(open) {
   document.body.classList.toggle("no-scroll", open);
 }
 
-function toggleFabMenu() {
-  closeAllMobileMenus("fab-menu-container");
+function toggleFabMenu(){
   const menu = document.getElementById("fab-menu-container");
-  if (!menu) return;
+  if(!menu) return;
 
-  const willOpen = menu.classList.contains("d-none");
-  if (willOpen) {
+  const isOpen = menu.classList.contains("open");
+
+  closeAllMobileMenus(); // 다른 메뉴 전부 닫기
+
+  if(!isOpen){
     menu.classList.remove("d-none");
-    requestAnimationFrame(() => menu.classList.add("open"));
-  } else {
-    menu.classList.remove("open");
-    setTimeout(() => menu.classList.add("d-none"), 160);
+    requestAnimationFrame(() => {
+      menu.classList.add("open");
+    });
+    setOverlay(true);
   }
-  setOverlay(willOpen);
 }
 
 function toggleSearchMenu() {
