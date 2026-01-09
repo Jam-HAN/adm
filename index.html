@@ -1056,15 +1056,11 @@
                     <div class="row g-3 mb-4">
                         <div class="col-3">
                             <div class="bg-white p-3 rounded border text-center shadow-sm">
-                            	<div class="small text-muted fw-bold mb-1">총 건수</div>
-                            
-                            	<h5 class="fw-bold text-dark m-0" id="dr_sum_total">-</h5>
-                            
-                            	<div
-                            		class="text-secondary fw-normal mt-1"
-                            		id="dr_sum_detail"
-                            		style="font-size: 0.8rem;"
-                            	></div>
+                                <div class="small text-muted fw-bold mb-1">총 건수</div>
+                                <h5 class="fw-bold text-dark m-0">
+                                    <span id="dr_sum_total">-</span>
+                                    <div class="text-secondary fw-normal mt-1" id="dr_sum_detail" style="font-size: 0.65rem;"></div>
+                                </h5>
                             </div>
                         </div>
                         <div class="col-3">
@@ -1092,7 +1088,14 @@
                             <i class="bi bi-list-task me-1"></i> 판매 상세 내역
                         </div>
                         <div class="table-responsive">
-                        	<table id="dr_table" class="table table-hover align-middle text-center small border mb-0" style="font-size:0.8rem;"></table>
+                            <table class="table table-hover align-middle text-center small border mb-0" style="font-size: 0.8rem; white-space: nowrap;">
+                                <thead class="table-light">
+                                    <tr id="dr_header_row"></tr>
+                                </thead>
+                                <tbody id="dr_tbody">
+                                    <tr><td colspan="100%" class="text-muted py-5 text-center">날짜를 선택하고 조회하세요.</td></tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
             
@@ -1415,22 +1418,6 @@
                 </div>
             </div>
         </div>
-    </div>
-
-    <div class="modal fade" id="modal-dr-detail" tabindex="-1" aria-hidden="true">
-    	<div class="modal-dialog modal-dialog-centered modal-lg">
-    		<div class="modal-content border-0 shadow">
-    			<div class="modal-header bg-dark text-white">
-    				<h6 class="modal-title fw-bold">
-    					<i class="bi bi-receipt-cutoff me-1"></i> 상세 금액
-    				</h6>
-    				<button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-    			</div>
-    			<div class="modal-body p-4">
-    				<div class="row g-2" id="dr_detail_body"></div>
-    			</div>
-    		</div>
-    	</div>
     </div>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
