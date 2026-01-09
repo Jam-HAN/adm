@@ -289,6 +289,83 @@ body.has-tabbar {
   background: rgba(67,97,238,0.08);
 }
 
+/* =========================
+   Mobile Floating Menus (FAB/Search/Manage/Stats)
+   ========================= */
+
+/* iOS 안전영역 + 하단바 높이 보정 */
+:root{
+  --bottom-nav-h: 74px;
+  --bottom-nav-safe: env(safe-area-inset-bottom, 0px);
+  --floating-gap: 14px;
+}
+
+/* 하단바: 안전영역 포함 */
+.mobile-bottom-nav{
+  padding-bottom: calc(8px + var(--bottom-nav-safe));
+  height: calc(var(--bottom-nav-h) + var(--bottom-nav-safe));
+}
+
+/* 하단바가 컨텐츠 가리지 않게(모바일) */
+@media (max-width: 991.98px){
+  body{
+    padding-bottom: calc(var(--bottom-nav-h) + var(--bottom-nav-safe) + 10px);
+  }
+}
+
+/* 메뉴 열릴 때 배경 스크롤 방지 */
+body.no-scroll{
+  overflow: hidden;
+  touch-action: none;
+}
+
+/* 오버레이(기존 inline 스타일 대신 CSS로 통일 권장) */
+#fab-menu-overlay{
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.45);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  z-index: 2000; /* 부트스트랩 모달보다 위로 올려둠(안전) */
+}
+
+/* 공통 플로팅 메뉴 컨테이너 */
+.floating-menu{
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: calc(var(--bottom-nav-h) + var(--bottom-nav-safe) + var(--floating-gap));
+  z-index: 2010;
+  width: min(92vw, 240px);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  /* 애니메이션 */
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-50%) translateY(10px) scale(.98);
+  transition: opacity .18s ease, transform .18s ease;
+}
+
+.floating-menu.open{
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(-50%) translateY(0) scale(1);
+}
+
+/* 버튼 터치감 */
+.floating-menu .btn{
+  border-radius: 16px !important;
+}
+
+/* FAB 중심 버튼 터치영역 보강 */
+.mobile-bottom-nav .center-fab .fab-btn{
+  width: 56px;
+  height: 56px;
+  border-radius: 18px;
+}
+
 /* Center FAB */
 .center-fab .fab-btn {
   width: 52px;
