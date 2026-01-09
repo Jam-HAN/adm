@@ -297,3 +297,16 @@ html, body {
 body {
   min-height: 100vh;
 }
+
+/* iOS에서 overlay가 메뉴보다 위에 올라오는 문제 강제 해결 */
+#fab-menu-overlay {
+  z-index: 1990 !important;
+}
+
+#fab-menu-container,
+#search-menu-container,
+#manage-menu-container,
+#stats-menu-container {
+  position: fixed !important;
+  z-index: 2000 !important;
+}
