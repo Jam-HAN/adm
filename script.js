@@ -190,6 +190,13 @@ window.onload = function() {
     }
 };
 
+window.addEventListener('resize', () => {
+	const cache = window.__DR_LAST_RENDER__;
+	if (cache?.list && cache?.summary) {
+		renderDailyReportTable(cache.list, cache.summary);
+	}
+});
+
 function logout() { sessionStorage.removeItem('dbphone_user'); location.reload(); }
 
 function setupAutoLogout() {
@@ -2518,6 +2525,8 @@ function renderDailyReportTable(list, summary) {
 
 	tbody.innerHTML = rowsHtml;
 }
+
+window.__DR_LAST_RENDER__ = { list, summary };
 
 // 좁은 화면에서 “상세보기” 버튼 클릭 시 모달 출력
 function openDailyReportDetail(index) {
