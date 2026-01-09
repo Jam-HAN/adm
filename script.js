@@ -2390,13 +2390,12 @@ function loadDailyReport() {
 }
 
 // 3. 일일 상세 보고 렌더링 (모바일: 한눈에 보이는 오픈형 카드)
-// [script.js] 일일 상세 보고 렌더링 (헤더/본문 모두 JS 생성)
 function renderDailyReportTable(list, summary) {
 	const table = document.getElementById('dr_table');
 	if (!table) return;
 
 	const fmt = (n) => Number(n || 0).toLocaleString();
-	const showMoney = (val) => Number(val || 0) === 0 ? '<span class="text-muted opacity-25">-</span>' : fmt(val);
+	const showMoney = (val) => Number(val || 0) === 0 ? '-' : fmt(val);
 
 	const reviewIcon = (v) => (v === 'true' || v === true)
 		? '<i class="bi bi-check-circle-fill text-success"></i>'
@@ -2410,139 +2409,9 @@ function renderDailyReportTable(list, summary) {
 		return 'badge bg-secondary bg-opacity-75';
 	};
 
-	// ============================================================
-	// ★ [설정] 컬럼 정의 (여기만 수정하면 표 전체가 바뀜)
-	// label: 헤더 / width: col 폭 / thCls: 헤더 클래스 / tdCls: 셀 클래스 / render: 셀 렌더러
-	// ============================================================
-	const columns = [
-		{
-			label: '지점',
-			width: '80px',
-			thCls: '',
-			tdCls: '',
-			render: (item) => item.branch ?? ''
-		},
-		{
-			label: '방문경로',
-			width: '90px',
-			thCls: '',
-			tdCls: 'text-truncate',
-			render: (item) => item.visit ?? ''
-		},
-		{
-			label: '개통처',
-			width: '90px',
-			thCls: '',
-			tdCls: '',
-			render: (item) => item.carrier ?? ''
-		},
-		{
-			label: '유형',
-			width: '90px',
-			thCls: '',
-			tdCls: '',
-			render: (item) => `<span class="${typeBadgeClass(item.type)}">${item.type ?? ''}</span>`
-		},
-		{
-			label: '고객명',
-			width: '90px',
-			thCls: '',
-			tdCls: 'fw-bold',
-			render: (item) => item.name ?? ''
-		},
-		{
-			label: '담당자',
-			width: '90px',
-			thCls: '',
-			tdCls: '',
-			render: (item) => item.manager ?? ''
-		},
-
-		// 정산 (강조)
-		{
-			label: '정산',
-			width: '90px',
-			thCls: 'table-primary bg-opacity-10 text-primary fw-bold',
-			tdCls: 'table-primary bg-opacity-10 text-primary fw-bold money-col',
-			render: (item) => showMoney(item.settle)
-		},
-
-		// 상세 자금
-		{
-			label: '대납',
-			width: '85px',
-			thCls: 'text-secondary',
-			tdCls: 'text-secondary money-col',
-			render: (item) => showMoney(item.support)
-		},
-		{
-			label: '캐시백',
-			width: '85px',
-			thCls: 'text-secondary',
-			tdCls: 'text-secondary money-col',
-			render: (item) => showMoney(item.cash)
-		},
-		{
-			label: '페이백',
-			width: '85px',
-			thCls: 'text-secondary',
-			tdCls: 'text-secondary money-col',
-			render: (item) => showMoney(item.payback)
-		},
-		{
-			label: '기기대',
-			width: '85px',
-			thCls: 'text-secondary',
-			tdCls: 'text-secondary money-col',
-			render: (item) => showMoney(item.device)
-		},
-		{
-			label: '요금',
-			width: '85px',
-			thCls: 'text-secondary',
-			tdCls: 'text-secondary money-col',
-			render: (item) => showMoney(item.fee)
-		},
-		{
-			label: '중고폰',
-			width: '85px',
-			thCls: 'text-secondary',
-			tdCls: 'text-secondary money-col',
-			render: (item) => showMoney(item.used)
-		},
-		{
-			label: '상품권',
-			width: '85px',
-			thCls: 'text-secondary',
-			tdCls: 'text-secondary money-col',
-			render: (item) => showMoney(item.gift)
-		},
-
-		// 결과 지표 (강조)
-		{
-			label: '매출',
-			width: '90px',
-			thCls: 'table-success bg-opacity-10 text-success fw-bold',
-			tdCls: 'table-success bg-opacity-10 text-success fw-bold money-col',
-			render: (item) => showMoney(item.revenue)
-		},
-		{
-			label: '마진',
-			width: '90px',
-			thCls: 'table-danger bg-opacity-10 text-danger fw-bold',
-			tdCls: 'table-danger bg-opacity-10 text-danger fw-bold money-col',
-			render: (item) => showMoney(item.margin)
-		},
-
-		{
-			label: '리뷰',
-			width: '60px',
-			thCls: '',
-			tdCls: '',
-			render: (item) => reviewIcon(item.review)
-		}
-	];
-	// ============================================================
+	// 반응형 기준(px): 이 값보다 작으면 "상세 금액" 컬럼 숨김
+	const DETAIL_HIDE_BELOW = 1200;
+	const isWide = window.innerWidth >= DETAIL_HIDE_BELOW;
 
 	// 1) 상단 요약 업데이트
 	document.getElementById('dr_sum_total').innerText = (summary?.total ?? 0) + '건';
@@ -2551,48 +2420,157 @@ function renderDailyReportTable(list, summary) {
 	document.getElementById('dr_sum_revenue').innerText = fmt(summary?.revenue ?? 0);
 	document.getElementById('dr_sum_margin').innerText = fmt(summary?.margin ?? 0);
 
-	// 2) 테이블 “스켈레톤”이 없으면 1회 생성 (colgroup + thead + tbody)
-	if (!table.dataset.inited) {
-		let colgroupHtml = '<colgroup>';
-		columns.forEach(col => {
-			colgroupHtml += `<col style="width:${col.width}; min-width:${col.width};">`;
-		});
-		colgroupHtml += '</colgroup>';
+	// ============================================================
+	// 컬럼 정의
+	// always: 항상 노출
+	// detail: 넓은 화면에서만 노출 (좁으면 숨김 + 모달로 보기)
+	// ============================================================
+	const columns = [
+		// ALWAYS
+		{ id: 'branch',	label: '지점',	width: '80px',	thCls: '',	tdCls: '',			always: true,	render: (i) => i.branch ?? '' },
+		{ id: 'type',	label: '유형',	width: '90px',	thCls: '',	tdCls: '',			always: true,	render: (i) => `<span class="${typeBadgeClass(i.type)}">${i.type ?? ''}</span>` },
+		{ id: 'name',	label: '고객명',	width: '90px',	thCls: '',	tdCls: 'fw-bold',	always: true,	render: (i) => i.name ?? '' },
+		{ id: 'manager',label: '담당자',	width: '90px',	thCls: '',	tdCls: '',			always: true,	render: (i) => i.manager ?? '' },
 
-		let theadHtml = '<thead class="table-light"><tr>';
-		columns.forEach(col => {
-			const thCls = col.thCls ? ` class="${col.thCls}"` : '';
-			theadHtml += `<th${thCls}>${col.label}</th>`;
-		});
-		theadHtml += '</tr></thead>';
+		{ id: 'settle',	label: '정산',	width: '90px',	thCls: 'table-primary bg-opacity-10 text-primary fw-bold',
+			tdCls: 'table-primary bg-opacity-10 text-primary fw-bold money-col', always: true,
+			render: (i) => showMoney(i.settle)
+		},
 
-		table.innerHTML = `${colgroupHtml}${theadHtml}<tbody id="dr_tbody"></tbody>`;
-		table.dataset.inited = '1';
-	} else {
-		// 컬럼 구성(폭/개수)이 바뀌는 경우를 대비해 colgroup/thead를 매번 재구성하려면
-		// 위 inited 로직을 제거하고 항상 갱신하도록 바꾸면 됩니다.
+		{ id: 'revenue',label: '매출',	width: '90px',	thCls: 'table-success bg-opacity-10 text-success fw-bold',
+			tdCls: 'table-success bg-opacity-10 text-success fw-bold money-col', always: true,
+			render: (i) => showMoney(i.revenue)
+		},
+
+		{ id: 'margin',	label: '마진',	width: '90px',	thCls: 'table-danger bg-opacity-10 text-danger fw-bold',
+			tdCls: 'table-danger bg-opacity-10 text-danger fw-bold money-col', always: true,
+			render: (i) => showMoney(i.margin)
+		},
+
+		{ id: 'review',	label: '리뷰',	width: '60px',	thCls: '',	tdCls: '',			always: true,	render: (i) => reviewIcon(i.review) },
+
+		// DETAIL (넓은 화면에서만)
+		{ id: 'visit',	label: '방문경로',width: '110px',	thCls: '',	tdCls: 'text-truncate', detail: true,	render: (i) => i.visit ?? '' },
+		{ id: 'carrier',label: '개통처',	width: '110px',	thCls: '',	tdCls: '',			 detail: true,	render: (i) => i.carrier ?? '' },
+
+		{ id: 'support',label: '대납',	width: '85px',	thCls: 'text-secondary', tdCls: 'text-secondary money-col', detail: true,	render: (i) => showMoney(i.support) },
+		{ id: 'cash',	label: '캐시백',	width: '85px',	thCls: 'text-secondary', tdCls: 'text-secondary money-col', detail: true,	render: (i) => showMoney(i.cash) },
+		{ id: 'payback',label: '페이백',	width: '85px',	thCls: 'text-secondary', tdCls: 'text-secondary money-col', detail: true,	render: (i) => showMoney(i.payback) },
+		{ id: 'device',	label: '기기대',	width: '85px',	thCls: 'text-secondary', tdCls: 'text-secondary money-col', detail: true,	render: (i) => showMoney(i.device) },
+		{ id: 'fee',	label: '요금',	width: '85px',	thCls: 'text-secondary', tdCls: 'text-secondary money-col', detail: true,	render: (i) => showMoney(i.fee) },
+		{ id: 'used',	label: '중고폰',	width: '85px',	thCls: 'text-secondary', tdCls: 'text-secondary money-col', detail: true,	render: (i) => showMoney(i.used) },
+		{ id: 'gift',	label: '상품권',	width: '85px',	thCls: 'text-secondary', tdCls: 'text-secondary money-col', detail: true,	render: (i) => showMoney(i.gift) }
+	];
+
+	// 좁은 화면에서는 “상세보기” 버튼 컬럼을 ALWAYS로 추가
+	const activeCols = columns
+		.filter(c => c.always || (c.detail && isWide));
+
+	if (!isWide) {
+		activeCols.splice(4, 0, {
+			id: 'detailBtn',
+			label: '상세',
+			width: '70px',
+			thCls: '',
+			tdCls: '',
+			always: true,
+			render: (i, idx) => `<button class="btn btn-sm btn-outline-dark fw-bold" onclick="openDailyReportDetail(${idx})">보기</button>`
+		});
 	}
+
+	// 2) 테이블 스켈레톤 생성/갱신 (colgroup + thead + tbody)
+	let colgroupHtml = '<colgroup>';
+	activeCols.forEach(col => {
+		colgroupHtml += `<col style="width:${col.width}; min-width:${col.width};">`;
+	});
+	colgroupHtml += '</colgroup>';
+
+	let theadHtml = '<thead class="table-light"><tr>';
+	activeCols.forEach(col => {
+		const thCls = col.thCls ? ` class="${col.thCls}"` : '';
+		theadHtml += `<th${thCls}>${col.label}</th>`;
+	});
+	theadHtml += '</tr></thead>';
+
+	table.innerHTML = `${colgroupHtml}${theadHtml}<tbody id="dr_tbody"></tbody>`;
 
 	const tbody = table.querySelector('#dr_tbody');
 	if (!tbody) return;
 
 	// 3) 본문 렌더링
 	if (!Array.isArray(list) || list.length === 0) {
-		tbody.innerHTML = `<tr><td colspan="${columns.length}" class="text-muted py-5 text-center">해당 날짜에 내역이 없습니다.</td></tr>`;
+		tbody.innerHTML = `<tr><td colspan="${activeCols.length}" class="text-muted py-5 text-center">해당 날짜에 내역이 없습니다.</td></tr>`;
 		return;
 	}
 
+	// 좁은 화면에서 모달에 쓸 원본 데이터를 저장
+	window.__DR_LAST_LIST__ = list;
+
 	let rowsHtml = '';
-	list.forEach(item => {
+	list.forEach((item, idx) => {
 		rowsHtml += '<tr>';
-		columns.forEach(col => {
+		activeCols.forEach(col => {
 			const tdCls = col.tdCls ? ` class="${col.tdCls}"` : '';
-			rowsHtml += `<td${tdCls}>${col.render(item)}</td>`;
+			rowsHtml += `<td${tdCls}>${col.render(item, idx)}</td>`;
 		});
 		rowsHtml += '</tr>';
 	});
 
 	tbody.innerHTML = rowsHtml;
+}
+
+// 좁은 화면에서 “상세보기” 버튼 클릭 시 모달 출력
+function openDailyReportDetail(index) {
+	const list = window.__DR_LAST_LIST__ || [];
+	const item = list[index];
+	if (!item) return;
+
+	const fmt = (n) => Number(n || 0).toLocaleString();
+	const money = (v) => Number(v || 0) === 0 ? '-' : fmt(v);
+
+	const fields = [
+		{ label: '지점', value: item.branch ?? '' },
+		{ label: '유형', value: item.type ?? '' },
+		{ label: '고객명', value: item.name ?? '' },
+		{ label: '담당자', value: item.manager ?? '' },
+		{ label: '방문경로', value: item.visit ?? '' },
+		{ label: '개통처', value: item.carrier ?? '' },
+
+		{ label: '정산', value: money(item.settle), cls: 'text-primary fw-bold' },
+		{ label: '매출', value: money(item.revenue), cls: 'text-success fw-bold' },
+		{ label: '마진', value: money(item.margin), cls: 'text-danger fw-bold' },
+
+		{ label: '대납', value: money(item.support) },
+		{ label: '캐시백', value: money(item.cash) },
+		{ label: '페이백', value: money(item.payback) },
+		{ label: '기기대', value: money(item.device) },
+		{ label: '요금', value: money(item.fee) },
+		{ label: '중고폰', value: money(item.used) },
+		{ label: '상품권', value: money(item.gift) }
+	];
+
+	const body = document.getElementById('dr_detail_body');
+	if (!body) return;
+
+	let html = '';
+	fields.forEach(f => {
+		html += `
+			<div class="col-6">
+				<div class="p-3 border rounded bg-light h-100">
+					<div class="small text-muted fw-bold mb-1">${f.label}</div>
+					<div class="${f.cls ? f.cls : 'fw-bold'}">${f.value}</div>
+				</div>
+			</div>
+		`;
+	});
+
+	body.innerHTML = html;
+
+	const modalEl = document.getElementById('modal-dr-detail');
+	if (!modalEl) return;
+
+	const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+	modal.show();
 }
 
 // ==========================================
