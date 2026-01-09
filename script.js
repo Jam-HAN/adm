@@ -1422,6 +1422,7 @@ function closeAllMobileMenus() {
 
 // [누락된 함수 추가] 더하기(+) 메뉴 토글 함수
 function toggleFabMenu() {
+    closeAllMobileMenus(); // ✅ 항상 초기화 후 열기
     const overlay = document.getElementById('fab-menu-overlay');
     const menu = document.getElementById('fab-menu-container');
     const fabIcon = document.querySelector('.center-fab .bi');
@@ -1455,6 +1456,7 @@ function toggleFabMenu() {
 
 // [추가 2] 조회 메뉴 토글 (돋보기 아이콘 클릭 시)
 function toggleSearchMenu() {
+    closeAllMobileMenus(); // ✅ 항상 초기화 후 열기
     const overlay = document.getElementById('fab-menu-overlay');
     const menu = document.getElementById('search-menu-container');
     
@@ -1483,6 +1485,7 @@ function toggleSearchMenu() {
 
 // [신규 추가] 관리 메뉴 토글 함수
 function toggleManageMenu() {
+    closeAllMobileMenus(); // ✅ 항상 초기화 후 열기
     const overlay = document.getElementById('fab-menu-overlay');
     const menu = document.getElementById('manage-menu-container');
     
@@ -1510,6 +1513,7 @@ function toggleManageMenu() {
 
 // ★ 집계 메뉴 토글 기능
 function toggleStatsMenu() {
+    closeAllMobileMenus(); // ✅ 항상 초기화 후 열기
     const statsMenu = document.getElementById('stats-menu-container');
     const overlay = document.getElementById('fab-menu-overlay');
     
