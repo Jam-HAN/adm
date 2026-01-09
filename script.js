@@ -2401,7 +2401,7 @@ function renderDailyReportTable(list, summary) {
     // label: 헤더 이름 / key: 데이터 키 / class: 스타일 클래스
     // ============================================================
     const columns = [
-        { label: "지점",    width: "80px",   cls: "" },
+        { label: "지점",    width: "50px",   cls: "" },
         { label: "방문경로", width: "",   cls: "" },
         { label: "개통처",  width: "",   cls: "" },
         { label: "유형",    width: "",   cls: "" },
