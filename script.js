@@ -2402,11 +2402,11 @@ function renderDailyReportTable(list, summary) {
     // ============================================================
     const columns = [
         { label: "지점",    width: "50px",   cls: "" },
-        { label: "방문경로", width: "",   cls: "" },
-        { label: "개통처",  width: "",   cls: "" },
-        { label: "유형",    width: "",   cls: "" },
-        { label: "고객명",  width: "",   cls: "fw-bold" },
-        { label: "담당자",  width: "",   cls: "" },
+        { label: "방문경로", width: "50px",   cls: "" },
+        { label: "개통처",  width: "50px",   cls: "" },
+        { label: "유형",    width: "50px",   cls: "" },
+        { label: "고객명",  width: "50px",   cls: "fw-bold" },
+        { label: "담당자",  width: "50px",   cls: "" },
         
         // 핵심 금액 (배경색 강조)
         { label: "정산",    width: "",   cls: "table-primary bg-opacity-10 text-primary fw-bold" },
