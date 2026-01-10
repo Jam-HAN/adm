@@ -896,13 +896,9 @@
                         <div class="col-3">
                             <div class="bg-white p-3 rounded border text-center shadow-sm">
                                 <div class="small text-muted fw-bold mb-1">총 건수</div>
-                                <h5 class="fw-bold text-dark m-0">
+                                <h5 class="summary-value m-0">
                                     <span id="dr_sum_total">-</span>
-                                    <span
-                                      id="dr_sum_detail"
-                                      class="text-secondary fw-normal ms-1"
-                                      style="font-size:0.65rem; white-space:nowrap;"
-                                    ></span>
+                                    <span id="dr_sum_detail" class="summary-sub"></span>
                                 </h5>
                             </div>
                         </div>
@@ -1004,11 +1000,15 @@
             			<div class="tab-pane fade show active" id="pills-trend" role="tabpanel">
             				<div class="row g-3 mb-4">
             					<div class="col-3">
-            						<div class="bg-white p-3 rounded border text-center shadow-sm">
+            						<div class="bg-white p-3 rounded border text-center shadow-sm summary-card">
             							<div class="small text-muted fw-bold mb-1">총 실적</div>
-            							<h4 class="fw-bold text-dark m-0" id="ds_total_cnt">-</h4>
-            						</div>
-            					</div>
+                                        <div class="summary-value">
+                                          <span id="ds_total_cnt">-</span>
+                                          <!-- 나중에 필요하면 보조 텍스트 추가 가능 -->
+                                          <!-- <span class="summary-sub">(+3%)</span> -->
+                                        </div>
+                                    </div>
+                                </div>
             					<div class="col-3">
             						<div class="bg-white p-3 rounded border text-center shadow-sm">
             							<div class="small text-muted fw-bold mb-1">총 정산</div>
