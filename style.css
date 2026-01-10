@@ -278,7 +278,10 @@ a { text-decoration: none; }
   align-items: center;
   justify-content: center;
 }
-.fixed-h-box .col-6 .small{ line-height: 1; margin-bottom: 10px !important; }
+.fixed-h-box .col-6 .small{
+  line-height: 1;
+  margin-bottom: 4px !important;   /* 10px → 4px */
+}
 .fixed-h-box .col-6 .h2{
   height: 72px;                /* 숫자 영역 고정(시각적 중심 흔들림 방지) */
   display: flex;
