@@ -1,5 +1,5 @@
 // ==========================================
-// script.js (V56.0 - Optimized UI Rendering)
+// script.js (V57.0 - Unified API + TTL Cache)
 // ==========================================
 
 const GAS_URL = "https://script.google.com/macros/s/AKfycbxVfZJV7fS-qrl6pdd-fUduJfpRI1cAdGu9l1eHj1eLYyDQDyNKUgBntbzUTPNKFNK9/exec"; 
@@ -50,6 +50,47 @@ let logoutTimer;
 let tempOpenStockData = null;
 let tempInStockData = null; 
 
+// ============================================================
+// [Cache] localStorage TTL cache (backward compatible)
+// ============================================================
+const CACHE_TTL = {
+    vendors: 6 * 60 * 60 * 1000,   // 6 hours
+    iphone:  24 * 60 * 60 * 1000   // 24 hours
+};
+
+function cacheSet(key, data, ttlMs) {
+    try {
+        const payload = { v: 1, exp: Date.now() + (ttlMs || 0), data };
+        localStorage.setItem(key, JSON.stringify(payload));
+    } catch (e) {
+        console.warn("cacheSet failed:", key, e);
+    }
+}
+
+function cacheGet(key) {
+    try {
+        const raw = localStorage.getItem(key);
+        if (!raw) return null;
+
+        const parsed = JSON.parse(raw);
+
+        // Legacy format support: directly stored array/object
+        if (!parsed || typeof parsed !== "object" || (!("exp" in parsed) && !("data" in parsed))) {
+            return parsed;
+        }
+
+        if (parsed.exp && Date.now() > parsed.exp) {
+            localStorage.removeItem(key);
+            return null;
+        }
+        return parsed.data ?? null;
+
+    } catch (e) {
+        console.warn("cacheGet failed:", key, e);
+        return null;
+    }
+}
+
 // --- [3단계] UI 렌더링 최적화 헬퍼 ---
 // HTML을 += 로 붙이지 않고 배열로 모아 한 번에 join하여 렌더링
 function renderHtmlList(containerId, dataList, renderFunc, emptyMsg) {
@@ -66,8 +107,7 @@ function renderHtmlList(containerId, dataList, renderFunc, emptyMsg) {
 // 1. 인증 및 초기화
 window.handleCredentialResponse = function(response) {
     if (!response.credential) { alert("구글 인증 정보를 받아오지 못했습니다."); return; }
-    fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "login", token: response.credential }) })
-    .then(res => res.json())
+    requestAPI({ action: "login", token: response.credential })
     .then(d => {
         if (d.status === 'success') {
             sessionStorage.setItem('dbphone_user', JSON.stringify({ name: d.name, email: d.user, role: d.role }));
@@ -339,8 +379,7 @@ function loadDashboard() {
             </div>`;
     }
     
-    fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "get_dashboard_data" }) })
-    .then(r => r.json())
+    requestAPI({ action: "get_dashboard_data" })
     .then(d => {
         if(d.status === 'success') { renderDashboard(d.data); } 
         else { dashList.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-danger">로드 실패</td></tr>'; }
@@ -474,39 +513,36 @@ function renderDashboard(data) {
 // [수정] 초기 데이터 로드 (LocalStorage 캐싱 적용으로 속도 10배 향상)
 function loadInitData() {
     // A. [로컬 스토리지] 캐시된 데이터가 있으면 먼저 화면에 뿌립니다 (0.1초 컷)
-    const cachedVendors = localStorage.getItem('dbphone_vendors');
-    const cachedIphone = localStorage.getItem('dbphone_iphone');
+    const cachedVendors = cacheGet('dbphone_vendors');
+    const cachedIphone = cacheGet('dbphone_iphone');
     
     if (cachedVendors) {
-        globalVendorList = JSON.parse(cachedVendors);
+        globalVendorList = cachedVendors;
         renderVendorDropdown(); // 즉시 렌더링
     }
     if (cachedIphone) {
-        globalIphoneData = JSON.parse(cachedIphone);
+        globalIphoneData = cachedIphone;
     }
 
     // B. [서버 요청] 최신 데이터를 백그라운드에서 가져와서 캐시를 갱신합니다.
-    fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "get_vendors" }) })
-    .then(r => r.json())
+    requestAPI({ action: "get_vendors" })
     .then(d => {
         globalVendorList = d.list.map(v => v.name);
-        localStorage.setItem('dbphone_vendors', JSON.stringify(globalVendorList)); // ★ 캐시 저장
+        cacheSet('dbphone_vendors', globalVendorList, CACHE_TTL.vendors); // ★ TTL 캐시 저장
         renderVendorDropdown(); // 최신 데이터로 다시 렌더링
         if (document.getElementById('search_criteria').value === 'supplier') updateSearchUI();
     });
 
-    fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "get_models" }) })
-    .then(r => r.json())
+    requestAPI({ action: "get_models" })
     .then(d => {
         globalModelList = d.list;
         if (document.getElementById('search_criteria').value === 'model') updateSearchUI();
     });
 
-    fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "get_iphone_data" }) })
-    .then(r => r.json())
+    requestAPI({ action: "get_iphone_data" })
     .then(d => {
         globalIphoneData = d.data;
-        localStorage.setItem('dbphone_iphone', JSON.stringify(d.data)); // ★ 캐시 저장
+        cacheSet('dbphone_iphone', d.data, CACHE_TTL.iphone); // ★ TTL 캐시 저장
     });
 }
 
@@ -528,7 +564,7 @@ function renderVendorDropdown() {
 
 function loadDropdownData() {
     if (globalDropdownData) { applyDropdownData(globalDropdownData); return; }
-    fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "get_dropdown_data" }) }).then(r => r.json()).then(d => {
+    requestAPI({ action: "get_dropdown_data" }).then(d => {
         if(d.status === 'success') { globalDropdownData = d; applyDropdownData(d); }
     });
 }
@@ -689,8 +725,7 @@ function handleInScan(e) {
         renderInList();
     }
 
-    fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "scan_preview", barcode: v, supplier: currentSupplier, branch: currentBranch, user: currentUser }) })
-    .then(r => r.json())
+    requestAPI({ action: "scan_preview", barcode: v, supplier: currentSupplier, branch: currentBranch, user: currentUser })
     .then(d => {
         if(isContinuous) {
             const idx = inPendingList.findIndex(i => i.tempId === tempId);
@@ -715,8 +750,7 @@ function handleInScan(e) {
 }
 
 function requestSingleRegister(barcode) {
-    fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "register_single", barcode: barcode, supplier: document.getElementById('in_supplier').value, branch: document.getElementById('in_branch').value, user: currentUser }) })
-    .then(r => r.json()).then(d => { if(d.status === 'success') showMsg('in-msg','success',`입고: ${d.data.model}`); else showMsg('in-msg','error', d.message); });
+    requestAPI({ action: "register_single", barcode: barcode, supplier: document.getElementById('in_supplier').value, branch: document.getElementById('in_branch').value, user: currentUser }).then(d => { if(d.status === 'success') showMsg('in-msg','success',`입고: ${d.data.model}`); else showMsg('in-msg','error', d.message); });
 }
 
 function showStockRegisterModal(type, dataObj) {
@@ -759,12 +793,11 @@ function showStockRegisterModal(type, dataObj) {
                 // 2. 목록이 없으면 "로딩 중" 표시 후 즉시 서버 요청
                 modalSupSel.innerHTML = `<option value="" disabled selected>데이터 불러오는 중...</option>`;
                 
-                fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "get_vendors" }) })
-                .then(r => r.json())
+                requestAPI({ action: "get_vendors" })
                 .then(d => {
                     if(d.status === 'success') {
                         globalVendorList = d.list.map(v => v.name); // 전역 변수 업데이트
-                        localStorage.setItem('dbphone_vendors', JSON.stringify(globalVendorList)); // 캐시 저장
+                        cacheSet('dbphone_vendors', globalVendorList, CACHE_TTL.vendors); // TTL 캐시 저장
                         
                         // 드롭다운 다시 그리기
                         modalSupSel.innerHTML = '<option value="">선택하세요</option>';
@@ -803,8 +836,7 @@ function showStockRegisterModal(type, dataObj) {
             
             // 아이폰 데이터가 아직 로드 안 됐을 경우 대비
             if (Object.keys(globalIphoneData).length === 0) {
-                 fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "get_iphone_data" }) })
-                 .then(r => r.json()).then(d => {
+                 requestAPI({ action: "get_iphone_data" }).then(d => {
                      globalIphoneData = d.data;
                      updateIphoneColors(); // 데이터 로드 후 갱신
                  });
@@ -946,9 +978,7 @@ function submitStockRegister() {
         btn.innerText = "처리 중...";
     }
 
-    fetch(GAS_URL, {
-        method: "POST",
-        body: JSON.stringify({
+    requestAPI({
             action: "register_quick",
             type: type,
             barcode: tempInStockData.barcode,
@@ -959,8 +989,6 @@ function submitStockRegister() {
             branch: tempInStockData.branch,
             user: currentUser
         })
-    })
-    .then(r => r.json())
     .then(d => {
         // 모달 닫기 안전 처리
         document.activeElement.blur();
@@ -1034,16 +1062,14 @@ function clearInList() { inPendingList=[]; renderInList(); }
 function submitInBatch() { 
     const count = inPendingList.length; if (count === 0) return; 
     if (!confirm(`${count}대 입고하시겠습니까?`)) return; 
-    fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "batch_register", items: inPendingList, branch: document.getElementById('in_branch').value, user: currentUser }) })
-    .then(r => r.json()).then(d => { if(d.status === 'success') { alert(d.count + "대 입고완료"); clearInList(); } else { alert(d.message); } }); 
+    requestAPI({ action: "batch_register", items: inPendingList, branch: document.getElementById('in_branch').value, user: currentUser }).then(d => { if(d.status === 'success') { alert(d.count + "대 입고완료"); clearInList(); } else { alert(d.message); } }); 
 }
 
 // 6. 무선 개통
 function handleOpenScan(e) { 
     if(e.key!=='Enter') return; const v=e.target.value.trim(); if(!v) return;
     e.target.disabled = true; document.getElementById('open_spinner').style.display = 'block';
-    fetch(GAS_URL,{method:"POST",body:JSON.stringify({ action:"get_stock_info_for_open", input:v })})
-    .then(r=>r.json()).then(d=>{
+    requestAPI({ action:"get_stock_info_for_open", input:v }).then(d=>{
         if(d.status==='success') {
             tempOpenStockData = d.data; tempOpenStockData.inputCode = v; 
             document.getElementById('target_model').innerText = `${d.data.model} (${d.data.color})`; 
@@ -1055,8 +1081,7 @@ function handleOpenScan(e) {
         } else {
             if (d.message === '재고 없음') {
                 if(confirm("입고되지 않은 단말기입니다. 간편입고 처리 하시겠습니까?")) {
-                    fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "scan_preview", barcode: v, supplier: "", branch: "", user: currentUser }) })
-                    .then(previewRes => previewRes.json()).then(previewData => {
+                    requestAPI({ action: "scan_preview", barcode: v, supplier: "", branch: "", user: currentUser }).then(previewData => {
                         let modalData = { barcode: v, serial: v }; 
                         if(previewData.status === 'iphone' || previewData.status === 'unregistered' || previewData.status === 'success') modalData = previewData.data;
                         showStockRegisterModal('simple_open', modalData);
@@ -1088,7 +1113,7 @@ window.submitFullContract = function() {
         payment1: document.getElementById('f_pay1').value, payment1Method: document.getElementById('f_pay1_m').value, payment1Date: document.getElementById('f_pay1_d').value, payment1Memo: document.getElementById('f_pay1_memo').value, payment2: document.getElementById('f_pay2').value, payment2Method: document.getElementById('f_pay2_m').value, payment2Date: document.getElementById('f_pay2_d').value, payment2Memo: document.getElementById('f_pay2_memo').value, cash: document.getElementById('f_cash').value, payback1: document.getElementById('f_back').value, bankName: document.getElementById('f_bank').value, accountNumber: document.getElementById('f_acc').value, depositor: document.getElementById('f_holder').value,
         income4_1: document.getElementById('f_inc4').value, income4_1Method: document.getElementById('f_inc4_m').value, income4_2: document.getElementById('f_inc4_2').value, income4_2Method: document.getElementById('f_inc4_2_m').value, income5: document.getElementById('f_inc5').value, income5Method: document.getElementById('f_inc5_m').value, income6: document.getElementById('f_inc6').value, income6Memo: document.getElementById('f_inc6_m').value, comment: document.getElementById('f_comment').value
     };
-    fetch(GAS_URL, { method: "POST", body: JSON.stringify(formData) }).then(r => r.json()).then(d => { if(d.status === 'success') { alert(d.message); resetOpenForm(); } else { alert("오류: " + d.message); } }).catch(e => alert("통신 오류")).finally(() => { btn.innerHTML = originalText; btn.disabled = false; });
+    requestAPI(formData).then(d => { if(d.status === 'success') { alert(d.message); resetOpenForm(); } else { alert("오류: " + d.message); } }).catch(e => alert("통신 오류")).finally(() => { btn.innerHTML = originalText; btn.disabled = false; });
 };
 
 function resetOpenForm() {
@@ -1193,7 +1218,7 @@ function submitWiredContract(event) {
         income5: document.getElementById('w_inc5').value, income5Method: document.getElementById('w_inc5_m').value, income6: document.getElementById('w_inc6').value, income6Memo: document.getElementById('w_inc6_m').value, comment: document.getElementById('w_comment').value
     };
     const btn = event.currentTarget; const originalText = btn.innerHTML; btn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> 저장 중...`; btn.disabled = true;
-    fetch(GAS_URL, { method: "POST", body: JSON.stringify(formData) }).then(r => r.json()).then(d => { if(d.status === 'success') { alert(d.message); resetWiredForm(); } else { alert("오류: " + d.message); } }).catch(e => alert("통신 오류")).finally(() => { btn.innerHTML = originalText; btn.disabled = false; });
+    requestAPI(formData).then(d => { if(d.status === 'success') { alert(d.message); resetWiredForm(); } else { alert("오류: " + d.message); } }).catch(e => alert("통신 오류")).finally(() => { btn.innerHTML = originalText; btn.disabled = false; });
 }
 
 // 중고 개통 (기존 로직 동일)
@@ -1230,12 +1255,12 @@ function submitUsedContract(event) {
         income5: document.getElementById('u_inc5').value, income5Method: document.getElementById('u_inc5_m').value, income6: document.getElementById('u_inc6').value, income6Memo: document.getElementById('u_inc6_m').value, comment: document.getElementById('u_comment').value
     };
     const btn = event.currentTarget; const originalText = btn.innerHTML; btn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> 저장 중...`; btn.disabled = true;
-    fetch(GAS_URL, { method: "POST", body: JSON.stringify(formData) }).then(r => r.json()).then(d => { if(d.status === 'success') { alert(d.message); resetUsedForm(); } else { alert("오류: " + d.message); } }).catch(e => alert("통신 오류")).finally(() => { btn.innerHTML = originalText; btn.disabled = false; });
+    requestAPI(formData).then(d => { if(d.status === 'success') { alert(d.message); resetUsedForm(); } else { alert("오류: " + d.message); } }).catch(e => alert("통신 오류")).finally(() => { btn.innerHTML = originalText; btn.disabled = false; });
 }
 
 // 9. 거래처 / 이동 / 반품 / 이력 / 조회
 function loadVendorsToList() { 
-    fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "get_vendors" }) }).then(r => r.json()).then(d => { 
+    requestAPI({ action: "get_vendors" }).then(d => { 
         renderHtmlList('vendor_list_ui', d.list, v => {
             const sales = v.salesName ? `👤${v.salesName}` : '';
             const phone = v.salesPhone ? ` 📞${v.salesPhone}` : '';
@@ -1259,18 +1284,14 @@ function addVendor() {
     
     if(!n) return alert("거래처명을 입력하세요.");
     
-    fetch(GAS_URL, { 
-        method: "POST", 
-        body: JSON.stringify({ 
+    requestAPI({ 
             action: "add_vendor", 
             name: n, 
             salesName: document.getElementById('v_sales').value, 
             salesPhone: document.getElementById('v_phone').value, 
             officePhone: document.getElementById('v_office').value, 
             type: type 
-        }) 
-    })
-    .then(r => r.json())
+        })
     .then(d => { 
         alert(d.message); 
         
@@ -1279,7 +1300,7 @@ function addVendor() {
             globalVendorList.push(n); // 1. 전역 변수 업데이트
             
             // ★ [추가된 부분] 로컬 스토리지도 즉시 업데이트!
-            localStorage.setItem('dbphone_vendors', JSON.stringify(globalVendorList)); 
+            cacheSet('dbphone_vendors', globalVendorList, CACHE_TTL.vendors); 
         }
 
         loadVendorsToList(); 
@@ -1293,18 +1314,17 @@ function addVendor() {
     }); 
 }
 
-function deleteVendor(n) { if(confirm("정말 삭제하시겠습니까?")) fetch(GAS_URL,{method:"POST",body:JSON.stringify({action:"delete_vendor",name:n})}).then(r=>r.json()).then(d=>{alert(d.message);loadVendorsToList();}); }
+function deleteVendor(n) { if(confirm("정말 삭제하시겠습니까?")) requestAPI({action:"delete_vendor",name:n}).then(d=>{alert(d.message);loadVendorsToList();}); }
 function showMsg(id, type, text) { const el=document.getElementById(id); el.style.display='block'; el.className=`alert py-2 text-center small fw-bold rounded-3 alert-${type==='success'?'success':'danger'}`; el.innerText=text; setTimeout(()=>el.style.display='none',2000); }
-function handleMoveScan(e) { if(e.key!=='Enter')return; const v=e.target.value.trim(); fetch(GAS_URL,{method:"POST",body:JSON.stringify({action:"transfer_stock",input:v,toBranch:document.getElementById('move_to_branch').value,user:currentUser})}).then(r=>r.json()).then(d=>showMsg('move-msg',d.status==='success'?'success':'error',d.message)).finally(()=>{e.target.value="";}); }
-function handleOutScan(e) { if(e.key!=='Enter')return; const v=e.target.value.trim(); if(!document.getElementById('out_note').value){alert("반품 사유를 입력해주세요.");return;} fetch(GAS_URL,{method:"POST",body:JSON.stringify({action:"return_stock",input:v,note:document.getElementById('out_note').value,user:currentUser})}).then(r=>r.json()).then(d=>showMsg('out-msg',d.status==='success'?'success':'error',d.message)).finally(()=>{e.target.value="";}); }
+function handleMoveScan(e) { if(e.key!=='Enter')return; const v=e.target.value.trim(); requestAPI({action:"transfer_stock",input:v,toBranch:document.getElementById('move_to_branch').value,user:currentUser}).then(d=>showMsg('move-msg',d.status==='success'?'success':'error',d.message)).finally(()=>{e.target.value="";}); }
+function handleOutScan(e) { if(e.key!=='Enter')return; const v=e.target.value.trim(); if(!document.getElementById('out_note').value){alert("반품 사유를 입력해주세요.");return;} requestAPI({action:"return_stock",input:v,note:document.getElementById('out_note').value,user:currentUser}).then(d=>showMsg('out-msg',d.status==='success'?'success':'error',d.message)).finally(()=>{e.target.value="";}); }
 
 // [3단계] 재고 검색 렌더링 최적화
 function searchStock() { 
     const crit = document.getElementById('search_criteria').value; const val = document.getElementById('search_value').value; 
     const div = document.getElementById('stock_result'); 
     div.innerHTML = `<div class="text-center py-4"><span class="spinner-border text-primary"></span></div>`; 
-    fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "search_stock", criteria: crit, keyword: val }) }) 
-    .then(r => r.json()).then(d => { 
+    requestAPI({ action: "search_stock", criteria: crit, keyword: val }).then(d => { 
         if(!d.list || d.list.length === 0) { div.innerHTML = `<div class="text-center text-muted py-5">결과 없음</div>`; return; } 
         
         const rows = d.list.map(item => {
@@ -1318,7 +1338,7 @@ function searchStock() {
 
 function searchHistory() { 
     const k=document.getElementById('hist_keyword').value; 
-    fetch(GAS_URL,{method:"POST",body:JSON.stringify({action:"search_history",keyword:k})}).then(r=>r.json()).then(d=>{ 
+    requestAPI({action:"search_history",keyword:k}).then(d=>{ 
         renderHtmlList('hist_result', d.list, i => `
         <div class='glass-card p-3 mb-2'>
             <div class="d-flex justify-content-between align-items-center">
@@ -1474,11 +1494,7 @@ function searchAllHistory() {
     resArea.classList.remove('list-group', 'list-group-flush');
     resArea.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary"></div><div class="mt-2 small text-muted">데이터 조회 중...</div></div>';
     
-    fetch(GAS_URL, { 
-        method: "POST", 
-        body: JSON.stringify({ action: "get_all_history", start, end, keyword, branch }) 
-    })
-    .then(r => r.json())
+    requestAPI({ action: "get_all_history", start, end, keyword, branch })
     .then(d => {
         if (d.status === 'success' && d.data.length > 0) {
             let html = '';
@@ -1559,8 +1575,7 @@ function openEditModal(item) {
             title: '데이터 로딩 중...', text: '필수 목록 데이터를 불러오고 있습니다. 잠시만 기다려주세요.',
             allowOutsideClick: false, didOpen: () => { Swal.showLoading(); }
         });
-        fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "get_dropdown_data" }) })
-        .then(r => r.json()).then(d => {
+        requestAPI({ action: "get_dropdown_data" }).then(d => {
             Swal.close();
             if(d.status === 'success') { globalDropdownData = d; applyDropdownData(d); openEditModal(item); }
             else { alert("데이터 로드 실패: " + d.message); }
@@ -1856,11 +1871,7 @@ function submitEditHistory() {
         allowOutsideClick: false, didOpen: () => { Swal.showLoading(); }
     });
 
-    fetch(GAS_URL, {
-        method: "POST",
-        body: JSON.stringify(formData)
-    })
-    .then(r => r.json())
+    requestAPI(formData)
     .then(data => {
         Swal.close();
         if (data.status === 'success') {
@@ -1896,11 +1907,7 @@ function deleteHistoryItem() {
     // 메시지 변경: '이 내역 삭제' -> '개통 취소'
     if(!confirm("정말 [개통 취소] 처리 하시겠습니까?\n\n(주의: 재고는 자동으로 복구되지 않으므로 재고 조정이 필요할 수 있습니다.)")) return;
     
-    fetch(GAS_URL, { 
-        method: "POST", 
-        body: JSON.stringify({ action: "delete_history", sheetName, rowIndex, branchName }) 
-    })
-    .then(r => r.json())
+    requestAPI({ action: "delete_history", sheetName, rowIndex, branchName })
     .then(d => {
         alert(d.message);
         bootstrap.Modal.getInstance(document.getElementById('modal-edit-history')).hide();
@@ -1963,9 +1970,7 @@ function searchSpecialList(type) {
 
     container.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary"></div></div>';
 
-    fetch(GAS_URL, {
-        method: "POST",
-        body: JSON.stringify({ 
+    requestAPI({ 
             action: "get_all_history", 
             start: start, 
             end: end, 
@@ -1973,8 +1978,6 @@ function searchSpecialList(type) {
             branch: branch,
             specialType: type  // ★ 핵심: 이 꼬리표를 달아줘야 서버가 "아! 필터링해야지" 하고 알아듣습니다.
         })
-    })
-    .then(r => r.json())
     .then(res => {
       const list = res.data || res.list || [];   // 어떤 형태든 흡수
       if (res.status === 'success' && list.length > 0) {
@@ -2133,8 +2136,7 @@ function submitSpecialUpdate() {
 
     Swal.fire({ title: '저장 중...', didOpen: () => Swal.showLoading() });
 
-    fetch(GAS_URL, { method: "POST", body: JSON.stringify(formData) })
-    .then(r => r.json())
+    requestAPI(formData)
     .then(data => {
         if (data.status === 'success') {
             Swal.fire({ icon: 'success', title: '처리 완료', timer: 1000, showConfirmButton: false });
@@ -2340,8 +2342,7 @@ function loadDailyReport() {
     if(tbody) tbody.innerHTML = `<tr><td colspan="100%" class="text-center align-middle py-5"><div class="spinner-border text-primary"></div><div class="mt-2 small text-muted">로딩 중...</div></td></tr>`;
     if(headerRow) headerRow.innerHTML = ""; // ★ 헤더 비우기
 
-    fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "get_daily_report_detail", branch, date }) })
-    .then(r => r.json()).then(d => {
+    requestAPI({ action: "get_daily_report_detail", branch, date }).then(d => {
         if(d.status === 'success') renderDailyReportTable(d.list, d.summary);
         else if(tbody) tbody.innerHTML = `<tr><td colspan="100%" class="text-danger text-center py-4">${d.message}</td></tr>`;
     }).catch(e => {
@@ -2431,16 +2432,12 @@ function loadDailySales() {
         </td></tr>`;
 
     // ★ requestAPI 사용 (기존 코드 일관성 유지)
-    fetch(GAS_URL, {
-        method: "POST",
-        body: JSON.stringify({
+    requestAPI({
             action: "get_daily_sales_report",
             branch: branch,
             month: month,
             role: userRole // ★ [핵심] 여기에 role을 실어서 보냅니다!
         })
-    })
-    .then(r => r.json())
     .then(d => {
         if(d.status === 'success') {
             renderDailySalesUI(d.list, d.total);
@@ -2622,15 +2619,11 @@ function loadSalesAnalysis() {
 
     // 로딩 중 표시 (캔버스 위에 글씨 쓰기 어려우니 비동기로 처리)
     
-    fetch(GAS_URL, {
-        method: "POST",
-        body: JSON.stringify({
+    requestAPI({
             action: "get_sales_analysis",
             branch: branch,
             month: month
         })
-    })
-    .then(r => r.json())
     .then(d => {
         if(d.status === 'success') {
             renderPieCharts(d.models, d.carriers);
@@ -3056,9 +3049,7 @@ function searchSetupList(type) {
     // 로딩 표시
     container.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-secondary"></div><div class="mt-2 small text-muted">데이터 조회 중...</div></div>';
 
-    fetch(GAS_URL, { 
-        method: "POST",
-        body: JSON.stringify({
+    requestAPI({
             action: "get_setup_pending_list", 
             type: type,
             branch: branch,
@@ -3066,8 +3057,6 @@ function searchSetupList(type) {
             endDate: end,
             keyword: keyword
         })
-    })
-    .then(r => r.json())
     .then(d => {
         if (d.status === 'success') {
             if (type === 'card') renderCardSetupList(d.list);
@@ -3251,9 +3240,7 @@ function saveSetupInfo(type, branch, rowIndex, rowId) {
 
     if(typeof Swal !== 'undefined') Swal.fire({ title: '저장 중...', didOpen: () => Swal.showLoading() });
 
-    fetch(GAS_URL, {
-        method: "POST",
-        body: JSON.stringify({
+    requestAPI({
             action: "update_setup_info",
             type: type,
             branch: branch,
@@ -3261,8 +3248,6 @@ function saveSetupInfo(type, branch, rowIndex, rowId) {
             val1: val1,
             val2: val2
         })
-    })
-    .then(r => r.json())
     .then(d => {
         if (d.status === 'success') {
             if(typeof Swal !== 'undefined') Swal.fire({ icon: 'success', title: '처리 완료', timer: 1000, showConfirmButton: false });
@@ -3294,9 +3279,7 @@ function searchDbView() {
     const container = document.getElementById('db_view_result');
     container.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-dark"></div><div class="mt-2 small text-muted">데이터를 불러오는 중...</div></div>';
 
-    fetch(GAS_URL, {
-        method: "POST",
-        body: JSON.stringify({
+    requestAPI({
             action: "get_db_view",
             branch: branch, // ★ 서버로 전송
             start: start,
@@ -3305,8 +3288,6 @@ function searchDbView() {
             actType: actType,
             contType: contType
         })
-    })
-    .then(r => r.json())
     .then(d => {
         if (d.status === 'success') {
             renderDbViewList(d.list);
@@ -3484,16 +3465,12 @@ function submitGoal() {
 
     if(!mobile || !wired) { alert("목표 수량을 입력해주세요."); return; }
 
-    fetch(GAS_URL, {
-        method: "POST",
-        body: JSON.stringify({
+    requestAPI({
             action: "set_monthly_goal",
             branch: branch,
             mobile: mobile,
             wired: wired
         })
-    })
-    .then(r => r.json())
     .then(d => {
         alert(d.message);
         bootstrap.Modal.getInstance(document.getElementById('modal-set-goal')).hide();
@@ -3548,15 +3525,11 @@ function loadExpiryList() {
         </tr>`;
 
     // API 호출 (기존 백엔드 그대로 사용 가능)
-    fetch(GAS_URL, {
-        method: "POST",
-        body: JSON.stringify({
+    requestAPI({
             action: "get_expiry_candidates",
             branch: branch,
             targetDate: dateVal // ★ 이름도 targetDate로 변경 (예: "2026-01-07")
         })
-    })
-    .then(r => r.json())
     .then(d => {
         if(d.status === 'success') {
             renderCrmTable(d.list);
@@ -3697,17 +3670,13 @@ function changeCrmStatus(btnId, newStatus, branch, phone, date) {
     btn.blur();
 
     // 4. 서버 저장 요청
-    fetch(GAS_URL, {
-        method: "POST",
-        body: JSON.stringify({
+    requestAPI({
             action: "update_crm_status",
             branch: branch,
             phone: phone,
             date: date,
             status: newStatus
         })
-    })
-    .then(r => r.json())
     .then(d => {
         if(d.status !== 'success') alert("저장 실패: " + d.message);
         else console.log("상태 저장 완료");
