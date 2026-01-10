@@ -328,24 +328,33 @@ body.no-scroll{
   touch-action: none;
 }
 
-/* APP BRAND (inline SVG logo) */
-.app-brand{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  color: var(--brand);
+
+
+/* =========================================================
+   NAVBAR BRAND (Logo + Text)
+   ========================================================= */
+.brand-link{
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  color: var(--brand) !important;
 }
-.app-brand svg{
-  height:28px;
-  width:auto;
-  display:block;
+
+.brand-link svg{
+  height: 28px;
+  width: auto;
+  display: block;
 }
-.brand-text{
-  font-size:1.25rem;
-  font-weight:700;
-  line-height:1;
-  color:currentColor;
+
+.brand-link .brand-text{
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.2px;
+  color: currentColor;
 }
-@media (max-width:576px){
-  .app-brand svg{ height:26px; }
+
+@media (max-width: 576px){
+  .brand-link svg{ height: 26px; }
 }
