@@ -362,22 +362,42 @@ body.no-scroll{
 
 .summary-sub { font-size: 0.8rem; }
 
-/* 무선/유선 숫자 영역 높이 고정 (값이 - 이든 12든 동일) */
-.fixed-h-box .h2{
-  min-height: 56px;         /* 필요시 48~64 사이로 조절 */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  line-height: 1;           /* 글자 박스 흔들림 감소 */
+
+
+
+
+
+/* 카드 내부 정렬을 row/col 기본 동작에서 떼어내서 "진짜 중앙"으로 */
+.fixed-h-box{
+  display: grid !important;
+  place-items: center !important;   /* 수직/수평 모두 중앙 */
 }
 
-.fixed-h-box .small{
-  line-height: 1;           /* 라벨 박스 흔들림 감소 */
+/* row의 기본 gutter/마진 영향 제거 */
+.fixed-h-box .row{
+  margin: 0 !important;
+  width: 100%;
 }
 
+/* 각 col을 세로 스택으로 만들고 중앙 정렬 */
 .fixed-h-box .col-6{
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
 }
 
+/* 라벨 라인 높이 고정 (baseline 흔들림 방지) */
+.fixed-h-box .col-6 .small{
+  line-height: 1 !important;
+  margin-bottom: 10px !important; /* 기존 mb-2와 비슷 */
+}
+
+/* ★ 핵심: 숫자 박스 높이를 고정해서 '-'와 '12'가 같은 위치에 보이게 */
+.fixed-h-box .col-6 .h2{
+  line-height: 1 !important;
+  height: 56px !important;          /* 필요하면 52~60 사이로 미세조정 */
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
