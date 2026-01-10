@@ -361,3 +361,35 @@ body.no-scroll{
 }
 
 .summary-sub { font-size: 0.8rem; }
+
+
+
+/* =========================================================
+   APP BRAND (Logo + Text)
+   ========================================================= */
+.app-brand{
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.brand-logo{
+  height: 28px;
+  width: auto;
+  display: block;
+}
+
+.brand-text{
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--brand);
+  letter-spacing: -0.2px;
+}
+
+@media (max-width: 576px){
+  .brand-logo{ height: 26px; }
+}
+
+.brand-logo--lg{ height: 56px; }
+.brand-logo--solo{ height: 30px; }
