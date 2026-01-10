@@ -356,13 +356,13 @@ body.no-scroll{
   justify-content: center;
   gap: 4px;
 
-  font-size: 1.25rem;
+  font-size: 1rem;
   font-weight: 700;
   color: #1f2430;
 }
 
 .summary-sub {
-  font-size: 0.65rem;
+  font-size: 0.8rem;
   font-weight: 400;
   color: #6b7280;
   white-space: nowrap;
