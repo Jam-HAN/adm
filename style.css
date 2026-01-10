@@ -347,3 +347,13 @@ body.no-scroll{
   font-size: 0.85em;
   margin-top: 4px;
 }
+
+/* KPI/요약 카드 라벨 1줄 고정 */
+.kpi-label,
+.summary-label,
+.stat-label,
+.card-label {
+  white-space: nowrap;        /* 줄바꿈 금지 */
+  overflow: hidden;           /* 넘치면 숨김 */
+  text-overflow: ellipsis;    /* ... 처리 */
+}
