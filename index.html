@@ -1103,29 +1103,26 @@
             </div>
 
             <div id="section-settlement-period" class="section-view">
-                <div class="glass-card p-4 w-100 d-block" style="min-height: 600px;">
-                    <h5 class="fw-bold mb-4 text-primary"><i class="bi bi-calendar-check"></i> 기간별 매출 집계</h5>
+                <div class="glass-card p-4">
                     
-                    <div class="row g-2 mb-4 align-items-end">
-                        <div class="col-4">
-                            <label class="small text-muted fw-bold">보기 방식</label>
-                            <select class="form-select fw-bold border-primary text-primary" id="sp_view_type">
-                                <option value="branch" selected>🏢 지점별 보기</option>
+                    <h5 class="fw-bold mb-4 text-primary"><i class="bi bi-calendar-check"></i> 기간별 매출 집계</h5>
+            
+                    <div class="row g-2 mb-4 bg-light p-3 rounded border align-items-end">
+                        <div class="col-5">
+                            <label class="form-label-sm fw-bold text-muted">보기 방식</label>
+                            <select id="sp_view_type" class="form-select form-select-sm fw-bold text-primary">
+                                <option value="branch">🏢 지점별 보기</option>
                                 <option value="carrier">📊 거래처별 보기</option>
                             </select>
                         </div>
-                        <div class="col-3">
-                            <label class="small text-muted fw-bold">시작일</label>
-                            <input type="date" id="sp_start" class="form-control">
-                        </div>
-                        <div class="col-3">
-                            <label class="small text-muted fw-bold">종료일</label>
-                            <input type="date" id="sp_end" class="form-control">
-                        </div>
-                        <div class="col-2">
-                            <button class="btn btn-primary w-100 fw-bold" onclick="loadSettlement('period')">조회</button>
-                        </div>
-                    </div>
+            			<div class="col-5">
+            				<label class="form-label-sm fw-bold text-muted">조회 월</label>
+            				<input type="month" id="ds_month" class="form-control form-control-sm fw-bold">
+            			</div>
+            			<div class="col-2">
+            				<button class="btn btn-primary btn-sm w-100 fw-bold" onclick="loadSettlement('period')">조회</button>
+            			</div>
+            		</div>
             
                     <div id="sp_result_area" class="table-responsive w-100">
                         <table class="table table-hover align-middle text-center small border w-100" style="table-layout: fixed;">
