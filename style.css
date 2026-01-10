@@ -347,3 +347,23 @@ body.no-scroll{
   font-size: 0.85em;
   margin-top: 4px;
 }
+
+.summary-value {
+  line-height: 1.2;          /* h5 기본값보다 안정적 */
+  min-height: 32px;          /* ★ 카드 높이 고정 핵심 */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1f2430;
+}
+
+.summary-sub {
+  font-size: 0.65rem;
+  font-weight: 400;
+  color: #6b7280;
+  white-space: nowrap;
+}
