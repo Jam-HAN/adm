@@ -362,3 +362,17 @@ body.no-scroll{
 
 .summary-sub { font-size: 0.8rem; }
 
+.fixed-h-box .col-6 {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+}
+
+.fixed-h-box .small {
+  line-height: 1;
+}
+
+.fixed-h-box .h2 {
+  line-height: 1.1;
+}
