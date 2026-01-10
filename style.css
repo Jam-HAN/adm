@@ -304,9 +304,9 @@ body {
 .floating-menu{
   position: fixed !important;
   left: 50%;
-  bottom: 90px;
+  bottom: calc(var(--tabbar-h) + 18px); /* 탭바 위로 띄우기 */
   transform: translateX(-50%) translateY(8px);
-  z-index: 1060; /* overlay(1050)보다 위 */
+  z-index: 1060 !important; /* overlay(1050)보다 위 */
   width: min(240px, calc(100vw - 28px));
   display: flex;
   flex-direction: column;
