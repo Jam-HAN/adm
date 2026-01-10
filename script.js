@@ -2187,76 +2187,65 @@ function toggleCheckDate() {
 // 1. 날짜 초기화 (이번 달 1일 ~ 말일)
 function initSettlementDates() {
     const today = new Date();
-    // 이번 달 1일
-    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
-    // 이번 달 말일 (다음 달 0일)
-    const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const currentMonth = `${yyyy}-${mm}`; // 예: "2024-05"
     
-    const fmt = d => {
-        const y = d.getFullYear();
-        const m = String(d.getMonth() + 1).padStart(2, '0');
-        const day = String(d.getDate()).padStart(2, '0');
-        return `${y}-${m}-${day}`;
-    };
-    
-    // 기간별 화면
-    if(document.getElementById('sp_start')) document.getElementById('sp_start').value = fmt(firstDay);
-    if(document.getElementById('sp_end')) document.getElementById('sp_end').value = fmt(lastDay);
-    
-    // 직원별 화면
-    if(document.getElementById('ss_start')) document.getElementById('ss_start').value = fmt(firstDay);
-    if(document.getElementById('ss_end')) document.getElementById('ss_end').value = fmt(lastDay);
+    if(document.getElementById('sp_month')) document.getElementById('sp_month').value = currentMonth;
+    if(document.getElementById('ss_month')) document.getElementById('ss_month').value = currentMonth;
 }
 
 // 2. 데이터 조회
 async function loadSettlement(type) {
-    let start, end, viewType = 'branch';
+    let monthVal = "", viewType = 'branch';
+    let start = "", end = "";
     
     if (type === 'period') {
-        start = document.getElementById('sp_start').value;
-        end = document.getElementById('sp_end').value;
+        monthVal = document.getElementById('sp_month').value;
         viewType = document.getElementById('sp_view_type').value;
-
-        // [초기화] 기존 데이터 및 합계 줄 삭제
+        
+        // UI 초기화
         document.getElementById('sp_tbody').innerHTML = `
             <tr style="height: 450px;">
                 <td colspan="8" class="align-middle">
                     <div class="spinner-border text-primary mb-2" style="width: 3rem; height: 3rem;"></div>
                     <div class="text-muted fw-bold mt-2">데이터를 불러오는 중입니다...</div>
                 </td>
-            </tr>
-        `;
-        document.getElementById('sp_tfoot').innerHTML = ''; // 잔상 제거
+            </tr>`;
+        document.getElementById('sp_tfoot').innerHTML = '';
     } else {
-        // 직원별 조회
-        start = document.getElementById('ss_start').value;
-        end = document.getElementById('ss_end').value;
+        monthVal = document.getElementById('ss_month').value;
         
-        // [초기화] 기존 데이터 및 합계 줄 삭제 (★ 여기 추가됨)
+        // UI 초기화
         document.getElementById('ss_tbody').innerHTML = `
             <tr style="height: 450px;">
                 <td colspan="7" class="align-middle">
                     <div class="spinner-border text-success mb-2" style="width: 3rem; height: 3rem;"></div>
                     <div class="text-muted fw-bold mt-2">데이터를 불러오는 중입니다...</div>
                 </td>
-            </tr>
-        `;
-        // ★ [핵심] 조회 버튼 누르자마자 하단 합계 줄 삭제 -> 잔상 해결
-        const tfoot = document.getElementById('ss_tfoot');
-        if (tfoot) tfoot.innerHTML = ''; 
+            </tr>`;
+        if (document.getElementById('ss_tfoot')) document.getElementById('ss_tfoot').innerHTML = '';
     }
+
+    if (!monthVal) { alert("조회 월을 선택해주세요."); return; }
+
+    // ★ [핵심] YYYY-MM -> 시작일/종료일 자동 계산
+    const [year, month] = monthVal.split('-');
+    start = `${year}-${month}-01`;
+    // 해당 월의 마지막 날짜 구하기 (다음달 0일 = 이번달 말일)
+    const lastDay = new Date(year, month, 0).getDate();
+    end = `${year}-${month}-${lastDay}`;
 
     try {
         const userSession = JSON.parse(sessionStorage.getItem('dbphone_user'));
         const myEmail = userSession ? userSession.email : "";
         
-        // 타임아웃 5분(300000ms) 설정된 requestAPI 호출
         const d = await requestAPI({
             action: "get_settlement_report",
             userEmail: myEmail, 
             userName: currentUser, 
-            startDate: start,
-            endDate: end,
+            startDate: start, // 계산된 시작일 전송
+            endDate: end,     // 계산된 종료일 전송
             viewType: viewType
         });
 
@@ -2264,33 +2253,23 @@ async function loadSettlement(type) {
             if (type === 'period') renderPeriodStats(d);
             else renderStaffStats(d);
         } else {
-            // 에러 표시
             const colspan = type === 'period' ? 8 : 7;
             const targetId = type === 'period' ? 'sp_tbody' : 'ss_tbody';
-            const targetEl = document.getElementById(targetId);
-            if(targetEl) {
-                targetEl.innerHTML = `
-                    <tr style="height: 450px;">
-                        <td colspan="${colspan}" class="text-danger align-middle fw-bold">
-                            <i class="bi bi-exclamation-triangle fs-1 d-block mb-3"></i>
-                            ${d.message}
-                        </td>
-                    </tr>`;
-            }
+            document.getElementById(targetId).innerHTML = `
+                <tr style="height: 450px;">
+                    <td colspan="${colspan}" class="text-danger align-middle fw-bold">
+                        <i class="bi bi-exclamation-triangle fs-1 d-block mb-3"></i>${d.message}
+                    </td>
+                </tr>`;
         }
     } catch (e) {
         console.error(e);
         const colspan = type === 'period' ? 8 : 7;
         const targetId = type === 'period' ? 'sp_tbody' : 'ss_tbody';
-        const targetEl = document.getElementById(targetId);
-        if(targetEl) {
-            targetEl.innerHTML = `
-                <tr style="height: 450px;">
-                    <td colspan="${colspan}" class="text-danger align-middle fw-bold">
-                        통신 오류가 발생했습니다.
-                    </td>
-                </tr>`;
-        }
+        document.getElementById(targetId).innerHTML = `
+            <tr style="height: 450px;">
+                <td colspan="${colspan}" class="text-danger align-middle fw-bold">통신 오류가 발생했습니다.</td>
+            </tr>`;
     }
 }
 
@@ -3543,7 +3522,7 @@ function showCrmSection() {
     showSection('section-crm-expiry');
     
     // 3. 자동 조회 시작
-    loadExpiryList();
+    // loadExpiryList();
 }
 
 function loadExpiryList() {
