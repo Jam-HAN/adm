@@ -883,6 +883,78 @@
                 </div>
             </div>
 
+            <div id="section-daily-report" class="section-view">
+                <div class="glass-card p-4">
+                    
+                    <h5 class="fw-bold mb-4 text-primary"><i class="bi bi-file-earmark-spreadsheet-fill"></i> 일일 상세 보고</h5>
+            
+                    <div class="row g-2 mb-4 bg-light p-3 rounded border align-items-end">
+                        <div class="col-5">
+                            <label class="form-label-sm fw-bold text-muted">지점</label>
+                            <select id="dr_branch" class="form-select form-select-sm fw-bold text-primary">
+                                <option value="전체">전체 지점</option>
+                                <option value="장지 본점">장지 본점</option>
+                                <option value="명일 직영점">명일 직영점</option>
+                            </select>
+                        </div>
+                        <div class="col-5">
+                            <label class="form-label-sm fw-bold text-muted">조회 일자</label>
+                            <input type="date" id="dr_date" class="form-control form-control-sm fw-bold">
+                        </div>
+                        <div class="col-2">
+                            <button class="btn btn-primary btn-sm w-100 fw-bold py-2" onclick="loadDailyReport()">조회</button>
+                        </div>
+                    </div>
+            
+                    <div class="row g-3 mb-4">
+                        <div class="col-3">
+                            <div class="bg-white p-3 rounded border text-center shadow-sm">
+                                <div class="small text-muted fw-bold mb-1">총 건수</div>
+                                <h5 class="fw-bold text-dark m-0">
+                                    <span id="dr_sum_total">-</span>
+                                    <div class="text-secondary fw-normal mt-1" id="dr_sum_detail" style="font-size: 0.65rem;"></div>
+                                </h5>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="bg-white p-3 rounded border text-center shadow-sm">
+                                <div class="small text-muted fw-bold mb-1">총 정산</div>
+                                <h5 class="fw-bold text-primary m-0" id="dr_sum_settle">-</h5>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="bg-white p-3 rounded border text-center shadow-sm">
+                                <div class="small text-muted fw-bold mb-1">총 매출</div>
+                                <h5 class="fw-bold text-success m-0" id="dr_sum_revenue">-</h5>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="bg-white p-3 rounded border text-center shadow-sm">
+                                <div class="small text-muted fw-bold mb-1">총 수익</div>
+                                <h5 class="fw-bold text-danger m-0" id="dr_sum_margin">-</h5>
+                            </div>
+                        </div>
+                    </div>
+            
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-white border-bottom fw-bold small text-secondary">
+                            <i class="bi bi-list-task me-1"></i> 판매 상세 내역
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle text-center small border mb-0" style="font-size: 0.8rem; white-space: nowrap;">
+                                <thead class="table-light">
+                                    <tr id="dr_header_row"></tr>
+                                </thead>
+                                <tbody id="dr_tbody">
+                                    <tr><td colspan="100%" class="text-muted py-5 text-center">날짜를 선택하고 조회하세요.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+            
+                </div>
+            </div>
+
             <div id="section-daily-sales" class="section-view">
             	<div class="glass-card p-4">
             		<h5 class="fw-bold mb-4 text-primary">
@@ -1028,80 +1100,7 @@
             		</div><!-- /tab-content -->
             	</div><!-- /glass-card -->
             </div><!-- /section-daily-sales -->
-
-
-            <div id="section-daily-report" class="section-view">
-                <div class="glass-card p-4">
-                    
-                    <h5 class="fw-bold mb-4 text-primary"><i class="bi bi-file-earmark-spreadsheet-fill"></i> 일일 상세 보고</h5>
             
-                    <div class="row g-2 mb-4 bg-light p-3 rounded border align-items-end">
-                        <div class="col-5">
-                            <label class="form-label-sm fw-bold text-muted">지점</label>
-                            <select id="dr_branch" class="form-select form-select-sm fw-bold text-primary">
-                                <option value="전체">전체 지점</option>
-                                <option value="장지 본점">장지 본점</option>
-                                <option value="명일 직영점">명일 직영점</option>
-                            </select>
-                        </div>
-                        <div class="col-5">
-                            <label class="form-label-sm fw-bold text-muted">조회 일자</label>
-                            <input type="date" id="dr_date" class="form-control form-control-sm fw-bold">
-                        </div>
-                        <div class="col-2">
-                            <button class="btn btn-primary btn-sm w-100 fw-bold" onclick="loadDailyReport()">조회</button>
-                        </div>
-                    </div>
-            
-                    <div class="row g-3 mb-4">
-                        <div class="col-3">
-                            <div class="bg-white p-3 rounded border text-center shadow-sm">
-                                <div class="small text-muted fw-bold mb-1">총 건수</div>
-                                <h5 class="fw-bold text-dark m-0">
-                                    <span id="dr_sum_total">-</span>
-                                    <div class="text-secondary fw-normal mt-1" id="dr_sum_detail" style="font-size: 0.65rem;"></div>
-                                </h5>
-                            </div>
-                        </div>
-                        <div class="col-3">
-                            <div class="bg-white p-3 rounded border text-center shadow-sm">
-                                <div class="small text-muted fw-bold mb-1">총 정산</div>
-                                <h5 class="fw-bold text-primary m-0" id="dr_sum_settle">-</h5>
-                            </div>
-                        </div>
-                        <div class="col-3">
-                            <div class="bg-white p-3 rounded border text-center shadow-sm">
-                                <div class="small text-muted fw-bold mb-1">총 매출</div>
-                                <h5 class="fw-bold text-success m-0" id="dr_sum_revenue">-</h5>
-                            </div>
-                        </div>
-                        <div class="col-3">
-                            <div class="bg-white p-3 rounded border text-center shadow-sm">
-                                <div class="small text-muted fw-bold mb-1">총 수익</div>
-                                <h5 class="fw-bold text-danger m-0" id="dr_sum_margin">-</h5>
-                            </div>
-                        </div>
-                    </div>
-            
-                    <div class="card border-0 shadow-sm">
-                        <div class="card-header bg-white border-bottom fw-bold small text-secondary">
-                            <i class="bi bi-list-task me-1"></i> 판매 상세 내역
-                        </div>
-                        <div class="table-responsive">
-                            <table class="table table-hover align-middle text-center small border mb-0" style="font-size: 0.8rem; white-space: nowrap;">
-                                <thead class="table-light">
-                                    <tr id="dr_header_row"></tr>
-                                </thead>
-                                <tbody id="dr_tbody">
-                                    <tr><td colspan="100%" class="text-muted py-5 text-center">날짜를 선택하고 조회하세요.</td></tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-            
-                </div>
-            </div>
-
             <div id="section-settlement-period" class="section-view">
                 <div class="glass-card p-4">
                     
