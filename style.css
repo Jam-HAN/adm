@@ -372,29 +372,3 @@ body.no-scroll{
 }
 
 .summary-sub { font-size: 0.8rem; }
-
-/* ---------- Floating Menus (모바일 하단 팝업 메뉴) ---------- */
-.floating-menu {
-    position: fixed !important;
-    bottom: 90px;           /* 하단 네비게이션 위쪽 */
-    left: 50%;              /* 중앙 정렬 */
-    transform: translateX(-50%) translateY(20px); /* 아래에서 위로 */
-    width: 200px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    z-index: 2000 !important;
-    opacity: 0;             /* 초기 투명 */
-    transition: opacity 0.2s ease, transform 0.2s ease;
-    pointer-events: none;
-}
-
-.floating-menu.open {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
-    pointer-events: auto;
-}
-
-#manage-menu-container {
-    width: 220px; /* 관리 메뉴만 조금 넓게 */
-}
