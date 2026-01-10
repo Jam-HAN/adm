@@ -263,7 +263,30 @@ a { text-decoration: none; }
 }
 
 /* fixed height boxes used in dashboard */
-.fixed-h-box{ min-height: 180px; }
+.fixed-h-box{
+  height: 260px;               /* 고정 높이(값 유무 상관없이 동일) */
+  display: flex;
+  align-items: center;         /* 세로 중앙 */
+  justify-content: center;     /* 가로 중앙 */
+}
+
+/* 내부 row/col 정렬 안정화 (값 '-' ↔ 숫자 변동에도 위치 고정) */
+.fixed-h-box .row{ margin: 0; width: 100%; }
+.fixed-h-box .col-6{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.fixed-h-box .col-6 .small{ line-height: 1; margin-bottom: 10px !important; }
+.fixed-h-box .col-6 .h2{
+  height: 72px;                /* 숫자 영역 고정(시각적 중심 흔들림 방지) */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
 
 /* ---------- Login View (optional class hook) ---------- */
 .login-bg{
