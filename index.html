@@ -1117,7 +1117,7 @@
                         </div>
             			<div class="col-5">
             				<label class="form-label-sm fw-bold text-muted">조회 월</label>
-            				<input type="month" id="ds_month" class="form-control form-control-sm fw-bold">
+            				<input type="month" id="sp_month" class="form-control form-control-sm fw-bold">
             			</div>
             			<div class="col-2">
             				<button class="btn btn-primary btn-sm w-100 fw-bold" onclick="loadSettlement('period')">조회</button>
@@ -1162,22 +1162,19 @@
             </div>
             
             <div id="section-settlement-staff" class="section-view">
-                <div class="glass-card p-4 w-100 d-block" style="min-height: 600px;">
-                    <h5 class="fw-bold mb-4 text-success"><i class="bi bi-people"></i> 직원별 실적 집계</h5>
+                <div class="glass-card p-4">
                     
-                    <div class="row g-2 mb-4 align-items-end">
-                        <div class="col-5">
-                            <label class="small text-muted fw-bold mb-1">시작일</label>
-                            <input type="date" id="ss_start" class="form-control">
-                        </div>
-                        <div class="col-5">
-                            <label class="small text-muted fw-bold mb-1">종료일</label>
-                            <input type="date" id="ss_end" class="form-control">
-                        </div>
-                        <div class="col-2">
-                            <button class="btn btn-success w-100 fw-bold" onclick="loadSettlement('staff')">조회</button>
-                        </div>
-                    </div>
+                    <h5 class="fw-bold mb-4 text-primary"><i class="bi bi-people"></i> 직원별 실적 집계</h5>
+            
+                    <div class="row g-2 mb-4 bg-light p-3 rounded border align-items-end">
+            			<div class="col-5">
+            				<label class="form-label-sm fw-bold text-muted">조회 월</label>
+            				<input type="month" id="ss_month" class="form-control form-control-sm fw-bold">
+            			</div>
+            			<div class="col-2">
+            				<button class="btn btn-primary btn-sm w-100 fw-bold" onclick="loadSettlement('staff')">조회</button>
+            			</div>
+            		</div>
             
                     <div class="table-responsive w-100">
                         <table class="table table-hover align-middle text-center small border w-100" style="table-layout: fixed;">
