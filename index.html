@@ -933,28 +933,28 @@
                     <div class="row g-3 mb-4">
                         <div class="col-3">
                             <div class="bg-white p-3 rounded border text-center shadow-sm">
-                                <div class="small text-muted fw-bold mb-1">총 건수</div>
-                                <h5 class="fw-bold text-dark m-0">
+                                <div class="small text-muted fw-bold mb-1">일 실적</div>
+                                <h5 class="summary-value m-0">
                                     <span id="dr_sum_total">-</span>
-                                    <div class="text-secondary fw-normal mt-1" id="dr_sum_detail" style="font-size: 0.65rem;"></div>
+                                    <span id="dr_sum_detail" class="summary-sub"></span>
                                 </h5>
                             </div>
                         </div>
                         <div class="col-3">
                             <div class="bg-white p-3 rounded border text-center shadow-sm">
-                                <div class="small text-muted fw-bold mb-1">총 정산</div>
+                                <div class="small text-muted fw-bold mb-1">일 정산</div>
                                 <h5 class="fw-bold text-primary m-0" id="dr_sum_settle">-</h5>
                             </div>
                         </div>
                         <div class="col-3">
                             <div class="bg-white p-3 rounded border text-center shadow-sm">
-                                <div class="small text-muted fw-bold mb-1">총 매출</div>
+                                <div class="small text-muted fw-bold mb-1">일 매출</div>
                                 <h5 class="fw-bold text-success m-0" id="dr_sum_revenue">-</h5>
                             </div>
                         </div>
                         <div class="col-3">
                             <div class="bg-white p-3 rounded border text-center shadow-sm">
-                                <div class="small text-muted fw-bold mb-1">총 수익</div>
+                                <div class="small text-muted fw-bold mb-1">일 수익</div>
                                 <h5 class="fw-bold text-danger m-0" id="dr_sum_margin">-</h5>
                             </div>
                         </div>
@@ -1040,7 +1040,9 @@
             					<div class="col-3">
             						<div class="bg-white p-3 rounded border text-center shadow-sm">
             							<div class="small text-muted fw-bold mb-1">총 실적</div>
-            							<h4 class="fw-bold text-dark m-0" id="ds_total_cnt">-</h4>
+            							<h5 class="summary-value m-0">
+                                            <span id="ds_total_cnt">-</span>
+                                        </h5>
             						</div>
             					</div>
             					<div class="col-3">
@@ -1052,7 +1054,7 @@
             					<div class="col-3">
             						<div class="bg-white p-3 rounded border text-center shadow-sm">
             							<div class="small text-muted fw-bold mb-1">총 매출</div>
-            							<h5 class="fw-bold text-primary m-0" id="ds_total_rev">-</h5>
+            							<h5 class="fw-bold text-success m-0" id="ds_total_rev">-</h5>
             						</div>
             					</div>
             					<div class="col-3">
