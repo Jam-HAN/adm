@@ -285,18 +285,12 @@ a { text-decoration: none; }
   .scan-input{ font-size: .98rem; }
 }
 
-/* ✅ 배경 단차 방지: 모바일에서는 fixed 배경 금지(탭바 사라짐 이슈 방지) */
+/* ✅ 배경 단차(끊김) 방지: html/body 동일 배경 + 고정 */
 html, body {
   height: 100%;
   margin: 0;
   background: var(--bg, #f4f7ff);
-}
-
-/* 데스크톱에서만 fixed 배경 허용 */
-@media (hover: hover) and (pointer: fine){
-  html, body {
-    background-attachment: fixed;
-  }
+  background-attachment: fixed;
 }
 
 /* body가 콘텐츠 높이까지만 칠해지는 경우 방지 */
