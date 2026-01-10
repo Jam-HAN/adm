@@ -195,7 +195,7 @@ a { text-decoration: none; }
   left: 0;
   right: 0;
   bottom: 0;
-  height: 72px;
+  height: var(--tabbar-h, 72px);
   background: rgba(255,255,255,.78);
   border-top: 1px solid rgba(47,107,255,.12);
   backdrop-filter: blur(16px);
