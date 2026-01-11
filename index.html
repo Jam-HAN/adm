@@ -1280,21 +1280,46 @@
                 </div>
             </div>
 
-			<div class="row g-2 mb-4 align-items-end">
-				<div class="col-5">
-				    <label class="small text-muted fw-bold mb-1">거래처</label>
-				    <select id="sl_vendor" class="form-select fw-bold text-primary">
-				        <option value="전체">전체 거래처</option>
-				        </select>
-				</div>
+			<div id="section-settlement-ledger" class="section-view">
+			    <div class="glass-card p-4 w-100 d-block" style="min-height: 600px;">
+			        <h5 class="fw-bold mb-4 text-primary">
+			            <i class="bi bi-calculator me-2"></i>정산 상세 대장
+			        </h5>
+			        
+			        <div class="row g-2 mb-4 align-items-end">
+			            <div class="col-5">
+			                <label class="small text-muted fw-bold mb-1">거래처</label>
+			                <select id="sl_vendor" class="form-select fw-bold text-primary">
+			                    <option value="전체">전체 거래처</option>
+			                    </select>
+			            </div>
 			
-			    <div class="col-5">
-			        <label class="small text-muted fw-bold mb-1">조회 월</label>
-			        <input type="month" id="sl_month" class="form-control fw-bold">
-			    </div>
+			            <div class="col-5">
+			                <label class="small text-muted fw-bold mb-1">조회 월</label>
+			                <input type="month" id="sl_month" class="form-control fw-bold">
+			            </div>
 			
-			    <div class="col-2">
-			        <button class="btn btn-primary w-100 fw-bold py-2" onclick="loadSettlementLedger()">조회</button>
+			            <div class="col-2">
+			                <button class="btn btn-primary w-100 fw-bold py-2" onclick="loadSettlementLedger()">조회</button>
+			            </div>
+			        </div>
+			
+			        <div class="table-responsive w-100 rounded-4 border overflow-hidden shadow-sm" style="max-height: 600px; overflow-y: auto;">
+			            <table class="table table-hover align-middle text-center small border mb-0" style="white-space: nowrap; font-size: 0.8rem;">
+			                <thead class="table-primary sticky-top" style="z-index: 5;">
+			                    <tr id="sl_header_row">
+			                        </tr>
+			                </thead>
+			                <tbody id="sl_tbody">
+			                    <tr style="height: 300px;">
+			                        <td colspan="19" class="text-muted align-middle">
+			                            <i class="bi bi-search fs-1 d-block mb-3 opacity-25"></i>
+			                            조회 조건을 선택하고 버튼을 눌러주세요.
+			                        </td>
+			                    </tr>
+			                </tbody>
+			            </table>
+			        </div>
 			    </div>
 			</div>
 
