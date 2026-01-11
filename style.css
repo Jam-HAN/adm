@@ -410,3 +410,14 @@ body.no-scroll{
 }
 
 .summary-sub { font-size: 0.8rem; }
+
+/* [style.css] 정산 대장: 첫 번째 컬럼(고객명) 고정 스타일 */
+.sticky-start {
+    position: sticky;
+    left: 0;
+    z-index: 2; /* 일반 셀보다 위에 뜸 */
+}
+/* 헤더의 첫 번째 컬럼은 더 위에 떠야 함 */
+thead .sticky-start {
+    z-index: 10 !important; 
+}
