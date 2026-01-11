@@ -330,8 +330,6 @@ body.no-scroll{
   touch-action: none;
 }
 
-
-
 /* =========================================================
    NAVBAR BRAND (Logo + Text)
    ========================================================= */
@@ -359,6 +357,43 @@ body.no-scroll{
 
 @media (max-width: 576px){
   .brand-link svg{ height: 26px; }
+}
+
+/* =========================================================
+	LOGIN BRAND (inline, one-line)
+   ========================================================= */
+.login-brand.inline{
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	margin-bottom: 22px;
+	color: var(--brand);
+	white-space: nowrap;
+}
+
+.login-logo{
+	height: 28px;			/* 🔥 크기 축소 핵심 */
+	width: auto;
+	display: block;
+	flex-shrink: 0;
+}
+
+.login-inline-text{
+	font-size: 1.05rem;
+	font-weight: 800;
+	letter-spacing: -0.2px;
+	line-height: 1;
+	color: currentColor;
+}
+
+@media (max-width: 576px){
+	.login-logo{
+		height: 24px;
+	}
+	.login-inline-text{
+		font-size: .98rem;
+	}
 }
 
 .summary-value {
