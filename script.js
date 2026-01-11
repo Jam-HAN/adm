@@ -2275,6 +2275,259 @@ async function loadSettlement(type) {
     }
 }
 
+// =========================================================
+// [최종 복구] 제휴카드 / 유선설치 (카드형 리스트 + 바로 입력 방식)
+// =========================================================
+
+// 0. 초기화: 날짜 기본값 세팅 (이번달 1일 ~ 오늘)
+function initSetupDates() {
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    
+    const firstDay = `${yyyy}-${mm}-01`;
+    const todayStr = `${yyyy}-${mm}-${dd}`;
+
+    document.getElementById('search_card_start').value = firstDay;
+    document.getElementById('search_card_end').value = todayStr;
+    document.getElementById('search_wired_start').value = firstDay;
+    document.getElementById('search_wired_end').value = todayStr;
+}
+
+// 1. 통합 검색 함수
+function searchSetupList(type) {
+    const branchId = type === 'card' ? 'search_card_branch' : 'search_wired_branch';
+    const startId = type === 'card' ? 'search_card_start' : 'search_wired_start';
+    const endId = type === 'card' ? 'search_card_end' : 'search_wired_end';
+    const keyId = type === 'card' ? 'search_card_keyword' : 'search_wired_keyword';
+    
+    // 리스트 컨테이너 ID
+    const containerId = type === 'card' ? 'card_setup_list' : 'wired_setup_list';
+
+    const branch = document.getElementById(branchId).value;
+    const start = document.getElementById(startId).value;
+    const end = document.getElementById(endId).value;
+    const keyword = document.getElementById(keyId).value;
+    const container = document.getElementById(containerId);
+
+    // 로딩 표시
+    container.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-secondary"></div><div class="mt-2 small text-muted">데이터 조회 중...</div></div>';
+
+    requestAPI({
+            action: "get_setup_pending_list", 
+            type: type,
+            branch: branch,
+            startDate: start,
+            endDate: end,
+            keyword: keyword
+        })
+    .then(d => {
+        if (d.status === 'success') {
+            if (type === 'card') renderCardSetupList(d.list);
+            else renderWiredSetupList(d.list);
+        } else {
+            container.innerHTML = `<div class="text-center text-danger py-5 small">${d.message}</div>`;
+        }
+    })
+    .catch(e => {
+        container.innerHTML = `<div class="text-center text-danger py-5 small">통신 오류가 발생했습니다.</div>`;
+    });
+}
+
+// 2. 제휴카드 렌더링 (UI 디자인 업그레이드: 세련된 입력 그룹)
+function renderCardSetupList(list) {
+    const container = document.getElementById('card_setup_list');
+    
+    if (!list || list.length === 0) {
+        container.innerHTML = `<div class="text-center text-muted py-5 small"><i class="bi bi-check-circle fs-1 d-block mb-3 opacity-25"></i>미처리 내역이 없습니다. (모두 완료)</div>`;
+        return;
+    }
+
+    container.innerHTML = list.map(item => {
+        const rowId = `card_${item.branch}_${item.rowIndex}`;
+        const v1 = item.val1 || ""; 
+        const v2 = item.val2 || "";
+
+        // 값이 '미사용'이면 빨간색 텍스트, 아니면 기본색
+        const color1 = v1 === '미사용' ? 'text-danger' : 'text-primary';
+        const color2 = v2 === '미사용' ? 'text-danger' : 'text-primary';
+
+        return `
+        <div class="glass-card p-3 mb-3 border-start border-4 border-primary shadow-sm bg-white">
+            <div class="d-flex justify-content-between align-items-center mb-2 border-bottom pb-2">
+                <div>
+                    <span class="badge bg-primary bg-opacity-10 text-primary me-1 border border-primary">제휴카드</span>
+                    <span class="badge bg-light text-secondary border">${item.branch}</span>
+                </div>
+                <span class="small fw-bold text-muted">${item.date}</span>
+            </div>
+            
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <div class="fw-bold fs-5 text-dark">${item.name}</div>
+                    <div class="small text-secondary fw-bold mt-1">
+                        <i class="bi bi-credit-card-2-front me-1 text-primary"></i>${item.cardName}
+                    </div>
+                </div>
+                <span class="badge bg-white text-dark border rounded-pill px-2 shadow-sm">
+                    <i class="bi bi-person-circle me-1 text-muted"></i>${item.manager || '미지정'}
+                </span>
+            </div>
+            
+            <div class="bg-light p-3 rounded-3 border">
+                <div class="row g-2 mb-3">
+                    
+                    <div class="col-6">
+                        <label class="form-label-sm fw-bold text-secondary small mb-1 ms-1">세이브 등록</label>
+                        <div class="input-group input-group-sm shadow-sm">
+                            <input type="text" class="form-control border-primary fw-bold text-center ${color1}" 
+                                   id="val1_${rowId}" value="${v1}" placeholder="날짜" 
+                                   onfocus="if(this.value!=='미사용')this.type='date'" 
+                                   onblur="if(!this.value)this.type='text'"
+                                   style="border-right: none;">
+                            <button class="btn btn-white border border-primary border-start-0 text-muted" type="button" 
+                                    onclick="setUnused('val1_${rowId}')" title="미사용 처리" 
+                                    style="background: white;">
+                                <i class="bi bi-slash-circle"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="col-6">
+                        <label class="form-label-sm fw-bold text-secondary small mb-1 ms-1">자동이체 등록</label>
+                        <div class="input-group input-group-sm shadow-sm">
+                            <input type="text" class="form-control border-primary fw-bold text-center ${color2}" 
+                                   id="val2_${rowId}" value="${v2}" placeholder="날짜" 
+                                   onfocus="if(this.value!=='미사용')this.type='date'" 
+                                   onblur="if(!this.value)this.type='text'"
+                                   style="border-right: none;">
+                            <button class="btn btn-white border border-primary border-start-0 text-muted" type="button" 
+                                    onclick="setUnused('val2_${rowId}')" title="미사용 처리" 
+                                    style="background: white;">
+                                <i class="bi bi-slash-circle"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary w-100 btn-sm fw-bold shadow hover-effect" onclick="saveSetupInfo('card', '${item.branch}', '${item.rowIndex}', '${rowId}')">
+                    <i class="bi bi-check-lg me-1"></i> 저장하기
+                </button>
+            </div>
+        </div>`;
+    }).join('');
+    
+    // 날짜 입력 이벤트 리스너 (기존과 동일)
+    document.querySelectorAll('input[id^="val"]').forEach(el => {
+        el.addEventListener('input', function() {
+            // 값이 바뀌면 글자색을 파란색으로 (미사용일땐 빨강이었음)
+            if(this.value !== '미사용') {
+                this.classList.remove('text-danger');
+                this.classList.add('text-primary');
+            }
+        });
+    });
+}
+
+// [script.js] 미사용 버튼 동작 (글자색 빨강으로 변경 추가)
+function setUnused(inputId) {
+    const el = document.getElementById(inputId);
+    el.type = 'text'; 
+    el.value = '미사용';
+    // 시각적 강조
+    el.classList.remove('text-primary');
+    el.classList.add('text-danger');
+}
+
+// 3. 유선설치 리스트 렌더링 (카드 내부에 입력창 배치)
+function renderWiredSetupList(list) {
+    const container = document.getElementById('wired_setup_list');
+    
+    if (!list || list.length === 0) {
+        container.innerHTML = `<div class="text-center text-muted py-5 small">
+            <i class="bi bi-check-circle fs-1 d-block mb-3 opacity-25"></i>
+            미처리 내역이 없습니다. (모두 완료!)
+        </div>`;
+        return;
+    }
+
+    container.innerHTML = list.map(item => {
+        const rowId = `wired_${item.branch}_${item.rowIndex}`;
+        const v1 = item.val1 ? String(item.val1).substring(0, 10) : "";
+        const v2 = item.val2 ? String(item.val2).substring(0, 10) : "";
+
+        return `
+        <div class="glass-card p-3 mb-3 border-start border-4 border-success shadow-sm" style="background: #fff;">
+            <div class="d-flex justify-content-between align-items-center mb-2 border-bottom pb-2">
+                <div>
+                    <span class="badge bg-success bg-opacity-10 text-success me-1 border border-success">유선설치</span>
+                    <span class="badge bg-light text-secondary border">${item.branch}</span>
+                </div>
+                <span class="small fw-bold text-muted">${item.date}</span>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <div class="fw-bold fs-5 text-dark">${item.name}</div>
+                    <div class="small text-success fw-bold mt-1"><i class="bi bi-router me-1"></i>${item.type}</div>
+                </div>
+                <span class="badge bg-white text-dark border rounded-pill px-2">
+                    <i class="bi bi-person-circle me-1"></i>${item.manager || '미지정'}
+                </span>
+            </div>
+
+            <div class="bg-light p-3 rounded-3 border">
+                <div class="row g-2 mb-2">
+                    <div class="col-6">
+                        <label class="form-label-sm fw-bold text-muted small" style="font-size: 0.75rem;">설치 예정일</label>
+                        <input type="date" class="form-control form-control-sm border-success fw-bold text-center" id="val1_${rowId}" value="${v1}">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label-sm fw-bold text-muted small" style="font-size: 0.75rem;">설치 완료일</label>
+                        <input type="date" class="form-control form-control-sm border-success fw-bold text-center" id="val2_${rowId}" value="${v2}">
+                    </div>
+                </div>
+                <button class="btn btn-success w-100 btn-sm fw-bold shadow-sm" onclick="saveSetupInfo('wired', '${item.branch}', '${item.rowIndex}', '${rowId}')">
+                    <i class="bi bi-check-lg me-1"></i> 저장하기
+                </button>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+// 4. 저장 함수 (입력값 그대로 전송)
+function saveSetupInfo(type, branch, rowIndex, rowId) {
+    const val1 = document.getElementById(`val1_${rowId}`).value;
+    const val2 = document.getElementById(`val2_${rowId}`).value;
+
+    if (!confirm("입력된 정보로 저장하시겠습니까?")) return;
+
+    if(typeof Swal !== 'undefined') Swal.fire({ title: '저장 중...', didOpen: () => Swal.showLoading() });
+
+    requestAPI({
+            action: "update_setup_info",
+            type: type,
+            branch: branch,
+            rowIndex: rowIndex,
+            val1: val1,
+            val2: val2
+        })
+    .then(d => {
+        if (d.status === 'success') {
+            if(typeof Swal !== 'undefined') Swal.fire({ icon: 'success', title: '처리 완료', timer: 1000, showConfirmButton: false });
+            else alert("저장되었습니다.");
+            // 목록 갱신
+            searchSetupList(type);
+        } else {
+            alert(d.message);
+        }
+    })
+    .catch(e => {
+        alert("통신 오류가 발생했습니다.");
+    });
+}
+
 // ==========================================
 // [신규] 일일 보고
 // ==========================================
@@ -3010,258 +3263,110 @@ function renderStaffStats(data) {
     `;
 }
 
-// =========================================================
-// [최종 복구] 제휴카드 / 유선설치 (카드형 리스트 + 바로 입력 방식)
-// =========================================================
+// ==========================================
+// 정산 대장
+// ==========================================
 
-// 0. 초기화: 날짜 기본값 세팅 (이번달 1일 ~ 오늘)
-function initSetupDates() {
-    const today = new Date();
-    const yyyy = today.getFullYear();
-    const mm = String(today.getMonth() + 1).padStart(2, '0');
-    const dd = String(today.getDate()).padStart(2, '0');
-    
-    const firstDay = `${yyyy}-${mm}-01`;
-    const todayStr = `${yyyy}-${mm}-${dd}`;
+// [설정] 마스터 권한 (이메일 수정 필수!)
+const MASTER_EMAILS = [
+    "scv@dbphone.co.kr", // 사장님 이메일
+    "master@gmail.com" 
+];
 
-    document.getElementById('search_card_start').value = firstDay;
-    document.getElementById('search_card_end').value = todayStr;
-    document.getElementById('search_wired_start').value = firstDay;
-    document.getElementById('search_wired_end').value = todayStr;
-}
+// [설정] 정산 대장 컬럼
+const LEDGER_COLUMNS = [
+    { label: "고객명", key: "name", width: "80px", className: "fw-bold sticky-start bg-white border-end" }, 
+    { label: "전화번호", key: "phone", width: "110px" },
+    { label: "생년월일", key: "birth", width: "90px" },
+    { label: "모델명", key: "model", width: "120px" },
+    { label: "요금제", key: "plan", width: "100px" },
+    { label: "부가서비스", key: "addon", width: "120px" },
+    { label: "기본정책", key: "pol_base", width: "90px", formatter: fmtMoney, className: "text-end text-primary" },
+    { label: "기본(메모)", key: "pol_base_m", width: "120px", className: "text-start text-muted small" },
+    { label: "추가정책", key: "pol_add", width: "90px", formatter: fmtMoney, className: "text-end text-primary" },
+    { label: "추가(메모)", key: "pol_add_m", width: "120px", className: "text-start text-muted small" },
+    { label: "부가정책", key: "pol_sub", width: "90px", formatter: fmtMoney, className: "text-end text-primary" },
+    { label: "부가(메모)", key: "pol_sub_m", width: "120px", className: "text-start text-muted small" },
+    { label: "차감정책", key: "pol_deduct", width: "90px", formatter: fmtMoney, className: "text-end text-danger" },
+    { label: "차감(메모)", key: "pol_deduct_m", width: "120px", className: "text-start text-muted small" },
+    { label: "프리할인", key: "pre_dc", width: "90px", formatter: fmtMoney, className: "text-end text-secondary" },
+    { label: "유심", key: "usim", width: "80px", formatter: fmtMoney, className: "text-end text-secondary" },
+    { label: "수수료", key: "comm", width: "80px", formatter: fmtMoney, className: "text-end text-secondary" },
+    { label: "담당자", key: "manager", width: "80px" },
+    { label: "정산", key: "total", width: "100px", formatter: fmtMoney, className: "fw-bold text-primary bg-primary bg-opacity-10 text-end" }
+];
 
-// 1. 통합 검색 함수
-function searchSetupList(type) {
-    const branchId = type === 'card' ? 'search_card_branch' : 'search_wired_branch';
-    const startId = type === 'card' ? 'search_card_start' : 'search_wired_start';
-    const endId = type === 'card' ? 'search_card_end' : 'search_wired_end';
-    const keyId = type === 'card' ? 'search_card_keyword' : 'search_wired_keyword';
-    
-    // 리스트 컨테이너 ID
-    const containerId = type === 'card' ? 'card_setup_list' : 'wired_setup_list';
-
-    const branch = document.getElementById(branchId).value;
-    const start = document.getElementById(startId).value;
-    const end = document.getElementById(endId).value;
-    const keyword = document.getElementById(keyId).value;
-    const container = document.getElementById(containerId);
-
-    // 로딩 표시
-    container.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-secondary"></div><div class="mt-2 small text-muted">데이터 조회 중...</div></div>';
-
-    requestAPI({
-            action: "get_setup_pending_list", 
-            type: type,
-            branch: branch,
-            startDate: start,
-            endDate: end,
-            keyword: keyword
-        })
-    .then(d => {
-        if (d.status === 'success') {
-            if (type === 'card') renderCardSetupList(d.list);
-            else renderWiredSetupList(d.list);
-        } else {
-            container.innerHTML = `<div class="text-center text-danger py-5 small">${d.message}</div>`;
-        }
-    })
-    .catch(e => {
-        container.innerHTML = `<div class="text-center text-danger py-5 small">통신 오류가 발생했습니다.</div>`;
-    });
-}
-
-// 2. 제휴카드 렌더링 (UI 디자인 업그레이드: 세련된 입력 그룹)
-function renderCardSetupList(list) {
-    const container = document.getElementById('card_setup_list');
-    
-    if (!list || list.length === 0) {
-        container.innerHTML = `<div class="text-center text-muted py-5 small"><i class="bi bi-check-circle fs-1 d-block mb-3 opacity-25"></i>미처리 내역이 없습니다. (모두 완료)</div>`;
-        return;
+// [기능] 마스터 권한 체크
+function checkMasterPermission() {
+    const user = JSON.parse(sessionStorage.getItem('dbphone_user'));
+    const menu = document.getElementById('menu_ledger_item');
+    if (user && user.email && MASTER_EMAILS.includes(user.email)) {
+        if(menu) menu.classList.remove('d-none');
+    } else {
+        if(menu) menu.classList.add('d-none');
     }
+}
 
-    container.innerHTML = list.map(item => {
-        const rowId = `card_${item.branch}_${item.rowIndex}`;
-        const v1 = item.val1 || ""; 
-        const v2 = item.val2 || "";
-
-        // 값이 '미사용'이면 빨간색 텍스트, 아니면 기본색
-        const color1 = v1 === '미사용' ? 'text-danger' : 'text-primary';
-        const color2 = v2 === '미사용' ? 'text-danger' : 'text-primary';
-
-        return `
-        <div class="glass-card p-3 mb-3 border-start border-4 border-primary shadow-sm bg-white">
-            <div class="d-flex justify-content-between align-items-center mb-2 border-bottom pb-2">
-                <div>
-                    <span class="badge bg-primary bg-opacity-10 text-primary me-1 border border-primary">제휴카드</span>
-                    <span class="badge bg-light text-secondary border">${item.branch}</span>
-                </div>
-                <span class="small fw-bold text-muted">${item.date}</span>
-            </div>
-            
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <div>
-                    <div class="fw-bold fs-5 text-dark">${item.name}</div>
-                    <div class="small text-secondary fw-bold mt-1">
-                        <i class="bi bi-credit-card-2-front me-1 text-primary"></i>${item.cardName}
-                    </div>
-                </div>
-                <span class="badge bg-white text-dark border rounded-pill px-2 shadow-sm">
-                    <i class="bi bi-person-circle me-1 text-muted"></i>${item.manager || '미지정'}
-                </span>
-            </div>
-            
-            <div class="bg-light p-3 rounded-3 border">
-                <div class="row g-2 mb-3">
-                    
-                    <div class="col-6">
-                        <label class="form-label-sm fw-bold text-secondary small mb-1 ms-1">세이브 등록</label>
-                        <div class="input-group input-group-sm shadow-sm">
-                            <input type="text" class="form-control border-primary fw-bold text-center ${color1}" 
-                                   id="val1_${rowId}" value="${v1}" placeholder="날짜" 
-                                   onfocus="if(this.value!=='미사용')this.type='date'" 
-                                   onblur="if(!this.value)this.type='text'"
-                                   style="border-right: none;">
-                            <button class="btn btn-white border border-primary border-start-0 text-muted" type="button" 
-                                    onclick="setUnused('val1_${rowId}')" title="미사용 처리" 
-                                    style="background: white;">
-                                <i class="bi bi-slash-circle"></i>
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div class="col-6">
-                        <label class="form-label-sm fw-bold text-secondary small mb-1 ms-1">자동이체 등록</label>
-                        <div class="input-group input-group-sm shadow-sm">
-                            <input type="text" class="form-control border-primary fw-bold text-center ${color2}" 
-                                   id="val2_${rowId}" value="${v2}" placeholder="날짜" 
-                                   onfocus="if(this.value!=='미사용')this.type='date'" 
-                                   onblur="if(!this.value)this.type='text'"
-                                   style="border-right: none;">
-                            <button class="btn btn-white border border-primary border-start-0 text-muted" type="button" 
-                                    onclick="setUnused('val2_${rowId}')" title="미사용 처리" 
-                                    style="background: white;">
-                                <i class="bi bi-slash-circle"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <button class="btn btn-primary w-100 btn-sm fw-bold shadow hover-effect" onclick="saveSetupInfo('card', '${item.branch}', '${item.rowIndex}', '${rowId}')">
-                    <i class="bi bi-check-lg me-1"></i> 저장하기
-                </button>
-            </div>
-        </div>`;
-    }).join('');
+// [기능] 정산 대장 페이지 초기화
+function initSettlementLedgerPage() {
+    const today = new Date();
+    const val = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}`;
+    const dateEl = document.getElementById('sl_month');
+    if(dateEl && !dateEl.value) dateEl.value = val;
     
-    // 날짜 입력 이벤트 리스너 (기존과 동일)
-    document.querySelectorAll('input[id^="val"]').forEach(el => {
-        el.addEventListener('input', function() {
-            // 값이 바뀌면 글자색을 파란색으로 (미사용일땐 빨강이었음)
-            if(this.value !== '미사용') {
-                this.classList.remove('text-danger');
-                this.classList.add('text-primary');
+    // 거래처 목록 로딩 (기존 API 활용)
+    const select = document.getElementById('sl_vendor');
+    if(select && select.options.length <= 1) {
+        requestAPI({ action: "get_vendors" }).then(data => {
+            if(data.status === 'success' && data.list) {
+                const set = new Set();
+                data.list.forEach(i => { if(i.carrier) set.add(i.carrier); else if(i.name) set.add(i.name); });
+                Array.from(set).sort().forEach(v => {
+                    const opt = document.createElement('option'); opt.value = v; opt.text = v; select.add(opt);
+                });
             }
         });
-    });
-}
-
-// [script.js] 미사용 버튼 동작 (글자색 빨강으로 변경 추가)
-function setUnused(inputId) {
-    const el = document.getElementById(inputId);
-    el.type = 'text'; 
-    el.value = '미사용';
-    // 시각적 강조
-    el.classList.remove('text-primary');
-    el.classList.add('text-danger');
-}
-
-// 3. 유선설치 리스트 렌더링 (카드 내부에 입력창 배치)
-function renderWiredSetupList(list) {
-    const container = document.getElementById('wired_setup_list');
-    
-    if (!list || list.length === 0) {
-        container.innerHTML = `<div class="text-center text-muted py-5 small">
-            <i class="bi bi-check-circle fs-1 d-block mb-3 opacity-25"></i>
-            미처리 내역이 없습니다. (모두 완료!)
-        </div>`;
-        return;
     }
-
-    container.innerHTML = list.map(item => {
-        const rowId = `wired_${item.branch}_${item.rowIndex}`;
-        const v1 = item.val1 ? String(item.val1).substring(0, 10) : "";
-        const v2 = item.val2 ? String(item.val2).substring(0, 10) : "";
-
-        return `
-        <div class="glass-card p-3 mb-3 border-start border-4 border-success shadow-sm" style="background: #fff;">
-            <div class="d-flex justify-content-between align-items-center mb-2 border-bottom pb-2">
-                <div>
-                    <span class="badge bg-success bg-opacity-10 text-success me-1 border border-success">유선설치</span>
-                    <span class="badge bg-light text-secondary border">${item.branch}</span>
-                </div>
-                <span class="small fw-bold text-muted">${item.date}</span>
-            </div>
-
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <div>
-                    <div class="fw-bold fs-5 text-dark">${item.name}</div>
-                    <div class="small text-success fw-bold mt-1"><i class="bi bi-router me-1"></i>${item.type}</div>
-                </div>
-                <span class="badge bg-white text-dark border rounded-pill px-2">
-                    <i class="bi bi-person-circle me-1"></i>${item.manager || '미지정'}
-                </span>
-            </div>
-
-            <div class="bg-light p-3 rounded-3 border">
-                <div class="row g-2 mb-2">
-                    <div class="col-6">
-                        <label class="form-label-sm fw-bold text-muted small" style="font-size: 0.75rem;">설치 예정일</label>
-                        <input type="date" class="form-control form-control-sm border-success fw-bold text-center" id="val1_${rowId}" value="${v1}">
-                    </div>
-                    <div class="col-6">
-                        <label class="form-label-sm fw-bold text-muted small" style="font-size: 0.75rem;">설치 완료일</label>
-                        <input type="date" class="form-control form-control-sm border-success fw-bold text-center" id="val2_${rowId}" value="${v2}">
-                    </div>
-                </div>
-                <button class="btn btn-success w-100 btn-sm fw-bold shadow-sm" onclick="saveSetupInfo('wired', '${item.branch}', '${item.rowIndex}', '${rowId}')">
-                    <i class="bi bi-check-lg me-1"></i> 저장하기
-                </button>
-            </div>
-        </div>`;
-    }).join('');
 }
 
-// 4. 저장 함수 (입력값 그대로 전송)
-function saveSetupInfo(type, branch, rowIndex, rowId) {
-    const val1 = document.getElementById(`val1_${rowId}`).value;
-    const val2 = document.getElementById(`val2_${rowId}`).value;
+// [기능] 정산 대장 조회
+function loadSettlementLedger() {
+    const monthVal = document.getElementById('sl_month').value;
+    const vendorVal = document.getElementById('sl_vendor').value;
+    if(!monthVal) { alert("조회 월을 선택해주세요."); return; }
 
-    if (!confirm("입력된 정보로 저장하시겠습니까?")) return;
+    const tbody = document.getElementById('sl_tbody');
+    const theadRow = document.getElementById('sl_header_row');
 
-    if(typeof Swal !== 'undefined') Swal.fire({ title: '저장 중...', didOpen: () => Swal.showLoading() });
+    if(theadRow) {
+        theadRow.innerHTML = LEDGER_COLUMNS.map((col, idx) => {
+            const stickyClass = idx === 0 ? "sticky-start bg-primary-subtle border-end z-index-10" : "";
+            return `<th class="${stickyClass}" style="min-width:${col.width}">${col.label}</th>`;
+        }).join('');
+    }
+    tbody.innerHTML = `<tr><td colspan="19" class="py-5"><div class="spinner-border text-primary"></div></td></tr>`;
 
-    requestAPI({
-            action: "update_setup_info",
-            type: type,
-            branch: branch,
-            rowIndex: rowIndex,
-            val1: val1,
-            val2: val2
-        })
-    .then(d => {
-        if (d.status === 'success') {
-            if(typeof Swal !== 'undefined') Swal.fire({ icon: 'success', title: '처리 완료', timer: 1000, showConfirmButton: false });
-            else alert("저장되었습니다.");
-            // 목록 갱신
-            searchSetupList(type);
-        } else {
-            alert(d.message);
+    requestAPI({ action: "get_settlement_ledger", month: monthVal, vendor: vendorVal })
+    .then(data => {
+        if(data.status !== 'success' || !data.list || data.list.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="19" class="text-muted py-5">내역이 없습니다.</td></tr>`;
+            return;
         }
-    })
-    .catch(e => {
-        alert("통신 오류가 발생했습니다.");
+        tbody.innerHTML = data.list.map(item => {
+            const tds = LEDGER_COLUMNS.map((col, idx) => {
+                const raw = item[col.key];
+                const val = col.formatter ? col.formatter(raw) : (raw || "");
+                const stickyClass = idx === 0 ? "sticky-start bg-white border-end" : "";
+                return `<td class="${col.className || ""} ${stickyClass}">${val}</td>`;
+            }).join('');
+            return `<tr>${tds}</tr>`;
+        }).join('');
     });
 }
+
+
+
+
 
 // ==========================================
 // [신규] 관리자 DB 열람 로직
