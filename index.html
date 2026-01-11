@@ -156,8 +156,8 @@
                             </ul>
                         </li>
 
-						<li class="nav-item" id="menu_ledger_item">
-						    <a class="nav-link" href="#" onclick="showSection('section-settlement-ledger'); initSettlementLedgerDate();">
+						<li class="nav-item d-none" id="menu_ledger_item">
+						    <a class="nav-link" href="#" onclick="showSection('section-settlement-ledger'); initSettlementLedgerPage();">
 						        <i class="bi bi-calculator-fill text-primary"></i> 정산 관리
 						    </a>
 						</li>
@@ -1279,6 +1279,24 @@
                     </div>
                 </div>
             </div>
+
+			<div class="row g-2 mb-4 align-items-end">
+				<div class="col-5">
+				    <label class="small text-muted fw-bold mb-1">거래처</label>
+				    <select id="sl_vendor" class="form-select fw-bold text-primary">
+				        <option value="전체">전체 거래처</option>
+				        </select>
+				</div>
+			
+			    <div class="col-5">
+			        <label class="small text-muted fw-bold mb-1">조회 월</label>
+			        <input type="month" id="sl_month" class="form-control fw-bold">
+			    </div>
+			
+			    <div class="col-2">
+			        <button class="btn btn-primary w-100 fw-bold py-2" onclick="loadSettlementLedger()">조회</button>
+			    </div>
+			</div>
 
             <div id="section-crm-expiry" class="section-view">
                 <div class="glass-card p-4">
