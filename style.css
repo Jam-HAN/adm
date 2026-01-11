@@ -380,7 +380,7 @@ body.no-scroll{
 }
 
 .login-inline-text{
-	font-size: 1.25rem;
+	font-size: 1.5rem;
 	font-weight: 800;
 	letter-spacing: -0.2px;
 	line-height: 1;
@@ -393,7 +393,7 @@ body.no-scroll{
 		height: 30px;
 	}
 	.login-inline-text{
-		font-size: 1rem;
+		font-size: 1.25rem;
 	}
 }
 
