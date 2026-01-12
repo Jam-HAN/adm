@@ -3277,26 +3277,43 @@ const MASTER_EMAILS = [
 
 // [설정] 정산 대장 컬럼
 const LEDGER_COLUMNS = [
-    { label: "고객명", key: "name", width: "80px", className: "fw-bold sticky-start bg-white border-end" }, 
-    { label: "전화번호", key: "phone", width: "110px" },
-    { label: "생년월일", key: "birth", width: "90px" },
-    { label: "모델명", key: "model", width: "120px" },
-    { label: "요금제", key: "plan", width: "100px" },
-    { label: "부가서비스", key: "addon", width: "120px" },
-    { label: "기본정책", key: "pol_base", width: "90px", formatter: fmtMoney, className: "text-end text-primary" },
-    { label: "기본(메모)", key: "pol_base_m", width: "120px", className: "text-start text-muted small" },
-    { label: "추가정책", key: "pol_add", width: "90px", formatter: fmtMoney, className: "text-end text-primary" },
-    { label: "추가(메모)", key: "pol_add_m", width: "120px", className: "text-start text-muted small" },
-    { label: "부가정책", key: "pol_sub", width: "90px", formatter: fmtMoney, className: "text-end text-primary" },
-    { label: "부가(메모)", key: "pol_sub_m", width: "120px", className: "text-start text-muted small" },
-    { label: "차감정책", key: "pol_deduct", width: "90px", formatter: fmtMoney, className: "text-end text-danger" },
-    { label: "차감(메모)", key: "pol_deduct_m", width: "120px", className: "text-start text-muted small" },
-    { label: "프리할인", key: "pre_dc", width: "90px", formatter: fmtMoney, className: "text-end text-secondary" },
-    { label: "유심", key: "usim", width: "80px", formatter: fmtMoney, className: "text-end text-secondary" },
-    { label: "수수료", key: "comm", width: "80px", formatter: fmtMoney, className: "text-end text-secondary" },
-    { label: "담당자", key: "manager", width: "80px" },
-    { label: "정산", key: "total", width: "100px", formatter: fmtMoney, className: "fw-bold text-primary bg-primary bg-opacity-10 text-end" }
+    // 1. 핵심 고정 정보 (지점, 개통일, 고객명)
+    { label: "지점",      key: "branch",    width: "70px",  className: "fw-bold text-secondary" }, // ★ 추가됨
+    { label: "개통일",    key: "date",      width: "90px",  className: "text-muted small" },       // ★ 추가됨
+    { label: "고객명",    key: "name",      width: "80px",  className: "fw-bold sticky-start bg-white border-end text-dark" }, 
+    
+    // 2. 개통 정보
+    { label: "전화번호",  key: "phone",     width: "110px" },
+    { label: "모델명",    key: "model",     width: "120px" },
+    { label: "요금제",    key: "plan",      width: "100px" },
+    { label: "부가서비스", key: "addon",     width: "100px", formatter: (v) => v ? `<span class="text-truncate d-block" style="max-width:100px" title="${v}">${v}</span>` : '-' },
+
+    // 3. 정책 자금 (우측 정렬)
+    { label: "기본정책",  key: "pol_base",  width: "90px",  formatter: fmtMoney, className: "text-end text-primary" },
+    { label: "추가정책",  key: "pol_add",   width: "90px",  formatter: fmtMoney, className: "text-end text-primary" },
+    { label: "부가정책",  key: "pol_sub",   width: "90px",  formatter: fmtMoney, className: "text-end text-primary" },
+    { label: "차감정책",  key: "pol_deduct", width: "90px",  formatter: fmtMoney, className: "text-end text-danger" },
+
+    // 4. 기타 비용
+    { label: "프리할인",  key: "pre_dc",    width: "90px",  formatter: fmtMoney, className: "text-end text-secondary" },
+    { label: "유심",      key: "usim",      width: "80px",  formatter: fmtMoney, className: "text-end text-secondary" },
+    { label: "수수료",    key: "comm",      width: "80px",  formatter: fmtMoney, className: "text-end text-secondary" },
+
+    // 5. 결과 및 관리
+    { label: "담당자",    key: "manager",   width: "70px" },
+    { label: "정산금",    key: "total",     width: "100px", formatter: fmtMoney, className: "fw-bold text-primary bg-primary bg-opacity-10 text-end border-start" },
+    
+    // ★ [추가] 상태 버튼 (입금확인)
+    { label: "상태",      key: "status",    width: "80px",  formatter: (v, row) => getDepositBtn(row) } 
 ];
+
+// [헬퍼] 입금 확인 버튼 생성기
+function getDepositBtn(row) {
+    // 임시 ID 생성 (토글용)
+    const btnId = `btn_deposit_${row.phone.replace(/[^0-9]/g, '')}`;
+    return `<button id="${btnId}" class="btn btn-sm btn-outline-secondary rounded-pill px-3 fw-bold" 
+            style="font-size: 0.75rem;" onclick="toggleDeposit(this, ${row.total})">대기</button>`;
+}
 
 // [기능] 정산 대장용 거래처 드롭다운 (입고등록과 동일한 방식 적용)
 function loadSettlementVendors() {
@@ -3379,35 +3396,90 @@ function loadSettlementLedger() {
     const tbody = document.getElementById('sl_tbody');
     const theadRow = document.getElementById('sl_header_row');
 
+    // 1. 헤더 그리기
     if(theadRow) {
         theadRow.innerHTML = LEDGER_COLUMNS.map((col, idx) => {
-            const stickyClass = idx === 0 ? "sticky-start bg-primary-subtle border-end z-index-10" : "";
+            const stickyClass = col.className && col.className.includes('sticky-start') ? "sticky-start bg-primary-subtle border-end z-index-10" : "";
             return `<th class="${stickyClass}" style="min-width:${col.width}">${col.label}</th>`;
         }).join('');
     }
-    tbody.innerHTML = `<tr><td colspan="19" class="py-5"><div class="spinner-border text-primary"></div></td></tr>`;
 
+    // 2. 로딩 표시
+    tbody.innerHTML = `<tr><td colspan="100%" class="py-5"><div class="spinner-border text-primary"></div></td></tr>`;
+    
+    // 상단 요약 초기화
+    document.getElementById('summary_expected').innerText = '-';
+    document.getElementById('summary_deposited').innerText = '-';
+    document.getElementById('summary_unpaid').innerText = '-';
+
+    // 3. 데이터 요청
     requestAPI({ action: "get_settlement_ledger", month: monthVal, vendor: vendorVal })
     .then(data => {
         if(data.status !== 'success' || !data.list || data.list.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="19" class="text-muted py-5">내역이 없습니다.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="100%" class="text-muted py-5">내역이 없습니다.</td></tr>`;
             return;
         }
-        tbody.innerHTML = data.list.map(item => {
-            const tds = LEDGER_COLUMNS.map((col, idx) => {
+
+        // ★ [핵심] 집계 계산 (초기값)
+        let totalExpected = 0;
+        
+        // 4. 본문 그리기
+        tbody.innerHTML = data.list.map((item, idx) => {
+            // 예상 정산금 누적
+            totalExpected += Number(item.total || 0);
+
+            const tds = LEDGER_COLUMNS.map((col) => {
                 const raw = item[col.key];
-                const val = col.formatter ? col.formatter(raw) : (raw || "");
-                const stickyClass = idx === 0 ? "sticky-start bg-white border-end" : "";
+                // formatter가 있으면 실행(값, 전체행데이터), 없으면 값 출력
+                const val = col.formatter ? col.formatter(raw, item) : (raw || "");
+                const stickyClass = col.className && col.className.includes('sticky-start') ? "sticky-start bg-white border-end" : "";
                 return `<td class="${col.className || ""} ${stickyClass}">${val}</td>`;
             }).join('');
             return `<tr>${tds}</tr>`;
         }).join('');
+
+        // 5. 상단 요약 업데이트 (초기 상태)
+        updateSummary(totalExpected, 0); // 처음엔 입금 0원
+        
+        // 데이터에 전역 변수로 총액 저장 (버튼 클릭 시 재계산용)
+        window.currentTotalExpected = totalExpected;
+        window.currentTotalDeposited = 0;
+    })
+    .catch(err => {
+        console.error(err);
+        tbody.innerHTML = `<tr><td colspan="100%" class="text-danger py-5">통신 오류 발생</td></tr>`;
     });
 }
 
+// [기능] 상단 요약 숫자 업데이트 함수
+function updateSummary(expected, deposited) {
+    const unpaid = expected - deposited;
+    document.getElementById('summary_expected').innerText = Number(expected).toLocaleString() + "원";
+    document.getElementById('summary_deposited').innerText = Number(deposited).toLocaleString() + "원";
+    document.getElementById('summary_unpaid').innerText = Number(unpaid).toLocaleString() + "원";
+}
 
-
-
+// [기능] 입금 확인 버튼 토글 (UI 전용)
+function toggleDeposit(btn, amount) {
+    const isConfirmed = btn.classList.contains('btn-success');
+    
+    if (isConfirmed) {
+        // [취소] 완료 -> 대기
+        btn.classList.remove('btn-success', 'text-white');
+        btn.classList.add('btn-outline-secondary');
+        btn.innerText = "대기";
+        window.currentTotalDeposited -= amount; // 입금액 차감
+    } else {
+        // [확인] 대기 -> 완료
+        btn.classList.remove('btn-outline-secondary');
+        btn.classList.add('btn-success', 'text-white');
+        btn.innerText = "완료";
+        window.currentTotalDeposited += amount; // 입금액 가산
+    }
+    
+    // 상단 요약 재계산
+    updateSummary(window.currentTotalExpected, window.currentTotalDeposited);
+}
 
 // ==========================================
 // [신규] 관리자 DB 열람 로직
