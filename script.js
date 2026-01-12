@@ -3360,24 +3360,14 @@ function loadSettlementVendors() {
 
 // [기능] 정산 대장 페이지 초기화
 function initSettlementLedgerPage() {
+    // 1. 날짜 세팅 (이번 달 자동 입력)
     const today = new Date();
     const val = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}`;
     const dateEl = document.getElementById('sl_month');
     if(dateEl && !dateEl.value) dateEl.value = val;
     
-    // 거래처 목록 로딩 (기존 API 활용)
-    const select = document.getElementById('sl_vendor');
-    if(select && select.options.length <= 1) {
-        requestAPI({ action: "get_vendors" }).then(data => {
-            if(data.status === 'success' && data.list) {
-                const set = new Set();
-                data.list.forEach(i => { if(i.carrier) set.add(i.carrier); else if(i.name) set.add(i.name); });
-                Array.from(set).sort().forEach(v => {
-                    const opt = document.createElement('option'); opt.value = v; opt.text = v; select.add(opt);
-                });
-            }
-        });
-    }
+    // 2. 거래처 목록 불러오기
+    loadSettlementVendors();
 }
 
 // [기능] 정산 대장 조회
