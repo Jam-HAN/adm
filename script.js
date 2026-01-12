@@ -4,12 +4,6 @@
 
 const GAS_URL = "https://script.google.com/macros/s/AKfycbxVfZJV7fS-qrl6pdd-fUduJfpRI1cAdGu9l1eHj1eLYyDQDyNKUgBntbzUTPNKFNK9/exec"; 
 
-// ★ [추가] 금액 포맷팅 함수 (이게 없으면 정산 대장에서 에러납니다!)
-const fmtMoney = (n) => {
-    if (!n || n === 0 || n === '0') return '<span class="text-muted opacity-25">-</span>';
-    return Number(n).toLocaleString();
-};
-
 // ============================================================
 // [Core] 통신 전용 엔진 (재시도 로직 + 타임아웃 처리 포함)
 // ============================================================
