@@ -4,6 +4,12 @@
 
 const GAS_URL = "https://script.google.com/macros/s/AKfycbxVfZJV7fS-qrl6pdd-fUduJfpRI1cAdGu9l1eHj1eLYyDQDyNKUgBntbzUTPNKFNK9/exec"; 
 
+// ★ [추가] 금액 포맷팅 함수 (이게 없으면 정산 대장에서 에러납니다!)
+const fmtMoney = (n) => {
+    if (!n || n === 0 || n === '0') return '<span class="text-muted opacity-25">-</span>';
+    return Number(n).toLocaleString();
+};
+
 // ============================================================
 // [Core] 통신 전용 엔진 (재시도 로직 + 타임아웃 처리 포함)
 // ============================================================
@@ -3297,17 +3303,6 @@ const LEDGER_COLUMNS = [
     { label: "담당자", key: "manager", width: "80px" },
     { label: "정산", key: "total", width: "100px", formatter: fmtMoney, className: "fw-bold text-primary bg-primary bg-opacity-10 text-end" }
 ];
-
-// [기능] 마스터 권한 체크
-function checkMasterPermission() {
-    const user = JSON.parse(sessionStorage.getItem('dbphone_user'));
-    const menu = document.getElementById('menu_ledger_item');
-    if (user && user.email && MASTER_EMAILS.includes(user.email)) {
-        if(menu) menu.classList.remove('d-none');
-    } else {
-        if(menu) menu.classList.add('d-none');
-    }
-}
 
 // [기능] 정산 대장용 거래처 드롭다운 채우기 (기존 API 활용)
 function loadSettlementVendors() {
