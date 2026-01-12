@@ -3298,7 +3298,7 @@ const LEDGER_COLUMNS = [
     { label: "정산", key: "total", width: "100px", formatter: fmtMoney, className: "fw-bold text-primary bg-primary bg-opacity-10 text-end" }
 ];
 
-// [기능] 정산 대장용 거래처 드롭다운 채우기 (기존 API 활용)
+// [기능] 정산 대장용 거래처 드롭다운 채우기 (거래처명 우선 수정판)
 function loadSettlementVendors() {
     const select = document.getElementById('sl_vendor');
     
@@ -3310,7 +3310,7 @@ function loadSettlementVendors() {
     loadingOpt.text = "로딩 중...";
     select.add(loadingOpt);
 
-    // 3. 기존에 있던 'get_vendors' 명령어로 데이터 요청
+    // 3. 데이터 요청
     requestAPI({ action: "get_vendors" })
     .then(data => {
         // 로딩 문구 제거
@@ -3323,13 +3323,13 @@ function loadSettlementVendors() {
         if(data.status === 'success' && data.list) {
             const vendorSet = new Set();
             
-            // 데이터에서 이름만 뽑아서 중복 제거
             data.list.forEach(item => {
-                const val = (item.name || "").trim();
+                // ★ [핵심 수정] carrier(통신사) 대신 name(거래처명)을 무조건 먼저 씁니다!
+                const val = (item.name || item.carrier || "").trim();
                 if (val) vendorSet.add(val);
             });
 
-            // 가나다순 정렬 후 옵션(<option>)으로 추가
+            // 가나다순 정렬 후 추가
             const sortedVendors = Array.from(vendorSet).sort();
             sortedVendors.forEach(v => {
                 const opt = document.createElement('option');
@@ -3341,6 +3341,10 @@ function loadSettlementVendors() {
     })
     .catch(err => {
         console.error("거래처 로딩 실패:", err);
+        // 에러 시 로딩 문구 제거
+        if (select.options.length > 0 && select.options[select.options.length-1].text === "로딩 중...") {
+            select.remove(select.options.length - 1);
+        }
     });
 }
 
