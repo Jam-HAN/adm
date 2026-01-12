@@ -3298,39 +3298,53 @@ const LEDGER_COLUMNS = [
     { label: "정산", key: "total", width: "100px", formatter: fmtMoney, className: "fw-bold text-primary bg-primary bg-opacity-10 text-end" }
 ];
 
-// [기능] 정산 대장용 거래처 드롭다운 채우기 (거래처명 우선 수정판)
+// [기능] 정산 대장용 거래처 드롭다운 (입고등록과 동일한 방식 적용)
 function loadSettlementVendors() {
     const select = document.getElementById('sl_vendor');
     
-    // 1. 선택 박스가 없거나, 이미 로딩됐으면(옵션이 2개 이상이면) 중단
+    // 1. 선택 박스가 없거나, 이미 로딩됐으면 중단
     if (!select || select.options.length > 1) return;
 
-    // 2. 로딩 표시 추가
+    // ★ [핵심] 입고 등록에서 이미 불러둔 데이터(globalVendorList)가 있으면 바로 씁니다! (속도 최적화)
+    if (typeof globalVendorList !== 'undefined' && globalVendorList.length > 0) {
+        // 기존 옵션("전체") 유지하고 뒤에 추가
+        globalVendorList.forEach(v => {
+            const opt = document.createElement('option');
+            opt.value = v;
+            opt.text = v;
+            select.add(opt);
+        });
+        return;
+    }
+
+    // 2. 데이터가 없으면 서버 요청
     const loadingOpt = document.createElement('option');
     loadingOpt.text = "로딩 중...";
     select.add(loadingOpt);
 
-    // 3. 데이터 요청
     requestAPI({ action: "get_vendors" })
     .then(data => {
         // 로딩 문구 제거
-        if (select.options.length > 0) {
-             for (let i=0; i<select.options.length; i++) {
-                 if (select.options[i].text === "로딩 중...") select.remove(i);
-             }
+        for (let i = 0; i < select.options.length; i++) {
+            if (select.options[i].text === "로딩 중...") select.remove(i);
         }
 
         if(data.status === 'success' && data.list) {
             const vendorSet = new Set();
             
             data.list.forEach(item => {
-                // ★ [핵심 수정] carrier(통신사) 대신 name(거래처명)을 무조건 먼저 씁니다!
-                const val = (item.name || item.carrier || "").trim();
+                // ❌ 기존 문제 코드: if(item.carrier) ... 
+                // ✅ 수정된 코드: 무조건 name(거래처명)만 가져옴
+                const val = (item.name || "").trim();
                 if (val) vendorSet.add(val);
             });
 
             // 가나다순 정렬 후 추가
             const sortedVendors = Array.from(vendorSet).sort();
+            
+            // 전역 변수에도 저장해둠 (다음엔 로딩 안 하게)
+            if (typeof globalVendorList !== 'undefined') globalVendorList = sortedVendors;
+
             sortedVendors.forEach(v => {
                 const opt = document.createElement('option');
                 opt.value = v;
@@ -3341,10 +3355,6 @@ function loadSettlementVendors() {
     })
     .catch(err => {
         console.error("거래처 로딩 실패:", err);
-        // 에러 시 로딩 문구 제거
-        if (select.options.length > 0 && select.options[select.options.length-1].text === "로딩 중...") {
-            select.remove(select.options.length - 1);
-        }
     });
 }
 
