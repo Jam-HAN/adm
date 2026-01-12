@@ -3273,7 +3273,6 @@ function renderStaffStats(data) {
 // [설정] 마스터 권한 (이메일 수정 필수!)
 const MASTER_EMAILS = [
     "scv@dbphone.co.kr", // 사장님 이메일
-    "master@gmail.com" 
 ];
 
 // [설정] 정산 대장 컬럼
@@ -3308,6 +3307,52 @@ function checkMasterPermission() {
     } else {
         if(menu) menu.classList.add('d-none');
     }
+}
+
+// [기능] 정산 대장용 거래처 드롭다운 채우기 (기존 API 활용)
+function loadSettlementVendors() {
+    const select = document.getElementById('sl_vendor');
+    
+    // 1. 선택 박스가 없거나, 이미 로딩됐으면(옵션이 2개 이상이면) 중단
+    if (!select || select.options.length > 1) return;
+
+    // 2. 로딩 표시 추가
+    const loadingOpt = document.createElement('option');
+    loadingOpt.text = "로딩 중...";
+    select.add(loadingOpt);
+
+    // 3. 기존에 있던 'get_vendors' 명령어로 데이터 요청
+    requestAPI({ action: "get_vendors" })
+    .then(data => {
+        // 로딩 문구 제거
+        if (select.options.length > 0) {
+             for (let i=0; i<select.options.length; i++) {
+                 if (select.options[i].text === "로딩 중...") select.remove(i);
+             }
+        }
+
+        if(data.status === 'success' && data.list) {
+            const vendorSet = new Set();
+            
+            // 데이터에서 이름만 뽑아서 중복 제거
+            data.list.forEach(item => {
+                const val = (item.name || "").trim();
+                if (val) vendorSet.add(val);
+            });
+
+            // 가나다순 정렬 후 옵션(<option>)으로 추가
+            const sortedVendors = Array.from(vendorSet).sort();
+            sortedVendors.forEach(v => {
+                const opt = document.createElement('option');
+                opt.value = v;
+                opt.text = v;
+                select.add(opt);
+            });
+        }
+    })
+    .catch(err => {
+        console.error("거래처 로딩 실패:", err);
+    });
 }
 
 // [기능] 정산 대장 페이지 초기화
