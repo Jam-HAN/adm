@@ -1282,37 +1282,61 @@
 
 			<div id="section-settlement-ledger" class="section-view">
 			    <div class="glass-card p-4 w-100 d-block" style="min-height: 600px;">
-			        <h5 class="fw-bold mb-4 text-primary">
-			            <i class="bi bi-calculator me-2"></i>정산 상세 대장
-			        </h5>
 			        
-			        <div class="row g-2 mb-4 align-items-end">
+			        <div class="d-flex justify-content-between align-items-center mb-4">
+			            <h5 class="fw-bold text-primary m-0">
+			                <i class="bi bi-calculator-fill me-2"></i>정산 입금 관리
+			            </h5>
+			            <span class="badge bg-white text-secondary border shadow-sm" id="sl_update_time"></span>
+			        </div>
+			
+			        <div class="row g-3 mb-4">
+			            <div class="col-4">
+			                <div class="p-3 rounded-4 shadow-sm h-100" style="background: linear-gradient(135deg, #eef2ff 0%, #ffffff 100%); border: 1px solid #c7d2fe;">
+			                    <div class="small text-primary fw-bold mb-1">🔵 예상 정산금</div>
+			                    <div class="fs-5 fw-bolder text-dark" id="summary_expected">0</div>
+			                </div>
+			            </div>
+			            <div class="col-4">
+			                <div class="p-3 rounded-4 shadow-sm h-100" style="background: linear-gradient(135deg, #ecfdf5 0%, #ffffff 100%); border: 1px solid #a7f3d0;">
+			                    <div class="small text-success fw-bold mb-1">🟢 입금 완료</div>
+			                    <div class="fs-5 fw-bolder text-success" id="summary_deposited">0</div>
+			                </div>
+			            </div>
+			            <div class="col-4">
+			                <div class="p-3 rounded-4 shadow-sm h-100" style="background: linear-gradient(135deg, #fef2f2 0%, #ffffff 100%); border: 1px solid #fecaca;">
+			                    <div class="small text-danger fw-bold mb-1">🔴 미수금</div>
+			                    <div class="fs-5 fw-bolder text-danger" id="summary_unpaid">0</div>
+			                </div>
+			            </div>
+			        </div>
+			        
+			        <div class="row g-2 mb-3 align-items-end">
 			            <div class="col-5">
 			                <label class="small text-muted fw-bold mb-1">거래처</label>
 			                <select id="sl_vendor" class="form-select fw-bold text-primary">
 			                    <option value="전체">전체 거래처</option>
-			                    </select>
+			                </select>
 			            </div>
-			
 			            <div class="col-5">
 			                <label class="small text-muted fw-bold mb-1">조회 월</label>
 			                <input type="month" id="sl_month" class="form-control fw-bold">
 			            </div>
-			
 			            <div class="col-2">
-			                <button class="btn btn-primary w-100 fw-bold py-2" onclick="loadSettlementLedger()">조회</button>
+			                <button class="btn btn-primary w-100 fw-bold py-2 shadow-sm" onclick="loadSettlementLedger()">
+			                    <i class="bi bi-search"></i>
+			                </button>
 			            </div>
 			        </div>
 			
 			        <div class="table-responsive w-100 rounded-4 border shadow-sm" style="max-height: 600px; overflow-y: auto;">
-			            <table class="table table-hover align-middle text-center small border mb-0" style="white-space: nowrap; font-size: 0.8rem;">
+			            <table class="table table-hover align-middle text-center small border mb-0" style="white-space: nowrap; font-size: 0.85rem;">
 			                <thead class="table-primary sticky-top" style="z-index: 5;">
-			                    <tr id="sl_header_row">
-			                        </tr>
+			                    <tr id="sl_header_row"></tr>
 			                </thead>
 			                <tbody id="sl_tbody">
 			                    <tr style="height: 300px;">
-			                        <td colspan="19" class="text-muted align-middle">
+			                        <td colspan="100%" class="text-muted align-middle">
 			                            <i class="bi bi-search fs-1 d-block mb-3 opacity-25"></i>
 			                            조회 조건을 선택하고 버튼을 눌러주세요.
 			                        </td>
