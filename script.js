@@ -3303,17 +3303,9 @@ const LEDGER_COLUMNS = [
     { label: "담당자",    key: "manager",   width: "70px" },
     { label: "정산금",    key: "total",     width: "100px", formatter: fmtMoney, className: "fw-bold text-primary bg-primary bg-opacity-10 text-end border-start" },
     
-    // ★ [추가] 상태 버튼 (입금확인)
-    { label: "상태",      key: "status",    width: "80px",  formatter: (v, row) => getDepositBtn(row) } 
+    // ★ [수정됨] 상태 드롭다운 컬럼
+    { label: "상태", key: "status", width: "110px", formatter: (v, row) => getStatusDropdown(v, row) }
 ];
-
-// [헬퍼] 입금 확인 버튼 생성기
-function getDepositBtn(row) {
-    // 임시 ID 생성 (토글용)
-    const btnId = `btn_deposit_${row.phone.replace(/[^0-9]/g, '')}`;
-    return `<button id="${btnId}" class="btn btn-sm btn-outline-secondary rounded-pill px-3 fw-bold" 
-            style="font-size: 0.75rem;" onclick="toggleDeposit(this, ${row.total})">대기</button>`;
-}
 
 // [기능] 정산 대장용 거래처 드롭다운 (입고등록과 동일한 방식 적용)
 function loadSettlementVendors() {
@@ -3396,7 +3388,6 @@ function loadSettlementLedger() {
     const tbody = document.getElementById('sl_tbody');
     const theadRow = document.getElementById('sl_header_row');
 
-    // 1. 헤더 그리기
     if(theadRow) {
         theadRow.innerHTML = LEDGER_COLUMNS.map((col, idx) => {
             const stickyClass = col.className && col.className.includes('sticky-start') ? "sticky-start bg-primary-subtle border-end z-index-10" : "";
@@ -3404,15 +3395,11 @@ function loadSettlementLedger() {
         }).join('');
     }
 
-    // 2. 로딩 표시
     tbody.innerHTML = `<tr><td colspan="100%" class="py-5"><div class="spinner-border text-primary"></div></td></tr>`;
     
-    // 상단 요약 초기화
-    document.getElementById('summary_expected').innerText = '-';
-    document.getElementById('summary_deposited').innerText = '-';
-    document.getElementById('summary_unpaid').innerText = '-';
+    // 요약 초기화
+    updateSummary(0, 0);
 
-    // 3. 데이터 요청
     requestAPI({ action: "get_settlement_ledger", month: monthVal, vendor: vendorVal })
     .then(data => {
         if(data.status !== 'success' || !data.list || data.list.length === 0) {
@@ -3420,17 +3407,20 @@ function loadSettlementLedger() {
             return;
         }
 
-        // ★ [핵심] 집계 계산 (초기값)
         let totalExpected = 0;
+        let totalDeposited = 0;
         
-        // 4. 본문 그리기
         tbody.innerHTML = data.list.map((item, idx) => {
-            // 예상 정산금 누적
-            totalExpected += Number(item.total || 0);
+            const settleAmt = Number(item.total || 0);
+            totalExpected += settleAmt;
+            
+            // '정상' 상태인 경우에만 입금 완료로 집계
+            if (item.status === '정상') {
+                totalDeposited += settleAmt;
+            }
 
             const tds = LEDGER_COLUMNS.map((col) => {
                 const raw = item[col.key];
-                // formatter가 있으면 실행(값, 전체행데이터), 없으면 값 출력
                 const val = col.formatter ? col.formatter(raw, item) : (raw || "");
                 const stickyClass = col.className && col.className.includes('sticky-start') ? "sticky-start bg-white border-end" : "";
                 return `<td class="${col.className || ""} ${stickyClass}">${val}</td>`;
@@ -3438,15 +3428,12 @@ function loadSettlementLedger() {
             return `<tr>${tds}</tr>`;
         }).join('');
 
-        // 5. 상단 요약 업데이트 (초기 상태)
-        updateSummary(totalExpected, 0); // 처음엔 입금 0원
-        
-        // 데이터에 전역 변수로 총액 저장 (버튼 클릭 시 재계산용)
+        // 요약 업데이트 및 전역 변수 저장 (드롭다운 변경 시 사용)
+        updateSummary(totalExpected, totalDeposited);
         window.currentTotalExpected = totalExpected;
-        window.currentTotalDeposited = 0;
+        window.currentTotalDeposited = totalDeposited;
     })
     .catch(err => {
-        console.error(err);
         tbody.innerHTML = `<tr><td colspan="100%" class="text-danger py-5">통신 오류 발생</td></tr>`;
     });
 }
@@ -3459,26 +3446,286 @@ function updateSummary(expected, deposited) {
     document.getElementById('summary_unpaid').innerText = Number(unpaid).toLocaleString() + "원";
 }
 
-// [기능] 입금 확인 버튼 토글 (UI 전용)
-function toggleDeposit(btn, amount) {
-    const isConfirmed = btn.classList.contains('btn-success');
+// 1. 상태 드롭다운 생성기
+function getStatusDropdown(status, row) {
+    const opts = ['대기', '수정요청', '수정완료', '정상'];
+    const colors = {
+        '대기': 'bg-light text-secondary border-secondary',
+        '수정요청': 'bg-danger text-white border-danger',
+        '수정완료': 'bg-warning text-dark border-warning',
+        '정상': 'bg-success text-white border-success'
+    };
     
-    if (isConfirmed) {
-        // [취소] 완료 -> 대기
-        btn.classList.remove('btn-success', 'text-white');
-        btn.classList.add('btn-outline-secondary');
-        btn.innerText = "대기";
-        window.currentTotalDeposited -= amount; // 입금액 차감
-    } else {
-        // [확인] 대기 -> 완료
-        btn.classList.remove('btn-outline-secondary');
-        btn.classList.add('btn-success', 'text-white');
-        btn.innerText = "완료";
-        window.currentTotalDeposited += amount; // 입금액 가산
+    // 현재 상태의 색상 클래스
+    const currentClass = colors[status] || colors['대기'];
+    const rowId = `status_${row.rowIndex}`;
+
+    return `
+        <select id="${rowId}" class="form-select form-select-sm fw-bold shadow-sm ${currentClass}" 
+                style="font-size: 0.75rem; width: 100px;" 
+                onchange="changeSettlementStatus(this, '${row.branch}', ${row.rowIndex}, ${row.total})">
+            ${opts.map(opt => `<option value="${opt}" ${status === opt ? 'selected' : ''} class="bg-white text-dark">${opt}</option>`).join('')}
+        </select>
+    `;
+}
+
+// 2. 상태 변경 처리 함수
+function changeSettlementStatus(selectEl, branch, rowIndex, amount) {
+    const newStatus = selectEl.value;
+    const oldStatus = selectEl.getAttribute('data-prev') || '대기'; // 이전 상태 기억용 (필요시 구현)
+    
+    // 색상 즉시 변경 (UX)
+    const colors = {
+        '대기': 'bg-light text-secondary border-secondary',
+        '수정요청': 'bg-danger text-white border-danger',
+        '수정완료': 'bg-warning text-dark border-warning',
+        '정상': 'bg-success text-white border-success'
+    };
+    
+    // 클래스 초기화 후 새 색상 적용
+    selectEl.className = `form-select form-select-sm fw-bold shadow-sm ${colors[newStatus]}`;
+    
+    // 서버 저장 요청
+    requestAPI({
+        action: "update_settlement_status",
+        branch: branch,
+        rowIndex: rowIndex,
+        status: newStatus
+    }).then(d => {
+        if(d.status !== 'success') {
+            alert("상태 저장 실패: " + d.message);
+            // 실패 시 원복 로직이 필요할 수 있음
+        } else {
+            // 성공 시 상단 합계 재계산
+            recalcSummary(selectEl, amount, newStatus);
+        }
+    });
+}
+
+// 3. 상단 합계 재계산 (화면 새로고침 없이 숫자만 변경)
+function recalcSummary(selectEl, amount, newStatus) {
+    // 이전 상태를 알 수 없으므로, 현재 화면의 모든 '정상' 상태 금액을 다시 더하는 방식이 안전함
+    // 하지만 성능을 위해 간단히 처리하자면:
+    // 이전에 '정상'이었다가 바뀌면 차감, '정상'으로 바뀌면 가산
+    
+    // 여기서는 간단하게 전체 테이블을 다시 훑어서 '정상' 합계를 구합니다. (오차 방지)
+    let newDeposited = 0;
+    document.querySelectorAll('#sl_tbody tr').forEach(tr => {
+        const sel = tr.querySelector('select');
+        const amtEl = tr.querySelector('td:nth-last-child(2)'); // 정산금 열
+        if (sel && amtEl && sel.value === '정상') {
+            const val = Number(amtEl.innerText.replace(/,/g, ''));
+            if (!isNaN(val)) newDeposited += val;
+        }
+    });
+    
+    window.currentTotalDeposited = newDeposited;
+    updateSummary(window.currentTotalExpected, newDeposited);
+}
+
+// ==========================================
+// [업그레이드] 약정 만료(CRM) 관리 (날짜기반 + 마스킹)
+// ==========================================
+
+function showCrmSection() {
+    // 1. 오늘 날짜 자동 세팅 (YYYY-MM-DD 포맷)
+    const now = new Date();
+    const yyyy = now.getFullYear();
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const dd = String(now.getDate()).padStart(2, '0');
+    
+    const dateInput = document.getElementById('crm_date');
+    if(dateInput) {
+        dateInput.value = `${yyyy}-${mm}-${dd}`; // 예: 2026-01-07
+    }
+
+    // 2. 화면 보여주기
+    showSection('section-crm-expiry');
+    
+    // 3. 자동 조회 시작
+    // loadExpiryList();
+}
+
+function loadExpiryList() {
+    const branch = document.getElementById('crm_branch').value;
+    const dateVal = document.getElementById('crm_date').value; // "2026-01-07"
+
+    if(!dateVal) { alert("날짜를 선택해주세요."); return; }
+
+    // ★ 날짜에서 '월(Month)' 정보만 추출해서 백엔드로 보냄
+    // (이유: 개통은 보통 '월 단위'로 관리하므로, 해당 날짜가 속한 달을 조회하는 게 정확합니다)
+    const month = dateVal.substring(0, 7); // "2026-01"
+
+    // 로딩 표시
+    document.getElementById('crm_tbody').innerHTML = `
+        <tr style="height: 300px;">
+            <td colspan="13" class="align-middle text-center">
+                <div class="spinner-border text-success" role="status"></div>
+                <div class="mt-2 small text-muted">
+                    기준일: ${dateVal}<br>
+                    고객 명단 분석 중...
+                </div>
+            </td>
+        </tr>`;
+
+    // API 호출 (기존 백엔드 그대로 사용 가능)
+    requestAPI({
+            action: "get_expiry_candidates",
+            branch: branch,
+            targetDate: dateVal // ★ 이름도 targetDate로 변경 (예: "2026-01-07")
+        })
+    .then(d => {
+        if(d.status === 'success') {
+            renderCrmTable(d.list);
+        } else {
+            alert("조회 실패: " + d.message);
+        }
+    })
+    .catch(e => {
+        console.error(e);
+        alert("통신 오류");
+    });
+}
+
+// 1. 상태별 색상/텍스트 매핑 (관리하기 쉽게 분리)
+const STATUS_CONFIG = {
+    '대기': { class: 'bg-light text-secondary border-secondary', label: '대기' },
+    '부재중': { class: 'bg-warning text-dark border-warning', label: '부재중' },
+    '내방예약': { class: 'bg-primary text-white border-primary', label: '내방예약' },
+    '보류': { class: 'bg-info text-dark border-info', label: '보류' },
+    '거절': { class: 'bg-danger text-white border-danger', label: '거절' },
+    '개통완료': { class: 'bg-success text-white border-success', label: '개통완료' }
+};
+
+function renderCrmTable(list) {
+    const tbody = document.getElementById('crm_tbody');
+    let html = "";
+
+    if (list.length === 0) {
+        html = `<tr><td colspan="13" class="py-5 text-muted">
+            해당 날짜(18, 21, 24개월 전) 조회 결과가 없습니다.<br>
+            <small>다른 날짜를 선택해보세요.</small>
+        </td></tr>`;
+        tbody.innerHTML = html;
+        return;
+    }
+
+    list.forEach((item, index) => { // index 포함됨 (OK)
+        
+        // 1. 전화번호 마스킹
+        let displayPhone = item.phone ? item.phone.replace(/^(\d{2,3})-?(\d{3,4})-?(\d{4})$/, "$1-****-$3") : '-';
+        
+        // 2. 생년월일 마스킹
+        let displayBirth = String(item.birth || '-');
+        if (displayBirth.length >= 6) {
+             displayBirth = displayBirth.substring(0, 3) + "***";
+        }
+
+        // 3. 배지 디자인
+        let badge = "";
+        if (item.targetType === 24) badge = `<span class="badge rounded-pill bg-danger">24개월</span>`;
+        else if (item.targetType === 21) badge = `<span class="badge rounded-pill bg-warning text-dark">21개월</span>`;
+        else badge = `<span class="badge rounded-pill bg-success">18개월</span>`;
+
+        // 4. 통화 버튼
+        const callBtn = item.phone ? 
+            `<a href="tel:${item.phone}" class="btn btn-outline-success btn-sm border-0">
+                <i class="bi bi-telephone-fill"></i>
+             </a>` : '-';
+
+        // 5. 드롭다운 버튼 설정
+        const currentStatus = item.crmStatus || '대기';
+        // STATUS_CONFIG가 없으면 안전하게 기본값 처리
+        const config = (typeof STATUS_CONFIG !== 'undefined' && STATUS_CONFIG[currentStatus]) 
+                       ? STATUS_CONFIG[currentStatus] 
+                       : { class: 'bg-light text-secondary border-secondary', label: currentStatus };
+        
+        const dropdownId = `dropdown_${index}`;
+        const statusKeys = (typeof STATUS_CONFIG !== 'undefined') ? Object.keys(STATUS_CONFIG) : ['대기', '완료'];
+
+        // ★ [핵심] data-bs-dismiss="dropdown" 속성 추가 (이게 있어야 클릭 시 닫힘)
+        const dropdownHtml = `
+            <div class="dropdown">
+                <button class="btn btn-sm dropdown-toggle rounded-pill fw-bold small shadow-sm w-100 ${config.class}" 
+                        type="button" id="${dropdownId}" data-bs-toggle="dropdown" aria-expanded="false"
+                        style="min-width: 85px; height: 26px; padding: 0; line-height: 24px; font-size: 0.8rem;">
+                    ${config.label}
+                </button>
+                <ul class="dropdown-menu text-center shadow-sm border-0" aria-labelledby="${dropdownId}" style="min-width: 85px;">
+                    ${statusKeys.map(status => `
+                        <li><a class="dropdown-item small fw-bold" href="#" 
+                            data-bs-dismiss="dropdown"
+                            onclick="changeCrmStatus('${dropdownId}', '${status}', '${item.branch}', '${item.phone}', '${item.openDate}')">
+                            ${status}
+                        </a></li>
+                    `).join('')}
+                </ul>
+            </div>
+        `;
+
+        html += `
+        <tr>
+            <td>${badge}</td>
+            <td class="fw-bold text-secondary">${item.branch}</td>
+            <td>${item.openDate}</td>
+            <td>${item.openPlace}</td>
+            <td>${item.openType}</td>
+            <td>${item.contractType}</td>
+            <td class="fw-bold">${item.name}</td>
+            <td class="fw-bold text-dark">${displayPhone}</td>
+            <td class="text-secondary">${displayBirth}</td>
+            <td class="text-primary fw-bold small">${item.model}</td>
+            <td class="small">${item.plan}</td>
+            <td>${callBtn}</td>
+            <td style="vertical-align: middle;">${dropdownHtml}</td>
+        </tr>`;
+    });
+    tbody.innerHTML = html;
+}
+
+// ★ [신규] 상태 변경 시 자동 저장 함수
+function changeCrmStatus(btnId, newStatus, branch, phone, date) {
+    const btn = document.getElementById(btnId);
+    if (!btn) return;
+
+    // 1. UI 즉시 반영 (버튼 텍스트 및 색상 변경)
+    // STATUS_CONFIG가 함수 밖 전역 변수로 선언되어 있어야 합니다.
+    const config = STATUS_CONFIG[newStatus] || { class: 'bg-light text-secondary', label: newStatus };
+    
+    // 기존 클래스 싹 지우고 새로 세팅
+    btn.className = `btn btn-sm dropdown-toggle rounded-pill fw-bold small shadow-sm w-100 ${config.class}`;
+    btn.innerText = config.label;
+
+    // 2. ★ [핵심 해결] 드롭다운 강제로 닫기
+    // Bootstrap의 공식 명령어를 사용하여 해당 버튼의 드롭다운을 숨깁니다.
+    try {
+        const dropdownInstance = bootstrap.Dropdown.getOrCreateInstance(btn);
+        dropdownInstance.hide();
+    } catch(e) {
+        // 혹시라도 위 코드가 안 먹히면 원시적인 방법으로 클래스를 제거해서 닫습니다.
+        btn.classList.remove('show');
+        btn.setAttribute('aria-expanded', 'false');
+        if (btn.nextElementSibling) {
+            btn.nextElementSibling.classList.remove('show');
+        }
     }
     
-    // 상단 요약 재계산
-    updateSummary(window.currentTotalExpected, window.currentTotalDeposited);
+    // 3. 포커스 해제 (선택 후 버튼에 남아있는 테두리 잔상 제거)
+    btn.blur();
+
+    // 4. 서버 저장 요청
+    requestAPI({
+            action: "update_crm_status",
+            branch: branch,
+            phone: phone,
+            date: date,
+            status: newStatus
+        })
+    .then(d => {
+        if(d.status !== 'success') alert("저장 실패: " + d.message);
+        else console.log("상태 저장 완료");
+    })
+    .catch(e => console.error(e));
 }
 
 // ==========================================
@@ -3697,207 +3944,3 @@ function submitGoal() {
     .catch(e => alert("저장 실패"));
 }
 
-// ==========================================
-// [업그레이드] 약정 만료(CRM) 관리 (날짜기반 + 마스킹)
-// ==========================================
-
-function showCrmSection() {
-    // 1. 오늘 날짜 자동 세팅 (YYYY-MM-DD 포맷)
-    const now = new Date();
-    const yyyy = now.getFullYear();
-    const mm = String(now.getMonth() + 1).padStart(2, '0');
-    const dd = String(now.getDate()).padStart(2, '0');
-    
-    const dateInput = document.getElementById('crm_date');
-    if(dateInput) {
-        dateInput.value = `${yyyy}-${mm}-${dd}`; // 예: 2026-01-07
-    }
-
-    // 2. 화면 보여주기
-    showSection('section-crm-expiry');
-    
-    // 3. 자동 조회 시작
-    // loadExpiryList();
-}
-
-function loadExpiryList() {
-    const branch = document.getElementById('crm_branch').value;
-    const dateVal = document.getElementById('crm_date').value; // "2026-01-07"
-
-    if(!dateVal) { alert("날짜를 선택해주세요."); return; }
-
-    // ★ 날짜에서 '월(Month)' 정보만 추출해서 백엔드로 보냄
-    // (이유: 개통은 보통 '월 단위'로 관리하므로, 해당 날짜가 속한 달을 조회하는 게 정확합니다)
-    const month = dateVal.substring(0, 7); // "2026-01"
-
-    // 로딩 표시
-    document.getElementById('crm_tbody').innerHTML = `
-        <tr style="height: 300px;">
-            <td colspan="13" class="align-middle text-center">
-                <div class="spinner-border text-success" role="status"></div>
-                <div class="mt-2 small text-muted">
-                    기준일: ${dateVal}<br>
-                    고객 명단 분석 중...
-                </div>
-            </td>
-        </tr>`;
-
-    // API 호출 (기존 백엔드 그대로 사용 가능)
-    requestAPI({
-            action: "get_expiry_candidates",
-            branch: branch,
-            targetDate: dateVal // ★ 이름도 targetDate로 변경 (예: "2026-01-07")
-        })
-    .then(d => {
-        if(d.status === 'success') {
-            renderCrmTable(d.list);
-        } else {
-            alert("조회 실패: " + d.message);
-        }
-    })
-    .catch(e => {
-        console.error(e);
-        alert("통신 오류");
-    });
-}
-
-// 1. 상태별 색상/텍스트 매핑 (관리하기 쉽게 분리)
-const STATUS_CONFIG = {
-    '대기': { class: 'bg-light text-secondary border-secondary', label: '대기' },
-    '부재중': { class: 'bg-warning text-dark border-warning', label: '부재중' },
-    '내방예약': { class: 'bg-primary text-white border-primary', label: '내방예약' },
-    '보류': { class: 'bg-info text-dark border-info', label: '보류' },
-    '거절': { class: 'bg-danger text-white border-danger', label: '거절' },
-    '개통완료': { class: 'bg-success text-white border-success', label: '개통완료' }
-};
-
-function renderCrmTable(list) {
-    const tbody = document.getElementById('crm_tbody');
-    let html = "";
-
-    if (list.length === 0) {
-        html = `<tr><td colspan="13" class="py-5 text-muted">
-            해당 날짜(18, 21, 24개월 전) 조회 결과가 없습니다.<br>
-            <small>다른 날짜를 선택해보세요.</small>
-        </td></tr>`;
-        tbody.innerHTML = html;
-        return;
-    }
-
-    list.forEach((item, index) => { // index 포함됨 (OK)
-        
-        // 1. 전화번호 마스킹
-        let displayPhone = item.phone ? item.phone.replace(/^(\d{2,3})-?(\d{3,4})-?(\d{4})$/, "$1-****-$3") : '-';
-        
-        // 2. 생년월일 마스킹
-        let displayBirth = String(item.birth || '-');
-        if (displayBirth.length >= 6) {
-             displayBirth = displayBirth.substring(0, 3) + "***";
-        }
-
-        // 3. 배지 디자인
-        let badge = "";
-        if (item.targetType === 24) badge = `<span class="badge rounded-pill bg-danger">24개월</span>`;
-        else if (item.targetType === 21) badge = `<span class="badge rounded-pill bg-warning text-dark">21개월</span>`;
-        else badge = `<span class="badge rounded-pill bg-success">18개월</span>`;
-
-        // 4. 통화 버튼
-        const callBtn = item.phone ? 
-            `<a href="tel:${item.phone}" class="btn btn-outline-success btn-sm border-0">
-                <i class="bi bi-telephone-fill"></i>
-             </a>` : '-';
-
-        // 5. 드롭다운 버튼 설정
-        const currentStatus = item.crmStatus || '대기';
-        // STATUS_CONFIG가 없으면 안전하게 기본값 처리
-        const config = (typeof STATUS_CONFIG !== 'undefined' && STATUS_CONFIG[currentStatus]) 
-                       ? STATUS_CONFIG[currentStatus] 
-                       : { class: 'bg-light text-secondary border-secondary', label: currentStatus };
-        
-        const dropdownId = `dropdown_${index}`;
-        const statusKeys = (typeof STATUS_CONFIG !== 'undefined') ? Object.keys(STATUS_CONFIG) : ['대기', '완료'];
-
-        // ★ [핵심] data-bs-dismiss="dropdown" 속성 추가 (이게 있어야 클릭 시 닫힘)
-        const dropdownHtml = `
-            <div class="dropdown">
-                <button class="btn btn-sm dropdown-toggle rounded-pill fw-bold small shadow-sm w-100 ${config.class}" 
-                        type="button" id="${dropdownId}" data-bs-toggle="dropdown" aria-expanded="false"
-                        style="min-width: 85px; height: 26px; padding: 0; line-height: 24px; font-size: 0.8rem;">
-                    ${config.label}
-                </button>
-                <ul class="dropdown-menu text-center shadow-sm border-0" aria-labelledby="${dropdownId}" style="min-width: 85px;">
-                    ${statusKeys.map(status => `
-                        <li><a class="dropdown-item small fw-bold" href="#" 
-                            data-bs-dismiss="dropdown"
-                            onclick="changeCrmStatus('${dropdownId}', '${status}', '${item.branch}', '${item.phone}', '${item.openDate}')">
-                            ${status}
-                        </a></li>
-                    `).join('')}
-                </ul>
-            </div>
-        `;
-
-        html += `
-        <tr>
-            <td>${badge}</td>
-            <td class="fw-bold text-secondary">${item.branch}</td>
-            <td>${item.openDate}</td>
-            <td>${item.openPlace}</td>
-            <td>${item.openType}</td>
-            <td>${item.contractType}</td>
-            <td class="fw-bold">${item.name}</td>
-            <td class="fw-bold text-dark">${displayPhone}</td>
-            <td class="text-secondary">${displayBirth}</td>
-            <td class="text-primary fw-bold small">${item.model}</td>
-            <td class="small">${item.plan}</td>
-            <td>${callBtn}</td>
-            <td style="vertical-align: middle;">${dropdownHtml}</td>
-        </tr>`;
-    });
-    tbody.innerHTML = html;
-}
-
-// ★ [신규] 상태 변경 시 자동 저장 함수
-function changeCrmStatus(btnId, newStatus, branch, phone, date) {
-    const btn = document.getElementById(btnId);
-    if (!btn) return;
-
-    // 1. UI 즉시 반영 (버튼 텍스트 및 색상 변경)
-    // STATUS_CONFIG가 함수 밖 전역 변수로 선언되어 있어야 합니다.
-    const config = STATUS_CONFIG[newStatus] || { class: 'bg-light text-secondary', label: newStatus };
-    
-    // 기존 클래스 싹 지우고 새로 세팅
-    btn.className = `btn btn-sm dropdown-toggle rounded-pill fw-bold small shadow-sm w-100 ${config.class}`;
-    btn.innerText = config.label;
-
-    // 2. ★ [핵심 해결] 드롭다운 강제로 닫기
-    // Bootstrap의 공식 명령어를 사용하여 해당 버튼의 드롭다운을 숨깁니다.
-    try {
-        const dropdownInstance = bootstrap.Dropdown.getOrCreateInstance(btn);
-        dropdownInstance.hide();
-    } catch(e) {
-        // 혹시라도 위 코드가 안 먹히면 원시적인 방법으로 클래스를 제거해서 닫습니다.
-        btn.classList.remove('show');
-        btn.setAttribute('aria-expanded', 'false');
-        if (btn.nextElementSibling) {
-            btn.nextElementSibling.classList.remove('show');
-        }
-    }
-    
-    // 3. 포커스 해제 (선택 후 버튼에 남아있는 테두리 잔상 제거)
-    btn.blur();
-
-    // 4. 서버 저장 요청
-    requestAPI({
-            action: "update_crm_status",
-            branch: branch,
-            phone: phone,
-            date: date,
-            status: newStatus
-        })
-    .then(d => {
-        if(d.status !== 'success') alert("저장 실패: " + d.message);
-        else console.log("상태 저장 완료");
-    })
-    .catch(e => console.error(e));
-}
