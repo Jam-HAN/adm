@@ -3438,14 +3438,6 @@ function loadSettlementLedger() {
     });
 }
 
-// [기능] 상단 요약 숫자 업데이트 함수
-function updateSummary(expected, deposited) {
-    const unpaid = expected - deposited;
-    document.getElementById('summary_expected').innerText = Number(expected).toLocaleString() + "원";
-    document.getElementById('summary_deposited').innerText = Number(deposited).toLocaleString() + "원";
-    document.getElementById('summary_unpaid').innerText = Number(unpaid).toLocaleString() + "원";
-}
-
 // 1. 상태 드롭다운 생성기
 function getStatusDropdown(status, row) {
     const opts = ['대기', '수정요청', '수정완료', '정상'];
@@ -3521,6 +3513,14 @@ function recalcSummary(selectEl, amount, newStatus) {
     
     window.currentTotalDeposited = newDeposited;
     updateSummary(window.currentTotalExpected, newDeposited);
+}
+
+// 4. 상단 요약 숫자 업데이트 함수
+function updateSummary(expected, deposited) {
+    const unpaid = expected - deposited;
+    document.getElementById('summary_expected').innerText = Number(expected).toLocaleString() + "원";
+    document.getElementById('summary_deposited').innerText = Number(deposited).toLocaleString() + "원";
+    document.getElementById('summary_unpaid').innerText = Number(unpaid).toLocaleString() + "원";
 }
 
 // ==========================================
