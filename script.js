@@ -3277,34 +3277,33 @@ const MASTER_EMAILS = [
 
 // [설정] 정산 대장 컬럼
 const LEDGER_COLUMNS = [
-    // 1. 핵심 고정 정보 (지점, 개통일, 고객명)
-    { label: "지점",      key: "branch",    width: "70px",  className: "fw-bold text-secondary" }, // ★ 추가됨
-    { label: "개통일",    key: "date",      width: "90px",  className: "text-muted small" },       // ★ 추가됨
-    { label: "고객명",    key: "name",      width: "80px",  className: "fw-bold sticky-start bg-white border-end text-dark" }, 
+    { label: "지점", key: "branch", width: "70px", className: "fw-bold text-secondary" },
+    { label: "개통일", key: "date", width: "90px", className: "text-muted small" },
+    { label: "고객명", key: "name", width: "80px", className: "fw-bold sticky-start bg-white border-end text-dark" }, 
+    { label: "전화번호", key: "phone", width: "110px" },
+    { label: "모델명", key: "model", width: "120px" },
+    { label: "요금제", key: "plan", width: "100px" },
+    { label: "부가서비스", key: "addon", width: "100px", formatter: (v) => v ? `<span class="text-truncate d-block" style="max-width:100px" title="${v}">${v}</span>` : '-' },
+
+    { label: "기본정책", key: "pol_base", width: "90px", formatter: fmtMoney, className: "text-end text-primary" },
+    { label: "기본(메모)", key: "pol_base_m", width: "120px", className: "text-start text-muted small" },
+    { label: "추가정책", key: "pol_add", width: "90px", formatter: fmtMoney, className: "text-end text-primary" },
+    { label: "추가(메모)", key: "pol_add_m", width: "120px", className: "text-start text-muted small" },
+    { label: "부가정책", key: "pol_sub", width: "90px", formatter: fmtMoney, className: "text-end text-primary" },
+    { label: "부가(메모)", key: "pol_sub_m", width: "120px", className: "text-start text-muted small" },
+    { label: "차감정책", key: "pol_deduct", width: "90px", formatter: fmtMoney, className: "text-end text-danger" },
+    { label: "차감(메모)", key: "pol_deduct_m", width: "120px", className: "text-start text-muted small" },
+    { label: "프리할인", key: "pre_dc", width: "90px", formatter: fmtMoney, className: "text-end text-secondary" },
+    { label: "유심", key: "usim", width: "80px", formatter: fmtMoney, className: "text-end text-secondary" },
+    { label: "수수료", key: "comm", width: "80px", formatter: fmtMoney, className: "text-end text-secondary" },
+
+    { label: "담당자", key: "manager", width: "70px" },
+    { label: "정산금", key: "total", width: "100px", formatter: fmtMoney, className: "fw-bold text-primary bg-primary bg-opacity-10 text-end border-start" },
     
-    // 2. 개통 정보
-    { label: "전화번호",  key: "phone",     width: "110px" },
-    { label: "모델명",    key: "model",     width: "120px" },
-    { label: "요금제",    key: "plan",      width: "100px" },
-    { label: "부가서비스", key: "addon",     width: "100px", formatter: (v) => v ? `<span class="text-truncate d-block" style="max-width:100px" title="${v}">${v}</span>` : '-' },
-
-    // 3. 정책 자금 (우측 정렬)
-    { label: "기본정책",  key: "pol_base",  width: "90px",  formatter: fmtMoney, className: "text-end text-primary" },
-    { label: "추가정책",  key: "pol_add",   width: "90px",  formatter: fmtMoney, className: "text-end text-primary" },
-    { label: "부가정책",  key: "pol_sub",   width: "90px",  formatter: fmtMoney, className: "text-end text-primary" },
-    { label: "차감정책",  key: "pol_deduct", width: "90px",  formatter: fmtMoney, className: "text-end text-danger" },
-
-    // 4. 기타 비용
-    { label: "프리할인",  key: "pre_dc",    width: "90px",  formatter: fmtMoney, className: "text-end text-secondary" },
-    { label: "유심",      key: "usim",      width: "80px",  formatter: fmtMoney, className: "text-end text-secondary" },
-    { label: "수수료",    key: "comm",      width: "80px",  formatter: fmtMoney, className: "text-end text-secondary" },
-
-    // 5. 결과 및 관리
-    { label: "담당자",    key: "manager",   width: "70px" },
-    { label: "정산금",    key: "total",     width: "100px", formatter: fmtMoney, className: "fw-bold text-primary bg-primary bg-opacity-10 text-end border-start" },
-    
-    // ★ [수정됨] 상태 드롭다운 컬럼
-    { label: "상태", key: "status", width: "110px", formatter: (v, row) => getStatusDropdown(v, row) }
+    { label: "상태", key: "status", width: "110px", formatter: (v, row) => getStatusDropdown(v, row) },
+    { label: "요청금액", key: "req_amt", width: "90px", formatter: (v, row) => getLedgerInput(v, row, 'req_amt', 'number') },
+    { label: "요청내용", key: "req_memo", width: "120px", formatter: (v, row) => getLedgerInput(v, row, 'req_memo', 'text') },
+    { label: "확정금액", key: "conf_amt", width: "90px", formatter: (v, row) => getLedgerInput(v, row, 'conf_amt', 'number', true) } // true: 강조색
 ];
 
 // [기능] 정산 대장용 거래처 드롭다운 (입고등록과 동일한 방식 적용)
@@ -3449,82 +3448,106 @@ function loadSettlementLedger() {
 
 // 1. 상태 드롭다운 생성기
 function getStatusDropdown(status, row) {
-    const opts = ['대기', '수정요청', '수정완료', '정상'];
+    const opts = ['대기', '수정요청', '수정불가', '수정완료', '정상']; // ★ 수정불가 추가됨
     const colors = {
         '대기': 'bg-light text-secondary border-secondary',
         '수정요청': 'bg-danger text-white border-danger',
+        '수정불가': 'bg-dark text-white border-dark', // ★ 검정색
         '수정완료': 'bg-warning text-dark border-warning',
         '정상': 'bg-success text-white border-success'
     };
     
-    // 현재 상태의 색상 클래스
     const currentClass = colors[status] || colors['대기'];
-    const rowId = `status_${row.rowIndex}`;
-
+    
     return `
-        <select id="${rowId}" class="form-select form-select-sm fw-bold shadow-sm ${currentClass}" 
+        <select class="form-select form-select-sm fw-bold shadow-sm ${currentClass}" 
                 style="font-size: 0.75rem; width: 100px;" 
-                onchange="changeSettlementStatus(this, '${row.branch}', ${row.rowIndex}, ${row.total})">
+                onchange="updateLedgerDetail(this, '${row.branch}', ${row.rowIndex}, 'status')">
             ${opts.map(opt => `<option value="${opt}" ${status === opt ? 'selected' : ''} class="bg-white text-dark">${opt}</option>`).join('')}
         </select>
     `;
 }
 
-// 2. 상태 변경 처리 함수
-function changeSettlementStatus(selectEl, branch, rowIndex, amount) {
-    const newStatus = selectEl.value;
-    const oldStatus = selectEl.getAttribute('data-prev') || '대기'; // 이전 상태 기억용 (필요시 구현)
+// 2. [신규] 입력 필드 생성기 (요청금액, 내용, 확정금액용)
+function getLedgerInput(value, row, field, type, isHighlight = false) {
+    const valStr = (value === 0 || value === '0') ? '' : value; // 0은 빈칸으로
+    const colorClass = isHighlight ? "text-primary fw-bold border-primary bg-primary bg-opacity-10" : "text-dark";
     
-    // 색상 즉시 변경 (UX)
-    const colors = {
-        '대기': 'bg-light text-secondary border-secondary',
-        '수정요청': 'bg-danger text-white border-danger',
-        '수정완료': 'bg-warning text-dark border-warning',
-        '정상': 'bg-success text-white border-success'
-    };
+    // 금액(number)인 경우 우측 정렬, 텍스트는 좌측 정렬
+    const align = type === 'number' ? 'text-end' : 'text-start';
     
-    // 클래스 초기화 후 새 색상 적용
-    selectEl.className = `form-select form-select-sm fw-bold shadow-sm ${colors[newStatus]}`;
+    return `
+        <input type="${type}" class="form-control form-control-sm ${colorClass} ${align}" 
+               value="${valStr}" 
+               style="font-size: 0.8rem; height: 28px;"
+               onchange="updateLedgerDetail(this, '${row.branch}', ${row.rowIndex}, '${field}')"
+               placeholder="-">
+    `;
+}
+
+// 3. [신규] 통합 저장 함수 (상태, 금액, 메모 모두 처리)
+function updateLedgerDetail(el, branch, rowIndex, field) {
+    const newValue = el.value;
     
+    // 상태 변경 시 색상 즉시 반영 (UX)
+    if (field === 'status') {
+        const colors = {
+            '대기': 'bg-light text-secondary border-secondary',
+            '수정요청': 'bg-danger text-white border-danger',
+            '수정불가': 'bg-dark text-white border-dark',
+            '수정완료': 'bg-warning text-dark border-warning',
+            '정상': 'bg-success text-white border-success'
+        };
+        el.className = `form-select form-select-sm fw-bold shadow-sm ${colors[newValue]}`;
+        
+        // '정상'으로 변경 시 상단 합계 재계산
+        recalcSummary(); 
+    }
+
     // 서버 저장 요청
     requestAPI({
-        action: "update_settlement_status",
+        action: "update_settlement_info", // ★ 새로운 명령어로 전송
         branch: branch,
         rowIndex: rowIndex,
-        status: newStatus
+        field: field, // status, req_amt, req_memo, conf_amt
+        value: newValue
     }).then(d => {
         if(d.status !== 'success') {
-            alert("상태 저장 실패: " + d.message);
-            // 실패 시 원복 로직이 필요할 수 있음
+            alert("저장 실패: " + d.message);
+            el.classList.add('is-invalid'); // 에러 표시
         } else {
-            // 성공 시 상단 합계 재계산
-            recalcSummary(selectEl, amount, newStatus);
+            el.classList.remove('is-invalid');
+            el.classList.add('is-valid'); // 성공 표시 (초록 테두리)
+            setTimeout(() => el.classList.remove('is-valid'), 1000);
         }
     });
 }
 
-// 3. 상단 합계 재계산 (화면 새로고침 없이 숫자만 변경)
-function recalcSummary(selectEl, amount, newStatus) {
-    // 이전 상태를 알 수 없으므로, 현재 화면의 모든 '정상' 상태 금액을 다시 더하는 방식이 안전함
-    // 하지만 성능을 위해 간단히 처리하자면:
-    // 이전에 '정상'이었다가 바뀌면 차감, '정상'으로 바뀌면 가산
-    
-    // 여기서는 간단하게 전체 테이블을 다시 훑어서 '정상' 합계를 구합니다. (오차 방지)
+// 4. 합계 재계산 (수정됨: 상태값 확인 방식 변경)
+function recalcSummary() {
     let newDeposited = 0;
+    
     document.querySelectorAll('#sl_tbody tr').forEach(tr => {
+        // 1. 상태 드롭다운 찾기
         const sel = tr.querySelector('select');
-        const amtEl = tr.querySelector('td:nth-last-child(2)'); // 정산금 열
-        if (sel && amtEl && sel.value === '정상') {
+        
+        // 2. 정산금(Total) 칸 찾기 (배경색 클래스로 정확히 찾음)
+        // LEDGER_COLUMNS에서 total 컬럼에 'bg-primary bg-opacity-10' 클래스를 줬으므로 이걸로 찾습니다.
+        const amtEl = tr.querySelector('.bg-primary.bg-opacity-10'); 
+        
+        // 상태가 '정상'이고, 금액 칸이 존재하면 합산
+        if (sel && sel.value === '정상' && amtEl) {
             const val = Number(amtEl.innerText.replace(/,/g, ''));
             if (!isNaN(val)) newDeposited += val;
         }
     });
     
+    // 전역 변수 업데이트 및 상단 표시 갱신
     window.currentTotalDeposited = newDeposited;
     updateSummary(window.currentTotalExpected, newDeposited);
 }
 
-// 4. 상단 요약 숫자 업데이트 함수
+// 5. 상단 요약 숫자 업데이트 함수
 function updateSummary(expected, deposited) {
     const unpaid = expected - deposited;
     document.getElementById('summary_expected').innerText = Number(expected).toLocaleString() + "원";
