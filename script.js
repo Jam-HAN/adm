@@ -3367,15 +3367,24 @@ function loadSettlementVendors() {
     });
 }
 
-// [기능] 정산 대장 페이지 초기화
+// [기능] 정산 대장 페이지 초기화 (수정됨: 지난달 자동 선택)
 function initSettlementLedgerPage() {
-    // 1. 날짜 세팅 (이번 달 자동 입력)
     const today = new Date();
-    const val = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}`;
-    const dateEl = document.getElementById('sl_month');
-    if(dateEl && !dateEl.value) dateEl.value = val;
     
-    // 2. 거래처 목록 불러오기
+    // ★ [핵심] 이번 달에서 1을 뺍니다. (0월이 되면 자동으로 작년 12월로 계산됨)
+    today.setMonth(today.getMonth() - 1); 
+
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0'); // 월은 0부터 시작하므로 다시 +1
+    const val = `${yyyy}-${mm}`;
+
+    const dateEl = document.getElementById('sl_month');
+    
+    // 값이 비어있을 때만 넣거나, 항상 지난달로 강제하거나 선택할 수 있습니다.
+    // 여기서는 "항상 지난달"로 설정합니다.
+    if(dateEl) dateEl.value = val;
+    
+    // 거래처 목록 불러오기
     loadSettlementVendors();
 }
 
