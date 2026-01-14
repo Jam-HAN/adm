@@ -3415,17 +3415,21 @@ function loadSettlementLedger() {
             return;
         }
 
-        let totalExpected = 0;
-        let totalDeposited = 0;
+        let totalExpected = 0;  // 총 예상금 (요청금액 우선)
+        let totalDeposited = 0; // 총 입금액 (확정금액 기준)
         
         tbody.innerHTML = data.list.map((item, idx) => {
-            const settleAmt = Number(item.total || 0);
-            totalExpected += settleAmt;
-            
-            // '정상' 상태인 경우에만 입금 완료로 집계
-            if (item.status === '정상') {
-                totalDeposited += settleAmt;
-            }
+            // 숫자 변환
+            const sysTotal = Number(item.total || 0);    // 시스템 계산 정산금
+            const reqAmt = Number(item.req_amt || 0);    // 사장님 요청금액
+            const confAmt = Number(item.conf_amt || 0);  // 확정(입금)금액
+
+            // 1. [예상 정산금] 로직: 요청금액이 있으면 그걸 쓰고, 없으면 시스템 금액 사용
+            const targetAmount = reqAmt > 0 ? reqAmt : sysTotal;
+            totalExpected += targetAmount;
+
+            // 2. [입금 완료] 로직: 확정금액 합산
+            totalDeposited += confAmt;
 
             const tds = LEDGER_COLUMNS.map((col) => {
                 const raw = item[col.key];
@@ -3436,10 +3440,8 @@ function loadSettlementLedger() {
             return `<tr>${tds}</tr>`;
         }).join('');
 
-        // 요약 업데이트 및 전역 변수 저장 (드롭다운 변경 시 사용)
+        // 요약 업데이트
         updateSummary(totalExpected, totalDeposited);
-        window.currentTotalExpected = totalExpected;
-        window.currentTotalDeposited = totalDeposited;
     })
     .catch(err => {
         tbody.innerHTML = `<tr><td colspan="100%" class="text-danger py-5">통신 오류 발생</td></tr>`;
@@ -3470,14 +3472,15 @@ function getStatusDropdown(status, row) {
 
 // 2. [신규] 입력 필드 생성기 (요청금액, 내용, 확정금액용)
 function getLedgerInput(value, row, field, type, isHighlight = false) {
-    const valStr = (value === 0 || value === '0') ? '' : value; // 0은 빈칸으로
+    const valStr = (value === 0 || value === '0') ? '' : value; 
     const colorClass = isHighlight ? "text-primary fw-bold border-primary bg-primary bg-opacity-10" : "text-dark";
-    
-    // 금액(number)인 경우 우측 정렬, 텍스트는 좌측 정렬
     const align = type === 'number' ? 'text-end' : 'text-start';
     
+    // ★ [핵심] 합계 계산을 위해 field명(req_amt, conf_amt)을 클래스로 추가
+    const calcClass = (field === 'req_amt') ? 'inp-req' : (field === 'conf_amt' ? 'inp-conf' : '');
+
     return `
-        <input type="${type}" class="form-control form-control-sm ${colorClass} ${align}" 
+        <input type="${type}" class="form-control form-control-sm ${colorClass} ${align} ${calcClass}" 
                value="${valStr}" 
                style="font-size: 0.8rem; height: 28px;"
                onchange="updateLedgerDetail(this, '${row.branch}', ${row.rowIndex}, '${field}')"
@@ -3489,7 +3492,7 @@ function getLedgerInput(value, row, field, type, isHighlight = false) {
 function updateLedgerDetail(el, branch, rowIndex, field) {
     const newValue = el.value;
     
-    // 상태 변경 시 색상 즉시 반영 (UX)
+    // 상태 변경 시 색상 즉시 반영
     if (field === 'status') {
         const colors = {
             '대기': 'bg-light text-secondary border-secondary',
@@ -3499,25 +3502,25 @@ function updateLedgerDetail(el, branch, rowIndex, field) {
             '정상': 'bg-success text-white border-success'
         };
         el.className = `form-select form-select-sm fw-bold shadow-sm ${colors[newValue]}`;
-        
-        // '정상'으로 변경 시 상단 합계 재계산
-        recalcSummary(); 
     }
+
+    // ★ [추가] 금액이나 상태가 바뀌면 무조건 상단 요약 재계산 (UX 향상)
+    recalcSummary();
 
     // 서버 저장 요청
     requestAPI({
-        action: "update_settlement_info", // ★ 새로운 명령어로 전송
+        action: "update_settlement_info",
         branch: branch,
         rowIndex: rowIndex,
-        field: field, // status, req_amt, req_memo, conf_amt
+        field: field,
         value: newValue
     }).then(d => {
         if(d.status !== 'success') {
             alert("저장 실패: " + d.message);
-            el.classList.add('is-invalid'); // 에러 표시
+            el.classList.add('is-invalid');
         } else {
             el.classList.remove('is-invalid');
-            el.classList.add('is-valid'); // 성공 표시 (초록 테두리)
+            el.classList.add('is-valid');
             setTimeout(() => el.classList.remove('is-valid'), 1000);
         }
     });
@@ -3525,28 +3528,34 @@ function updateLedgerDetail(el, branch, rowIndex, field) {
 
 // 4. 합계 재계산 (수정됨: 상태값 확인 방식 변경)
 function recalcSummary() {
+    let newExpected = 0;
     let newDeposited = 0;
     
     document.querySelectorAll('#sl_tbody tr').forEach(tr => {
-        // 1. 상태 드롭다운 찾기
-        const sel = tr.querySelector('select');
+        // 1. 시스템 정산금 (텍스트) 가져오기
+        // (total 컬럼의 bg-primary bg-opacity-10 클래스를 찾음)
+        const sysTotalEl = tr.querySelector('.bg-primary.bg-opacity-10');
+        const sysTotal = sysTotalEl ? Number(sysTotalEl.innerText.replace(/,/g, '')) || 0 : 0;
+
+        // 2. 요청금액 (입력창) 가져오기
+        const reqInput = tr.querySelector('.inp-req');
+        const reqAmt = reqInput ? Number(reqInput.value.replace(/,/g, '')) || 0 : 0;
+
+        // 3. 확정금액 (입력창) 가져오기
+        const confInput = tr.querySelector('.inp-conf');
+        const confAmt = confInput ? Number(confInput.value.replace(/,/g, '')) || 0 : 0;
+
+        // ★ [핵심 로직]
+        // 예상금 = 요청금액 있으면 요청금액, 없으면 시스템금액
+        newExpected += (reqAmt > 0 ? reqAmt : sysTotal);
         
-        // 2. 정산금(Total) 칸 찾기 (배경색 클래스로 정확히 찾음)
-        // LEDGER_COLUMNS에서 total 컬럼에 'bg-primary bg-opacity-10' 클래스를 줬으므로 이걸로 찾습니다.
-        const amtEl = tr.querySelector('.bg-primary.bg-opacity-10'); 
-        
-        // 상태가 '정상'이고, 금액 칸이 존재하면 합산
-        if (sel && sel.value === '정상' && amtEl) {
-            const val = Number(amtEl.innerText.replace(/,/g, ''));
-            if (!isNaN(val)) newDeposited += val;
-        }
+        // 입금액 = 확정금액 누적
+        newDeposited += confAmt;
     });
     
-    // 전역 변수 업데이트 및 상단 표시 갱신
-    window.currentTotalDeposited = newDeposited;
-    updateSummary(window.currentTotalExpected, newDeposited);
+    // 상단 숫자판 갱신
+    updateSummary(newExpected, newDeposited);
 }
-
 // 5. 상단 요약 숫자 업데이트 함수
 function updateSummary(expected, deposited) {
     const unpaid = expected - deposited;
