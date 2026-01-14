@@ -3404,8 +3404,6 @@ function loadSettlementLedger() {
     }
 
     tbody.innerHTML = `<tr><td colspan="100%" class="py-5"><div class="spinner-border text-primary"></div></td></tr>`;
-    
-    // 요약 초기화
     updateSummary(0, 0);
 
     requestAPI({ action: "get_settlement_ledger", month: monthVal, vendor: vendorVal })
@@ -3415,21 +3413,37 @@ function loadSettlementLedger() {
             return;
         }
 
-        let totalExpected = 0;  // 총 예상금 (요청금액 우선)
-        let totalDeposited = 0; // 총 입금액 (확정금액 기준)
+        let sumExpected = 0;  // 총 예상금 (시스템 기준)
+        let sumDeposited = 0; // 총 입금액 (계산된 결과)
         
         tbody.innerHTML = data.list.map((item, idx) => {
-            // 숫자 변환
-            const sysTotal = Number(item.total || 0);    // 시스템 계산 정산금
-            const reqAmt = Number(item.req_amt || 0);    // 사장님 요청금액
-            const confAmt = Number(item.conf_amt || 0);  // 확정(입금)금액
+            // 1. 값 가져오기
+            const sys = Number(item.total || 0);    // 시스템 금액
+            const req = Number(item.req_amt || 0);  // 요청 금액
+            const conf = Number(item.conf_amt || 0); // 확정 금액
+            const status = item.status || '대기';
 
-            // 1. [예상 정산금] 로직: 요청금액이 있으면 그걸 쓰고, 없으면 시스템 금액 사용
-            const targetAmount = reqAmt > 0 ? reqAmt : sysTotal;
-            totalExpected += targetAmount;
+            // 2. ★ 4단계 계산 로직 적용 ★
+            let deposit = 0; 
 
-            // 2. [입금 완료] 로직: 확정금액 합산
-            totalDeposited += confAmt;
+            if (status === '정상') {
+                deposit = sys; // 전액 입금
+            } 
+            else if (status === '대기') {
+                deposit = 0;   // 전액 미수금
+            } 
+            else if (status === '수정요청' || status === '수정불가') {
+                // 요청금액(req)은 미수금, 나머지(sys-req)는 입금
+                deposit = sys - req;
+            } 
+            else if (status === '수정완료') {
+                // 기본 입금(sys-req)에 확정금액(conf)을 더함
+                deposit = (sys - req) + conf;
+            }
+
+            // 총계 누적
+            sumExpected += sys;
+            sumDeposited += deposit;
 
             const tds = LEDGER_COLUMNS.map((col) => {
                 const raw = item[col.key];
@@ -3440,8 +3454,7 @@ function loadSettlementLedger() {
             return `<tr>${tds}</tr>`;
         }).join('');
 
-        // 요약 업데이트
-        updateSummary(totalExpected, totalDeposited);
+        updateSummary(sumExpected, sumDeposited);
     })
     .catch(err => {
         tbody.innerHTML = `<tr><td colspan="100%" class="text-danger py-5">통신 오류 발생</td></tr>`;
@@ -3504,10 +3517,10 @@ function updateLedgerDetail(el, branch, rowIndex, field) {
         el.className = `form-select form-select-sm fw-bold shadow-sm ${colors[newValue]}`;
     }
 
-    // ★ [추가] 금액이나 상태가 바뀌면 무조건 상단 요약 재계산 (UX 향상)
+    // ★ 값이 바뀌면 무조건 재계산 실행
     recalcSummary();
 
-    // 서버 저장 요청
+    // 서버 저장
     requestAPI({
         action: "update_settlement_info",
         branch: branch,
@@ -3528,34 +3541,48 @@ function updateLedgerDetail(el, branch, rowIndex, field) {
 
 // 4. 합계 재계산 (수정됨: 상태값 확인 방식 변경)
 function recalcSummary() {
-    let newExpected = 0;
-    let newDeposited = 0;
+    let sumExpected = 0;
+    let sumDeposited = 0;
     
     document.querySelectorAll('#sl_tbody tr').forEach(tr => {
-        // 1. 시스템 정산금 (텍스트) 가져오기
-        // (total 컬럼의 bg-primary bg-opacity-10 클래스를 찾음)
-        const sysTotalEl = tr.querySelector('.bg-primary.bg-opacity-10');
-        const sysTotal = sysTotalEl ? Number(sysTotalEl.innerText.replace(/,/g, '')) || 0 : 0;
+        // 1. 화면에서 값 읽어오기
+        const sysEl = tr.querySelector('.bg-primary.bg-opacity-10'); // 정산금 열
+        const reqEl = tr.querySelector('.inp-req'); // 요청금액 입력창
+        const confEl = tr.querySelector('.inp-conf'); // 확정금액 입력창
+        const statusEl = tr.querySelector('select'); // 상태 드롭다운
 
-        // 2. 요청금액 (입력창) 가져오기
-        const reqInput = tr.querySelector('.inp-req');
-        const reqAmt = reqInput ? Number(reqInput.value.replace(/,/g, '')) || 0 : 0;
+        if (!sysEl || !statusEl) return;
 
-        // 3. 확정금액 (입력창) 가져오기
-        const confInput = tr.querySelector('.inp-conf');
-        const confAmt = confInput ? Number(confInput.value.replace(/,/g, '')) || 0 : 0;
+        const sys = Number(sysEl.innerText.replace(/,/g, '')) || 0;
+        const req = reqEl ? (Number(reqEl.value.replace(/,/g, '')) || 0) : 0;
+        const conf = confEl ? (Number(confEl.value.replace(/,/g, '')) || 0) : 0;
+        const status = statusEl.value;
 
-        // ★ [핵심 로직]
-        // 예상금 = 요청금액 있으면 요청금액, 없으면 시스템금액
-        newExpected += (reqAmt > 0 ? reqAmt : sysTotal);
-        
-        // 입금액 = 확정금액 누적
-        newDeposited += confAmt;
+        // 2. ★ 4단계 계산 로직 적용 (위와 동일) ★
+        let deposit = 0;
+
+        if (status === '정상') {
+            deposit = sys; 
+        } 
+        else if (status === '대기') {
+            deposit = 0;   
+        } 
+        else if (status === '수정요청' || status === '수정불가') {
+            deposit = sys - req;
+        } 
+        else if (status === '수정완료') {
+            deposit = (sys - req) + conf;
+        }
+
+        // 3. 누적
+        sumExpected += sys;
+        sumDeposited += deposit;
     });
     
-    // 상단 숫자판 갱신
-    updateSummary(newExpected, newDeposited);
+    // 4. 상단 업데이트
+    updateSummary(sumExpected, sumDeposited);
 }
+
 // 5. 상단 요약 숫자 업데이트 함수
 function updateSummary(expected, deposited) {
     const unpaid = expected - deposited;
