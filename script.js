@@ -1691,7 +1691,7 @@ function openEditModal(item) {
     // 2. 리뷰 HTML 구성 (onchange 이벤트 추가)
     // ID 입력칸은 display:none으로 숨겨두고, 상태에 따라 JS로 켭니다.
     const reviewHtml = `
-        <div class="col-6">
+        <div class="col-4">
             <label class="form-label-sm">리뷰작성여부</label>
             <select class="form-select form-select-sm edit-input" data-key="리뷰작성여부" data-original="${item['리뷰작성여부']}" 
                     onchange="toggleEditReviewId(this)">
@@ -1700,8 +1700,8 @@ function openEditModal(item) {
                 <option value="미작성" ${item['리뷰작성여부'] === '미작성' ? 'selected' : ''}>미작성</option>
             </select>
         </div>
-        <div class="col-6" id="edit_review_id_container" style="display: ${item['리뷰작성여부'] === '작성' ? 'block' : 'none'};">
-            <label class="form-label-sm">작성자ID <span class="required-star">*</span></label>
+        <div class="col-4" id="edit_review_id_container" style="display: ${item['리뷰작성여부'] === '작성' ? 'block' : 'none'};">
+            <label class="form-label-sm">작성자ID<span class="required-star">*</span></label>
             <input type="text" class="form-control form-control-sm edit-input" data-key="reviewId" value="${savedReviewId}" data-original="${savedReviewId}" placeholder="아이디 입력">
         </div>
     `;
@@ -1725,7 +1725,7 @@ function openEditModal(item) {
             ${makeInput('부가서비스', '부가서비스', 'col-8')}
             ${makeInput('부가서비스해지일', '부가서비스해지일', 'col-4', 'text', false, true)}
 
-            ${makeInput('제휴카드', '제휴카드', 'col-6')}
+            ${makeInput('제휴카드', '제휴카드', 'col-4')}
 
             ${reviewHtml}
         </div>
