@@ -1683,6 +1683,29 @@ function openEditModal(item) {
     // ==========================================
     // 2. [기본 정보]
     // ==========================================
+
+    // ★ [문제 3 해결] 리뷰 작성 시 ID 입력칸 동적 제어
+    // 1. 초기값 세팅 (DB에서 가져온 reviewId가 있으면 넣음)
+    const savedReviewId = item['reviewId'] || '';
+    
+    // 2. 리뷰 HTML 구성 (onchange 이벤트 추가)
+    // ID 입력칸은 display:none으로 숨겨두고, 상태에 따라 JS로 켭니다.
+    const reviewHtml = `
+        <div class="col-6">
+            <label class="form-label-sm">리뷰작성여부</label>
+            <select class="form-select form-select-sm edit-input" data-key="리뷰작성여부" data-original="${item['리뷰작성여부']}" 
+                    onchange="toggleEditReviewId(this)">
+                <option value="">선택</option>
+                <option value="작성" ${item['리뷰작성여부'] === '작성' ? 'selected' : ''}>작성</option>
+                <option value="미작성" ${item['리뷰작성여부'] === '미작성' ? 'selected' : ''}>미작성</option>
+            </select>
+        </div>
+        <div class="col-6" id="edit_review_id_container" style="display: ${item['리뷰작성여부'] === '작성' ? 'block' : 'none'};">
+            <label class="form-label-sm">작성자ID <span class="required-star">*</span></label>
+            <input type="text" class="form-control form-control-sm edit-input" data-key="reviewId" value="${savedReviewId}" data-original="${savedReviewId}" placeholder="아이디 입력">
+        </div>
+    `;
+    
     let sectionBasic = `
         <div class="divider"></div>
         <div class="section-header"><i class="bi bi-person-badge"></i> 기본 정보</div>
@@ -1703,7 +1726,8 @@ function openEditModal(item) {
             ${makeInput('부가서비스해지일', '부가서비스해지일', 'col-4', 'text', false, true)}
 
             ${makeInput('제휴카드', '제휴카드', 'col-6')}
-            ${makeSelect('리뷰작성여부', '리뷰작성여부', reviewList, 'col-6')}
+
+            ${reviewHtml}
         </div>
     `;
     container.innerHTML += sectionBasic;
@@ -1851,19 +1875,26 @@ function submitEditHistory() {
         let currentVal = input.value;
         const originalVal = input.getAttribute('data-original') || '';
 
-        // [핵심] 값이 변경되었는지 비교
+        // [핵심] 변경된 값만 전송
         if (String(currentVal) !== String(originalVal)) {
-            
-            // [변환] 리뷰작성의 경우: "작성" -> true, "미작성" -> false 로 변환
-            if (key === '리뷰작성여부') {
-                formData[key] = (currentVal === '작성'); 
-            } else {
-                formData[key] = currentVal;
-            }
+            // "작성" 텍스트 그대로 보냅니다 (서버에서 boolean 변환함)
+            formData[key] = currentVal; 
             changeCount++;
         }
     });
-
+    
+    // ★ [추가] 리뷰 ID는 변경 여부 상관없이, '작성' 상태면 무조건 현재 값을 보냄 (안전장치)
+    const reviewStatusEl = document.querySelector('select[data-key="리뷰작성여부"]');
+    const reviewIdEl = document.querySelector('input[data-key="reviewId"]');
+    
+    if (reviewStatusEl && reviewStatusEl.value === '작성' && reviewIdEl) {
+        formData['reviewId'] = reviewIdEl.value;
+        // ID가 바뀌었으면 changeCount 증가 (위 forEach에서 처리되지만 확실하게)
+        if (reviewIdEl.value !== reviewIdEl.getAttribute('data-original')) {
+             changeCount = Math.max(1, changeCount); 
+        }
+    }
+    
     if (changeCount === 0) {
         Swal.fire({ icon: 'info', title: '변경사항 없음', text: '수정된 내용이 없습니다.' });
         return;
@@ -1899,6 +1930,20 @@ function submitEditHistory() {
         console.error(err);
         Swal.fire({ icon: 'error', title: '통신 오류', text: '서버와 연결할 수 없습니다.' });
     });
+}
+
+// 수정 모달에서 리뷰 상태 변경 시 ID 입력칸 토글
+function toggleEditReviewId(selectEl) {
+    const container = document.getElementById('edit_review_id_container');
+    const input = container.querySelector('input');
+    
+    if (selectEl.value === '작성') {
+        container.style.display = 'block';
+        input.focus();
+    } else {
+        container.style.display = 'none';
+        input.value = ''; // 미작성 시 값 비우기
+    }
 }
 
 // [추가 수정] 개통 취소(삭제) 확인 메시지 변경
