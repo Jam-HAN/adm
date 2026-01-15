@@ -1722,8 +1722,8 @@ function openEditModal(item) {
             ${makeInput('변경요금제', '변경요금제', 'col-4')}
             ${makeInput('요금제변경일', '요금제변경일', 'col-4', 'text', false, true)}
 
-            ${makeInput('부가서비스', '부가서비스', 'col-8')}
-            ${makeInput('부가서비스해지일', '부가서비스해지일', 'col-4', 'text', false, true)}
+            ${makeInput('부가서비스', '부가서비스', 'col-6')}
+            ${makeInput('부가서비스해지일', '부가서비스해지일', 'col-6', 'text', false, true)}
 
             ${makeInput('제휴카드', '제휴카드', 'col-4')}
 
