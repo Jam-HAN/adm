@@ -420,9 +420,3 @@ body.no-scroll{
 thead .sticky-start {
     z-index: 10 !important; 
 }
-
-/* =========================================================
-   [NEW] 통합 미처리 카드 UX
-   ========================================================= */
-.unified-card{cursor:pointer; transition:transform .18s ease, box-shadow .18s ease;}
-.unified-card:hover{transform:translateY(-2px);}

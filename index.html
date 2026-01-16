@@ -122,23 +122,23 @@
                                 </li>
 
                                 <li>
-                                    <a class="dropdown-item" href="#" onclick="showSection('section-pending-unified'); setUnifiedTab('usedphone')">
+                                    <a class="dropdown-item" href="#" onclick="showSection('section-return-usedphone')">
                                         <i class="bi bi-phone text-primary"></i> 중고폰 반납
                                     </a>
                                 </li>
                                 <li>
-                                    <a class="dropdown-item" href="#" onclick="showSection('section-pending-unified'); setUnifiedTab('gift')">
+                                    <a class="dropdown-item" href="#" onclick="showSection('section-receive-gift')">
                                         <i class="bi bi-gift text-primary"></i> 상품권 수령
                                     </a>
                                 </li>
 
                                 <li>
-                                    <a class="dropdown-item" href="#" onclick="showSection('section-pending-unified'); setUnifiedTab('card')">
+                                    <a class="dropdown-item" href="#" onclick="showSection('section-card-setup')">
                                         <i class="bi bi-credit-card text-danger"></i> 제휴카드 접수
                                     </a>
                                 </li>
                                 <li>
-                                    <a class="dropdown-item" href="#" onclick="showSection('section-pending-unified'); setUnifiedTab('wired')">
+                                    <a class="dropdown-item" href="#" onclick="showSection('section-wired-setup')">
                                         <i class="bi bi-router text-danger"></i> 유선상품 설치
                                     </a>
                                 </li>
@@ -700,50 +700,7 @@
                 </div>
             </div>
 
-            
-
-            <div id="section-pending-unified" class="section-view">
-                <div class="glass-card p-4">
-                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
-                        <h5 class="fw-bold mb-0"><i class="bi bi-inbox"></i> 미처리/특수 처리 통합</h5>
-                        <div class="btn-group btn-group-sm" role="group" aria-label="type tabs">
-                            <button type="button" class="btn btn-outline-primary" id="unified_tab_card" onclick="setUnifiedTab('card')"><i class="bi bi-credit-card"></i> 카드</button>
-                            <button type="button" class="btn btn-outline-primary" id="unified_tab_wired" onclick="setUnifiedTab('wired')"><i class="bi bi-router"></i> 유선</button>
-                            <button type="button" class="btn btn-outline-primary" id="unified_tab_usedphone" onclick="setUnifiedTab('usedphone')"><i class="bi bi-phone"></i> 중고</button>
-                            <button type="button" class="btn btn-outline-primary" id="unified_tab_gift" onclick="setUnifiedTab('gift')"><i class="bi bi-gift"></i> 상품권</button>
-                        </div>
-                    </div>
-
-                    <div class="row g-2 mb-3">
-                        <div class="col-12 col-lg-3">
-                            <select id="unified_branch" class="form-select form-select-sm fw-bold text-primary">
-                                <option value="전체">🏢 전체 지점 보기</option>
-                                <option value="장지 본점">장지 본점</option>
-                                <option value="명일 직영점">명일 직영점</option>
-                            </select>
-                        </div>
-                        <div class="col-6 col-lg-2"><input type="date" class="form-control form-control-sm" id="unified_start"></div>
-                        <div class="col-6 col-lg-2"><input type="date" class="form-control form-control-sm" id="unified_end"></div>
-                        <div class="col-12 col-lg-5">
-                            <div class="input-group input-group-sm">
-                                <input type="text" class="form-control" id="unified_keyword" placeholder="고객명, 전화번호" onkeydown="if(event.key==='Enter') unifiedSearch()">
-                                <button class="btn btn-outline-secondary" onclick="unifiedSearch()">조회</button>
-                                <button class="btn btn-outline-dark" onclick="unifiedRefresh()"><i class="bi bi-arrow-clockwise"></i></button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
-                        <div class="small text-muted" id="unified_hint">탭을 선택하고 조회하세요.</div>
-                        <div class="small fw-bold" id="unified_count"></div>
-                    </div>
-
-                    <div id="unified_list" class="mt-3">
-                        <div class="text-center text-muted py-5 small">조회 조건을 입력하고 검색하세요.</div>
-                    </div>
-                </div>
-            </div>
-<div id="section-return-usedphone" class="section-view">
+            <div id="section-return-usedphone" class="section-view">
                 <div class="glass-card p-4">
                     <h5 class="fw-bold mb-4"><i class="bi bi-phone"></i> 중고폰 반납 등록</h5>
                     
@@ -1650,16 +1607,16 @@
     </div>
     
     <div id="manage-menu-container" class="d-none floating-menu">
-        <button onclick="showSection('section-pending-unified'); setUnifiedTab('usedphone');" class="btn btn-light shadow-lg fw-bold py-2 text-primary border-0 rounded-4">
+        <button onclick="showSection('section-return-usedphone');" class="btn btn-light shadow-lg fw-bold py-2 text-primary border-0 rounded-4">
             <i class="bi bi-phone me-2"></i> 중고폰 반납
         </button>
-        <button onclick="showSection('section-pending-unified'); setUnifiedTab('gift');" class="btn btn-light shadow-lg fw-bold py-2 text-primary border-0 rounded-4">
+        <button onclick="showSection('section-receive-gift');" class="btn btn-light shadow-lg fw-bold py-2 text-primary border-0 rounded-4">
             <i class="bi bi-gift me-2"></i> 상품권 수령
         </button>
-        <button onclick="showSection('section-pending-unified'); setUnifiedTab('card');" class="btn btn-light shadow-lg fw-bold py-2 text-danger border-0 rounded-4">
+        <button onclick="showSection('section-card-setup');" class="btn btn-light shadow-lg fw-bold py-2 text-danger border-0 rounded-4">
             <i class="bi bi-credit-card me-2"></i> 제휴카드 접수
         </button>
-        <button onclick="showSection('section-pending-unified'); setUnifiedTab('wired');" class="btn btn-light shadow-lg fw-bold py-2 text-danger border-0 rounded-4">
+        <button onclick="showSection('section-wired-setup');" class="btn btn-light shadow-lg fw-bold py-2 text-danger border-0 rounded-4">
             <i class="bi bi-router me-2"></i> 유선상품 설치
         </button>
         <button onclick="showSection('section-vendor');" class="btn btn-light shadow-lg fw-bold py-2 text-dark border-0 rounded-4">
