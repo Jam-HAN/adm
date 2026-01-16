@@ -165,10 +165,6 @@ a { text-decoration: none; }
 .btn-success{ box-shadow: 0 10px 22px rgba(22,163,74,.12); border: none; }
 .btn-warning{ box-shadow: 0 10px 22px rgba(245,158,11,.12); border: none; }
 
-/* ---------- Micro interactions ---------- */
-.hover-effect{ transition: transform .12s ease, filter .12s ease; }
-.hover-effect:hover{ transform: translateY(-1px); filter: brightness(.99); }
-
 /* ---------- Alerts / Badges ---------- */
 .alert{
   border-radius: 16px;
@@ -424,3 +420,9 @@ body.no-scroll{
 thead .sticky-start {
     z-index: 10 !important; 
 }
+
+/* =========================================================
+   [NEW] 통합 미처리 카드 UX
+   ========================================================= */
+.unified-card{cursor:pointer; transition:transform .18s ease, box-shadow .18s ease;}
+.unified-card:hover{transform:translateY(-2px);}
