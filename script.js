@@ -2362,17 +2362,16 @@ function searchSetupList(type) {
     // 로딩 표시
     container.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-secondary"></div><div class="mt-2 small text-muted">데이터 조회 중...</div></div>';
 
-    // ★ get_all_history와 동일한 패턴: data 객체로 start/end 통일
+    // ✅ 리팩토링: 카드/유선 미처리 목록도 "개통 정보 조회(get_all_history)" 로직을 재사용
+    // specialType: 'card' | 'wired'
     requestAPI({
-            action: "get_setup_pending_list",
-            data: {
-                type: type,
-                branch: branch,
-                start: start,
-                end: end,
-                keyword: keyword
-            }
-        })
+        action: "get_all_history",
+        start: start,
+        end: end,
+        keyword: keyword,
+        branch: branch,
+        specialType: type
+    })
     .then(d => {
         if (d.status === 'success') {
             // 서버 응답: { status:'success', data:[...] }
@@ -2582,9 +2581,11 @@ function saveSetupInfo(type, branch, rowIndex, rowId) {
 
     if(typeof Swal !== 'undefined') Swal.fire({ title: '저장 중...', didOpen: () => Swal.showLoading() });
 
+    // ✅ 리팩토링: 저장도 update_history(통합 수정)로 처리
+    // - type: 'card' | 'wired' 를 specialType으로 넘겨 GAS에서 분기
     requestAPI({
-            action: "update_setup_info",
-            type: type,
+            action: "update_history",
+            specialType: type, // 'card' | 'wired'
             branch: branch,
             rowIndex: rowIndex,
             val1: val1,
