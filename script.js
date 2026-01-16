@@ -2366,8 +2366,7 @@ function searchSetupList(type) {
     requestAPI({
             action: "get_setup_pending_list",
             data: {
-                type: type,
-                branch: branch,
+            branch: branch,
                 start: start,
                 end: end,
                 keyword: keyword
@@ -2583,8 +2582,8 @@ function saveSetupInfo(type, branch, rowIndex, rowId) {
     if(typeof Swal !== 'undefined') Swal.fire({ title: '저장 중...', didOpen: () => Swal.showLoading() });
 
     requestAPI({
-            action: "update_setup_info",
-            type: type,
+            action: "update_history",
+            specialType: type,
             branch: branch,
             rowIndex: rowIndex,
             val1: val1,
