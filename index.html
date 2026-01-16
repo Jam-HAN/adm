@@ -1,0 +1,1650 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>대박통신 관리자 시스템</title>
+    <link rel="icon" type="image/png" href="./favicon.png?v=1">
+    <link rel="apple-touch-icon" href="./favicon.png?v=1">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .dash-table { table-layout: fixed !important; width: 100% !important; }
+        .dash-table th, .dash-table td {
+            width: 20% !important;
+            text-align: center !important;
+            vertical-align: middle !important;
+            padding: 8px 4px !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+        }
+        #vendor_list_ui .list-group-item { display: block; }
+        #vendor_list_ui .small { display: block !important; color: #6c757d !important; font-size: 0.85em; margin-top: 4px; }
+    </style>
+    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+	<div id="login-view" class="login-bg"
+		style="height: 100vh; background: linear-gradient(135deg, #4e73df 10%, #224abe 100%); display: flex; align-items: center; justify-content: center; position: fixed; top: 0; left: 0; width: 100%; z-index: 9999;">
+		<div class="p-5 text-center shadow-lg rounded-4 bg-white login-card" style="width: 90%; max-width: 400px;">
+
+			<!-- Login Brand Header (same as main) -->
+			<div class="login-brand inline">
+				<svg class="login-logo-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 304 304" aria-label="대박통신 로고" role="img">
+					<defs>
+						<mask id="loginLogoMask" maskUnits="userSpaceOnUse" x="0" y="0" width="304" height="304" maskContentUnits="userSpaceOnUse" style="mask-type:alpha">
+							<image href="data:image/png;base64,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" x="0" y="0" width="304" height="304" preserveAspectRatio="xMidYMid meet"/>
+						</mask>
+					</defs>
+					<rect x="0" y="0" width="304" height="304" fill="currentColor" mask="url(#loginLogoMask)"/>
+				</svg>
+			
+				<div class="login-inline-text">대박통신 관리자 시스템</div>
+			</div>
+
+			<div id="g_id_onload"
+				data-client_id="98614909172-tj2a973qqgi1l7iukvfnnek0e09bpupl.apps.googleusercontent.com"
+				data-callback="handleCredentialResponse">
+			</div>
+
+			<div class="g_id_signin"
+				data-type="standard"
+				data-size="large"
+				data-theme="outline"
+				data-text="sign_in_with"
+				data-shape="rectangular"
+				data-logo_alignment="left">
+			</div>
+
+			<div id="login-msg" class="text-danger mt-3 small fw-bold"></div>
+
+		</div>
+	</div>
+
+	<div id="main-view" style="display:none;">
+
+		<nav class="navbar navbar-expand-lg sticky-top px-3 bg-white shadow-sm d-none d-lg-block">
+			<div class="container-fluid px-0">
+
+				<a class="navbar-brand fw-bold brand-link"
+					onclick="showSection('section-dashboard')"
+					style="cursor:pointer;">
+
+					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 304 304" width="304" height="304" aria-label="대박통신 로고" role="img">
+						<defs>
+							<mask id="logoMask" maskUnits="userSpaceOnUse" x="0" y="0" width="304" height="304" maskContentUnits="userSpaceOnUse" style="mask-type:alpha">
+								<image href="data:image/png;base64,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"
+									x="0" y="0" width="304" height="304" preserveAspectRatio="xMidYMid meet"></image>
+							</mask>
+						</defs>
+						<rect x="0" y="0" width="304" height="304" fill="currentColor" mask="url(#logoMask)"></rect>
+					</svg>
+
+					<span class="brand-text">대박통신</span>
+				</a>
+                <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"><span class="navbar-toggler-icon"></span></button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav me-auto ms-lg-3">
+                        <li class="nav-item"><a class="nav-link" onclick="showSection('section-dashboard')">📊 대시보드</a></li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">📦 재고 관리</a>
+                            <ul class="dropdown-menu shadow-sm border-0">
+                                <li><a class="dropdown-item" href="#" onclick="showSection('section-in')">입고 등록</a></li>
+                                <li><a class="dropdown-item" href="#" onclick="showSection('section-move')">재고 이동</a></li>
+                                <li><a class="dropdown-item text-danger" href="#" onclick="showSection('section-out')">반품 처리</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="#" onclick="showSection('section-stock')">🔍 재고 조회</a></li>
+                                <li><a class="dropdown-item" href="#" onclick="showSection('section-history')">📜 이력 조회</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle text-primary" href="#" data-bs-toggle="dropdown">✅ 개통 처리</a>
+                            <ul class="dropdown-menu shadow-sm border-0">
+                                <li><a class="dropdown-item" href="#" onclick="showOpenSection('무선개통')"><i class="bi bi-phone text-primary"></i> 무선 개통</a></li>
+                                <li><a class="dropdown-item" href="#" onclick="showWiredSection()"><i class="bi bi-router text-success"></i> 유선 개통</a></li>
+                                <li><a class="dropdown-item" href="#" onclick="showUsedSection()"><i class="bi bi-recycle text-warning"></i> 중고 개통</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">📂 개통 관리</a>
+                            <ul class="dropdown-menu shadow-sm border-0">
+                                <li>
+                                    <a class="dropdown-item" href="#" onclick="showSection('section-search-all')">
+                                        <i class="bi bi-card-list"></i> 개통 조회
+                                    </a>
+                                </li>
+
+                                <li>
+                                    <a class="dropdown-item" href="#" onclick="showSection('section-return-usedphone')">
+                                        <i class="bi bi-phone text-primary"></i> 중고폰 반납
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="#" onclick="showSection('section-receive-gift')">
+                                        <i class="bi bi-gift text-primary"></i> 상품권 수령
+                                    </a>
+                                </li>
+
+                                <li>
+                                    <a class="dropdown-item" href="#" onclick="showSection('section-card-setup')">
+                                        <i class="bi bi-credit-card text-danger"></i> 제휴카드 접수
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="#" onclick="showSection('section-wired-setup')">
+                                        <i class="bi bi-router text-danger"></i> 유선상품 설치
+                                    </a>
+                                </li>
+                                
+                            </ul>
+                        </li>
+
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">💰 매출 관리</a>
+                            <ul class="dropdown-menu shadow-sm border-0">
+                                <li id="menu_daily_report"><a class="dropdown-item" href="#" onclick="showDailyReportSection()">📄 일일 보고</a></li>
+                                <li id="menu_daily_sales"><a class="dropdown-item" href="#" onclick="showDailySalesSection()">📈 일별 집계</a></li>
+                                <li id="menu_period_item"><a class="dropdown-item" href="#" onclick="showSection('section-settlement-period')">📅 기간별 집계</a></li>
+                                <li><a class="dropdown-item" href="#" onclick="showSection('section-settlement-staff')">👥 직원별 집계</a></li>
+                            </ul>
+                        </li>
+
+						<li class="nav-item" id="menu_ledger_item">
+						    <a class="nav-link" href="#" onclick="showSection('section-settlement-ledger'); initSettlementLedgerPage();">
+						        <i class="bi bi-calculator-fill text-primary"></i> 정산 관리
+						    </a>
+						</li>
+
+                        <li class="nav-item" id="menu_crm_item">
+                            <a class="nav-link" href="#" onclick="showCrmSection()">
+                                <i class="bi bi-people-fill text-success"></i> CRM 관리
+                            </a>
+                        </li>
+
+                        <li class="nav-item" id="menu_db_view_item" style="display:none;">
+                            <a class="nav-link" href="#" onclick="showSection('section-db-view')">
+                                <i class="bi bi-database-fill-lock text-danger"></i> DB 열람
+                            </a>
+                        </li>
+                        
+                        <li class="nav-item"><a class="nav-link" onclick="showSection('section-vendor')">🏢 거래처</a></li>
+                    </ul>
+                    <div class="d-flex align-items-center mt-3 mt-lg-0">
+                        <span class="small me-3 fw-bold text-secondary" id="user-name"></span>
+                        <button onclick="logout()" class="btn btn-sm btn-outline-secondary rounded-pill"><i class="bi bi-box-arrow-right"></i> 로그아웃</button>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <nav class="navbar sticky-top px-3 d-lg-none glass-header">
+            <div class="container-fluid px-0 d-flex justify-content-between align-items-center">
+                <a class="navbar-brand fw-bold brand-link"
+   onclick="showSection('section-dashboard')"
+   style="cursor:pointer;">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 304 304" width="304" height="304" aria-label="대박통신 로고" role="img">
+  <defs>
+    <mask id="logoMask" maskUnits="userSpaceOnUse" x="0" y="0" width="304" height="304" maskContentUnits="userSpaceOnUse" style="mask-type:alpha">
+      <image href="data:image/png;base64,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" x="0" y="0" width="304" height="304" preserveAspectRatio="xMidYMid meet"/>
+    </mask>
+  </defs>
+  <rect x="0" y="0" width="304" height="304" fill="currentColor" mask="url(#logoMask)"/>
+</svg>
+
+  <span class="brand-text">대박통신</span>
+</a>
+                <button onclick="logout()" class="btn btn-sm btn-light border-0 rounded-circle text-secondary">
+                    <i class="bi bi-box-arrow-right fs-5"></i>
+                </button>
+            </div>
+        </nav>
+
+        <div class="container py-4">
+
+            <div id="section-dashboard" class="section-view active-section">
+                
+                <div class="row g-3 mb-4">
+                    
+                    <div class="col-lg-6">
+                        <div class="glass-card h-100">
+                            <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center px-4" 
+                                 style="height: 60px; overflow: hidden;">
+                                <h6 class="m-0 fw-bold text-primary text-uppercase text-truncate">오늘 개통 현황 (전체)</h6>
+                                <div></div> 
+                            </div>
+                            <div class="card-body p-4 d-flex align-items-center justify-content-center fixed-h-box">
+                                <div class="row text-center w-100">
+                                    <div class="col-6 border-end">
+                                        <div class="small text-muted mb-2">📱 무선</div>
+                                        <div class="h2 fw-bold text-dark mb-0" id="dash_today_mobile">-</div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="small text-muted mb-2">📺 유선</div>
+                                        <div class="h2 fw-bold text-dark mb-0" id="dash_today_wired">-</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            
+                    <div class="col-lg-6">
+                        <div class="glass-card h-100">
+                            <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center px-4" 
+                                 style="height: 60px; overflow: hidden;">
+                                <h6 class="m-0 fw-bold text-success text-uppercase text-truncate">
+                                    이번 달 누적 (지점별)
+                                </h6>
+                                <button class="btn btn-sm btn-outline-primary fw-bold rounded-pill px-3" onclick="openGoalModal()">
+                                    <i class="bi bi-flag-fill me-1"></i> 목표 설정
+                                </button>
+                            </div>
+                            <div class="card-body p-3 d-flex flex-column justify-content-center fixed-h-box" id="dash_month_stats">
+                                <div class="text-center text-muted">
+                                    <div class="spinner-border text-success mb-2"></div>
+                                    <div class="small">데이터 로딩 중...</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="row g-3">
+                    
+                    <div class="col-lg-6">
+                        <div class="glass-card h-100">
+                            <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center px-4" 
+                                 style="height: 60px; overflow: hidden;">
+                                <h6 class="m-0 fw-bold text-primary text-truncate">
+                                    <i class="bi bi-broadcast me-2"></i>실시간 개통 (Today)
+                                </h6>
+                                
+                                <button class="btn btn-sm btn-light border rounded-circle" onclick="loadDashboard()" title="새로고침">
+                                    <i class="bi bi-arrow-clockwise"></i>
+                                </button>
+                            </div>
+                            
+                            <div class="card-body p-0">
+                                <div class="table-responsive" style="height: 300px; overflow-y: auto;">
+                                    <table class="table table-hover align-middle mb-0 dash-table" style="font-size: 0.9rem;">
+                                        <thead class="sticky-top border-bottom bg-white">
+                                            <tr>
+                                                <th>지점</th>
+                                                <th>유형</th>
+                                                <th>고객명</th>
+                                                <th>담당매니저</th>
+                                                <th>마진</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="dash_today_list">
+                                            <tr><td colspan="5" class="text-center py-5 text-muted">데이터 로딩 중...</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            
+                    <div class="col-lg-6">
+                        <div class="glass-card h-100">
+                            <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center px-4" 
+                                 style="height: 60px; overflow: hidden;">
+                                <h6 class="m-0 fw-bold text-success text-truncate"><i class="bi bi-trophy me-2"></i>이달의 실적 (매니저별)</h6>
+                                <div></div>
+                            </div>
+                            <div class="card-body p-0" id="dash_user_rank" style="height: 300px; overflow-y: auto;">
+                                <div class="text-center py-5 text-muted">데이터 로딩 중...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+            </div>
+            
+            <div id="section-in" class="section-view">
+                <div class="glass-card p-4">
+                    <h5 class="fw-bold mb-4 text-secondary"><i class="bi bi-box-seam"></i> 입고 등록</h5>
+                    <div class="row g-3 mb-4">
+                        <div class="col-6"><label class="form-label-sm">거래처</label><select class="form-select form-select-sm" id="in_supplier"></select></div>
+                        <div class="col-6"><label class="form-label-sm">지점</label><select class="form-select form-select-sm" id="in_branch"><option value="장지 본점">장지 본점</option><option value="명일 직영점">명일 직영점</option></select></div>
+                    </div>
+                    <div class="mb-3"><input type="checkbox" id="in_mode_toggle"> <label for="in_mode_toggle" class="small">연속 스캔 모드</label></div>
+                    <input type="text" class="form-control form-control-lg text-center fw-bold mb-3 border-primary scan-input" id="in_scan" placeholder="바코드 스캔" onkeydown="handleInScan(event)">
+                    <div id="in-msg" class="alert py-2 text-center small fw-bold" style="display:none"></div>
+                    <div id="in_batch_area" style="display:none;" class="bg-light p-3 rounded border">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="small fw-bold">대기 목록 <span id="in_count" class="badge bg-primary rounded-pill ms-1">0</span></span>
+                            <button class="btn btn-xs btn-outline-danger" onclick="clearInList()">비우기</button>
+                        </div>
+
+                        <div class="d-flex text-center small fw-bold text-muted border-bottom pb-2 mb-2 px-2">
+                            <div style="width: 25%;">거래처</div>
+                            <div style="width: 25%;">모델명</div>
+                            <div style="width: 15%;">색상</div>
+                            <div style="width: 25%;">일련번호</div>
+                            <div style="width: 10%;"></div>
+                        </div>
+
+                        <div id="in_tbody" class="mt-2" style="max-height: 250px; overflow-y: auto;"></div>
+
+                        <button class="btn btn-primary w-100 btn-sm fw-bold mt-3 shadow-sm" onclick="submitInBatch()">
+                            <i class="bi bi-upload"></i> 일괄 등록하기
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="section-open" class="section-view">
+                <div class="glass-card border-top border-4 border-primary">
+                    <div class="p-3 bg-light border-bottom d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0 fw-bold text-primary" id="open_title"><i class="bi bi-phone"></i> 무선 개통</h5>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="resetOpenForm()">초기화</button>
+                    </div>
+                    <div class="p-4">
+                        <div id="open_step_1">
+                            <div class="text-center p-5 bg-light rounded border border-dashed mb-3">
+                                <i class="bi bi-qr-code-scan fs-1 text-muted mb-3 d-block"></i>
+                                <label class="text-muted fw-bold mb-3">단말기 일련번호를 입력하세요.</label>
+                                <input type="text" class="form-control form-control-lg text-center fs-4 fw-bold mx-auto scan-input" style="max-width:300px;" id="open_scan" onkeydown="handleOpenScan(event)" autocomplete="off">
+                                <div id="open_spinner" class="mt-3 text-primary small fw-bold" style="display:none;">조회 중...</div>
+                            </div>
+                        </div>
+                        <div id="open_step_2" style="display:none;">
+                            <div class="alert alert-primary d-flex justify-content-between align-items-center shadow-sm">
+                                <div>
+                                    <i class="bi bi-phone-fill me-2"></i>
+                                    <span id="target_model" class="fw-bold fs-5"></span>
+                                    <span class="fw-bold fs-5"> : </span>
+                                    <span id="target_serial" class="fw-bold fs-5"></span>
+                                </div>
+                                <span class="badge bg-primary fs-6" id="target_branch"></span>
+                            </div>
+                            <div class="section-header"><i class="bi bi-person-badge"></i> 기본 정보</div>
+                            <div class="row g-2 mb-4">
+                                <div class="col-4"><label class="form-label-sm">개통유형<span class="required-star">*</span></label><select class="form-select form-select-sm" id="f_act_type"></select></div>
+                                <div class="col-4"><label class="form-label-sm">약정유형<span class="required-star">*</span></label><select class="form-select form-select-sm" id="f_cont_type"></select></div>
+                                <div class="col-4"><label class="form-label-sm">방문경로<span class="required-star">*</span></label><select class="form-select form-select-sm" id="f_visit" onchange="checkVisitPath()"></select></div>
+                                <div class="col-12" id="div_visit_etc" style="display:none;"><label class="form-label-sm" id="f_label_visit_etc"></label><input type="text" class="form-control form-control-sm" id="f_visit_etc" placeholder="상세 경로 입력"></div>
+                                <div class="col-4"><label class="form-label-sm">고객명<span class="required-star">*</span></label><input type="text" class="form-control form-control-sm" id="f_name"></div>
+                                <div class="col-4"><label class="form-label-sm">생년월일<span class="required-star">*</span></label><input type="number" inputmode="decimal" class="form-control form-control-sm" id="f_birth" placeholder="6자리"></div>
+                                <div class="col-4"><label class="form-label-sm">전화번호<span class="required-star">*</span></label><input type="number" inputmode="decimal" class="form-control form-control-sm" id="f_phone"></div>
+                                <div class="col-6"><label class="form-label-sm">요금제</label><input type="text" class="form-control form-control-sm" id="f_plan"></div>
+                                <div class="col-6"><label class="form-label-sm">변경요금제</label><input type="text" class="form-control form-control-sm" id="f_plan_chg"></div>
+                                <div class="col-12"><label class="form-label-sm">부가서비스</label><div id="div_addon_container" class="border rounded p-3 bg-light" style="min-height: 50px;"></div></div>
+                                <div class="col-4"><label class="form-label-sm">제휴카드</label><input type="text" class="form-control form-control-sm" id="f_card"></div>
+                                <div class="col-4"><label class="form-label-sm">리뷰작성여부 <span class="required-star">*</span></label><select class="form-select form-select-sm" id="f_review" onchange="checkReviewId()"></select></div>
+                                <div class="col-4" id="div_review_id" style="display:none;"><label class="form-label-sm">작성자ID<span class="required-star">*</span></label><input type="text" class="form-control form-control-sm" id="f_review_id" placeholder="작성자 ID"></div>
+                            </div>
+                            <div class="divider"></div>
+                            <div class="section-header"><i class="bi bi-calculator"></i> 정책 및 정산</div>
+                            <div class="row g-2 mb-3">
+                                <div class="col-6"><label class="form-label-sm">개통처</label><input type="text" class="form-control form-control-sm" id="f_avalue" oninput="refreshAddons()"></div>
+                                <div class="col-6"><label class="form-label-sm">정책차수</label><input type="text" class="form-control form-control-sm" id="f_policy"></div>
+                                <div class="col-6"><label class="form-label-sm">기본정책</label><input type="number" inputmode="decimal" class="form-control form-control-sm" id="f_inc1" placeholder="액면/히든"></div>
+                                <div class="col-6"><label class="form-label-sm">메모</label><input type="text" class="form-control form-control-sm" id="f_inc1_m"></div>
+                                <div class="col-6"><label class="form-label-sm">추가정책</label><input type="number" inputmode="decimal" class="form-control form-control-sm" id="f_inc2" placeholder="상권/타켓 등"></div>
+                                <div class="col-6"><label class="form-label-sm">메모</label><input type="text" class="form-control form-control-sm" id="f_inc2_m"></div>
+                                <div class="col-6"><label class="form-label-sm">부가정책</label><input type="number" inputmode="decimal" class="form-control form-control-sm" id="f_inc3"></div>
+                                <div class="col-6"><label class="form-label-sm">메모</label><input type="text" class="form-control form-control-sm" id="f_inc3_m"></div>
+                                <div class="col-6"><label class="form-label-sm text-danger-custom">차감정책</label><input type="number" inputmode="decimal" class="form-control form-control-sm border-danger-custom" id="f_cost1"></div>
+                                <div class="col-6"><label class="form-label-sm">메모</label><input type="text" class="form-control form-control-sm" id="f_cost1_m"></div>
+                                <div class="col-6"><label class="form-label-sm text-danger-custom">프리할인</label><input type="number" inputmode="decimal" class="form-control form-control-sm border-danger-custom" id="f_cost2"></div>
+                                <div class="col-6"><label class="form-label-sm">유심</label><select class="form-select form-select-sm" id="f_usim"></select></div>
+                            </div>
+                            <div class="divider"></div>
+                            <div class="section-header"><i class="bi bi-credit-card"></i> 대납 및 지원</div>
+                            <div class="row g-2 mb-3">
+                                <div class="col-4"><label class="form-label-sm text-danger-custom">대납1</label><input type="number" inputmode="decimal" class="form-control form-control-sm border-danger-custom" id="f_pay1"></div>
+                                <div class="col-4"><label class="form-label-sm">결제</label><select class="form-select form-select-sm" id="f_pay1_m"></select></div>
+                                <div class="col-4"><label class="form-label-sm">처리일</label><input type="date" class="form-control form-control-sm" id="f_pay1_d"></div>
+                                <div class="col-12"><label class="form-label-sm">사유</label><input type="text" class="form-control form-control-sm" id="f_pay1_memo" placeholder="예: 고객 요청으로 선납 후 청구"></div>
+                                <div class="col-4"><label class="form-label-sm text-danger-custom">대납2</label><input type="number" inputmode="decimal" class="form-control form-control-sm border-danger-custom" id="f_pay2"></div>
+                                <div class="col-4"><label class="form-label-sm">결제</label><select class="form-select form-select-sm" id="f_pay2_m"></select></div>
+                                <div class="col-4"><label class="form-label-sm">처리일</label><input type="date" class="form-control form-control-sm" id="f_pay2_d"></div>
+                                <div class="col-12"><label class="form-label-sm">사유</label><input type="text" class="form-control form-control-sm" id="f_pay2_memo" placeholder="예: 미납요금 개통불가 사유로 선납 후 청구"></div>
+                                <div class="col-6"><label class="form-label-sm text-danger-custom">캐시백</label><input type="number" inputmode="decimal" class="form-control form-control-sm border-danger-custom" id="f_cash"></div>
+                                <div class="col-6"><label class="form-label-sm text-danger-custom">페이백</label><input type="number" inputmode="decimal" class="form-control form-control-sm border-danger-custom" id="f_back"></div>
+                                <div class="col-4"><label class="form-label-sm">은행명</label><input type="text" class="form-control form-control-sm" id="f_bank"></div>
+                                <div class="col-4"><label class="form-label-sm">계좌번호</label><input type="text" inputmode="decimal" class="form-control form-control-sm" id="f_acc"></div>
+                                <div class="col-4"><label class="form-label-sm">예금주</label><input type="text" class="form-control form-control-sm" id="f_holder"></div>
+                            </div>
+                            <div class="divider"></div>
+                            <div class="section-header"><i class="bi bi-wallet2"></i> 수납 상세</div>
+                            <div class="row g-2 mb-3">
+                                <div class="col-6"><label class="form-label-sm">단말기수납1</label><input type="number" inputmode="decimal" class="form-control form-control-sm" id="f_inc4"></div>
+                                <div class="col-6"><label class="form-label-sm">방법</label><select class="form-select form-select-sm" id="f_inc4_m"></select></div>
+                                <div class="col-6"><label class="form-label-sm">단말기수납2</label><input type="number" inputmode="decimal" class="form-control form-control-sm" id="f_inc4_2"></div>
+                                <div class="col-6"><label class="form-label-sm">방법</label><select class="form-select form-select-sm" id="f_inc4_2_m"></select></div>
+                                <div class="col-6"><label class="form-label-sm">요금수납</label><input type="number" inputmode="decimal" class="form-control form-control-sm" id="f_inc5"></div>
+                                <div class="col-6"><label class="form-label-sm">방법</label><select class="form-select form-select-sm" id="f_inc5_m"></select></div>
+                                <div class="col-6"><label class="form-label-sm">중고폰</label><input type="number" inputmode="decimal" class="form-control form-control-sm" id="f_inc6"></div>
+                                <div class="col-6"><label class="form-label-sm">메모</label><input type="text" class="form-control form-control-sm" id="f_inc6_m"></div>
+                                <div class="col-12"><label class="form-label-sm">특이사항</label><input type="text" class="form-control form-control-sm" id="f_comment"></div>
+                            </div>
+                            <div class="mt-4 pb-4">
+                                <button type="button" id="btn-mobile-save" class="btn btn-primary w-100 py-3 fw-bold shadow-sm" onclick="submitFullContract(event)">
+                                    <i class="bi bi-save-fill"></i> 개통 및 저장 완료
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="section-wired" class="section-view">
+                 <div class="glass-card border-top border-4 border-success">
+                    <div class="p-3 bg-light border-bottom d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0 fw-bold text-success"><i class="bi bi-router"></i> 유선 개통</h5>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="resetWiredForm()">초기화</button>
+                    </div>
+                    <div class="p-4">
+                        <div id="wired_step_1">
+                            <div class="bg-light p-4 rounded border">
+                                <div class="mb-3"><label class="form-label fw-bold">1. 지점 선택</label><select class="form-select" id="wired_branch"><option value="" selected>선택하세요</option><option value="장지 본점">장지 본점</option><option value="명일 직영점">명일 직영점</option></select></div>
+                                <div class="mb-3"><label class="form-label fw-bold">2. 개통처 선택</label><select class="form-select" id="w_pre_avalue"><option value="" selected>선택하세요</option></select></div>
+                                <div class="mb-3"><label class="form-label fw-bold">3. 개통유형 선택</label><select class="form-select" id="w_pre_act_type"><option value="" selected>선택하세요</option></select></div>
+                                <div class="mb-4"><label class="form-label fw-bold">4. 약정유형 선택</label><select class="form-select" id="w_pre_cont_type"><option value="" selected>선택하세요</option></select></div>
+                                <button class="btn btn-success w-100 fw-bold py-2" onclick="startWiredActivation()">다음 단계로 이동</button>
+                            </div>
+                        </div>
+                        <div id="wired_step_2" style="display:none;">
+                            <div class="alert alert-success d-flex justify-content-between align-items-center shadow-sm mb-4"><div><i class="bi bi-check-circle-fill me-2"></i><span id="w_target_info" class="fw-bold fs-5"></span></div><span class="badge bg-success fs-6" id="w_target_branch"></span></div>
+                            <div class="section-header"><i class="bi bi-person-lines-fill"></i> 기본 정보</div>
+                            <div class="row g-2 mb-3">
+                                <div class="col-3"><label class="form-label-sm">개통유형<span class="required-star">*</span></label><input type="text" class="form-control form-control-sm" id="w_act_type" readonly></div>
+                                <div class="col-3"><label class="form-label-sm">약정유형<span class="required-star">*</span></label><input type="text" class="form-control form-control-sm" id="w_cont_type" readonly></div>
+                                <div class="col-3"><label class="form-label-sm">방문경로<span class="required-star">*</span></label><select class="form-select form-select-sm" id="w_visit" onchange="checkWiredVisitPath()"></select></div>
+                                <div class="col-3" id="w_div_visit_etc" style="display:none;"><label class="form-label-sm" id="w_label_visit_etc"></label><input type="text" class="form-control form-control-sm" id="w_visit_etc" placeholder="입력하세요"></div>
+                            </div>
+                            <div class="row g-2 mb-3">
+                                <div class="col-4"><label class="form-label-sm">고객명<span class="required-star">*</span></label><input type="text" class="form-control form-control-sm" id="w_name"></div>
+                                <div class="col-4"><label class="form-label-sm">생년월일<span class="required-star">*</span></label><input type="number" inputmode="decimal" class="form-control form-control-sm" id="w_birth"></div>
+                                <div class="col-4"><label class="form-label-sm">전화번호<span class="required-star">*</span></label><input type="number" inputmode="decimal" class="form-control form-control-sm" id="w_phone"></div>
+                            </div>
+                            <div class="row g-2 mb-3">
+                                <div class="col-12" id="w_plan_input_area"></div>
+                                <div class="col-4"><label class="form-label-sm">제휴카드</label><input type="text" class="form-control form-control-sm" id="w_card"></div>
+                                <div class="col-4"><label class="form-label-sm">리뷰작성여부<span class="required-star">*</span></label><select class="form-select form-select-sm" id="w_review" onchange="checkWiredReviewId()"></select></div>
+                                <div class="col-4" id="w_div_review_id" style="display:none;"><label class="form-label-sm">작성자ID<span class="required-star">*</span></label><input type="text" class="form-control form-control-sm" id="w_review_id" placeholder="입력하세요"></div>
+                            </div>
+                            <div class="divider"></div><div class="section-header"><i class="bi bi-calculator"></i> 정책 및 정산</div>
+                            <div class="row g-2 mb-3">
+                                <div class="col-6"><label class="form-label-sm">개통처</label><input type="text" class="form-control form-control-sm" id="w_avalue"></div>
+                                <div class="col-6"><label class="form-label-sm">정책차수</label><input type="text" class="form-control form-control-sm" id="w_policy"></div>
+                                <div class="col-6"><label class="form-label-sm">기본정책</label><input type="number" inputmode="decimal" class="form-control form-control-sm" id="w_inc1" placeholder="액면/히든"></div>
+                                <div class="col-6"><label class="form-label-sm">메모</label><input type="text" class="form-control form-control-sm" id="w_inc1_m"></div>
+                                <div class="col-6"><label class="form-label-sm">추가정책</label><input type="number" inputmode="decimal" class="form-control form-control-sm" id="w_inc2" placeholder="상권/타켓 등"></div>
+                                <div class="col-6"><label class="form-label-sm">메모</label><input type="text" class="form-control form-control-sm" id="w_inc2_m"></div>
+                                <div class="col-6"><label class="form-label-sm">부가정책</label><input type="number" inputmode="decimal" class="form-control form-control-sm" id="w_inc3"></div>
+                                <div class="col-6"><label class="form-label-sm">메모</label><input type="text" class="form-control form-control-sm" id="w_inc3_m"></div>
+                                <div class="col-6"><label class="form-label-sm text-danger-custom">차감정책</label><input type="number" inputmode="decimal" class="form-control form-control-sm border-danger-custom" id="w_cost1"></div>
+                                <div class="col-6"><label class="form-label-sm">메모</label><input type="text" class="form-control form-control-sm" id="w_cost1_m"></div>
+                            </div>
+                            <div class="divider"></div><div class="section-header"><i class="bi bi-credit-card"></i> 대납 및 지원</div>
+                            <div class="row g-2 mb-3">
+                                <div class="col-4"><label class="form-label-sm text-danger-custom">대납1</label><input type="number" inputmode="decimal" class="form-control form-control-sm border-danger-custom" id="w_pay1"></div>
+                                <div class="col-4"><label class="form-label-sm">결제</label><select class="form-select form-select-sm" id="w_pay1_m"></select></div>
+                                <div class="col-4"><label class="form-label-sm">처리일</label><input type="date" class="form-control form-control-sm" id="w_pay1_d"></div>
+                                <div class="col-12"><label class="form-label-sm">사유</label><input type="text" class="form-control form-control-sm" id="w_pay1_memo" placeholder="예: 고객 요청으로 선납 후 청구"></div>
+                                <div class="col-4"><label class="form-label-sm text-danger-custom">대납2</label><input type="number" inputmode="decimal" class="form-control form-control-sm border-danger-custom" id="w_pay2"></div>
+                                <div class="col-4"><label class="form-label-sm">결제</label><select class="form-select form-select-sm" id="w_pay2_m"></select></div>
+                                <div class="col-4"><label class="form-label-sm">처리일</label><input type="date" class="form-control form-control-sm" id="w_pay2_d"></div>
+                                <div class="col-12"><label class="form-label-sm">사유</label><input type="text" class="form-control form-control-sm" id="w_pay2_memo" placeholder="예: 미납요금 개통불가 사유로 선납 후 청구"></div>
+                                <div class="col-6"><label class="form-label-sm text-danger-custom">캐시백</label><input type="number" inputmode="decimal" class="form-control form-control-sm border-danger-custom" id="w_cash"></div>
+                                <div class="col-6"><label class="form-label-sm text-danger-custom">페이백</label><input type="number" inputmode="decimal" class="form-control form-control-sm border-danger-custom" id="w_back"></div>
+                                <div class="col-4"><label class="form-label-sm">은행명</label><input type="text" class="form-control form-control-sm" id="w_bank"></div>
+                                <div class="col-4"><label class="form-label-sm">계좌번호</label><input type="text" inputmode="decimal" class="form-control form-control-sm" id="w_acc"></div>
+                                <div class="col-4"><label class="form-label-sm">예금주</label><input type="text" class="form-control form-control-sm" id="w_holder"></div>
+                            </div>
+                            <div class="divider"></div><div class="section-header"><i class="bi bi-wallet2"></i> 수납 상세</div>
+                            <div class="row g-2 mb-3">
+                                <div class="col-6"><label class="form-label-sm">요금수납</label><input type="number" inputmode="decimal" class="form-control form-control-sm" id="w_inc5"></div>
+                                <div class="col-6"><label class="form-label-sm">방법</label><select class="form-select form-select-sm" id="w_inc5_m"></select></div>
+                                <div class="col-6"><label class="form-label-sm">상품권/기타</label><input type="number" inputmode="decimal" class="form-control form-control-sm" id="w_inc6"></div>
+                                <div class="col-6"><label class="form-label-sm">메모</label><input type="text" class="form-control form-control-sm" id="w_inc6_m"></div>
+                                <div class="col-12"><label class="form-label-sm">특이사항</label><input type="text" class="form-control form-control-sm" id="w_comment"></div>
+                            </div>
+                            <div class="mt-4 pb-4">
+                                <button type="button" class="btn btn-success w-100 py-3 fw-bold shadow-sm" onclick="submitWiredContract(event)">
+                                    <i class="bi bi-save-fill"></i> 유선 개통 저장
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="section-used" class="section-view">
+                 <div class="glass-card border-top border-4 border-warning">
+                    <div class="p-3 bg-light border-bottom d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0 fw-bold text-warning"><i class="bi bi-recycle"></i> 중고 개통</h5>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="resetUsedForm()">초기화</button>
+                    </div>
+                    <div class="p-4">
+                        <div id="used_step_1">
+                            <div class="bg-light p-4 rounded border">
+                                <div class="mb-3"><label class="form-label fw-bold">1. 지점 선택</label><select class="form-select" id="u_branch"><option value="" selected>선택하세요</option><option value="장지 본점">장지 본점</option><option value="명일 직영점">명일 직영점</option></select></div>
+                                <div class="mb-3"><label class="form-label fw-bold">2. 개통처 선택</label><select class="form-select" id="u_pre_avalue"><option value="" selected>선택하세요</option></select></div>
+                                <div class="mb-3"><label class="form-label fw-bold">3. 개통유형 선택</label><select class="form-select" id="u_pre_act_type"><option value="" selected>선택하세요</option></select></div>
+                                <div class="mb-4"><label class="form-label fw-bold">4. 약정유형 선택</label><select class="form-select" id="u_pre_cont_type"><option value="" selected>선택하세요</option></select></div>
+                                <button class="btn btn-warning text-white w-100 fw-bold py-2" onclick="startUsedActivation()">다음 단계로 이동</button>
+                            </div>
+                        </div>
+                        <div id="used_step_2" style="display:none;">
+                            <div class="alert alert-warning d-flex justify-content-between align-items-center shadow-sm mb-4"><div><i class="bi bi-recycle me-2"></i><span id="u_target_info" class="fw-bold fs-5"></span></div><span class="badge bg-warning text-dark fs-6" id="u_target_branch"></span></div>
+                            <div class="section-header"><i class="bi bi-person-lines-fill"></i> 기본 정보</div>
+                            <div class="row g-2 mb-3">
+                                <div class="col-4"><label class="form-label-sm">개통유형<span class="required-star">*</span></label><input type="text" class="form-control form-control-sm" id="u_act_type" readonly></div>
+                                <div class="col-4"><label class="form-label-sm">약정유형<span class="required-star">*</span></label><input type="text" class="form-control form-control-sm" id="u_cont_type" readonly></div>
+                                <div class="col-4"><label class="form-label-sm">방문경로<span class="required-star">*</span></label><select class="form-select form-select-sm" id="u_visit" onchange="checkUsedVisitPath()"></select></div>
+                                <div class="col-12" id="u_div_visit_etc" style="display:none;"><label class="form-label-sm" id="u_label_visit_etc"></label><input type="text" class="form-control form-control-sm" id="u_visit_etc" placeholder="상세 경로"></div>
+                            </div>
+                            <div class="row g-2 mb-3">
+                                <div class="col-4"><label class="form-label-sm">고객명<span class="required-star">*</span></label><input type="text" class="form-control form-control-sm" id="u_name"></div>
+                                <div class="col-4"><label class="form-label-sm">생년월일<span class="required-star">*</span></label><input type="number" inputmode="decimal" class="form-control form-control-sm" id="u_birth"></div>
+                                <div class="col-4"><label class="form-label-sm">전화번호<span class="required-star">*</span></label><input type="number" inputmode="decimal" class="form-control form-control-sm" id="u_phone"></div>
+                            </div>
+                            <div class="row g-2 mb-3">
+                                <div class="col-6"><label class="form-label-sm">기기모델명</label><input type="text" class="form-control form-control-sm" id="u_model"></div>
+                                <div class="col-6"><label class="form-label-sm">일련번호</label><input type="text" class="form-control form-control-sm" id="u_serial"></div>
+                            </div>
+                            <div class="row g-2 mb-3">
+                                <div class="col-6"><label class="form-label-sm">요금제</label><input type="text" class="form-control form-control-sm" id="u_plan"></div>
+                                <div class="col-6"><label class="form-label-sm">변경요금제</label><input type="text" class="form-control form-control-sm" id="u_plan_chg"></div>
+                            </div>
+                            <div class="row g-2 mb-3">
+                                <div class="col-12"><label class="form-label-sm">부가서비스</label><div id="u_div_addon_container" class="border rounded p-2 bg-light" style="min-height: 40px;"></div></div>
+                                <div class="col-4"><label class="form-label-sm">제휴카드</label><input type="text" class="form-control form-control-sm" id="u_card"></div>
+                                <div class="col-4"><label class="form-label-sm">리뷰작성여부<span class="required-star">*</span></label><select class="form-select form-select-sm" id="u_review" onchange="checkUsedReviewId()"></select></div>
+                                <div class="col-4" id="u_div_review_id" style="display:none;"><label class="form-label-sm">작성자ID<span class="required-star">*</span></label><input type="text" class="form-control form-control-sm" id="u_review_id" placeholder="작성자 ID"></div>
+                            </div>
+                            <div class="divider"></div><div class="section-header"><i class="bi bi-calculator"></i> 정책 및 정산</div>
+                            <div class="row g-2 mb-3">
+                                <div class="col-6"><label class="form-label-sm">개통처</label><input type="text" class="form-control form-control-sm" id="u_avalue" oninput="refreshUsedAddons()"></div>
+                                <div class="col-6"><label class="form-label-sm">정책차수</label><input type="text" class="form-control form-control-sm" id="u_policy"></div>
+                                <div class="col-6"><label class="form-label-sm">기본정책</label><input type="number" inputmode="decimal" class="form-control form-control-sm" id="u_inc1" placeholder="액면/히든"></div>
+                                <div class="col-6"><label class="form-label-sm">메모</label><input type="text" class="form-control form-control-sm" id="u_inc1_m"></div>
+                                <div class="col-6"><label class="form-label-sm">추가정책</label><input type="number" inputmode="decimal" class="form-control form-control-sm" id="u_inc2" placeholder="상권/타켓 등"></div>
+                                <div class="col-6"><label class="form-label-sm">메모</label><input type="text" class="form-control form-control-sm" id="u_inc2_m"></div>
+                                <div class="col-6"><label class="form-label-sm">부가정책</label><input type="number" inputmode="decimal" class="form-control form-control-sm" id="u_inc3"></div>
+                                <div class="col-6"><label class="form-label-sm">메모</label><input type="text" class="form-control form-control-sm" id="u_inc3_m"></div>
+                                <div class="col-6"><label class="form-label-sm text-danger-custom">차감정책</label><input type="number" inputmode="decimal" class="form-control form-control-sm border-danger-custom" id="u_cost1"></div>
+                                <div class="col-6"><label class="form-label-sm">메모</label><input type="text" class="form-control form-control-sm" id="u_cost1_m"></div>
+                                <div class="col-6"><label class="form-label-sm">유심</label><select class="form-select form-select-sm" id="u_usim"><option value="" selected>선택</option></select></div>
+                            </div>
+                            <div class="divider"></div><div class="section-header"><i class="bi bi-credit-card"></i> 대납 및 지원</div>
+                            <div class="row g-2 mb-3">
+                                <div class="col-4"><label class="form-label-sm text-danger-custom">대납1</label><input type="number" inputmode="decimal" class="form-control form-control-sm border-danger-custom" id="u_pay1"></div>
+                                <div class="col-4"><label class="form-label-sm">결제</label><select class="form-select form-select-sm" id="u_pay1_m"></select></div>
+                                <div class="col-4"><label class="form-label-sm">처리일</label><input type="date" class="form-control form-control-sm" id="u_pay1_d"></div>
+                                <div class="col-12"><label class="form-label-sm">사유</label><input type="text" class="form-control form-control-sm" id="u_pay1_memo" placeholder="예: 고객 요청으로 선납 후 청구"></div>
+                                <div class="col-4"><label class="form-label-sm text-danger-custom">대납2</label><input type="number" inputmode="decimal" class="form-control form-control-sm border-danger-custom" id="u_pay2"></div>
+                                <div class="col-4"><label class="form-label-sm">결제</label><select class="form-select form-select-sm" id="u_pay2_m"></select></div>
+                                <div class="col-4"><label class="form-label-sm">처리일</label><input type="date" class="form-control form-control-sm" id="u_pay2_d"></div>
+                                <div class="col-12"><label class="form-label-sm">사유</label><input type="text" class="form-control form-control-sm" id="u_pay2_memo" placeholder="예: 미납요금 개통불가 사유로 선납 후 청구"></div>
+                            </div>
+                            <div class="divider"></div><div class="section-header"><i class="bi bi-wallet2"></i> 수납 상세</div>
+                            <div class="row g-2 mb-3">
+                                <div class="col-6"><label class="form-label-sm">요금수납</label><input type="number" inputmode="decimal" class="form-control form-control-sm" id="u_inc5"></div>
+                                <div class="col-6"><label class="form-label-sm">방법</label><select class="form-select form-select-sm" id="u_inc5_m"></select></div>
+                                <div class="col-6"><label class="form-label-sm">중고폰</label><input type="number" inputmode="decimal" class="form-control form-control-sm" id="u_inc6"></div>
+                                <div class="col-6"><label class="form-label-sm">메모</label><input type="text" class="form-control form-control-sm" id="u_inc6_m"></div>
+                                <div class="col-12"><label class="form-label-sm">특이사항</label><input type="text" class="form-control form-control-sm" id="u_comment"></div>
+                            </div>
+                            <div class="mt-4 pb-4">
+                                <button type="button" class="btn btn-warning w-100 py-3 fw-bold text-white shadow-sm" onclick="submitUsedContract(event)">
+                                    <i class="bi bi-save-fill"></i> 중고 개통 저장
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="section-stock" class="section-view">
+                <div class="glass-card p-4">
+                    <h5 class="fw-bold mb-3"><i class="bi bi-search"></i> 보유 재고 조회</h5>
+                    <div class="row g-2 align-items-center mb-3">
+                        <div class="col-4"><select class="form-select fw-bold" id="search_criteria" onchange="updateSearchUI()"><option value="supplier">거래처별</option><option value="branch">지점별</option><option value="model">모델별</option><option value="serial">일련번호/바코드</option></select></div>
+                        <div class="col-8" id="search_input_area"><select class="form-select" id="search_value_supplier"></select></div>
+                    </div>
+                    <button class="btn btn-primary w-100 fw-bold rounded-3 mb-3" onclick="searchStock()">조회하기</button>
+                    <div id="stock_result"></div>
+                </div>
+            </div>
+
+            <div id="section-history" class="section-view">
+                <div class="glass-card p-4">
+                    <h5 class="fw-bold mb-3"><i class="bi bi-clock-history"></i> 단말기 이력 조회</h5>
+                    <div class="input-group mb-3"><input type="text" class="form-control" id="hist_keyword" placeholder="일련번호 또는 바코드 (정확히 입력)" onkeydown="if(event.key==='Enter') searchHistory()"><button class="btn btn-outline-secondary" onclick="searchHistory()">검색</button></div>
+                    <div id="hist_result"></div>
+                </div>
+            </div>
+
+            <div id="section-move" class="section-view">
+                <div class="glass-card p-4">
+                    <h5 class="fw-bold mb-4 text-primary">재고 이동</h5>
+                    <select class="form-select bg-light fw-bold py-3 mb-3" id="move_to_branch"><option value="명일 직영점">👉 명일 직영점으로 보냄</option><option value="장지 본점">👉 장지 본점으로 보냄</option></select>
+                    <div class="scan-wrapper my-4"><input type="text" class="form-control scan-input" id="move_scan" placeholder="바코드 또는 일련번호" onkeydown="handleMoveScan(event)" autocomplete="off"></div>
+                    <div id="move-msg" class="alert py-2 text-center small fw-bold rounded-3" style="display:none"></div>
+                </div>
+            </div>
+
+            <div id="section-out" class="section-view">
+                <div class="glass-card p-4 border-top border-4 border-danger">
+                    <h5 class="fw-bold mb-4 text-danger">반품 처리</h5>
+                    <div class="form-floating mb-3"><input type="text" class="form-control" id="out_note" placeholder="사유"><label>반품 사유 / 메모 (필수)</label></div>
+                    <div class="scan-wrapper bg-danger bg-opacity-75 my-4" style="background-color: #d63031;"><input type="text" class="form-control scan-input border-danger" id="out_scan" placeholder="바코드 또는 일련번호" onkeydown="handleOutScan(event)" autocomplete="off"></div>
+                    <div id="out-msg" class="alert py-2 text-center small fw-bold rounded-3" style="display:none"></div>
+                </div>
+            </div>
+            
+            <div id="section-vendor" class="section-view">
+                 <div class="glass-card p-4">
+                    <h5 class="fw-bold mb-3">거래처 등록</h5>
+                    <div class="row g-2 mb-3">
+                        <div class="col-4">
+                            <select class="form-select enter-trigger" id="v_type">
+                                <option value="" selected>통신사</option>
+                                <option value="SKT">SKT</option>
+                                <option value="KT">KT</option>
+                                <option value="LGU+">LGU+</option>
+                                <option value="기타">기타(일반)</option>
+                            </select>
+                        </div>
+                        <div class="col-8"><input type="text" class="form-control enter-trigger" id="v_name" placeholder="거래처명 (필수)"></div>
+                        <div class="col-6"><input type="text" class="form-control enter-trigger" id="v_sales" placeholder="영업사원"></div>
+                        <div class="col-6"><input type="text" class="form-control enter-trigger" id="v_phone" placeholder="연락처"></div>
+                        <div class="col-12"><input type="text" class="form-control enter-trigger" id="v_office" placeholder="개통실 전화번호"></div>
+                    </div>
+                    <button class="btn btn-secondary w-100 fw-bold rounded-3" onclick="addVendor()">등록하기</button>
+                </div>
+                <div class="glass-card p-0">
+                    <div class="p-3 border-bottom bg-light"><h6 class="mb-0 fw-bold">등록된 거래처</h6></div>
+                    <div id="vendor_list_ui" class="list-group list-group-flush">
+                        </div>
+                </div>
+            </div>
+
+            <div id="section-search-all" class="section-view">
+                <div class="glass-card p-4">
+                    <h5 class="fw-bold mb-4"><i class="bi bi-card-list"></i> 개통 정보 조회</h5>
+                    
+                    <div class="row g-2 mb-3">
+                        <div class="col-12">
+                            <select class="form-select form-select-sm fw-bold text-primary" id="hist_branch_filter">
+                                <option value="전체">🏢 전체 지점 보기</option>
+                                <option value="장지 본점">장지 본점</option>
+                                <option value="명일 직영점">명일 직영점</option>
+                            </select>
+                        </div>
+                        <div class="col-6"><input type="date" class="form-control form-control-sm" id="hist_start_date"></div>
+                        <div class="col-6"><input type="date" class="form-control form-control-sm" id="hist_end_date"></div>
+                        <div class="col-12">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="hist_all_keyword" placeholder="고객명, 전화번호" onkeydown="if(event.key==='Enter') searchAllHistory()">
+                                <button class="btn btn-outline-secondary" onclick="searchAllHistory()">조회</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="hist_all_result" class="list-group list-group-flush mt-3">
+                        <div class="text-center text-muted py-5 small">조회 조건을 입력하고 검색하세요.</div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="section-return-usedphone" class="section-view">
+                <div class="glass-card p-4">
+                    <h5 class="fw-bold mb-4"><i class="bi bi-phone"></i> 중고폰 반납 등록</h5>
+                    
+                    <div class="row g-2 mb-3">
+                        <div class="col-12">
+                            <select id="search_return_branch" class="form-select form-select-sm fw-bold text-primary">
+                                <option value="전체">🏢 전체 지점 보기</option>
+                                <option value="장지 본점">장지 본점</option>
+                                <option value="명일 직영점">명일 직영점</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-6">
+                            <input type="date" class="form-control form-control-sm" id="search_return_start">
+                        </div>
+                        <div class="col-6">
+                            <input type="date" class="form-control form-control-sm" id="search_return_end">
+                        </div>
+                        
+                        <div class="col-12">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="search_return_keyword" placeholder="고객명, 전화번호" onkeydown="if(event.key==='Enter') searchSpecialList('usedphone')">
+                                <button class="btn btn-outline-secondary" onclick="searchSpecialList('usedphone')">조회</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="return-usedphone-list" class="mt-3">
+                        <div class="text-center text-muted py-5 small">조회 조건을 입력하고 검색하세요.</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="section-receive-gift" class="section-view">
+                <div class="glass-card p-4">
+                    <h5 class="fw-bold mb-4"><i class="bi bi-gift"></i> 상품권 수령 등록</h5>
+                    
+                    <div class="row g-2 mb-3">
+                        <div class="col-12">
+                            <select id="search_gift_branch" class="form-select form-select-sm fw-bold text-primary">
+                                <option value="전체">🏢 전체 지점 보기</option>
+                                <option value="장지 본점">장지 본점</option>
+                                <option value="명일 직영점">명일 직영점</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-6">
+                            <input type="date" class="form-control form-control-sm" id="search_gift_start">
+                        </div>
+                        <div class="col-6">
+                            <input type="date" class="form-control form-control-sm" id="search_gift_end">
+                        </div>
+                        
+                        <div class="col-12">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="search_gift_keyword" placeholder="고객명, 전화번호" onkeydown="if(event.key==='Enter') searchSpecialList('gift')">
+                                <button class="btn btn-outline-secondary" onclick="searchSpecialList('gift')">조회</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="receive-gift-list" class="mt-3">
+                        <div class="text-center text-muted py-5 small">조회 조건을 입력하고 검색하세요.</div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="section-card-setup" class="section-view">
+                <div class="glass-card p-4">
+                    <h5 class="fw-bold mb-4"><i class="bi bi-credit-card"></i> 제휴카드 접수 등록</h5>
+                    
+                    <div class="row g-2 mb-3">
+                        <div class="col-12">
+                            <select id="search_card_branch" class="form-select form-select-sm fw-bold text-primary">
+                                <option value="전체">🏢 전체 지점 보기</option>
+                                <option value="장지 본점">장지 본점</option>
+                                <option value="명일 직영점">명일 직영점</option>
+                            </select>
+                        </div>
+                        <div class="col-6"><input type="date" class="form-control form-control-sm" id="search_card_start"></div>
+                        <div class="col-6"><input type="date" class="form-control form-control-sm" id="search_card_end"></div>
+                        <div class="col-12">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="search_card_keyword" placeholder="고객명, 전화번호" onkeydown="if(event.key==='Enter') searchSetupList('card')">
+                                <button class="btn btn-outline-secondary" onclick="searchSetupList('card')">조회</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="card_setup_list" class="mt-3">
+                        <div class="text-center text-muted py-5 small">조회 조건을 입력하고 검색하세요.</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="section-wired-setup" class="section-view">
+                <div class="glass-card p-4">
+                    <h5 class="fw-bold mb-4"><i class="bi bi-router"></i> 유선상품 설치 등록</h5>
+                    
+                    <div class="row g-2 mb-3">
+                        <div class="col-12">
+                            <select id="search_wired_branch" class="form-select form-select-sm fw-bold text-primary">
+                                <option value="전체">🏢 전체 지점 보기</option>
+                                <option value="장지 본점">장지 본점</option>
+                                <option value="명일 직영점">명일 직영점</option>
+                            </select>
+                        </div>
+                        <div class="col-6"><input type="date" class="form-control form-control-sm" id="search_wired_start"></div>
+                        <div class="col-6"><input type="date" class="form-control form-control-sm" id="search_wired_end"></div>
+                        <div class="col-12">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="search_wired_keyword" placeholder="고객명, 전화번호" onkeydown="if(event.key==='Enter') searchSetupList('wired')">
+                                <button class="btn btn-outline-secondary" onclick="searchSetupList('wired')">조회</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="wired_setup_list" class="mt-3">
+                        <div class="text-center text-muted py-5 small">조회 조건을 입력하고 검색하세요.</div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="section-db-view" class="section-view">
+                <div class="glass-card p-4">
+                    <h5 class="fw-bold mb-4 text-dark"><i class="bi bi-database-fill"></i> DB 상세 열람</h5>
+                    
+                    <div class="row g-2 mb-3 bg-light p-3 rounded border">
+                        
+                        <div class="col-6">
+                            <label class="form-label-sm fw-bold text-muted">시작일</label>
+                            <input type="date" class="form-control form-control-sm" id="view_start">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label-sm fw-bold text-muted">종료일</label>
+                            <input type="date" class="form-control form-control-sm" id="view_end">
+                        </div>
+
+                        <div class="col-3">
+                            <label class="form-label-sm fw-bold text-muted">지점</label>
+                            <select id="view_branch" class="form-select form-select-sm fw-bold text-primary">
+                                <option value="전체">🏢 전체 지점</option>
+                                <option value="장지 본점">장지 본점</option>
+                                <option value="명일 직영점">명일 직영점</option>
+                            </select>
+                        </div>
+            
+                        <div class="col-3">
+                            <label class="form-label-sm fw-bold text-muted">통신사</label>
+                            <select class="form-select form-select-sm fw-bold" id="view_carrier">
+                                <option value="전체">전체</option>
+                                <option value="SKT">SKT</option>
+                                <option value="KT">KT</option>
+                                <option value="LGU+">LGU+</option>
+                            </select>
+                        </div>
+            
+                        <div class="col-3">
+                            <label class="form-label-sm fw-bold text-muted">개통유형</label>
+                            <select class="form-select form-select-sm fw-bold" id="view_act_type">
+                                <option value="전체">전체</option>
+                                <option value="무선">무선</option>
+                                <option value="유선">유선</option>
+                                <option value="중고무선">중고무선</option>
+                            </select>
+                        </div>
+            
+                        <div class="col-3">
+                            <label class="form-label-sm fw-bold text-muted">약정유형</label>
+                            <select class="form-select form-select-sm fw-bold" id="view_cont_type">
+                                <option value="전체">전체</option>
+                                <option value="공시지원">공시지원</option>
+                                <option value="선택약정">선택약정</option>
+                                <option value="선택약정(추가지원)">선택약정(추가지원)</option>
+                                <option value="무약정">무약정</option>
+                            </select>
+                        </div>
+            
+                        <div class="col-12 mt-2 d-flex gap-2">
+                            <button class="btn btn-dark flex-grow-1 fw-bold shadow-sm" onclick="searchDbView()">
+                                <i class="bi bi-search me-1"></i> 조건 검색
+                            </button>
+                            <button class="btn btn-danger fw-bold shadow-sm" onclick="downloadDbPdf()" style="width: 120px;">
+                                <i class="bi bi-file-earmark-pdf me-1"></i> PDF 저장
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div id="db_view_result" class="mt-3">
+                        <div class="text-center text-muted py-5 small">
+                            <i class="bi bi-funnel fs-1 d-block mb-3 opacity-25"></i>
+                            조건을 선택하고 검색하세요.
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modal fade" id="modal-special-update" tabindex="-1">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content border-0 shadow">
+                        <div class="modal-header bg-primary text-white">
+                            <h5 class="modal-title fw-bold" id="special-modal-title">등록</h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body p-4">
+                            <input type="hidden" id="sp_sheetName">
+                            <input type="hidden" id="sp_rowIndex">
+                            <input type="hidden" id="sp_branch">
+                            <input type="hidden" id="sp_type"> <div class="alert alert-light border mb-3">
+                                <h5 class="fw-bold mb-1" id="sp_customer_name">홍길동</h5>
+                                <small class="text-muted" id="sp_customer_info">010-1234-5678 | SKT</small>
+                            </div>
+            
+                            <div class="mb-3">
+                                <label class="form-label fw-bold" id="sp_amt_label">정산 금액 (반납 금액)</label>
+                                <input type="text" class="form-control form-control-lg fw-bold text-primary" id="sp_amount" placeholder="금액 입력" onkeyup="formatCurrency(this)">
+                            </div>
+
+                            <input type="hidden" id="sp_date">
+            
+                            <div class="mb-3" id="sp_model_group">
+                                <label class="form-label fw-bold">반납 모델명</label>
+                                <input type="text" class="form-control" id="sp_model_name" placeholder="예: 아이폰13 미니">
+                            </div>
+
+                            <div class="mb-3 bg-light p-3 rounded border">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="sp_checkbox" onchange="toggleCheckDate()">
+                                    <label class="form-check-label fw-bold text-primary" for="sp_checkbox" id="sp_check_label">
+                                        반납/수령 확인
+                                    </label>
+                                </div>
+                            </div>
+            
+                            <div class="d-grid mt-4">
+                                <button type="button" class="btn btn-primary btn-lg fw-bold" onclick="submitSpecialUpdate()">
+                                    <i class="bi bi-check-circle"></i> 저장하기
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="section-daily-report" class="section-view">
+                <div class="glass-card p-4">
+                    
+                    <h5 class="fw-bold mb-4 text-primary"><i class="bi bi-file-earmark-spreadsheet-fill"></i> 일일 상세 보고</h5>
+            
+                    <div class="row g-2 mb-4 bg-light p-3 rounded border align-items-end">
+                        <div class="col-5">
+                            <label class="form-label-sm fw-bold text-muted">지점</label>
+                            <select id="dr_branch" class="form-select form-select-sm fw-bold text-primary">
+                                <option value="전체">전체 지점</option>
+                                <option value="장지 본점">장지 본점</option>
+                                <option value="명일 직영점">명일 직영점</option>
+                            </select>
+                        </div>
+                        <div class="col-5">
+                            <label class="form-label-sm fw-bold text-muted">조회 일자</label>
+                            <input type="date" id="dr_date" class="form-control form-control-sm fw-bold">
+                        </div>
+                        <div class="col-2">
+                            <button class="btn btn-primary btn-sm w-100 fw-bold py-2" onclick="loadDailyReport()">조회</button>
+                        </div>
+                    </div>
+            
+                    <div class="row g-3 mb-4">
+                        <div class="col-3">
+                            <div class="bg-white p-3 rounded border text-center shadow-sm">
+                                <div class="small text-muted fw-bold mb-1">일 실적</div>
+                                <h5 class="summary-value m-0">
+                                    <span id="dr_sum_total">-</span>
+                                    <span id="dr_sum_detail" class="summary-sub"></span>
+                                </h5>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="bg-white p-3 rounded border text-center shadow-sm">
+                                <div class="small text-muted fw-bold mb-1">일 정산</div>
+                                <h5 class="fw-bold text-primary m-0" id="dr_sum_settle">-</h5>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="bg-white p-3 rounded border text-center shadow-sm">
+                                <div class="small text-muted fw-bold mb-1">일 매출</div>
+                                <h5 class="fw-bold text-success m-0" id="dr_sum_revenue">-</h5>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="bg-white p-3 rounded border text-center shadow-sm">
+                                <div class="small text-muted fw-bold mb-1">일 수익</div>
+                                <h5 class="fw-bold text-danger m-0" id="dr_sum_margin">-</h5>
+                            </div>
+                        </div>
+                    </div>
+            
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-white border-bottom fw-bold small text-secondary">
+                            <i class="bi bi-list-task me-1"></i> 판매 상세 내역
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle text-center small border mb-0" style="font-size: 0.8rem; white-space: nowrap;">
+                                <thead class="table-light">
+                                    <tr id="dr_header_row"></tr>
+                                </thead>
+                                <tbody id="dr_tbody">
+                                    <tr><td colspan="100%" class="text-muted py-5 text-center">날짜를 선택하고 조회하세요.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+            
+                </div>
+            </div>
+
+            <div id="section-daily-sales" class="section-view">
+            	<div class="glass-card p-4">
+            		<h5 class="fw-bold mb-4 text-primary">
+            			<i class="bi bi-graph-up-arrow"></i> 일별 매출 및 추이
+            		</h5>
+            
+            		<div class="row g-2 mb-4 bg-light p-3 rounded border align-items-end">
+            			<div class="col-5">
+            				<label class="form-label-sm fw-bold text-muted">지점</label>
+            				<select id="ds_branch" class="form-select form-select-sm fw-bold text-primary">
+            					<option value="전체">전체 지점</option>
+            					<option value="장지 본점">장지 본점</option>
+            					<option value="명일 직영점">명일 직영점</option>
+            				</select>
+            			</div>
+            			<div class="col-5">
+            				<label class="form-label-sm fw-bold text-muted">조회 월</label>
+            				<input type="month" id="ds_month" class="form-control form-control-sm fw-bold">
+            			</div>
+            			<div class="col-2">
+            				<button class="btn btn-primary btn-sm w-100 fw-bold py-2" onclick="refreshAnalysis()">조회</button>
+            			</div>
+            		</div>
+            
+            		<ul class="nav nav-pills nav-fill mb-4 p-1 bg-light rounded-pill border" id="pills-tab" role="tablist">
+            			<li class="nav-item" role="presentation">
+            				<button
+            					class="nav-link active rounded-pill fw-bold small py-2"
+            					id="pills-trend-tab"
+            					data-bs-toggle="pill"
+            					data-bs-target="#pills-trend"
+            					type="button"
+            					role="tab"
+            					onclick="loadDailySales()"
+            				>
+            					📈 일별 추이
+            				</button>
+            			</li>
+            			<li class="nav-item" role="presentation">
+            				<button
+            					class="nav-link rounded-pill fw-bold small py-2"
+            					id="pills-analysis-tab"
+            					data-bs-toggle="pill"
+            					data-bs-target="#pills-analysis"
+            					type="button"
+            					role="tab"
+            					onclick="loadSalesAnalysis()"
+            				>
+            					🥧 판매 분석
+            				</button>
+            			</li>
+            		</ul>
+            
+            		<div class="tab-content" id="pills-tabContent">
+            
+            			<!-- TAB 1: 일별 추이 -->
+            			<div class="tab-pane fade show active" id="pills-trend" role="tabpanel">
+            				<div class="row g-3 mb-4">
+            					<div class="col-3">
+            						<div class="bg-white p-3 rounded border text-center shadow-sm">
+            							<div class="small text-muted fw-bold mb-1">총 실적</div>
+            							<h5 class="summary-value m-0">
+                                            <span id="ds_total_cnt">-</span>
+                                        </h5>
+            						</div>
+            					</div>
+            					<div class="col-3">
+            						<div class="bg-white p-3 rounded border text-center shadow-sm">
+            							<div class="small text-muted fw-bold mb-1">총 정산</div>
+            							<h5 class="fw-bold text-primary m-0" id="ds_total_set">-</h5>
+            						</div>
+            					</div>
+            					<div class="col-3">
+            						<div class="bg-white p-3 rounded border text-center shadow-sm">
+            							<div class="small text-muted fw-bold mb-1">총 매출</div>
+            							<h5 class="fw-bold text-success m-0" id="ds_total_rev">-</h5>
+            						</div>
+            					</div>
+            					<div class="col-3">
+            						<div class="bg-white p-3 rounded border text-center shadow-sm">
+            							<div class="small text-muted fw-bold mb-1">총 수익</div>
+            							<h5 class="fw-bold text-danger m-0" id="ds_total_mar">-</h5>
+            						</div>
+            					</div>
+            				</div>
+            
+            				<div class="card border-0 shadow-sm mb-4">
+            					<div class="card-header bg-white fw-bold small text-secondary border-bottom">
+            						<i class="bi bi-bar-chart-line-fill me-1"></i> 일별 실적(선) vs 수익(막대)
+            					</div>
+            					<div class="card-body">
+            						<div style="height: 300px; position: relative;">
+            							<canvas id="dailySalesChart"></canvas>
+            						</div>
+            					</div>
+            				</div>
+            
+            				<div class="table-responsive">
+            					<table class="table table-hover align-middle text-center small border mb-0" style="font-size: 0.9rem;">
+            						<thead class="table-light">
+            							<tr>
+            								<th>일자</th>
+            								<th>📱무선</th>
+            								<th>📺유선</th>
+            								<th>합계</th>
+            								<th>정산</th>
+            								<th>매출</th>
+            								<th>수익</th>
+            							</tr>
+            						</thead>
+            						<tbody id="ds_tbody">
+            							<tr>
+            								<td colspan="7" class="text-muted py-5">조회 버튼을 눌러주세요.</td>
+            							</tr>
+            						</tbody>
+            					</table>
+            				</div>
+            			</div>
+            
+            			<!-- TAB 2: 판매 분석 -->
+            			<div class="tab-pane fade" id="pills-analysis" role="tabpanel">
+            				<div class="card border-0 shadow-sm mb-3">
+            					<div class="card-header bg-white border-bottom fw-bold text-primary">
+            						<i class="bi bi-phone-fill me-1"></i> 모델별 판매 비중
+            					</div>
+            					<div class="card-body">
+            						<div style="height: 300px; position: relative;">
+            							<canvas id="chartModelShare"></canvas>
+            						</div>
+            					</div>
+            				</div>
+            
+            				<div class="card border-0 shadow-sm mb-3">
+            					<div class="card-header bg-white border-bottom fw-bold text-success">
+            						<i class="bi bi-broadcast me-1"></i> 거래처별 점유율
+            					</div>
+            					<div class="card-body">
+            						<div style="height: 300px; position: relative;">
+            							<canvas id="chartCarrierShare"></canvas>
+            						</div>
+            					</div>
+            				</div>
+            			</div>
+            
+            		</div><!-- /tab-content -->
+            	</div><!-- /glass-card -->
+            </div><!-- /section-daily-sales -->
+            
+            <div id="section-settlement-period" class="section-view">
+                <div class="glass-card p-4">
+                    
+                    <h5 class="fw-bold mb-4 text-primary"><i class="bi bi-calendar-check"></i> 기간별 매출 집계</h5>
+            
+                    <div class="row g-2 mb-4 bg-light p-3 rounded border align-items-end">
+                        <div class="col-5">
+                            <label class="form-label-sm fw-bold text-muted">보기 방식</label>
+                            <select id="sp_view_type" class="form-select form-select-sm fw-bold text-primary">
+                                <option value="carrier">📊 거래처별 보기</option>
+                                <option value="branch">🏢 지점별 보기</option>
+                            </select>
+                        </div>
+            			<div class="col-5">
+            				<label class="form-label-sm fw-bold text-muted">조회 월</label>
+            				<input type="month" id="sp_month" class="form-control form-control-sm fw-bold">
+            			</div>
+            			<div class="col-2">
+            				<button class="btn btn-primary btn-sm w-100 fw-bold py-2" onclick="loadSettlement('period')">조회</button>
+            			</div>
+            		</div>
+            
+                    <div id="sp_result_area" class="table-responsive w-100 rounded border overflow-hidden shadow-sm">
+                        <table class="table table-hover align-middle text-center small border w-100" style="table-layout: fixed;">
+                            <colgroup>
+                                <col style="width: 14%;"> <col style="width: 7%;"> <col style="width: 7%;"> 
+                                <col style="width: 12%;"> <col style="width: 12%;"> <col style="width: 12%;"> 
+                                <col style="width: 18%;"> <col style="width: 18%;">
+                            </colgroup>
+                            <thead class="table-primary">
+                                <tr>
+                                    <th rowspan="2" class="align-middle border-bottom-0">구분</th>
+                                    <th colspan="2" class="border-bottom-0">건수</th>
+                                    <th colspan="3" class="border-bottom-0">매출 상세</th>
+                                    <th rowspan="2" class="align-middle border-bottom-0">정산</th>
+                                    <th rowspan="2" class="align-middle border-bottom-0">수익</th>
+                                </tr>
+                                <tr>
+                                    <th class="bg-white text-muted" style="font-size:0.8rem;">무선</th>
+                                    <th class="bg-white text-muted" style="font-size:0.8rem;">유선</th>
+                                    <th class="bg-white text-muted" style="font-size:0.8rem;">단말기수납</th>
+                                    <th class="bg-white text-muted" style="font-size:0.8rem;">중고폰</th>
+                                    <th class="bg-white text-muted" style="font-size:0.8rem;">상품권</th>
+                                </tr>
+                            </thead>
+                            <tbody id="sp_tbody">
+                                <tr style="height: 450px;">
+                                    <td colspan="8" class="text-muted align-middle">
+                                        <i class="bi bi-search fs-1 d-block mb-3 opacity-25"></i>
+                                        기간과 방식을 선택하고 조회하세요.
+                                    </td>
+                                </tr>
+                            </tbody>
+                            <tfoot class="table-light fw-bold" id="sp_tfoot"></tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="section-settlement-staff" class="section-view">
+                <div class="glass-card p-4">
+                    
+                    <h5 class="fw-bold mb-4 text-success"><i class="bi bi-people"></i> 직원별 실적 집계</h5>
+            
+                    <div class="row g-2 mb-4 bg-light p-3 rounded border align-items-end">
+                        <div class="col-5"></div>
+            			<div class="col-5">
+            				<label class="form-label-sm fw-bold text-muted">조회 월</label>
+            				<input type="month" id="ss_month" class="form-control form-control-sm fw-bold">
+            			</div>
+            			<div class="col-2">
+            				<button class="btn btn-success btn-sm w-100 fw-bold py-2" onclick="loadSettlement('staff')">조회</button>
+            			</div>
+            		</div>
+            
+                    <div class="table-responsive w-100 rounded border overflow-hidden shadow-sm">
+                        <table class="table table-hover align-middle text-center small border w-100" style="table-layout: fixed;">
+                            <colgroup>
+                                <col style="width: 15%;"> 
+                                <col style="width: 13%;"> <col style="width: 13%;"> 
+                                <col style="width: 13%;"> <col style="width: 13%;"> <col style="width: 13%;"> 
+                                <col style="width: 20%;"> 
+                            </colgroup>
+            
+                            <thead class="table-success">
+                                <tr>
+                                    <th rowspan="2" class="align-middle border-bottom-0">직원명</th>
+                                    <th colspan="2" class="border-bottom-0">무선</th>
+                                    <th colspan="3" class="border-bottom-0">유선</th>
+                                    <th rowspan="2" class="align-middle border-bottom-0">총 마진</th>
+                                </tr>
+                                <tr>
+                                    <th class="bg-white text-muted text-nowrap" style="font-size:0.75rem;">신규/기변</th>
+                                    <th class="bg-white text-muted text-nowrap" style="font-size:0.75rem;">중고</th>
+                                    <th class="bg-white text-muted text-nowrap" style="font-size:0.75rem;">동시판매</th>
+                                    <th class="bg-white text-muted text-nowrap" style="font-size:0.75rem;">약정갱신</th>
+                                    <th class="bg-white text-muted text-nowrap" style="font-size:0.75rem;">단품</th>
+                                </tr>
+                            </thead>
+                            
+                            <tbody id="ss_tbody">
+                                <tr style="height: 450px;">
+                                    <td colspan="7" class="text-muted align-middle">
+                                        <i class="bi bi-search fs-1 d-block mb-3 opacity-25"></i>
+                                        조회 버튼을 눌러주세요.
+                                    </td>
+                                </tr>
+                            </tbody>
+            
+                            <tfoot id="ss_tfoot" class="table-light fw-bold"></tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+			<div id="section-settlement-ledger" class="section-view">
+			    <div class="glass-card p-4 w-100 d-block" style="min-height: 600px;">
+			        
+			        <div class="d-flex justify-content-between align-items-center mb-4">
+			            <h5 class="fw-bold text-primary m-0">
+			                <i class="bi bi-calculator-fill me-2"></i>정산 입금 관리
+			            </h5>
+			            <span class="badge bg-white text-secondary border shadow-sm" id="sl_update_time"></span>
+			        </div>
+			
+			        <div class="row g-3 mb-4">
+			            <div class="col-4">
+			                <div class="p-3 rounded-4 shadow-sm h-100" style="background: linear-gradient(135deg, #eef2ff 0%, #ffffff 100%); border: 1px solid #c7d2fe;">
+			                    <div class="small text-primary fw-bold mb-1">🔵 예상 정산금</div>
+			                    <div class="fs-5 fw-bolder text-dark" id="summary_expected">0</div>
+			                </div>
+			            </div>
+			            <div class="col-4">
+			                <div class="p-3 rounded-4 shadow-sm h-100" style="background: linear-gradient(135deg, #ecfdf5 0%, #ffffff 100%); border: 1px solid #a7f3d0;">
+			                    <div class="small text-success fw-bold mb-1">🟢 입금 완료</div>
+			                    <div class="fs-5 fw-bolder text-success" id="summary_deposited">0</div>
+			                </div>
+			            </div>
+			            <div class="col-4">
+			                <div class="p-3 rounded-4 shadow-sm h-100" style="background: linear-gradient(135deg, #fef2f2 0%, #ffffff 100%); border: 1px solid #fecaca;">
+			                    <div class="small text-danger fw-bold mb-1">🔴 미수금</div>
+			                    <div class="fs-5 fw-bolder text-danger" id="summary_unpaid">0</div>
+			                </div>
+			            </div>
+			        </div>
+			        
+			        <div class="row g-2 mb-3 align-items-end">
+			            <div class="col-5">
+			                <label class="small text-muted fw-bold mb-1">거래처</label>
+			                <select id="sl_vendor" class="form-select fw-bold text-primary">
+			                    <option value="전체">전체 거래처</option>
+			                </select>
+			            </div>
+			            <div class="col-5">
+			                <label class="small text-muted fw-bold mb-1">조회 월</label>
+			                <input type="month" id="sl_month" class="form-control fw-bold">
+			            </div>
+			            <div class="col-2">
+			                <button class="btn btn-primary w-100 fw-bold py-2 shadow-sm" onclick="loadSettlementLedger()">
+			                    <i class="bi bi-search"></i>
+			                </button>
+			            </div>
+			        </div>
+			
+			        <div class="table-responsive w-100 rounded-4 border shadow-sm">
+			            <table class="table table-hover align-middle text-center small border mb-0" style="white-space: nowrap; font-size: 0.85rem;">
+			                <thead class="table-primary sticky-top" style="z-index: 5;">
+			                    <tr id="sl_header_row"></tr>
+			                </thead>
+			                <tbody id="sl_tbody">
+			                    <tr style="height: 300px;">
+			                        <td colspan="100%" class="text-muted align-middle">
+			                            <i class="bi bi-search fs-1 d-block mb-3 opacity-25"></i>
+			                            조회 조건을 선택하고 버튼을 눌러주세요.
+			                        </td>
+			                    </tr>
+			                </tbody>
+			            </table>
+			        </div>
+			    </div>
+			</div>
+
+            <div id="section-crm-expiry" class="section-view">
+                <div class="glass-card p-4">
+                    <h5 class="fw-bold mb-4 text-success"><i class="bi bi-people-fill"></i> 약정 만료 예정 고객</h5>
+            
+                    <div class="row g-2 mb-4 bg-light p-3 rounded border align-items-end">
+                        <div class="col-5">
+                            <label class="form-label-sm fw-bold text-muted">지점</label>
+                            <select id="crm_branch" class="form-select form-select-sm fw-bold text-success">
+                                <option value="전체">전체 지점</option>
+                                <option value="장지 본점">장지 본점</option>
+                                <option value="명일 직영점">명일 직영점</option>
+                            </select>
+                        </div>
+                        <div class="col-5">
+                            <label class="form-label-sm fw-bold text-muted">조회 기준일</label>
+                            <input type="date" id="crm_date" class="form-control form-control-sm fw-bold">
+                        </div>
+                        <div class="col-2">
+                            <button class="btn btn-success btn-sm w-100 fw-bold py-2" onclick="loadExpiryList()">조회</button>
+                        </div>
+                    </div>
+            
+                    <div class="alert alert-info small py-2 fw-bold">
+                        <i class="bi bi-info-circle me-1"></i>
+                        선택한 날로부터 <span class="text-danger">정확히 24개월, 21개월, 18개월 전</span>에 개통한 고객 목록입니다.
+                    </div>
+            
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle text-center small border mb-0 text-nowrap">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>대상</th>
+                                    <th>지점</th>
+                                    <th>개통일</th>
+                                    <th>개통처</th>
+                                    <th>개통유형</th>
+                                    <th>약정유형</th>
+                                    <th>고객명</th>
+                                    <th>전화번호</th>
+                                    <th>생년월일</th>
+                                    <th>모델명</th>
+                                    <th>요금제</th>
+                                    <th>액션</th>
+                                    <th>상태</th>
+                                </tr>
+                            </thead>
+                            <tbody id="crm_tbody">
+                                <tr><td colspan="13" class="text-muted py-5">조회 버튼을 눌러주세요.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+
+    <div class="modal fade" id="modal-stock-register" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-primary text-white border-0">
+                    <h5 class="modal-title fw-bold" id="modal-register-title"><i class="bi bi-box-seam"></i> 상세 정보 입력</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+    
+                    <div class="mb-3" id="area-modal-barcode">
+                        <label class="form-label small fw-bold text-muted">바코드</label>
+                        <input type="text" class="form-control bg-light" id="reg_modal_barcode" readonly>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted">일련번호</label>
+                        <input type="text" class="form-control bg-light" id="reg_modal_serial" readonly>
+                    </div>
+
+                    <div class="alert alert-warning small fw-bold mb-3" id="msg-manual-text">
+                        <i class="bi bi-exclamation-triangle"></i> 등록되지 않은 단말기입니다.<br>
+                        정보를 입력하면 다음부터는 자동 등록됩니다.
+                    </div>
+
+                     <div class="mb-3" id="area-modal-branch" style="display:none;">
+                        <label class="form-label small fw-bold text-muted">입고 지점 선택 <span class="text-danger">*</span></label>
+                        <select class="form-select fw-bold" id="reg_modal_branch">
+                            <option value="">선택하세요</option>
+                            <option value="장지 본점">장지 본점</option>
+                            <option value="명일 직영점">명일 직영점</option>
+                        </select>
+                    </div>                   
+
+                    <div class="mb-3" id="area-modal-supplier" style="display:none;">
+                        <label class="form-label small fw-bold text-muted">거래처 선택</label>
+                        <select class="form-select fw-bold" id="reg_modal_supplier">
+                            </select>
+                    </div>
+
+                    <div id="area-iphone" style="display:none;">
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-muted">모델명 선택</label>
+                            <select class="form-select fw-bold" id="reg_iphone_model" onchange="updateIphoneColors()">
+                                <option value="">선택</option>
+                            </select>
+                        </div>
+        
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-muted">용량 선택</label>
+                            <select class="form-select fw-bold" id="reg_iphone_storage">
+                                <option value="">선택</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-muted">색상 선택</label>
+                            <select class="form-select fw-bold" id="reg_iphone_color">
+                                <option value="">선택</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div id="area-manual" style="display:none;">
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-muted">모델명 선택</label>
+                            <input type="text" class="form-control fw-bold" id="reg_manual_model" placeholder="예: SM-S931">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-muted">용량 선택</label>
+                            <select class="form-select fw-bold" id="reg_manual_storage">
+                                <option value="">선택</option>
+                            </select>
+                        </div>
+        
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-muted">색상 선택</label>
+                            <input type="text" class="form-control fw-bold" id="reg_manual_color" placeholder="예: 오닉스블랙">
+                        </div>
+                    </div>
+
+                    <button type="button" id="btn-stock-submit" class="btn btn-primary w-100 fw-bold py-2 mt-3">입력 완료</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modal-edit-history" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title fw-bold">✏️ 개통 정보 수정</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <input type="hidden" id="edit_sheet_name">
+                    <input type="hidden" id="edit_row_index">
+                    <input type="hidden" id="edit_branch_name">
+                    
+                    <div id="edit_form_container" class="row g-3"></div>
+                </div>
+                <div class="modal-footer bg-light border-0 justify-content-between">
+                    <button type="button" class="btn btn-outline-danger btn-sm" onclick="deleteHistoryItem()">🗑️ 이 내역 삭제</button>
+                    <div>
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">닫기</button>
+                        <button type="button" class="btn btn-primary fw-bold" onclick="submitEditHistory()">수정사항 저장</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modal-set-goal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-dark text-white">
+                    <h6 class="modal-title fw-bold"><i class="bi bi-flag"></i> 이번 달 목표 설정</h6>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">지점 선택</label>
+                        <select class="form-select form-select-sm" id="goal_branch">
+                            <option value="장지 본점">장지 본점</option>
+                            <option value="명일 직영점">명일 직영점</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-primary">📱 무선 목표 (건)</label>
+                        <input type="number" class="form-control" id="goal_mobile" placeholder="예: 100">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-success">📺 유선 목표 (건)</label>
+                        <input type="number" class="form-control" id="goal_wired" placeholder="예: 20">
+                    </div>
+                    <button class="btn btn-primary w-100 fw-bold" onclick="submitGoal()">저장하기</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="script.js"></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <nav class="mobile-bottom-nav d-lg-none">
+        
+        <a href="#" class="nav-item active" onclick="showSection('section-dashboard'); activeNav(this)">
+            <i class="bi bi-speedometer2"></i>
+            <span>홈</span>
+        </a>
+        <a href="#" class="nav-item" onclick="showSection('section-in'); activeNav(this)">
+            <i class="bi bi-box-seam"></i>
+            <span>입고</span>
+        </a>
+        <a href="#" class="nav-item" onclick="toggleSearchMenu();">
+            <i class="bi bi-search"></i>
+            <span>조회</span>
+        </a>
+        <a href="#" class="nav-item center-fab" onclick="toggleFabMenu()">
+            <div class="fab-btn"><i class="bi bi-plus-lg"></i></div>
+        </a>
+        <a href="#" class="nav-item" onclick="toggleManageMenu()">
+            <i class="bi bi-sliders"></i>
+            <span>관리</span>
+        </a>
+        <a href="#" class="nav-item" onclick="showCrmSection(); activeNav(this)">
+            <i class="bi bi-people-fill"></i>
+            <span>CRM</span>
+        </a>
+
+        <a href="#" class="nav-item" id="mobile_menu_stats" onclick="toggleStatsMenu()">
+            <i class="bi bi-graph-up-arrow"></i>
+            <span>집계</span>
+        </a>
+        
+    </nav>
+
+    <div id="fab-menu-overlay" class="d-none" style="position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index: 1050;" onclick="closeAllMobileMenus()"></div>
+    
+    <div id="fab-menu-container" class="d-none floating-menu">
+        <button onclick="showOpenSection('무선개통');" class="btn btn-light shadow-lg fw-bold py-2 text-primary border-0 rounded-4">
+            <i class="bi bi-phone me-2"></i> 무선 개통
+        </button>
+        <button onclick="showWiredSection();" class="btn btn-light shadow-lg fw-bold py-2 text-success border-0 rounded-4">
+            <i class="bi bi-router me-2"></i> 유선 개통
+        </button>
+        <button onclick="showUsedSection();" class="btn btn-light shadow-lg fw-bold py-2 text-warning border-0 rounded-4">
+            <i class="bi bi-recycle me-2"></i> 중고 개통
+        </button>
+    </div>
+    
+    <div id="search-menu-container" class="d-none floating-menu">
+        <button onclick="showSection('section-search-all'); initHistoryDates();" class="btn btn-light shadow-lg fw-bold py-2 text-dark border-0 rounded-4">
+            <i class="bi bi-card-list me-2 text-primary"></i> 개통 조회
+        </button>
+        <button onclick="showSection('section-stock');" class="btn btn-light shadow-lg fw-bold py-2 text-dark border-0 rounded-4">
+            <i class="bi bi-search me-2 text-success"></i> 재고 조회
+        </button>
+    </div>
+    
+    <div id="manage-menu-container" class="d-none floating-menu">
+        <button onclick="showSection('section-return-usedphone');" class="btn btn-light shadow-lg fw-bold py-2 text-primary border-0 rounded-4">
+            <i class="bi bi-phone me-2"></i> 중고폰 반납
+        </button>
+        <button onclick="showSection('section-receive-gift');" class="btn btn-light shadow-lg fw-bold py-2 text-primary border-0 rounded-4">
+            <i class="bi bi-gift me-2"></i> 상품권 수령
+        </button>
+        <button onclick="showSection('section-card-setup');" class="btn btn-light shadow-lg fw-bold py-2 text-danger border-0 rounded-4">
+            <i class="bi bi-credit-card me-2"></i> 제휴카드 접수
+        </button>
+        <button onclick="showSection('section-wired-setup');" class="btn btn-light shadow-lg fw-bold py-2 text-danger border-0 rounded-4">
+            <i class="bi bi-router me-2"></i> 유선상품 설치
+        </button>
+        <button onclick="showSection('section-vendor');" class="btn btn-light shadow-lg fw-bold py-2 text-dark border-0 rounded-4">
+            <i class="bi bi-shop me-2"></i> 거래처
+        </button>
+    </div>
+    
+    <div id="stats-menu-container" class="d-none floating-menu">
+        <button id="mobile_btn_daily_report" onclick="showDailyReportSection();" class="btn btn-light shadow-lg fw-bold py-2 text-info border-0 rounded-4">
+            <i class="bi bi-file-earmark-spreadsheet-fill me-2"></i> 일일 보고
+        </button>
+        <button id="mobile_btn_daily" onclick="showDailySalesSection();" class="btn btn-light shadow-lg fw-bold py-2 text-primary border-0 rounded-4">
+            <i class="bi bi-graph-up me-2"></i> 일별 집계
+        </button>
+        <button id="mobile_btn_period" onclick="showSection('section-settlement-period');" class="btn btn-light shadow-lg fw-bold py-2 text-dark border-0 rounded-4">
+            <i class="bi bi-calendar-check me-2 text-success"></i> 기간별 집계
+        </button>
+        <button onclick="showSection('section-settlement-staff');" class="btn btn-light shadow-lg fw-bold py-2 text-dark border-0 rounded-4">
+            <i class="bi bi-person-badge me-2 text-warning"></i> 직원별 집계
+        </button>
+    </div>
+
+    <script>
+        // 하단 탭 활성화 효과 (script.js에 넣어도 되지만 UI 전용이라 여기에 둠)
+        function activeNav(el) {
+            document.querySelectorAll('.mobile-bottom-nav .nav-item').forEach(i => i.classList.remove('active'));
+            el.classList.add('active');
+        }
+    </script>
+</body>
+</html>
