@@ -2401,6 +2401,11 @@ function renderCardSetupList(list) {
         const color1 = v1 === '미사용' ? 'text-danger' : 'text-primary';
         const color2 = v2 === '미사용' ? 'text-danger' : 'text-primary';
 
+        // ★ [추가] 상세 정보 변수 준비 (데이터가 없으면 빈칸)
+        const phone = item.phone || item['전화번호'] || '';
+        const birth = item.birth || item['생년월일'] || '';
+        const carrier = item.carrier || item['개통처'] || item['통신사'] || '';
+
         return `
         <div class="glass-card p-3 mb-3 border-start border-4 border-primary shadow-sm bg-white">
             <div class="d-flex justify-content-between align-items-center mb-2 border-bottom pb-2">
@@ -2412,9 +2417,16 @@ function renderCardSetupList(list) {
             </div>
             
             <div class="d-flex justify-content-between align-items-center mb-3">
-                <div>
+                <div class="text-truncate me-2">
                     <div class="fw-bold fs-5 text-dark">${item.name}</div>
-                    <div class="small text-secondary fw-bold mt-1">
+                    
+                    <div class="small text-muted my-1">
+                        ${phone} <span class="mx-1 text-light">|</span>
+                        ${birth} <span class="mx-1 text-light">|</span>
+                        ${carrier}
+                    </div>
+
+                    <div class="small text-secondary fw-bold">
                         <i class="bi bi-credit-card-2-front me-1 text-primary"></i>${item.cardName}
                     </div>
                 </div>
