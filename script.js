@@ -2362,18 +2362,23 @@ function searchSetupList(type) {
     // 로딩 표시
     container.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-secondary"></div><div class="mt-2 small text-muted">데이터 조회 중...</div></div>';
 
+    // ★ get_all_history와 동일한 패턴: data 객체로 start/end 통일
     requestAPI({
-            action: "get_setup_pending_list", 
-            type: type,
-            branch: branch,
-            startDate: start,
-            endDate: end,
-            keyword: keyword
+            action: "get_setup_pending_list",
+            data: {
+                type: type,
+                branch: branch,
+                start: start,
+                end: end,
+                keyword: keyword
+            }
         })
     .then(d => {
         if (d.status === 'success') {
-            if (type === 'card') renderCardSetupList(d.list);
-            else renderWiredSetupList(d.list);
+            // 서버 응답: { status:'success', data:[...] }
+            const list = d.data || d.list || [];
+            if (type === 'card') renderCardSetupList(list);
+            else renderWiredSetupList(list);
         } else {
             container.innerHTML = `<div class="text-center text-danger py-5 small">${d.message}</div>`;
         }
@@ -2517,6 +2522,11 @@ function renderWiredSetupList(list) {
         const v1 = item.val1 ? String(item.val1).substring(0, 10) : "";
         const v2 = item.val2 ? String(item.val2).substring(0, 10) : "";
 
+        // ★ [추가] 상세 정보 (데이터가 없으면 빈칸)
+        const phone = item.phone || item['전화번호'] || '';
+        const birth = item.birth || item['생년월일'] || '';
+        const carrier = item.carrier || item['개통처'] || item['통신사'] || '';
+
         return `
         <div class="glass-card p-3 mb-3 border-start border-4 border-success shadow-sm" style="background: #fff;">
             <div class="d-flex justify-content-between align-items-center mb-2 border-bottom pb-2">
@@ -2528,8 +2538,15 @@ function renderWiredSetupList(list) {
             </div>
 
             <div class="d-flex justify-content-between align-items-center mb-3">
-                <div>
+                <div class="text-truncate me-2">
                     <div class="fw-bold fs-5 text-dark">${item.name}</div>
+
+                    <div class="small text-muted my-1">
+                        ${phone} <span class="mx-1 text-light">|</span>
+                        ${birth} <span class="mx-1 text-light">|</span>
+                        ${carrier}
+                    </div>
+
                     <div class="small text-success fw-bold mt-1"><i class="bi bi-router me-1"></i>${item.type}</div>
                 </div>
                 <span class="badge bg-white text-dark border rounded-pill px-2">
