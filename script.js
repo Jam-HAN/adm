@@ -2029,7 +2029,7 @@ function searchSpecialList(type) {
     .then(res => {
       const list = res.data || res.list || [];   // 어떤 형태든 흡수
       if (res.status === 'success' && list.length > 0) {
-        container.innerHTML = list.map(item => renderSpecialCard(item, type)).join('');
+        renderUnifiedPendingList(list, type);
       } else {
         container.innerHTML = '<div class="text-center text-muted py-5 small">미처리 내역이 없습니다. (모두 완료됨)</div>';
       }
@@ -2362,22 +2362,20 @@ function searchSetupList(type) {
     // 로딩 표시
     container.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-secondary"></div><div class="mt-2 small text-muted">데이터 조회 중...</div></div>';
 
-    // ✅ 리팩토링: 카드/유선 미처리 목록도 "개통 정보 조회(get_all_history)" 로직을 재사용
-    // specialType: 'card' | 'wired'
+    // ★ 완전 단일화: 미처리(카드/유선)도 get_all_history + update_history_item 패턴으로 처리
     requestAPI({
         action: "get_all_history",
         start: start,
         end: end,
         keyword: keyword,
         branch: branch,
-        specialType: type
+        specialType: type // 'card' | 'wired'
     })
     .then(d => {
         if (d.status === 'success') {
             // 서버 응답: { status:'success', data:[...] }
             const list = d.data || d.list || [];
-            if (type === 'card') renderCardSetupList(list);
-            else renderWiredSetupList(list);
+            renderUnifiedPendingList(list, type);
         } else {
             container.innerHTML = `<div class="text-center text-danger py-5 small">${d.message}</div>`;
         }
@@ -2387,111 +2385,287 @@ function searchSetupList(type) {
     });
 }
 
-// 2. 제휴카드 렌더링 (UI 디자인 업그레이드: 세련된 입력 그룹)
-function renderCardSetupList(list) {
-    const container = document.getElementById('card_setup_list');
-    
+// =========================================================
+// [Unified Component] 미처리(카드/유선) + 중고/상품권 동일 카드 컴포넌트
+// =========================================================
+
+function getPendingContainerId(type) {
+    if (type === 'card') return 'card_setup_list';
+    if (type === 'wired') return 'wired_setup_list';
+    if (type === 'usedphone') return 'return-usedphone-list';
+    if (type === 'gift') return 'receive-gift-list';
+    return '';
+}
+
+function renderUnifiedPendingList(list, type) {
+    const containerId = getPendingContainerId(type);
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
     if (!list || list.length === 0) {
         container.innerHTML = `<div class="text-center text-muted py-5 small"><i class="bi bi-check-circle fs-1 d-block mb-3 opacity-25"></i>미처리 내역이 없습니다. (모두 완료)</div>`;
         return;
     }
 
-    container.innerHTML = list.map(item => {
-        const rowId = `card_${item.branch}_${item.rowIndex}`;
-        const v1 = item.val1 || ""; 
-        const v2 = item.val2 || "";
+    container.innerHTML = list.map(item => renderUnifiedPendingItem(item, type)).join('');
 
-        // 값이 '미사용'이면 빨간색 텍스트, 아니면 기본색
+    // 제휴카드: 미사용→값 변경 시 색상 복구
+    if (type === 'card') {
+        container.querySelectorAll('input[id^="val"]').forEach(el => {
+            el.addEventListener('input', function() {
+                if (this.value !== '미사용') {
+                    this.classList.remove('text-danger');
+                    this.classList.add('text-primary');
+                }
+            });
+        });
+    }
+
+    // 중고/상품권: 금액 포맷
+    if (type === 'usedphone' || type === 'gift') {
+        container.querySelectorAll('input[data-money="true"]').forEach(el => {
+            el.addEventListener('blur', function() {
+                const n = Number(String(this.value).replace(/[^0-9.-]/g, ''));
+                this.value = isNaN(n) || n === 0 ? '' : n.toLocaleString();
+            });
+        });
+    }
+}
+
+function renderUnifiedPendingItem(item, type) {
+    // 공통 필드 흡수(서버 응답 키가 혼재해도 동작)
+    const branch = item.branch || item['지점'] || '-';
+    const sheetName = item.sheetName || item['sheetName'] || '';
+    const rowIndex = item.rowIndex || item['rowIndex'] || '';
+    const date = item.date || item['개통일'] || item['처리일자'] || '';
+    const name = item.name || item['고객명'] || '';
+    const manager = item.manager || item['담당자'] || '';
+    const phone = item.phone || item['전화번호'] || '';
+    const birth = item.birth || item['생년월일'] || '';
+    const carrier = item.carrier || item['개통처'] || item['통신사'] || '';
+
+    const rowId = `${type}_${branch}_${rowIndex}`;
+
+    // 타입별 색상/타이틀
+    const meta = {
+        card: { border: 'primary', badge: 'primary', title: '제휴카드' },
+        wired: { border: 'success', badge: 'success', title: '유선설치' },
+        usedphone: { border: 'warning', badge: 'warning', title: '중고폰' },
+        gift: { border: 'info', badge: 'info', title: '상품권' }
+    }[type] || { border: 'secondary', badge: 'secondary', title: '미처리' };
+
+    // 카드/유선: 기존 UX 유지
+    if (type === 'card') {
+        const v1 = item.val1 || '';
+        const v2 = item.val2 || '';
+        const cardName = item.cardName || item['카드명'] || '';
         const color1 = v1 === '미사용' ? 'text-danger' : 'text-primary';
         const color2 = v2 === '미사용' ? 'text-danger' : 'text-primary';
 
-        // ★ [추가] 상세 정보 변수 준비 (데이터가 없으면 빈칸)
-        const phone = item.phone || item['전화번호'] || '';
-        const birth = item.birth || item['생년월일'] || '';
-        const carrier = item.carrier || item['개통처'] || item['통신사'] || '';
-
         return `
-        <div class="glass-card p-3 mb-3 border-start border-4 border-primary shadow-sm bg-white">
+        <div class="glass-card p-3 mb-3 border-start border-4 border-${meta.border} shadow-sm">
             <div class="d-flex justify-content-between align-items-center mb-2 border-bottom pb-2">
                 <div>
-                    <span class="badge bg-primary bg-opacity-10 text-primary me-1 border border-primary">제휴카드</span>
-                    <span class="badge bg-light text-secondary border">${item.branch}</span>
+                    <span class="badge bg-${meta.badge} bg-opacity-10 text-${meta.badge} me-1 border border-${meta.badge}">${meta.title}</span>
+                    <span class="badge bg-light text-secondary border">${branch}</span>
                 </div>
-                <span class="small fw-bold text-muted">${item.date}</span>
+                <span class="small fw-bold text-muted">${date}</span>
             </div>
-            
+
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <div class="text-truncate me-2">
-                    <div class="fw-bold fs-5 text-dark">${item.name}</div>
-                    
-                    <div class="small text-muted my-1">
-                        ${phone} <span class="mx-1 text-light">|</span>
-                        ${birth} <span class="mx-1 text-light">|</span>
-                        ${carrier}
-                    </div>
-
-                    <div class="small text-secondary fw-bold">
-                        <i class="bi bi-credit-card-2-front me-1 text-primary"></i>${item.cardName}
-                    </div>
+                    <div class="fw-bold fs-5 text-dark">${name}</div>
+                    <div class="small text-muted my-1">${phone} <span class="mx-1 text-light">|</span> ${birth} <span class="mx-1 text-light">|</span> ${carrier}</div>
+                    <div class="small text-secondary fw-bold"><i class="bi bi-credit-card-2-front me-1 text-primary"></i>${cardName}</div>
                 </div>
-                <span class="badge bg-white text-dark border rounded-pill px-2 shadow-sm">
-                    <i class="bi bi-person-circle me-1 text-muted"></i>${item.manager || '미지정'}
-                </span>
+                <span class="badge bg-white text-dark border rounded-pill px-2 shadow-sm"><i class="bi bi-person-circle me-1 text-muted"></i>${manager || '미지정'}</span>
             </div>
-            
+
             <div class="bg-light p-3 rounded-3 border">
                 <div class="row g-2 mb-3">
-                    
                     <div class="col-6">
                         <label class="form-label-sm fw-bold text-secondary small mb-1 ms-1">세이브 등록</label>
                         <div class="input-group input-group-sm shadow-sm">
-                            <input type="text" class="form-control border-primary fw-bold text-center ${color1}" 
-                                   id="val1_${rowId}" value="${v1}" placeholder="날짜" 
-                                   onfocus="if(this.value!=='미사용')this.type='date'" 
-                                   onblur="if(!this.value)this.type='text'"
-                                   style="border-right: none;">
-                            <button class="btn btn-white border border-primary border-start-0 text-muted" type="button" 
-                                    onclick="setUnused('val1_${rowId}')" title="미사용 처리" 
-                                    style="background: white;">
+                            <input type="text" class="form-control border-primary fw-bold text-center ${color1}" id="val1_${rowId}" value="${v1}" placeholder="날짜"
+                                   onfocus="if(this.value!=='미사용')this.type='date'" onblur="if(!this.value)this.type='text'" style="border-right:none;">
+                            <button class="btn btn-white border border-primary border-start-0 text-muted" type="button" onclick="setUnused('val1_${rowId}')" title="미사용 처리" style="background:white;">
                                 <i class="bi bi-slash-circle"></i>
                             </button>
                         </div>
                     </div>
-                    
                     <div class="col-6">
                         <label class="form-label-sm fw-bold text-secondary small mb-1 ms-1">자동이체 등록</label>
                         <div class="input-group input-group-sm shadow-sm">
-                            <input type="text" class="form-control border-primary fw-bold text-center ${color2}" 
-                                   id="val2_${rowId}" value="${v2}" placeholder="날짜" 
-                                   onfocus="if(this.value!=='미사용')this.type='date'" 
-                                   onblur="if(!this.value)this.type='text'"
-                                   style="border-right: none;">
-                            <button class="btn btn-white border border-primary border-start-0 text-muted" type="button" 
-                                    onclick="setUnused('val2_${rowId}')" title="미사용 처리" 
-                                    style="background: white;">
+                            <input type="text" class="form-control border-primary fw-bold text-center ${color2}" id="val2_${rowId}" value="${v2}" placeholder="날짜"
+                                   onfocus="if(this.value!=='미사용')this.type='date'" onblur="if(!this.value)this.type='text'" style="border-right:none;">
+                            <button class="btn btn-white border border-primary border-start-0 text-muted" type="button" onclick="setUnused('val2_${rowId}')" title="미사용 처리" style="background:white;">
                                 <i class="bi bi-slash-circle"></i>
                             </button>
                         </div>
                     </div>
                 </div>
-
-                <button class="btn btn-primary w-100 btn-sm fw-bold shadow hover-effect" onclick="saveSetupInfo('card', '${item.branch}', '${item.rowIndex}', '${rowId}')">
-                    <i class="bi bi-check-lg me-1"></i> 저장하기
-                </button>
+                <button class="btn btn-primary w-100 btn-sm fw-bold shadow-sm" onclick="savePendingItem('card','${branch}','${rowIndex}','${rowId}','${sheetName}')"><i class="bi bi-check-lg me-1"></i> 저장하기</button>
             </div>
         </div>`;
-    }).join('');
-    
-    // 날짜 입력 이벤트 리스너 (기존과 동일)
-    document.querySelectorAll('input[id^="val"]').forEach(el => {
-        el.addEventListener('input', function() {
-            // 값이 바뀌면 글자색을 파란색으로 (미사용일땐 빨강이었음)
-            if(this.value !== '미사용') {
-                this.classList.remove('text-danger');
-                this.classList.add('text-primary');
-            }
-        });
+    }
+
+    if (type === 'wired') {
+        const v1 = item.val1 ? String(item.val1).substring(0,10) : '';
+        const v2 = item.val2 ? String(item.val2).substring(0,10) : '';
+        const wiredType = item.type || item['유선상품'] || '';
+
+        return `
+        <div class="glass-card p-3 mb-3 border-start border-4 border-${meta.border} shadow-sm">
+            <div class="d-flex justify-content-between align-items-center mb-2 border-bottom pb-2">
+                <div>
+                    <span class="badge bg-${meta.badge} bg-opacity-10 text-${meta.badge} me-1 border border-${meta.badge}">${meta.title}</span>
+                    <span class="badge bg-light text-secondary border">${branch}</span>
+                </div>
+                <span class="small fw-bold text-muted">${date}</span>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="text-truncate me-2">
+                    <div class="fw-bold fs-5 text-dark">${name}</div>
+                    <div class="small text-muted my-1">${phone} <span class="mx-1 text-light">|</span> ${birth} <span class="mx-1 text-light">|</span> ${carrier}</div>
+                    <div class="small text-success fw-bold mt-1"><i class="bi bi-router me-1"></i>${wiredType}</div>
+                </div>
+                <span class="badge bg-white text-dark border rounded-pill px-2"><i class="bi bi-person-circle me-1"></i>${manager || '미지정'}</span>
+            </div>
+
+            <div class="bg-light p-3 rounded-3 border">
+                <div class="row g-2 mb-2">
+                    <div class="col-6">
+                        <label class="form-label-sm fw-bold text-muted small" style="font-size:.75rem;">설치 예정일</label>
+                        <input type="date" class="form-control form-control-sm border-success fw-bold text-center" id="val1_${rowId}" value="${v1}">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label-sm fw-bold text-muted small" style="font-size:.75rem;">설치 완료일</label>
+                        <input type="date" class="form-control form-control-sm border-success fw-bold text-center" id="val2_${rowId}" value="${v2}">
+                    </div>
+                </div>
+                <button class="btn btn-success w-100 btn-sm fw-bold shadow-sm" onclick="savePendingItem('wired','${branch}','${rowIndex}','${rowId}','${sheetName}')"><i class="bi bi-check-lg me-1"></i> 저장하기</button>
+            </div>
+        </div>`;
+    }
+
+    // 중고/상품권: 동일 카드 컴포넌트로 인라인 편집
+    const amountKey = (type === 'usedphone') ? '중고폰' : '상품권';
+    const existingAmount = item.amount ?? item[amountKey] ?? '';
+    const amountVal = existingAmount ? Number(String(existingAmount).replace(/[^0-9.-]/g, '')).toLocaleString() : '';
+    const isChecked = (item.isChecked === true) || (item.completed === true) || (item['완료'] === true);
+    const checkDate = item.checkDate || item['checkDate'] || '';
+    const modelMemo = item.modelMemo || item['중고폰메모'] || '';
+
+    const typeBadgeClass = sheetName.includes('유선') ? 'bg-success' : (sheetName.includes('중고') ? 'bg-warning text-dark' : 'bg-primary');
+
+    return `
+    <div class="glass-card p-3 mb-3 border-start border-4 border-${meta.border} shadow-sm">
+        <div class="d-flex justify-content-between align-items-center mb-2 border-bottom pb-2">
+            <div>
+                <span class="badge bg-${meta.badge} bg-opacity-10 text-${meta.badge} me-1 border border-${meta.badge}">${meta.title}</span>
+                <span class="badge ${typeBadgeClass} me-1">${sheetName || '-'}</span>
+                <span class="badge bg-light text-secondary border">${branch}</span>
+            </div>
+            <span class="small fw-bold text-muted">${date}</span>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div class="text-truncate me-2">
+                <div class="fw-bold fs-5 text-dark">${name}</div>
+                <div class="small text-muted my-1">${phone} <span class="mx-1 text-light">|</span> ${carrier} <span class="mx-1 text-light">|</span> ${item['개통유형'] || item.type || ''}</div>
+            </div>
+            <span class="badge bg-white text-dark border rounded-pill px-2 shadow-sm"><i class="bi bi-person-circle me-1 text-muted"></i>${manager || '미지정'}</span>
+        </div>
+
+        <div class="bg-light p-3 rounded-3 border">
+            <div class="row g-2 mb-2">
+                <div class="col-6">
+                    <label class="form-label-sm fw-bold text-muted small">금액</label>
+                    <input type="text" class="form-control form-control-sm fw-bold text-center" data-money="true" id="amt_${rowId}" value="${amountVal}" placeholder="0">
+                </div>
+                <div class="col-6">
+                    <label class="form-label-sm fw-bold text-muted small">${type === 'usedphone' ? '반납/수령일' : '수령일'}</label>
+                    <input type="date" class="form-control form-control-sm fw-bold text-center" id="date_${rowId}" value="${checkDate}" ${isChecked ? '' : 'disabled'}>
+                </div>
+            </div>
+
+            ${type === 'usedphone' ? `
+            <div class="mb-2">
+                <label class="form-label-sm fw-bold text-muted small">중고폰 모델명</label>
+                <input type="text" class="form-control form-control-sm fw-bold" id="model_${rowId}" value="${modelMemo}" placeholder="예: S24 256G / 아이폰15 Pro">
+            </div>` : ''}
+
+            <div class="d-flex align-items-center justify-content-between gap-2 mt-2">
+                <div class="form-check form-switch m-0">
+                    <input class="form-check-input" type="checkbox" id="chk_${rowId}" ${isChecked ? 'checked' : ''} onchange="toggleSpecialInline('${rowId}')">
+                    <label class="form-check-label small fw-bold" for="chk_${rowId}">${type === 'usedphone' ? '반납 확인(체크 시 정산 반영)' : '수령 확인(체크 시 정산 반영)'}</label>
+                </div>
+                <button class="btn btn-${type==='gift' ? 'primary' : 'warning'} btn-sm fw-bold shadow-sm" onclick="savePendingItem('${type}','${branch}','${rowIndex}','${rowId}','${sheetName}')"><i class="bi bi-check-lg me-1"></i> 저장</button>
+            </div>
+        </div>
+    </div>`;
+}
+
+function toggleSpecialInline(rowId) {
+    const chk = document.getElementById(`chk_${rowId}`);
+    const dateEl = document.getElementById(`date_${rowId}`);
+    if (!chk || !dateEl) return;
+    dateEl.disabled = !chk.checked;
+    if (chk.checked && !dateEl.value) {
+        dateEl.value = new Date().toISOString().split('T')[0];
+    }
+}
+
+// 저장(단일 엔드포인트: update_history_item)
+function savePendingItem(type, branch, rowIndex, rowId, sheetName) {
+    if (!confirm("입력된 정보로 저장하시겠습니까?")) return;
+
+    const payload = {
+        action: 'update_history_item',
+        specialType: type,
+        branch: branch,
+        rowIndex: rowIndex,
+        sheetName: sheetName
+    };
+
+    // 카드/유선
+    if (type === 'card' || type === 'wired') {
+        payload.val1 = document.getElementById(`val1_${rowId}`)?.value || '';
+        payload.val2 = document.getElementById(`val2_${rowId}`)?.value || '';
+    }
+
+    // 중고/상품권
+    if (type === 'usedphone' || type === 'gift') {
+        payload.amount = document.getElementById(`amt_${rowId}`)?.value || '';
+        payload.isChecked = document.getElementById(`chk_${rowId}`)?.checked || false;
+        payload.checkDate = document.getElementById(`date_${rowId}`)?.value || '';
+        payload.modelMemo = (type === 'usedphone') ? (document.getElementById(`model_${rowId}`)?.value || '') : '';
+    }
+
+    if (typeof Swal !== 'undefined') Swal.fire({ title: '저장 중...', didOpen: () => Swal.showLoading() });
+
+    requestAPI(payload).then(d => {
+        if (typeof Swal !== 'undefined') Swal.close();
+        if (d.status === 'success') {
+            if (typeof Swal !== 'undefined') Swal.fire({ icon: 'success', title: '처리 완료', timer: 1000, showConfirmButton: false });
+            else alert('저장되었습니다.');
+
+            // 목록 갱신
+            if (type === 'card' || type === 'wired') searchSetupList(type);
+            else searchSpecialList(type);
+        } else {
+            alert(d.message || '저장 실패');
+        }
+    }).catch(e => {
+        if (typeof Swal !== 'undefined') Swal.close();
+        alert('통신 오류가 발생했습니다.');
     });
+}
+
+// 2. 제휴카드 렌더링 (UI 디자인 업그레이드: 세련된 입력 그룹)
+function renderCardSetupList(list) {
+    renderUnifiedPendingList(list, 'card');
 }
 
 // [script.js] 미사용 버튼 동작 (글자색 빨강으로 변경 추가)
@@ -2506,104 +2680,13 @@ function setUnused(inputId) {
 
 // 3. 유선설치 리스트 렌더링 (카드 내부에 입력창 배치)
 function renderWiredSetupList(list) {
-    const container = document.getElementById('wired_setup_list');
-    
-    if (!list || list.length === 0) {
-        container.innerHTML = `<div class="text-center text-muted py-5 small">
-            <i class="bi bi-check-circle fs-1 d-block mb-3 opacity-25"></i>
-            미처리 내역이 없습니다. (모두 완료!)
-        </div>`;
-        return;
-    }
-
-    container.innerHTML = list.map(item => {
-        const rowId = `wired_${item.branch}_${item.rowIndex}`;
-        const v1 = item.val1 ? String(item.val1).substring(0, 10) : "";
-        const v2 = item.val2 ? String(item.val2).substring(0, 10) : "";
-
-        // ★ [추가] 상세 정보 (데이터가 없으면 빈칸)
-        const phone = item.phone || item['전화번호'] || '';
-        const birth = item.birth || item['생년월일'] || '';
-        const carrier = item.carrier || item['개통처'] || item['통신사'] || '';
-
-        return `
-        <div class="glass-card p-3 mb-3 border-start border-4 border-success shadow-sm" style="background: #fff;">
-            <div class="d-flex justify-content-between align-items-center mb-2 border-bottom pb-2">
-                <div>
-                    <span class="badge bg-success bg-opacity-10 text-success me-1 border border-success">유선설치</span>
-                    <span class="badge bg-light text-secondary border">${item.branch}</span>
-                </div>
-                <span class="small fw-bold text-muted">${item.date}</span>
-            </div>
-
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <div class="text-truncate me-2">
-                    <div class="fw-bold fs-5 text-dark">${item.name}</div>
-
-                    <div class="small text-muted my-1">
-                        ${phone} <span class="mx-1 text-light">|</span>
-                        ${birth} <span class="mx-1 text-light">|</span>
-                        ${carrier}
-                    </div>
-
-                    <div class="small text-success fw-bold mt-1"><i class="bi bi-router me-1"></i>${item.type}</div>
-                </div>
-                <span class="badge bg-white text-dark border rounded-pill px-2">
-                    <i class="bi bi-person-circle me-1"></i>${item.manager || '미지정'}
-                </span>
-            </div>
-
-            <div class="bg-light p-3 rounded-3 border">
-                <div class="row g-2 mb-2">
-                    <div class="col-6">
-                        <label class="form-label-sm fw-bold text-muted small" style="font-size: 0.75rem;">설치 예정일</label>
-                        <input type="date" class="form-control form-control-sm border-success fw-bold text-center" id="val1_${rowId}" value="${v1}">
-                    </div>
-                    <div class="col-6">
-                        <label class="form-label-sm fw-bold text-muted small" style="font-size: 0.75rem;">설치 완료일</label>
-                        <input type="date" class="form-control form-control-sm border-success fw-bold text-center" id="val2_${rowId}" value="${v2}">
-                    </div>
-                </div>
-                <button class="btn btn-success w-100 btn-sm fw-bold shadow-sm" onclick="saveSetupInfo('wired', '${item.branch}', '${item.rowIndex}', '${rowId}')">
-                    <i class="bi bi-check-lg me-1"></i> 저장하기
-                </button>
-            </div>
-        </div>`;
-    }).join('');
+    renderUnifiedPendingList(list, 'wired');
 }
 
-// 4. 저장 함수 (입력값 그대로 전송)
+// 4. 저장 함수 (레거시 호환: unified 저장 함수로 위임)
 function saveSetupInfo(type, branch, rowIndex, rowId) {
-    const val1 = document.getElementById(`val1_${rowId}`).value;
-    const val2 = document.getElementById(`val2_${rowId}`).value;
-
-    if (!confirm("입력된 정보로 저장하시겠습니까?")) return;
-
-    if(typeof Swal !== 'undefined') Swal.fire({ title: '저장 중...', didOpen: () => Swal.showLoading() });
-
-    // ✅ 리팩토링: 저장도 update_history(통합 수정)로 처리
-    // - type: 'card' | 'wired' 를 specialType으로 넘겨 GAS에서 분기
-    requestAPI({
-            action: "update_history",
-            specialType: type, // 'card' | 'wired'
-            branch: branch,
-            rowIndex: rowIndex,
-            val1: val1,
-            val2: val2
-        })
-    .then(d => {
-        if (d.status === 'success') {
-            if(typeof Swal !== 'undefined') Swal.fire({ icon: 'success', title: '처리 완료', timer: 1000, showConfirmButton: false });
-            else alert("저장되었습니다.");
-            // 목록 갱신
-            searchSetupList(type);
-        } else {
-            alert(d.message);
-        }
-    })
-    .catch(e => {
-        alert("통신 오류가 발생했습니다.");
-    });
+    // 기존 버튼/호출부 호환용
+    savePendingItem(type, branch, rowIndex, rowId, '');
 }
 
 // ==========================================
