@@ -2650,7 +2650,6 @@ const REPORT_COLUMNS = [
 
 // [도구] 포맷팅 헬퍼 함수
 const fmt = (n) => Number(n).toLocaleString();
-const fmtMoney = (n) => n === 0 ? '<span class="text-muted opacity-25">-</span>' : fmt(n);
 const getReviewIcon = (v) => (v === 'true' || v === true) ? '<i class="bi bi-check-circle-fill text-success"></i>' : '<span class="text-muted opacity-25">-</span>';
 
 function getTypeBadge(t) {
