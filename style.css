@@ -101,7 +101,7 @@ a { text-decoration: none; }
 }
 
 .table thead th{
-  font-size: 15px;
+  font-size: 14px;
 }
 .table-hover > tbody > tr:hover > *{
   background: rgba(47,107,255,.06) !important;
