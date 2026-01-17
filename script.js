@@ -2323,186 +2323,191 @@ async function loadSettlement(type) {
     }
 }
 
-// ==========================================
-// [특수업무] 제휴카드/유선설치 (get_all_history + update_history로 통일)
-// ==========================================
+/* =========================================================
+   [GLOBAL UTIL] HTML / JS Escape
+   ========================================================= */
 
-// 날짜 기본값 세팅 (card/wired 공통)
+// innerHTML 출력용
+function escapeHtml(input) {
+  const s = String(input ?? "");
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+// onclick 파라미터용
+function escapeJsString(input) {
+  return String(input ?? "")
+    .replace(/\\/g, "\\\\")
+    .replace(/'/g, "\\'")
+    .replace(/"/g, '\\"')
+    .replace(/\n/g, "\\n")
+    .replace(/\r/g, "\\r");
+}
+
+/* =========================================================
+   [SETUP] 제휴카드 / 유선설치 공통
+   ========================================================= */
+
 function initSetupDates() {
   const today = new Date();
   const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
-  const fmt = (d) => d.toISOString().slice(0, 10);
+  const fmt = d => d.toISOString().slice(0, 10);
 
-  // 카드
-  if (!document.getElementById('search_card_start').value) document.getElementById('search_card_start').value = fmt(firstDay);
-  if (!document.getElementById('search_card_end').value) document.getElementById('search_card_end').value = fmt(today);
+  const ids = [
+    'search_card_start','search_card_end',
+    'search_wired_start','search_wired_end'
+  ];
 
-  // 유선
-  if (!document.getElementById('search_wired_start').value) document.getElementById('search_wired_start').value = fmt(firstDay);
-  if (!document.getElementById('search_wired_end').value) document.getElementById('search_wired_end').value = fmt(today);
-}
-
-// 조회 버튼
-function searchSetupList(type) {
-  const branch = (type === 'card')
-    ? document.getElementById('search_card_branch').value
-    : document.getElementById('search_wired_branch').value;
-
-  const keyword = (type === 'card')
-    ? document.getElementById('search_card_keyword').value
-    : document.getElementById('search_wired_keyword').value;
-
-  const start = (type === 'card')
-    ? document.getElementById('search_card_start').value
-    : document.getElementById('search_wired_start').value;
-
-  const end = (type === 'card')
-    ? document.getElementById('search_card_end').value
-    : document.getElementById('search_wired_end').value;
-
-  const containerId = (type === 'card') ? 'card_setup_list' : 'wired_setup_list';
-  const container = document.getElementById(containerId);
-
-  if (container) {
-    container.innerHTML = `
-      <div class="glass-card p-4 text-center">
-        <div class="spinner-border text-primary"></div>
-        <div class="mt-2 small text-muted">조회 중...</div>
-      </div>
-    `;
-  }
-
-  // ✅ 서버는 get_all_history로 통일
-  requestAPI({
-    action: "get_all_history",
-    branch: branch || "전체",
-    keyword: keyword || "",
-    start: start,
-    end: end,
-    specialType: type // 'card' | 'wired'
-  }).then(res => {
-    if (res.status !== 'success') throw new Error(res.message || '조회 실패');
-    renderSetupPendingList(type, res.data || []);
-  }).catch(err => {
-    if (container) {
-      container.innerHTML = `
-        <div class="glass-card p-4 text-center text-danger">
-          ${err.message || '조회 오류'}
-        </div>
-      `;
-    }
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.value = id.includes('start') ? fmt(firstDay) : fmt(today);
   });
 }
 
-// 리스트 렌더 (중고폰/상품권 카드 스타일과 톤 통일)
-function renderSetupPendingList(type, list) {
-  const containerId = (type === 'card') ? 'card_setup_list' : 'wired_setup_list';
-  const container = document.getElementById(containerId);
-  if (!container) return;
+function searchSetupList(type) {
+  const get = id => document.getElementById(id)?.value || "";
 
-  if (!list.length) {
-    container.innerHTML = `
-      <div class="glass-card p-4 text-center">
-        <div class="fw-bold">미처리 항목이 없습니다.</div>
-        <div class="small text-muted mt-1">완벽합니다. 이제 커피 한 잔 하셔도 됩니다 ☕</div>
-      </div>
-    `;
+  const payload = {
+    action: "get_all_history",
+    specialType: type,
+    branch: get(`search_${type}_branch`) || "전체",
+    keyword: get(`search_${type}_keyword`),
+    start: get(`search_${type}_start`),
+    end: get(`search_${type}_end`)
+  };
+
+  const container = document.getElementById(`${type}_setup_list`);
+  container.innerHTML = `<div class="text-center p-4 text-muted">조회 중...</div>`;
+
+  requestAPI(payload).then(res => {
+    if (res.status !== 'success') throw new Error(res.message);
+    if (type === 'card') renderCardSetupList(res.data);
+    else renderWiredSetupList(res.data);
+  }).catch(err => {
+    container.innerHTML = `<div class="text-danger p-4 text-center">${err.message}</div>`;
+  });
+}
+
+/* =========================================================
+   [RENDER] 제휴카드
+   ========================================================= */
+
+function renderCardSetupList(list) {
+  const container = document.getElementById('card_setup_list');
+
+  if (!list || list.length === 0) {
+    container.innerHTML = `<div class="text-center text-muted p-5">미처리 내역 없음</div>`;
     return;
   }
 
-  const titleA = (type === 'card') ? '세이브 등록일' : '설치예정일';
-  const titleB = (type === 'card') ? '자동이체 등록일' : '설치일';
-
   container.innerHTML = list.map(item => {
-    const label = (type === 'card')
-      ? (item.typeLabel ? `제휴카드: ${item.typeLabel}` : '제휴카드')
-      : (item.typeLabel ? `상품: ${item.typeLabel}` : '유선상품');
+    const rowId = `card_${item.branch}_${item.rowIndex}`;
 
     return `
       <div class="glass-card p-3 mb-3">
-        <div class="d-flex justify-content-between align-items-start">
-          <div>
-            <div class="fw-bold">${item['고객명'] || '-'} <span class="text-muted small">(${item.branch})</span></div>
-            <div class="small text-muted mt-1">
-              ${item['전화번호'] || '-'} · ${item['생년월일'] || '-'} · ${item['개통처'] || '-'}
-            </div>
-            <div class="small mt-2">
-              <span class="badge bg-secondary bg-opacity-75">${label}</span>
-              <span class="badge bg-primary bg-opacity-10 text-primary ms-2">${item['담당자'] || '미지정'}</span>
-              <span class="badge bg-light text-dark ms-2">${item['개통일'] || '-'}</span>
-            </div>
+        <div class="fw-bold">${escapeHtml(item['고객명'])}</div>
+        <div class="small text-muted">
+          ${escapeHtml(item['전화번호'] || '')} · ${escapeHtml(item['생년월일'] || '')}
+        </div>
+
+        <div class="row g-2 mt-2">
+          <div class="col-6">
+            <input id="val1_${rowId}" class="form-control form-control-sm"
+              value="${escapeHtml(item.val1 || '')}" placeholder="세이브 등록일">
           </div>
-
-          <button class="btn btn-sm btn-outline-primary rounded-4"
-            onclick="openSetupEditPopup('${type}', '${item.branch}', '${item.rowIndex}', '${escapeHtml(item['고객명']||'')}', '${escapeHtml(item['전화번호']||'')}', '${escapeHtml(item.val1||'')}', '${escapeHtml(item.val2||'')}' )">
-            등록/수정
-          </button>
+          <div class="col-6">
+            <input id="val2_${rowId}" class="form-control form-control-sm"
+              value="${escapeHtml(item.val2 || '')}" placeholder="자동이체 등록일">
+          </div>
         </div>
 
-        <div class="mt-3 d-flex flex-wrap gap-2">
-          <div class="small"><span class="text-muted">${titleA}:</span> <span class="fw-bold">${item.val1 || '-'}</span></div>
-          <div class="small"><span class="text-muted">${titleB}:</span> <span class="fw-bold">${item.val2 || '-'}</span></div>
-        </div>
+        <button class="btn btn-primary btn-sm w-100 mt-3"
+          onclick="saveSetupInfo(
+            'card',
+            '${escapeJsString(item.branch)}',
+            '${item.rowIndex}',
+            '${escapeJsString(rowId)}'
+          )">
+          저장
+        </button>
       </div>
     `;
   }).join('');
 }
 
-// 팝업 (SweetAlert2 사용 가정: 기존 프로젝트 패턴 유지)
-function openSetupEditPopup(type, branch, rowIndex, name, phone, val1, val2) {
-  const titleA = (type === 'card') ? '세이브 등록일' : '설치예정일';
-  const titleB = (type === 'card') ? '자동이체 등록일' : '설치일';
+/* =========================================================
+   [RENDER] 유선설치
+   ========================================================= */
 
-  Swal.fire({
-    title: (type === 'card') ? '제휴카드 등록' : '유선설치 등록',
-    html: `
-      <div class="text-start small mb-2 text-muted">${name} · ${phone}</div>
+function renderWiredSetupList(list) {
+  const container = document.getElementById('wired_setup_list');
 
-      <label class="form-label-sm mt-2">${titleA}</label>
-      <input id="sp_val1" class="form-control" value="${val1 || ''}" placeholder="예: 2026-01-17 또는 미사용">
+  if (!list || list.length === 0) {
+    container.innerHTML = `<div class="text-center text-muted p-5">미처리 내역 없음</div>`;
+    return;
+  }
 
-      <label class="form-label-sm mt-3">${titleB}</label>
-      <input id="sp_val2" class="form-control" value="${val2 || ''}" placeholder="예: 2026-01-17 또는 해당없음">
+  container.innerHTML = list.map(item => {
+    const rowId = `wired_${item.branch}_${item.rowIndex}`;
 
-      <input type="hidden" id="sp_branch" value="${branch}">
-      <input type="hidden" id="sp_row" value="${rowIndex}">
-      <input type="hidden" id="sp_type" value="${type}">
-    `,
-    showCancelButton: true,
-    confirmButtonText: '저장',
-    cancelButtonText: '취소',
-    preConfirm: () => {
-      return {
-        branch: document.getElementById('sp_branch').value,
-        rowIndex: Number(document.getElementById('sp_row').value),
-        type: document.getElementById('sp_type').value,
-        val1: document.getElementById('sp_val1').value.trim(),
-        val2: document.getElementById('sp_val2').value.trim(),
-      };
-    }
-  }).then(result => {
-    if (!result.isConfirmed) return;
-    saveSetupInfo(result.value);
-  });
+    return `
+      <div class="glass-card p-3 mb-3 border-start border-success">
+        <div class="fw-bold">${escapeHtml(item['고객명'])}</div>
+        <div class="small text-muted">
+          ${escapeHtml(item['전화번호'] || '')}
+        </div>
+
+        <div class="row g-2 mt-2">
+          <div class="col-6">
+            <input type="date" id="val1_${rowId}" class="form-control form-control-sm"
+              value="${escapeHtml(item.val1 || '')}">
+          </div>
+          <div class="col-6">
+            <input type="date" id="val2_${rowId}" class="form-control form-control-sm"
+              value="${escapeHtml(item.val2 || '')}">
+          </div>
+        </div>
+
+        <button class="btn btn-success btn-sm w-100 mt-3"
+          onclick="saveSetupInfo(
+            'wired',
+            '${escapeJsString(item.branch)}',
+            '${item.rowIndex}',
+            '${escapeJsString(rowId)}'
+          )">
+          저장
+        </button>
+      </div>
+    `;
+  }).join('');
 }
 
-// ✅ 저장: update_history로 통일
-function saveSetupInfo(payload) {
+/* =========================================================
+   [SAVE]
+   ========================================================= */
+
+function saveSetupInfo(type, branch, rowIndex, rowId) {
+  const val1 = document.getElementById(`val1_${rowId}`)?.value || "";
+  const val2 = document.getElementById(`val2_${rowId}`)?.value || "";
+
   requestAPI({
     action: "update_history",
-    branch: payload.branch,
-    rowIndex: payload.rowIndex,
-    specialType: payload.type, // 'card' | 'wired'
-    val1: payload.val1,
-    val2: payload.val2
+    specialType: type,
+    branch,
+    rowIndex: Number(rowIndex),
+    val1,
+    val2
   }).then(res => {
-    if (res.status !== 'success') throw new Error(res.message || '저장 실패');
-    Swal.fire({ icon: 'success', title: '저장 완료', timer: 900, showConfirmButton: false });
-
-    // 저장 후 재조회
-    searchSetupList(payload.type);
+    if (res.status !== 'success') throw new Error(res.message);
+    alert('저장 완료');
+    searchSetupList(type);
   }).catch(err => {
-    Swal.fire({ icon: 'error', title: '저장 오류', text: err.message || '통신 오류' });
+    alert(err.message);
   });
 }
 
