@@ -2687,7 +2687,7 @@ function renderPendingTableTemplate(container, list, type) {
     // - usedphone/gift: 개통처, 약정/유형 제거
     // - card/wired: 약정/유형 제거 + (전화번호 오른쪽에 생년월일 추가)
     const COMMON_COLS = [
-        { key: 'branch', label: '지점', width: '110px', formatter: (v) => v || '-' },
+        { key: 'branch', label: '지점', width: '150px', formatter: (v) => v || '-' },
         { key: 'date', label: '개통일', width: '110px', formatter: (v) => v || '-' },
         { key: 'name', label: '고객명', width: '120px', className: 'fw-bold text-primary', formatter: (v) => v || '-' },
         { key: 'phone', label: '전화번호', width: '140px', formatter: (v) => v || '-' },
