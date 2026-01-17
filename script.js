@@ -2693,21 +2693,21 @@ function renderPendingTableTemplate(container, list, type) {
     // - usedphone/gift: 개통처, 약정/유형 제거
     // - card/wired: 약정/유형 제거 + (전화번호 오른쪽에 생년월일 추가)
     const COMMON_COLS = [
-        { key: 'branch', label: '지점', width: '120px', formatter: (v) => v || '-' },
-        { key: 'date', label: '개통일', width: '120px', formatter: (v) => v || '-' },
+        { key: 'branch', label: '지점', width: '100px', formatter: (v) => v || '-' },
+        { key: 'date', label: '개통일', width: '110px', formatter: (v) => v || '-' },
         { key: 'name', label: '고객명', width: '120px', className: 'fw-bold text-primary', formatter: (v) => v || '-' },
         { key: 'phone', label: '전화번호', width: '140px', formatter: (v) => v || '-' },
         // ★ card/wired 화면: 전화번호 오른쪽에 생년월일 표시
         ...((type === 'card' || type === 'wired')
-            ? [{ key: 'birth', label: '생년월일', width: '120px', formatter: (v) => v || '-' }]
+            ? [{ key: 'birth', label: '생년월일', width: '110px', formatter: (v) => v || '-' }]
             : []),
         // ★ usedphone/gift 화면에서는 개통처를 숨김
         ...((type === 'usedphone' || type === 'gift')
             ? []
-            : [{ key: 'carrier', label: '개통처', width: '120px', formatter: (v) => v || '-' }]),
+            : [{ key: 'carrier', label: '개통처', width: '110px', formatter: (v) => v || '-' }]),
         // ★ 약정/유형은 요청대로 전 화면에서 제거
-        { key: 'manager', label: '담당자', width: '120px', formatter: (v) => v || '미지정' },
-        { key: 'status', label: '상태', width: '120px', formatter: (_, row) => {
+        { key: 'manager', label: '담당자', width: '110px', formatter: (v) => v || '미지정' },
+        { key: 'status', label: '상태', width: '110px', formatter: (_, row) => {
             const done = !!row.completed;
             return done
                 ? `<span class="badge bg-success bg-opacity-75">${cfg.doneLabel || '완료'}</span>`
@@ -2726,22 +2726,22 @@ function renderPendingTableTemplate(container, list, type) {
     if (type === 'usedphone' || type === 'gift') {
         const amtLabel = cfg.amountKey || (type === 'usedphone' ? '중고폰' : '상품권');
         TYPE_COLS = [
-            { key: '_amount', label: amtLabel, width: '120px', className: 'fw-bold', formatter: (v) => money(v) },
-            { key: '_memo', label: '메모', width: '220px', formatter: (v) => v || '-' },
-            { key: '_checkDate', label: (cfg.checkDateLabel || '확인일'), width: '140px', formatter: (v) => v || '-' }
+            { key: '_amount', label: amtLabel, width: '110px', className: 'fw-bold', formatter: (v) => money(v) },
+            { key: '_memo', label: '메모', width: '240px', formatter: (v) => v || '-' },
+            { key: '_checkDate', label: (cfg.checkDateLabel || '확인일'), width: '110px', formatter: (v) => v || '-' }
         ];
     } else if (type === 'card') {
         TYPE_COLS = [
-            { key: '_label', label: cfg.labelKey || '제휴카드', width: '120px', formatter: (v) => v || '-' },
+            { key: '_label', label: cfg.labelKey || '제휴카드', width: '140px', formatter: (v) => v || '-' },
             { key: 'val1', label: cfg.val1Label || '세이브 등록일', width: '140px', formatter: (v) => v || '-' },
             { key: 'val2', label: cfg.val2Label || '자동이체 등록일', width: '160px', formatter: (v) => v || '-' }
         ];
     } else {
         // wired
         TYPE_COLS = [
-            { key: '_label', label: cfg.labelKey || '유선유형', width: '120px', formatter: (v) => v || '-' },
-            { key: 'val1', label: cfg.val1Label || '설치 예정일', width: '140px', formatter: (v) => v || '-' },
-            { key: 'val2', label: cfg.val2Label || '설치 완료일', width: '140px', formatter: (v) => v || '-' }
+            { key: '_label', label: cfg.labelKey || '유선유형', width: '160px', formatter: (v) => v || '-' },
+            { key: 'val1', label: cfg.val1Label || '설치 예정일', width: '160px', formatter: (v) => v || '-' },
+            { key: 'val2', label: cfg.val2Label || '설치 완료일', width: '160px', formatter: (v) => v || '-' }
         ];
     }
 
