@@ -2323,192 +2323,286 @@ async function loadSettlement(type) {
     }
 }
 
-/* =========================================================
-   [GLOBAL UTIL] HTML / JS Escape
-   ========================================================= */
+// =========================================================
+// [최종 복구] 제휴카드 / 유선설치 (카드형 리스트 + 바로 입력 방식)
+// =========================================================
 
-// innerHTML 출력용
-function escapeHtml(input) {
-  const s = String(input ?? "");
-  return s
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
-
-// onclick 파라미터용
-function escapeJsString(input) {
-  return String(input ?? "")
-    .replace(/\\/g, "\\\\")
-    .replace(/'/g, "\\'")
-    .replace(/"/g, '\\"')
-    .replace(/\n/g, "\\n")
-    .replace(/\r/g, "\\r");
-}
-
-/* =========================================================
-   [SETUP] 제휴카드 / 유선설치 공통
-   ========================================================= */
-
+// 0. 초기화: 날짜 기본값 세팅 (이번달 1일 ~ 오늘)
 function initSetupDates() {
-  const today = new Date();
-  const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
-  const fmt = d => d.toISOString().slice(0, 10);
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    
+    const firstDay = `${yyyy}-${mm}-01`;
+    const todayStr = `${yyyy}-${mm}-${dd}`;
 
-  const ids = [
-    'search_card_start','search_card_end',
-    'search_wired_start','search_wired_end'
-  ];
-
-  ids.forEach(id => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    el.value = id.includes('start') ? fmt(firstDay) : fmt(today);
-  });
+    document.getElementById('search_card_start').value = firstDay;
+    document.getElementById('search_card_end').value = todayStr;
+    document.getElementById('search_wired_start').value = firstDay;
+    document.getElementById('search_wired_end').value = todayStr;
 }
 
+// 1. 통합 검색 함수
 function searchSetupList(type) {
-  const get = id => document.getElementById(id)?.value || "";
+    const branchId = type === 'card' ? 'search_card_branch' : 'search_wired_branch';
+    const startId = type === 'card' ? 'search_card_start' : 'search_wired_start';
+    const endId = type === 'card' ? 'search_card_end' : 'search_wired_end';
+    const keyId = type === 'card' ? 'search_card_keyword' : 'search_wired_keyword';
+    
+    // 리스트 컨테이너 ID
+    const containerId = type === 'card' ? 'card_setup_list' : 'wired_setup_list';
 
-  const payload = {
-    action: "get_all_history",
-    specialType: type,
-    branch: get(`search_${type}_branch`) || "전체",
-    keyword: get(`search_${type}_keyword`),
-    start: get(`search_${type}_start`),
-    end: get(`search_${type}_end`)
-  };
+    const branch = document.getElementById(branchId).value;
+    const start = document.getElementById(startId).value;
+    const end = document.getElementById(endId).value;
+    const keyword = document.getElementById(keyId).value;
+    const container = document.getElementById(containerId);
 
-  const container = document.getElementById(`${type}_setup_list`);
-  container.innerHTML = `<div class="text-center p-4 text-muted">조회 중...</div>`;
+    // 로딩 표시
+    container.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-secondary"></div><div class="mt-2 small text-muted">데이터 조회 중...</div></div>';
 
-  requestAPI(payload).then(res => {
-    if (res.status !== 'success') throw new Error(res.message);
-    if (type === 'card') renderCardSetupList(res.data);
-    else renderWiredSetupList(res.data);
-  }).catch(err => {
-    container.innerHTML = `<div class="text-danger p-4 text-center">${err.message}</div>`;
-  });
+    // ★ get_all_history와 동일한 패턴: data 객체로 start/end 통일
+    requestAPI({
+            action: "get_setup_pending_list",
+            data: {
+                type: type,
+                branch: branch,
+                start: start,
+                end: end,
+                keyword: keyword
+            }
+        })
+    .then(d => {
+        if (d.status === 'success') {
+            // 서버 응답: { status:'success', data:[...] }
+            const list = d.data || d.list || [];
+            if (type === 'card') renderCardSetupList(list);
+            else renderWiredSetupList(list);
+        } else {
+            container.innerHTML = `<div class="text-center text-danger py-5 small">${d.message}</div>`;
+        }
+    })
+    .catch(e => {
+        container.innerHTML = `<div class="text-center text-danger py-5 small">통신 오류가 발생했습니다.</div>`;
+    });
 }
 
-/* =========================================================
-   [RENDER] 제휴카드
-   ========================================================= */
-
+// 2. 제휴카드 렌더링 (UI 디자인 업그레이드: 세련된 입력 그룹)
 function renderCardSetupList(list) {
-  const container = document.getElementById('card_setup_list');
+    const container = document.getElementById('card_setup_list');
+    
+    if (!list || list.length === 0) {
+        container.innerHTML = `<div class="text-center text-muted py-5 small"><i class="bi bi-check-circle fs-1 d-block mb-3 opacity-25"></i>미처리 내역이 없습니다. (모두 완료)</div>`;
+        return;
+    }
 
-  if (!list || list.length === 0) {
-    container.innerHTML = `<div class="text-center text-muted p-5">미처리 내역 없음</div>`;
-    return;
-  }
+    container.innerHTML = list.map(item => {
+        const rowId = `card_${item.branch}_${item.rowIndex}`;
+        const v1 = item.val1 || ""; 
+        const v2 = item.val2 || "";
 
-  container.innerHTML = list.map(item => {
-    const rowId = `card_${item.branch}_${item.rowIndex}`;
+        // 값이 '미사용'이면 빨간색 텍스트, 아니면 기본색
+        const color1 = v1 === '미사용' ? 'text-danger' : 'text-primary';
+        const color2 = v2 === '미사용' ? 'text-danger' : 'text-primary';
 
-    return `
-      <div class="glass-card p-3 mb-3">
-        <div class="fw-bold">${escapeHtml(item['고객명'])}</div>
-        <div class="small text-muted">
-          ${escapeHtml(item['전화번호'] || '')} · ${escapeHtml(item['생년월일'] || '')}
-        </div>
+        // ★ [추가] 상세 정보 변수 준비 (데이터가 없으면 빈칸)
+        const phone = item.phone || item['전화번호'] || '';
+        const birth = item.birth || item['생년월일'] || '';
+        const carrier = item.carrier || item['개통처'] || item['통신사'] || '';
 
-        <div class="row g-2 mt-2">
-          <div class="col-6">
-            <input id="val1_${rowId}" class="form-control form-control-sm"
-              value="${escapeHtml(item.val1 || '')}" placeholder="세이브 등록일">
-          </div>
-          <div class="col-6">
-            <input id="val2_${rowId}" class="form-control form-control-sm"
-              value="${escapeHtml(item.val2 || '')}" placeholder="자동이체 등록일">
-          </div>
-        </div>
+        return `
+        <div class="glass-card p-3 mb-3 border-start border-4 border-primary shadow-sm bg-white">
+            <div class="d-flex justify-content-between align-items-center mb-2 border-bottom pb-2">
+                <div>
+                    <span class="badge bg-primary bg-opacity-10 text-primary me-1 border border-primary">제휴카드</span>
+                    <span class="badge bg-light text-secondary border">${item.branch}</span>
+                </div>
+                <span class="small fw-bold text-muted">${item.date}</span>
+            </div>
+            
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="text-truncate me-2">
+                    <div class="fw-bold fs-5 text-dark">${item.name}</div>
+                    
+                    <div class="small text-muted my-1">
+                        ${phone} <span class="mx-1 text-light">|</span>
+                        ${birth} <span class="mx-1 text-light">|</span>
+                        ${carrier}
+                    </div>
 
-        <button class="btn btn-primary btn-sm w-100 mt-3"
-          onclick="saveSetupInfo(
-            'card',
-            '${escapeJsString(item.branch)}',
-            '${item.rowIndex}',
-            '${escapeJsString(rowId)}'
-          )">
-          저장
-        </button>
-      </div>
-    `;
-  }).join('');
+                    <div class="small text-secondary fw-bold">
+                        <i class="bi bi-credit-card-2-front me-1 text-primary"></i>${item.cardName}
+                    </div>
+                </div>
+                <span class="badge bg-white text-dark border rounded-pill px-2 shadow-sm">
+                    <i class="bi bi-person-circle me-1 text-muted"></i>${item.manager || '미지정'}
+                </span>
+            </div>
+            
+            <div class="bg-light p-3 rounded-3 border">
+                <div class="row g-2 mb-3">
+                    
+                    <div class="col-6">
+                        <label class="form-label-sm fw-bold text-secondary small mb-1 ms-1">세이브 등록</label>
+                        <div class="input-group input-group-sm shadow-sm">
+                            <input type="text" class="form-control border-primary fw-bold text-center ${color1}" 
+                                   id="val1_${rowId}" value="${v1}" placeholder="날짜" 
+                                   onfocus="if(this.value!=='미사용')this.type='date'" 
+                                   onblur="if(!this.value)this.type='text'"
+                                   style="border-right: none;">
+                            <button class="btn btn-white border border-primary border-start-0 text-muted" type="button" 
+                                    onclick="setUnused('val1_${rowId}')" title="미사용 처리" 
+                                    style="background: white;">
+                                <i class="bi bi-slash-circle"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="col-6">
+                        <label class="form-label-sm fw-bold text-secondary small mb-1 ms-1">자동이체 등록</label>
+                        <div class="input-group input-group-sm shadow-sm">
+                            <input type="text" class="form-control border-primary fw-bold text-center ${color2}" 
+                                   id="val2_${rowId}" value="${v2}" placeholder="날짜" 
+                                   onfocus="if(this.value!=='미사용')this.type='date'" 
+                                   onblur="if(!this.value)this.type='text'"
+                                   style="border-right: none;">
+                            <button class="btn btn-white border border-primary border-start-0 text-muted" type="button" 
+                                    onclick="setUnused('val2_${rowId}')" title="미사용 처리" 
+                                    style="background: white;">
+                                <i class="bi bi-slash-circle"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary w-100 btn-sm fw-bold shadow hover-effect" onclick="saveSetupInfo('card', '${item.branch}', '${item.rowIndex}', '${rowId}')">
+                    <i class="bi bi-check-lg me-1"></i> 저장하기
+                </button>
+            </div>
+        </div>`;
+    }).join('');
+    
+    // 날짜 입력 이벤트 리스너 (기존과 동일)
+    document.querySelectorAll('input[id^="val"]').forEach(el => {
+        el.addEventListener('input', function() {
+            // 값이 바뀌면 글자색을 파란색으로 (미사용일땐 빨강이었음)
+            if(this.value !== '미사용') {
+                this.classList.remove('text-danger');
+                this.classList.add('text-primary');
+            }
+        });
+    });
 }
 
-/* =========================================================
-   [RENDER] 유선설치
-   ========================================================= */
+// [script.js] 미사용 버튼 동작 (글자색 빨강으로 변경 추가)
+function setUnused(inputId) {
+    const el = document.getElementById(inputId);
+    el.type = 'text'; 
+    el.value = '미사용';
+    // 시각적 강조
+    el.classList.remove('text-primary');
+    el.classList.add('text-danger');
+}
 
+// 3. 유선설치 리스트 렌더링 (카드 내부에 입력창 배치)
 function renderWiredSetupList(list) {
-  const container = document.getElementById('wired_setup_list');
+    const container = document.getElementById('wired_setup_list');
+    
+    if (!list || list.length === 0) {
+        container.innerHTML = `<div class="text-center text-muted py-5 small">
+            <i class="bi bi-check-circle fs-1 d-block mb-3 opacity-25"></i>
+            미처리 내역이 없습니다. (모두 완료!)
+        </div>`;
+        return;
+    }
 
-  if (!list || list.length === 0) {
-    container.innerHTML = `<div class="text-center text-muted p-5">미처리 내역 없음</div>`;
-    return;
-  }
+    container.innerHTML = list.map(item => {
+        const rowId = `wired_${item.branch}_${item.rowIndex}`;
+        const v1 = item.val1 ? String(item.val1).substring(0, 10) : "";
+        const v2 = item.val2 ? String(item.val2).substring(0, 10) : "";
 
-  container.innerHTML = list.map(item => {
-    const rowId = `wired_${item.branch}_${item.rowIndex}`;
+        // ★ [추가] 상세 정보 (데이터가 없으면 빈칸)
+        const phone = item.phone || item['전화번호'] || '';
+        const birth = item.birth || item['생년월일'] || '';
+        const carrier = item.carrier || item['개통처'] || item['통신사'] || '';
 
-    return `
-      <div class="glass-card p-3 mb-3 border-start border-success">
-        <div class="fw-bold">${escapeHtml(item['고객명'])}</div>
-        <div class="small text-muted">
-          ${escapeHtml(item['전화번호'] || '')}
-        </div>
+        return `
+        <div class="glass-card p-3 mb-3 border-start border-4 border-success shadow-sm" style="background: #fff;">
+            <div class="d-flex justify-content-between align-items-center mb-2 border-bottom pb-2">
+                <div>
+                    <span class="badge bg-success bg-opacity-10 text-success me-1 border border-success">유선설치</span>
+                    <span class="badge bg-light text-secondary border">${item.branch}</span>
+                </div>
+                <span class="small fw-bold text-muted">${item.date}</span>
+            </div>
 
-        <div class="row g-2 mt-2">
-          <div class="col-6">
-            <input type="date" id="val1_${rowId}" class="form-control form-control-sm"
-              value="${escapeHtml(item.val1 || '')}">
-          </div>
-          <div class="col-6">
-            <input type="date" id="val2_${rowId}" class="form-control form-control-sm"
-              value="${escapeHtml(item.val2 || '')}">
-          </div>
-        </div>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="text-truncate me-2">
+                    <div class="fw-bold fs-5 text-dark">${item.name}</div>
 
-        <button class="btn btn-success btn-sm w-100 mt-3"
-          onclick="saveSetupInfo(
-            'wired',
-            '${escapeJsString(item.branch)}',
-            '${item.rowIndex}',
-            '${escapeJsString(rowId)}'
-          )">
-          저장
-        </button>
-      </div>
-    `;
-  }).join('');
+                    <div class="small text-muted my-1">
+                        ${phone} <span class="mx-1 text-light">|</span>
+                        ${birth} <span class="mx-1 text-light">|</span>
+                        ${carrier}
+                    </div>
+
+                    <div class="small text-success fw-bold mt-1"><i class="bi bi-router me-1"></i>${item.type}</div>
+                </div>
+                <span class="badge bg-white text-dark border rounded-pill px-2">
+                    <i class="bi bi-person-circle me-1"></i>${item.manager || '미지정'}
+                </span>
+            </div>
+
+            <div class="bg-light p-3 rounded-3 border">
+                <div class="row g-2 mb-2">
+                    <div class="col-6">
+                        <label class="form-label-sm fw-bold text-muted small" style="font-size: 0.75rem;">설치 예정일</label>
+                        <input type="date" class="form-control form-control-sm border-success fw-bold text-center" id="val1_${rowId}" value="${v1}">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label-sm fw-bold text-muted small" style="font-size: 0.75rem;">설치 완료일</label>
+                        <input type="date" class="form-control form-control-sm border-success fw-bold text-center" id="val2_${rowId}" value="${v2}">
+                    </div>
+                </div>
+                <button class="btn btn-success w-100 btn-sm fw-bold shadow-sm" onclick="saveSetupInfo('wired', '${item.branch}', '${item.rowIndex}', '${rowId}')">
+                    <i class="bi bi-check-lg me-1"></i> 저장하기
+                </button>
+            </div>
+        </div>`;
+    }).join('');
 }
 
-/* =========================================================
-   [SAVE]
-   ========================================================= */
-
+// 4. 저장 함수 (입력값 그대로 전송)
 function saveSetupInfo(type, branch, rowIndex, rowId) {
-  const val1 = document.getElementById(`val1_${rowId}`)?.value || "";
-  const val2 = document.getElementById(`val2_${rowId}`)?.value || "";
+    const val1 = document.getElementById(`val1_${rowId}`).value;
+    const val2 = document.getElementById(`val2_${rowId}`).value;
 
-  requestAPI({
-    action: "update_history",
-    specialType: type,
-    branch,
-    rowIndex: Number(rowIndex),
-    val1,
-    val2
-  }).then(res => {
-    if (res.status !== 'success') throw new Error(res.message);
-    alert('저장 완료');
-    searchSetupList(type);
-  }).catch(err => {
-    alert(err.message);
-  });
+    if (!confirm("입력된 정보로 저장하시겠습니까?")) return;
+
+    if(typeof Swal !== 'undefined') Swal.fire({ title: '저장 중...', didOpen: () => Swal.showLoading() });
+
+    requestAPI({
+            action: "update_setup_info",
+            type: type,
+            branch: branch,
+            rowIndex: rowIndex,
+            val1: val1,
+            val2: val2
+        })
+    .then(d => {
+        if (d.status === 'success') {
+            if(typeof Swal !== 'undefined') Swal.fire({ icon: 'success', title: '처리 완료', timer: 1000, showConfirmButton: false });
+            else alert("저장되었습니다.");
+            // 목록 갱신
+            searchSetupList(type);
+        } else {
+            alert(d.message);
+        }
+    })
+    .catch(e => {
+        alert("통신 오류가 발생했습니다.");
+    });
 }
 
 // ==========================================
