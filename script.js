@@ -1987,6 +1987,8 @@ const PENDING_CONFIGS = {
         amountKey: '중고폰',
         supportsModel: true,
         toggleLabel: '반납 확인',
+        // amount(중고/상품권) 타입에서 체크된 날짜 컬럼 라벨
+        checkDateLabel: '반납일',
         labelKey: '모델명',
         extraLabels: ['중고폰', '메모', '상태']
     },
@@ -2002,6 +2004,8 @@ const PENDING_CONFIGS = {
         amountKey: '상품권',
         supportsModel: false,
         toggleLabel: '수령 확인',
+        // amount(중고/상품권) 타입에서 체크된 날짜 컬럼 라벨
+        checkDateLabel: '수령일',
         labelKey: '상품권',
         extraLabels: ['상품권', '메모', '상태']
     },
@@ -2062,8 +2066,7 @@ function renderPendingFilter(type) {
         start: `pending_${type}_start`,
         end: `pending_${type}_end`,
         keyword: `pending_${type}_keyword`,
-        searchBtn: `pending_${type}_search_btn`,
-        resetBtn: `pending_${type}_reset_btn`
+        searchBtn: `pending_${type}_search_btn`
     };
 
     mount.innerHTML = `
@@ -2081,7 +2084,6 @@ function renderPendingFilter(type) {
                 <div class="input-group">
                     <input type="text" class="form-control" id="${ids.keyword}" placeholder="고객명, 전화번호">
                     <button class="btn btn-outline-secondary" id="${ids.searchBtn}">조회</button>
-                    <button class="btn btn-outline-dark" id="${ids.resetBtn}">초기화</button>
                 </div>
             </div>
         </div>
@@ -2094,7 +2096,6 @@ function renderPendingFilter(type) {
 
     // 이벤트 연결
     document.getElementById(ids.searchBtn).addEventListener('click', () => searchPending(type));
-    document.getElementById(ids.resetBtn).addEventListener('click', () => resetPendingFilter(type));
     document.getElementById(ids.keyword).addEventListener('keydown', (e) => {
         if (e.key === 'Enter') searchPending(type);
     });
@@ -2113,21 +2114,6 @@ function getPendingFilterValues(type) {
         end: (document.getElementById(ids.end)?.value || ''),
         keyword: (document.getElementById(ids.keyword)?.value || '')
     };
-}
-
-function resetPendingFilter(type) {
-    const ids = {
-        branch: `pending_${type}_branch`,
-        start: `pending_${type}_start`,
-        end: `pending_${type}_end`,
-        keyword: `pending_${type}_keyword`
-    };
-    const range = getDefaultRangeThisMonth();
-    if (document.getElementById(ids.branch)) document.getElementById(ids.branch).value = '전체';
-    if (document.getElementById(ids.start)) document.getElementById(ids.start).value = range.start;
-    if (document.getElementById(ids.end)) document.getElementById(ids.end).value = range.end;
-    if (document.getElementById(ids.keyword)) document.getElementById(ids.keyword).value = '';
-    searchPending(type);
 }
 
 function initPendingPages() {
@@ -2726,7 +2712,7 @@ function renderPendingTableTemplate(container, list, type) {
         TYPE_COLS = [
             { key: '_amount', label: amtLabel, width: '110px', className: 'text-end fw-bold', formatter: (v) => money(v) },
             { key: '_memo', label: '메모', width: '240px', formatter: (v) => v || '-' },
-            { key: '_checkDate', label: '확인일', width: '110px', formatter: (v) => v || '-' }
+            { key: '_checkDate', label: (cfg.checkDateLabel || '확인일'), width: '110px', formatter: (v) => v || '-' }
         ];
     } else if (type === 'card') {
         TYPE_COLS = [
