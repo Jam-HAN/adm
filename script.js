@@ -8,7 +8,7 @@ const GAS_URL = "https://script.google.com/macros/s/AKfycbxVfZJV7fS-qrl6pdd-fUdu
 // [Core] 통신 전용 엔진 (재시도 로직 + 타임아웃 처리 포함)
 // ============================================================
 async function requestAPI(payload, retries = 2) {
-    const timeout = 15000; // 15초 타임아웃 설정
+    const timeout = 25000; // 25초 타임아웃 설정 (미처리 조회 등 대용량 요청 대비)
     const controller = new AbortController();
     const id = setTimeout(() => controller.abort(), timeout);
 
@@ -311,7 +311,8 @@ function showSection(id) {
     if (id === 'section-return-usedphone') initSpecialDates('usedphone');
     if (id === 'section-receive-gift') initSpecialDates('gift');
     if (id === 'section-settlement-period' || id === 'section-settlement-staff') {initSettlementDates();}
-    if (id === 'section-card-setup' || id === 'section-wired-setup') {initSetupDates();}
+    if (id === 'section-card-setup') initSetupDates('card');
+    if (id === 'section-wired-setup') initSetupDates('wired');
     // ---------------------------------------------------------
     
     // 3. [핵심 수정] 입고 화면(section-in) 진입 시 로직 개선
@@ -2042,6 +2043,9 @@ function getTodoConfig(kind) {
 
 // ---------- [3] 서버 결과 -> DTO(완전 통일) ----------
 function normalizeTodoDTO(raw, kind) {
+    // 서버가 이미 완전 통일 DTO를 내려주면 그대로 사용
+    if (raw && raw.kind && raw.customer && raw.fields) return raw;
+
     const cfg = getTodoConfig(kind);
 
     // 공통 식별자
@@ -2196,7 +2200,8 @@ function loadTodoList(kind, opts = {}) {
         if (res.status !== 'success') throw new Error(res.message || '조회 실패');
 
         // 서버가 완전 통일 DTO로 주면 normalizeTodoDTO는 거의 패스처럼 동작합니다.
-        const dtoList = (res.data || res.list || []).map(r => normalizeTodoDTO(r, kind));
+        const rawList = (res.data || res.list || []);
+        const dtoList = rawList.map(r => (r && r.kind && r.customer && r.fields) ? r : normalizeTodoDTO(r, kind));
         renderTodoList(containerId, dtoList, kind);
 
     }).catch(err => {
@@ -2208,62 +2213,95 @@ function loadTodoList(kind, opts = {}) {
 // =========================================================
 // ✅ (A) 중고폰/상품권 미처리 조회 - 기존 버튼 호환
 // =========================================================
-function initSpecialDates() {
-    // 기존 UI가 있다면 그대로 사용 (없어도 안전)
-    const s = document.getElementById('sp_start');
-    const e = document.getElementById('sp_end');
-    if (!s || !e) return;
-
+function initSpecialDates(type) {
+    // 중고/상품권 화면의 날짜 입력(id가 서로 다름)을 타입별로 세팅
     const today = new Date();
     const start = new Date();
     start.setMonth(today.getMonth() - 2);
-
-    s.value = start.toISOString().slice(0, 10);
-    e.value = today.toISOString().slice(0, 10);
-}
-
-function searchSpecialList(type) {
-    const branch = (document.getElementById('sp_branch')?.value) || '전체';
-    const start = (document.getElementById('sp_start')?.value) || '';
-    const end = (document.getElementById('sp_end')?.value) || '';
-    const keyword = (document.getElementById('sp_keyword')?.value) || '';
-
-    const containerId = (type === 'gift') ? 'gift_list' : 'used_list';
-
-    loadTodoList(type, { branch, start, end, keyword, containerId });
-}
-
-// =========================================================
-// ✅ (B) 제휴카드/유선설치 미처리 조회 - 기존 버튼 호환
-// =========================================================
-function initSetupDates() {
-    // setup 페이지 날짜 기본값(최근 2개월)
-    const today = new Date();
-    const start = new Date();
-    start.setMonth(today.getMonth() - 2);
-
-    const set = (id, val) => {
-        const el = document.getElementById(id);
-        if (el) el.value = val;
-    };
 
     const s = start.toISOString().slice(0, 10);
     const e = today.toISOString().slice(0, 10);
 
-    set('setup_start', s);
-    set('setup_end', e);
+    if (type === 'gift') {
+        const a = document.getElementById('search_gift_start');
+        const b = document.getElementById('search_gift_end');
+        if (a) a.value = s;
+        if (b) b.value = e;
+    } else {
+        const a = document.getElementById('search_return_start');
+        const b = document.getElementById('search_return_end');
+        if (a) a.value = s;
+        if (b) b.value = e;
+    }
 }
+
+
+function searchSpecialList(type) {
+    if (type === 'gift') {
+        const branch = document.getElementById('search_gift_branch')?.value || '전체';
+        const start = document.getElementById('search_gift_start')?.value || '';
+        const end = document.getElementById('search_gift_end')?.value || '';
+        const keyword = document.getElementById('search_gift_keyword')?.value || '';
+        loadTodoList('gift', { branch, start, end, keyword, containerId: 'receive-gift-list' });
+        return;
+    }
+
+    // usedphone
+    const branch = document.getElementById('search_return_branch')?.value || '전체';
+    const start = document.getElementById('search_return_start')?.value || '';
+    const end = document.getElementById('search_return_end')?.value || '';
+    const keyword = document.getElementById('search_return_keyword')?.value || '';
+    loadTodoList('usedphone', { branch, start, end, keyword, containerId: 'return-usedphone-list' });
+}
+
+
+// =========================================================
+// ✅ (B) 제휴카드/유선설치 미처리 조회 - 기존 버튼 호환
+// =========================================================
+function initSetupDates(type) {
+    // 제휴카드/유선설치 화면의 날짜 입력(id가 서로 다름)을 타입별로 세팅
+    // type 미지정이면(card/wired 모두) 세팅
+    const today = new Date();
+    const start = new Date();
+    start.setMonth(today.getMonth() - 2);
+
+    const s = start.toISOString().slice(0, 10);
+    const e = today.toISOString().slice(0, 10);
+
+    if (!type || type === 'card') {
+        const a = document.getElementById('search_card_start');
+        const b = document.getElementById('search_card_end');
+        if (a) a.value = s;
+        if (b) b.value = e;
+    }
+
+    if (!type || type === 'wired') {
+        const a = document.getElementById('search_wired_start');
+        const b = document.getElementById('search_wired_end');
+        if (a) a.value = s;
+        if (b) b.value = e;
+    }
+}
+
 
 function searchSetupList(type) {
-    const branch = (document.getElementById('setup_branch')?.value) || '전체';
-    const start = (document.getElementById('setup_start')?.value) || '';
-    const end = (document.getElementById('setup_end')?.value) || '';
-    const keyword = (document.getElementById('setup_keyword')?.value) || '';
+    if (type === 'card') {
+        const branch = document.getElementById('search_card_branch')?.value || '전체';
+        const start = document.getElementById('search_card_start')?.value || '';
+        const end = document.getElementById('search_card_end')?.value || '';
+        const keyword = document.getElementById('search_card_keyword')?.value || '';
+        loadTodoList('card', { branch, start, end, keyword, containerId: 'card_setup_list' });
+        return;
+    }
 
-    const containerId = (type === 'card') ? 'card_setup_list' : 'wired_setup_list';
-
-    loadTodoList(type, { branch, start, end, keyword, containerId });
+    // wired
+    const branch = document.getElementById('search_wired_branch')?.value || '전체';
+    const start = document.getElementById('search_wired_start')?.value || '';
+    const end = document.getElementById('search_wired_end')?.value || '';
+    const keyword = document.getElementById('search_wired_keyword')?.value || '';
+    loadTodoList('wired', { branch, start, end, keyword, containerId: 'wired_setup_list' });
 }
+
 
 // =========================================================
 // ✅ (C) 모달 UX 1개로 통일 (modal-special-update 재사용)
