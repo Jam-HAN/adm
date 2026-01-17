@@ -2693,10 +2693,10 @@ function renderPendingTableTemplate(container, list, type) {
     // - usedphone/gift: 개통처, 약정/유형 제거
     // - card/wired: 약정/유형 제거 + (전화번호 오른쪽에 생년월일 추가)
     const COMMON_COLS = [
-        { key: 'branch', label: '지점', width: '100px', formatter: (v) => v || '-' },
+        { key: 'branch', label: '지점', width: '110px', formatter: (v) => v || '-' },
         { key: 'date', label: '개통일', width: '110px', formatter: (v) => v || '-' },
-        { key: 'name', label: '고객명', width: '120px', className: 'fw-bold text-primary', formatter: (v) => v || '-' },
-        { key: 'phone', label: '전화번호', width: '140px', formatter: (v) => v || '-' },
+        { key: 'name', label: '고객명', width: '110px', className: 'fw-bold text-primary', formatter: (v) => v || '-' },
+        { key: 'phone', label: '전화번호', width: '130px', formatter: (v) => v || '-' },
         // ★ card/wired 화면: 전화번호 오른쪽에 생년월일 표시
         ...((type === 'card' || type === 'wired')
             ? [{ key: 'birth', label: '생년월일', width: '110px', formatter: (v) => v || '-' }]
@@ -2732,16 +2732,16 @@ function renderPendingTableTemplate(container, list, type) {
         ];
     } else if (type === 'card') {
         TYPE_COLS = [
-            { key: '_label', label: cfg.labelKey || '제휴카드', width: '140px', formatter: (v) => v || '-' },
-            { key: 'val1', label: cfg.val1Label || '세이브 등록일', width: '140px', formatter: (v) => v || '-' },
-            { key: 'val2', label: cfg.val2Label || '자동이체 등록일', width: '160px', formatter: (v) => v || '-' }
+            { key: '_label', label: cfg.labelKey || '제휴카드', width: '110px', formatter: (v) => v || '-' },
+            { key: 'val1', label: cfg.val1Label || '세이브 등록일', width: '150px', formatter: (v) => v || '-' },
+            { key: 'val2', label: cfg.val2Label || '자동이체 등록일', width: '150px', formatter: (v) => v || '-' }
         ];
     } else {
         // wired
         TYPE_COLS = [
-            { key: '_label', label: cfg.labelKey || '유선유형', width: '160px', formatter: (v) => v || '-' },
-            { key: 'val1', label: cfg.val1Label || '설치 예정일', width: '160px', formatter: (v) => v || '-' },
-            { key: 'val2', label: cfg.val2Label || '설치 완료일', width: '160px', formatter: (v) => v || '-' }
+            { key: '_label', label: cfg.labelKey || '유선유형', width: '110px', formatter: (v) => v || '-' },
+            { key: 'val1', label: cfg.val1Label || '설치 예정일', width: '150px', formatter: (v) => v || '-' },
+            { key: 'val2', label: cfg.val2Label || '설치 완료일', width: '150px', formatter: (v) => v || '-' }
         ];
     }
 
