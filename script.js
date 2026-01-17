@@ -2399,8 +2399,8 @@ function renderCardSetupList(list) {
 
     container.innerHTML = list.map(item => {
         const rowId = `card_${item.branch}_${item.rowIndex}`;
-        const v1 = item.val1 || ""; 
-        const v2 = item.val2 || "";
+        const v1 = item.val1 || item['제휴카드세이브등록일'] || ""; 
+        const v2 = item.val2 || item['제휴카드자동이체등록일'] || "";
 
         // 값이 '미사용'이면 빨간색 텍스트, 아니면 기본색
         const color1 = v1 === '미사용' ? 'text-danger' : 'text-primary';
@@ -2411,6 +2411,12 @@ function renderCardSetupList(list) {
         const birth = item.birth || item['생년월일'] || '';
         const carrier = item.carrier || item['개통처'] || item['통신사'] || '';
 
+        // ✅ 서버 키 호환(구버전/신버전 혼용 대비)
+        const name = item.name || item['고객명'] || '';
+        const manager = item.manager || item['담당자'] || '미지정';
+        const date = item.date || item['개통일'] || '';
+        const cardName = item.cardName || item['제휴카드'] || '';
+
         return `
         <div class="glass-card p-3 mb-3 border-start border-4 border-primary shadow-sm bg-white">
             <div class="d-flex justify-content-between align-items-center mb-2 border-bottom pb-2">
@@ -2418,12 +2424,12 @@ function renderCardSetupList(list) {
                     <span class="badge bg-primary bg-opacity-10 text-primary me-1 border border-primary">제휴카드</span>
                     <span class="badge bg-light text-secondary border">${item.branch}</span>
                 </div>
-                <span class="small fw-bold text-muted">${item.date}</span>
+                <span class="small fw-bold text-muted">${date}</span>
             </div>
             
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <div class="text-truncate me-2">
-                    <div class="fw-bold fs-5 text-dark">${item.name}</div>
+                    <div class="fw-bold fs-5 text-dark">${name}</div>
                     
                     <div class="small text-muted my-1">
                         ${phone} <span class="mx-1 text-light">|</span>
@@ -2432,11 +2438,11 @@ function renderCardSetupList(list) {
                     </div>
 
                     <div class="small text-secondary fw-bold">
-                        <i class="bi bi-credit-card-2-front me-1 text-primary"></i>${item.cardName}
+                        <i class="bi bi-credit-card-2-front me-1 text-primary"></i>${cardName}
                     </div>
                 </div>
                 <span class="badge bg-white text-dark border rounded-pill px-2 shadow-sm">
-                    <i class="bi bi-person-circle me-1 text-muted"></i>${item.manager || '미지정'}
+                    <i class="bi bi-person-circle me-1 text-muted"></i>${manager}
                 </span>
             </div>
             
@@ -2519,13 +2525,19 @@ function renderWiredSetupList(list) {
 
     container.innerHTML = list.map(item => {
         const rowId = `wired_${item.branch}_${item.rowIndex}`;
-        const v1 = item.val1 ? String(item.val1).substring(0, 10) : "";
-        const v2 = item.val2 ? String(item.val2).substring(0, 10) : "";
+        const v1 = (item.val1 || item['유선상품설치예정일'] || '') ? String(item.val1 || item['유선상품설치예정일']).substring(0, 10) : "";
+        const v2 = (item.val2 || item['유선상품설치일'] || '') ? String(item.val2 || item['유선상품설치일']).substring(0, 10) : "";
 
         // ★ [추가] 상세 정보 (데이터가 없으면 빈칸)
         const phone = item.phone || item['전화번호'] || '';
         const birth = item.birth || item['생년월일'] || '';
         const carrier = item.carrier || item['개통처'] || item['통신사'] || '';
+
+        // ✅ 서버 키 호환(구버전/신버전 혼용 대비)
+        const name = item.name || item['고객명'] || '';
+        const manager = item.manager || item['담당자'] || '미지정';
+        const date = item.date || item['개통일'] || '';
+        const typeText = item.type || item['약정유형'] || item['개통유형'] || '';
 
         return `
         <div class="glass-card p-3 mb-3 border-start border-4 border-success shadow-sm" style="background: #fff;">
@@ -2534,12 +2546,12 @@ function renderWiredSetupList(list) {
                     <span class="badge bg-success bg-opacity-10 text-success me-1 border border-success">유선설치</span>
                     <span class="badge bg-light text-secondary border">${item.branch}</span>
                 </div>
-                <span class="small fw-bold text-muted">${item.date}</span>
+                <span class="small fw-bold text-muted">${date}</span>
             </div>
 
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <div class="text-truncate me-2">
-                    <div class="fw-bold fs-5 text-dark">${item.name}</div>
+                    <div class="fw-bold fs-5 text-dark">${name}</div>
 
                     <div class="small text-muted my-1">
                         ${phone} <span class="mx-1 text-light">|</span>
@@ -2547,10 +2559,10 @@ function renderWiredSetupList(list) {
                         ${carrier}
                     </div>
 
-                    <div class="small text-success fw-bold mt-1"><i class="bi bi-router me-1"></i>${item.type}</div>
+                    <div class="small text-success fw-bold mt-1"><i class="bi bi-router me-1"></i>${typeText}</div>
                 </div>
                 <span class="badge bg-white text-dark border rounded-pill px-2">
-                    <i class="bi bi-person-circle me-1"></i>${item.manager || '미지정'}
+                    <i class="bi bi-person-circle me-1"></i>${manager}
                 </span>
             </div>
 
