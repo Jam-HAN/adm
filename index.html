@@ -1351,64 +1351,53 @@
                 </div>
             </div>
             
-        </div>
-    </div>
 
-    <!-- 급여 계산 섹션 -->
-    <div id="section-salary" class="section-view">
-        <!-- 다른 섹션들과 동일하게 glass-card만 사용합니다 -->
-        <div class="glass-card p-4">
-                <h5 class="fw-bold mb-4 text-primary"><i class="bi bi-cash-coin"></i> 급여 계산</h5>
-                <!-- 필터 영역: 조회 월 선택 -->
-                <div class="row g-2 mb-4 bg-light p-3 rounded border align-items-end">
-                    <div class="col-6">
-                        <label class="form-label-sm fw-bold text-muted">조회 월</label>
-                        <input type="month" id="salary_month" class="form-control form-control-sm fw-bold">
+
+            <!-- 급여 계산 섹션 -->
+            <div id="section-salary" class="section-view">
+                <div class="glass-card p-4">
+                    <h5 class="fw-bold mb-4 text-primary"><i class="bi bi-cash-coin"></i> 급여 계산</h5>
+                    <!-- 필터 영역: 조회 월 선택 -->
+                    <div class="row g-2 mb-4 bg-light p-3 rounded border align-items-end">
+                        <div class="col-6">
+                            <label class="form-label-sm fw-bold text-muted">조회 월</label>
+                            <input type="month" id="salary_month" class="form-control form-control-sm fw-bold">
+                        </div>
+                        <div class="col-2">
+                            <button class="btn btn-primary btn-sm w-100 fw-bold py-2" onclick="loadSalaryReport()">조회</button>
+                        </div>
                     </div>
-                    <div class="col-2">
-                        <button class="btn btn-primary btn-sm w-100 fw-bold py-2" onclick="loadSalaryReport()">조회</button>
+                    <!-- 결과 테이블 -->
+                    <div class="table-responsive w-100 rounded border overflow-hidden shadow-sm">
+                        <table class="table table-hover align-middle text-center small border w-100" style="table-layout: fixed;">
+                            <thead class="table-primary">
+                                <tr>
+                                    <th style="width: 12%">직원명</th>
+                                    <th style="width: 12%">지점</th>
+                                    <th style="width: 10%">직급</th>
+                                    <th style="width: 10%">마진</th>
+                                    <th style="width: 10%">유선점수</th>
+                                    <th style="width: 12%">기본급</th>
+                                    <th style="width: 12%">인센티브</th>
+                                    <th style="width: 12%">상여</th>
+                                    <th style="width: 10%">합계</th>
+                                </tr>
+                            </thead>
+                            <tbody id="salary_tbody">
+                                <tr>
+                                    <td colspan="9" class="text-muted py-5">
+                                        <i class="bi bi-search fs-1 d-block mb-3 opacity-25"></i>
+                                        조회 버튼을 눌러주세요.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
-                </div>
-                <!-- 결과 테이블 -->
-                <div class="table-responsive w-100 rounded border overflow-hidden shadow-sm">
-                    <table class="table table-hover align-middle text-center small border w-100" style="table-layout: fixed;">
-                        <!-- 지정된 폭을 가진 colgroup을 사용해 테이블 폭을 다른 표와 통일합니다 -->
-                        <colgroup>
-                            <col style="width: 12%;">
-                            <col style="width: 12%;">
-                            <col style="width: 10%;">
-                            <col style="width: 10%;">
-                            <col style="width: 10%;">
-                            <col style="width: 12%;">
-                            <col style="width: 12%;">
-                            <col style="width: 12%;">
-                            <col style="width: 10%;">
-                        </colgroup>
-                        <thead class="table-primary">
-                            <tr>
-                                <th>직원명</th>
-                                <th>지점</th>
-                                <th>직급</th>
-                                <th>마진</th>
-                                <th>유선점수</th>
-                                <th>기본급</th>
-                                <th>인센티브</th>
-                                <th>상여</th>
-                                <th>합계</th>
-                            </tr>
-                        </thead>
-                        <tbody id="salary_tbody">
-                            <tr>
-                                <td colspan="9" class="text-muted py-5">
-                                    <i class="bi bi-search fs-1 d-block mb-3 opacity-25"></i>
-                                    조회 버튼을 눌러주세요.
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
                 </div>
             </div>
+            
         </div>
+    </div>
 
     <div class="modal fade" id="modal-stock-register" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
         <div class="modal-dialog modal-dialog-centered">
