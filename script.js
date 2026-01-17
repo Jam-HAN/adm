@@ -5,6 +5,20 @@
 const GAS_URL = "https://script.google.com/macros/s/AKfycbxVfZJV7fS-qrl6pdd-fUduJfpRI1cAdGu9l1eHj1eLYyDQDyNKUgBntbzUTPNKFNK9/exec"; 
 
 // ============================================================
+// [Safe] XSS 방지용 HTML escape
+// - 렌더링 시 undefined/null 안전 처리 포함
+// ============================================================
+function escapeHtml(value) {
+    const s = String(value ?? '');
+    return s
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+// ============================================================
 // [Core] 통신 전용 엔진 (재시도 로직 + 타임아웃 처리 포함)
 // ============================================================
 async function requestAPI(payload, retries = 2) {
