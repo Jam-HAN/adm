@@ -2872,9 +2872,13 @@ function loadSalaryReport() {
         action: 'get_salary_report',
         month: month
     })
-    .then(d => {
+        .then(d => {
         // 정상 응답일 경우 리스트 렌더링, 아닐 경우 메시지를 출력한다.
-        if (d && d.status === 'success' && Array.isArray(d.data)) {
+        // 일부 서버 구현에서는 status 필드가 없고 data만 존재할 수 있으므로
+        // data가 배열인지 먼저 확인하여 성공 처리합니다.
+        if (d && Array.isArray(d.data)) {
+            renderSalaryReportUI(d.data);
+        } else if (d && d.status === 'success' && Array.isArray(d.data)) {
             renderSalaryReportUI(d.data);
         } else {
             // 서버에서 전송된 오류 메시지가 없으면 기본 메시지를 사용한다. d.error나 d.status도 보조적으로 사용한다.
