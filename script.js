@@ -2323,286 +2323,187 @@ async function loadSettlement(type) {
     }
 }
 
-// =========================================================
-// [최종 복구] 제휴카드 / 유선설치 (카드형 리스트 + 바로 입력 방식)
-// =========================================================
+// ==========================================
+// [특수업무] 제휴카드/유선설치 (get_all_history + update_history로 통일)
+// ==========================================
 
-// 0. 초기화: 날짜 기본값 세팅 (이번달 1일 ~ 오늘)
+// 날짜 기본값 세팅 (card/wired 공통)
 function initSetupDates() {
-    const today = new Date();
-    const yyyy = today.getFullYear();
-    const mm = String(today.getMonth() + 1).padStart(2, '0');
-    const dd = String(today.getDate()).padStart(2, '0');
-    
-    const firstDay = `${yyyy}-${mm}-01`;
-    const todayStr = `${yyyy}-${mm}-${dd}`;
+  const today = new Date();
+  const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+  const fmt = (d) => d.toISOString().slice(0, 10);
 
-    document.getElementById('search_card_start').value = firstDay;
-    document.getElementById('search_card_end').value = todayStr;
-    document.getElementById('search_wired_start').value = firstDay;
-    document.getElementById('search_wired_end').value = todayStr;
+  // 카드
+  if (!document.getElementById('search_card_start').value) document.getElementById('search_card_start').value = fmt(firstDay);
+  if (!document.getElementById('search_card_end').value) document.getElementById('search_card_end').value = fmt(today);
+
+  // 유선
+  if (!document.getElementById('search_wired_start').value) document.getElementById('search_wired_start').value = fmt(firstDay);
+  if (!document.getElementById('search_wired_end').value) document.getElementById('search_wired_end').value = fmt(today);
 }
 
-// 1. 통합 검색 함수
+// 조회 버튼
 function searchSetupList(type) {
-    const branchId = type === 'card' ? 'search_card_branch' : 'search_wired_branch';
-    const startId = type === 'card' ? 'search_card_start' : 'search_wired_start';
-    const endId = type === 'card' ? 'search_card_end' : 'search_wired_end';
-    const keyId = type === 'card' ? 'search_card_keyword' : 'search_wired_keyword';
-    
-    // 리스트 컨테이너 ID
-    const containerId = type === 'card' ? 'card_setup_list' : 'wired_setup_list';
+  const branch = (type === 'card')
+    ? document.getElementById('search_card_branch').value
+    : document.getElementById('search_wired_branch').value;
 
-    const branch = document.getElementById(branchId).value;
-    const start = document.getElementById(startId).value;
-    const end = document.getElementById(endId).value;
-    const keyword = document.getElementById(keyId).value;
-    const container = document.getElementById(containerId);
+  const keyword = (type === 'card')
+    ? document.getElementById('search_card_keyword').value
+    : document.getElementById('search_wired_keyword').value;
 
-    // 로딩 표시
-    container.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-secondary"></div><div class="mt-2 small text-muted">데이터 조회 중...</div></div>';
+  const start = (type === 'card')
+    ? document.getElementById('search_card_start').value
+    : document.getElementById('search_wired_start').value;
 
-    // ★ get_all_history와 동일한 패턴: data 객체로 start/end 통일
-    requestAPI({
-            action: "get_setup_pending_list",
-            data: {
-                type: type,
-                branch: branch,
-                start: start,
-                end: end,
-                keyword: keyword
-            }
-        })
-    .then(d => {
-        if (d.status === 'success') {
-            // 서버 응답: { status:'success', data:[...] }
-            const list = d.data || d.list || [];
-            if (type === 'card') renderCardSetupList(list);
-            else renderWiredSetupList(list);
-        } else {
-            container.innerHTML = `<div class="text-center text-danger py-5 small">${d.message}</div>`;
-        }
-    })
-    .catch(e => {
-        container.innerHTML = `<div class="text-center text-danger py-5 small">통신 오류가 발생했습니다.</div>`;
-    });
-}
+  const end = (type === 'card')
+    ? document.getElementById('search_card_end').value
+    : document.getElementById('search_wired_end').value;
 
-// 2. 제휴카드 렌더링 (UI 디자인 업그레이드: 세련된 입력 그룹)
-function renderCardSetupList(list) {
-    const container = document.getElementById('card_setup_list');
-    
-    if (!list || list.length === 0) {
-        container.innerHTML = `<div class="text-center text-muted py-5 small"><i class="bi bi-check-circle fs-1 d-block mb-3 opacity-25"></i>미처리 내역이 없습니다. (모두 완료)</div>`;
-        return;
+  const containerId = (type === 'card') ? 'card_setup_list' : 'wired_setup_list';
+  const container = document.getElementById(containerId);
+
+  if (container) {
+    container.innerHTML = `
+      <div class="glass-card p-4 text-center">
+        <div class="spinner-border text-primary"></div>
+        <div class="mt-2 small text-muted">조회 중...</div>
+      </div>
+    `;
+  }
+
+  // ✅ 서버는 get_all_history로 통일
+  requestAPI({
+    action: "get_all_history",
+    branch: branch || "전체",
+    keyword: keyword || "",
+    start: start,
+    end: end,
+    specialType: type // 'card' | 'wired'
+  }).then(res => {
+    if (res.status !== 'success') throw new Error(res.message || '조회 실패');
+    renderSetupPendingList(type, res.data || []);
+  }).catch(err => {
+    if (container) {
+      container.innerHTML = `
+        <div class="glass-card p-4 text-center text-danger">
+          ${err.message || '조회 오류'}
+        </div>
+      `;
     }
-
-    container.innerHTML = list.map(item => {
-        const rowId = `card_${item.branch}_${item.rowIndex}`;
-        const v1 = item.val1 || ""; 
-        const v2 = item.val2 || "";
-
-        // 값이 '미사용'이면 빨간색 텍스트, 아니면 기본색
-        const color1 = v1 === '미사용' ? 'text-danger' : 'text-primary';
-        const color2 = v2 === '미사용' ? 'text-danger' : 'text-primary';
-
-        // ★ [추가] 상세 정보 변수 준비 (데이터가 없으면 빈칸)
-        const phone = item.phone || item['전화번호'] || '';
-        const birth = item.birth || item['생년월일'] || '';
-        const carrier = item.carrier || item['개통처'] || item['통신사'] || '';
-
-        return `
-        <div class="glass-card p-3 mb-3 border-start border-4 border-primary shadow-sm bg-white">
-            <div class="d-flex justify-content-between align-items-center mb-2 border-bottom pb-2">
-                <div>
-                    <span class="badge bg-primary bg-opacity-10 text-primary me-1 border border-primary">제휴카드</span>
-                    <span class="badge bg-light text-secondary border">${item.branch}</span>
-                </div>
-                <span class="small fw-bold text-muted">${item.date}</span>
-            </div>
-            
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <div class="text-truncate me-2">
-                    <div class="fw-bold fs-5 text-dark">${item.name}</div>
-                    
-                    <div class="small text-muted my-1">
-                        ${phone} <span class="mx-1 text-light">|</span>
-                        ${birth} <span class="mx-1 text-light">|</span>
-                        ${carrier}
-                    </div>
-
-                    <div class="small text-secondary fw-bold">
-                        <i class="bi bi-credit-card-2-front me-1 text-primary"></i>${item.cardName}
-                    </div>
-                </div>
-                <span class="badge bg-white text-dark border rounded-pill px-2 shadow-sm">
-                    <i class="bi bi-person-circle me-1 text-muted"></i>${item.manager || '미지정'}
-                </span>
-            </div>
-            
-            <div class="bg-light p-3 rounded-3 border">
-                <div class="row g-2 mb-3">
-                    
-                    <div class="col-6">
-                        <label class="form-label-sm fw-bold text-secondary small mb-1 ms-1">세이브 등록</label>
-                        <div class="input-group input-group-sm shadow-sm">
-                            <input type="text" class="form-control border-primary fw-bold text-center ${color1}" 
-                                   id="val1_${rowId}" value="${v1}" placeholder="날짜" 
-                                   onfocus="if(this.value!=='미사용')this.type='date'" 
-                                   onblur="if(!this.value)this.type='text'"
-                                   style="border-right: none;">
-                            <button class="btn btn-white border border-primary border-start-0 text-muted" type="button" 
-                                    onclick="setUnused('val1_${rowId}')" title="미사용 처리" 
-                                    style="background: white;">
-                                <i class="bi bi-slash-circle"></i>
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div class="col-6">
-                        <label class="form-label-sm fw-bold text-secondary small mb-1 ms-1">자동이체 등록</label>
-                        <div class="input-group input-group-sm shadow-sm">
-                            <input type="text" class="form-control border-primary fw-bold text-center ${color2}" 
-                                   id="val2_${rowId}" value="${v2}" placeholder="날짜" 
-                                   onfocus="if(this.value!=='미사용')this.type='date'" 
-                                   onblur="if(!this.value)this.type='text'"
-                                   style="border-right: none;">
-                            <button class="btn btn-white border border-primary border-start-0 text-muted" type="button" 
-                                    onclick="setUnused('val2_${rowId}')" title="미사용 처리" 
-                                    style="background: white;">
-                                <i class="bi bi-slash-circle"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <button class="btn btn-primary w-100 btn-sm fw-bold shadow hover-effect" onclick="saveSetupInfo('card', '${item.branch}', '${item.rowIndex}', '${rowId}')">
-                    <i class="bi bi-check-lg me-1"></i> 저장하기
-                </button>
-            </div>
-        </div>`;
-    }).join('');
-    
-    // 날짜 입력 이벤트 리스너 (기존과 동일)
-    document.querySelectorAll('input[id^="val"]').forEach(el => {
-        el.addEventListener('input', function() {
-            // 값이 바뀌면 글자색을 파란색으로 (미사용일땐 빨강이었음)
-            if(this.value !== '미사용') {
-                this.classList.remove('text-danger');
-                this.classList.add('text-primary');
-            }
-        });
-    });
+  });
 }
 
-// [script.js] 미사용 버튼 동작 (글자색 빨강으로 변경 추가)
-function setUnused(inputId) {
-    const el = document.getElementById(inputId);
-    el.type = 'text'; 
-    el.value = '미사용';
-    // 시각적 강조
-    el.classList.remove('text-primary');
-    el.classList.add('text-danger');
+// 리스트 렌더 (중고폰/상품권 카드 스타일과 톤 통일)
+function renderSetupPendingList(type, list) {
+  const containerId = (type === 'card') ? 'card_setup_list' : 'wired_setup_list';
+  const container = document.getElementById(containerId);
+  if (!container) return;
+
+  if (!list.length) {
+    container.innerHTML = `
+      <div class="glass-card p-4 text-center">
+        <div class="fw-bold">미처리 항목이 없습니다.</div>
+        <div class="small text-muted mt-1">완벽합니다. 이제 커피 한 잔 하셔도 됩니다 ☕</div>
+      </div>
+    `;
+    return;
+  }
+
+  const titleA = (type === 'card') ? '세이브 등록일' : '설치예정일';
+  const titleB = (type === 'card') ? '자동이체 등록일' : '설치일';
+
+  container.innerHTML = list.map(item => {
+    const label = (type === 'card')
+      ? (item.typeLabel ? `제휴카드: ${item.typeLabel}` : '제휴카드')
+      : (item.typeLabel ? `상품: ${item.typeLabel}` : '유선상품');
+
+    return `
+      <div class="glass-card p-3 mb-3">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <div class="fw-bold">${item['고객명'] || '-'} <span class="text-muted small">(${item.branch})</span></div>
+            <div class="small text-muted mt-1">
+              ${item['전화번호'] || '-'} · ${item['생년월일'] || '-'} · ${item['개통처'] || '-'}
+            </div>
+            <div class="small mt-2">
+              <span class="badge bg-secondary bg-opacity-75">${label}</span>
+              <span class="badge bg-primary bg-opacity-10 text-primary ms-2">${item['담당자'] || '미지정'}</span>
+              <span class="badge bg-light text-dark ms-2">${item['개통일'] || '-'}</span>
+            </div>
+          </div>
+
+          <button class="btn btn-sm btn-outline-primary rounded-4"
+            onclick="openSetupEditPopup('${type}', '${item.branch}', '${item.rowIndex}', '${escapeHtml(item['고객명']||'')}', '${escapeHtml(item['전화번호']||'')}', '${escapeHtml(item.val1||'')}', '${escapeHtml(item.val2||'')}' )">
+            등록/수정
+          </button>
+        </div>
+
+        <div class="mt-3 d-flex flex-wrap gap-2">
+          <div class="small"><span class="text-muted">${titleA}:</span> <span class="fw-bold">${item.val1 || '-'}</span></div>
+          <div class="small"><span class="text-muted">${titleB}:</span> <span class="fw-bold">${item.val2 || '-'}</span></div>
+        </div>
+      </div>
+    `;
+  }).join('');
 }
 
-// 3. 유선설치 리스트 렌더링 (카드 내부에 입력창 배치)
-function renderWiredSetupList(list) {
-    const container = document.getElementById('wired_setup_list');
-    
-    if (!list || list.length === 0) {
-        container.innerHTML = `<div class="text-center text-muted py-5 small">
-            <i class="bi bi-check-circle fs-1 d-block mb-3 opacity-25"></i>
-            미처리 내역이 없습니다. (모두 완료!)
-        </div>`;
-        return;
+// 팝업 (SweetAlert2 사용 가정: 기존 프로젝트 패턴 유지)
+function openSetupEditPopup(type, branch, rowIndex, name, phone, val1, val2) {
+  const titleA = (type === 'card') ? '세이브 등록일' : '설치예정일';
+  const titleB = (type === 'card') ? '자동이체 등록일' : '설치일';
+
+  Swal.fire({
+    title: (type === 'card') ? '제휴카드 등록' : '유선설치 등록',
+    html: `
+      <div class="text-start small mb-2 text-muted">${name} · ${phone}</div>
+
+      <label class="form-label-sm mt-2">${titleA}</label>
+      <input id="sp_val1" class="form-control" value="${val1 || ''}" placeholder="예: 2026-01-17 또는 미사용">
+
+      <label class="form-label-sm mt-3">${titleB}</label>
+      <input id="sp_val2" class="form-control" value="${val2 || ''}" placeholder="예: 2026-01-17 또는 해당없음">
+
+      <input type="hidden" id="sp_branch" value="${branch}">
+      <input type="hidden" id="sp_row" value="${rowIndex}">
+      <input type="hidden" id="sp_type" value="${type}">
+    `,
+    showCancelButton: true,
+    confirmButtonText: '저장',
+    cancelButtonText: '취소',
+    preConfirm: () => {
+      return {
+        branch: document.getElementById('sp_branch').value,
+        rowIndex: Number(document.getElementById('sp_row').value),
+        type: document.getElementById('sp_type').value,
+        val1: document.getElementById('sp_val1').value.trim(),
+        val2: document.getElementById('sp_val2').value.trim(),
+      };
     }
-
-    container.innerHTML = list.map(item => {
-        const rowId = `wired_${item.branch}_${item.rowIndex}`;
-        const v1 = item.val1 ? String(item.val1).substring(0, 10) : "";
-        const v2 = item.val2 ? String(item.val2).substring(0, 10) : "";
-
-        // ★ [추가] 상세 정보 (데이터가 없으면 빈칸)
-        const phone = item.phone || item['전화번호'] || '';
-        const birth = item.birth || item['생년월일'] || '';
-        const carrier = item.carrier || item['개통처'] || item['통신사'] || '';
-
-        return `
-        <div class="glass-card p-3 mb-3 border-start border-4 border-success shadow-sm" style="background: #fff;">
-            <div class="d-flex justify-content-between align-items-center mb-2 border-bottom pb-2">
-                <div>
-                    <span class="badge bg-success bg-opacity-10 text-success me-1 border border-success">유선설치</span>
-                    <span class="badge bg-light text-secondary border">${item.branch}</span>
-                </div>
-                <span class="small fw-bold text-muted">${item.date}</span>
-            </div>
-
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <div class="text-truncate me-2">
-                    <div class="fw-bold fs-5 text-dark">${item.name}</div>
-
-                    <div class="small text-muted my-1">
-                        ${phone} <span class="mx-1 text-light">|</span>
-                        ${birth} <span class="mx-1 text-light">|</span>
-                        ${carrier}
-                    </div>
-
-                    <div class="small text-success fw-bold mt-1"><i class="bi bi-router me-1"></i>${item.type}</div>
-                </div>
-                <span class="badge bg-white text-dark border rounded-pill px-2">
-                    <i class="bi bi-person-circle me-1"></i>${item.manager || '미지정'}
-                </span>
-            </div>
-
-            <div class="bg-light p-3 rounded-3 border">
-                <div class="row g-2 mb-2">
-                    <div class="col-6">
-                        <label class="form-label-sm fw-bold text-muted small" style="font-size: 0.75rem;">설치 예정일</label>
-                        <input type="date" class="form-control form-control-sm border-success fw-bold text-center" id="val1_${rowId}" value="${v1}">
-                    </div>
-                    <div class="col-6">
-                        <label class="form-label-sm fw-bold text-muted small" style="font-size: 0.75rem;">설치 완료일</label>
-                        <input type="date" class="form-control form-control-sm border-success fw-bold text-center" id="val2_${rowId}" value="${v2}">
-                    </div>
-                </div>
-                <button class="btn btn-success w-100 btn-sm fw-bold shadow-sm" onclick="saveSetupInfo('wired', '${item.branch}', '${item.rowIndex}', '${rowId}')">
-                    <i class="bi bi-check-lg me-1"></i> 저장하기
-                </button>
-            </div>
-        </div>`;
-    }).join('');
+  }).then(result => {
+    if (!result.isConfirmed) return;
+    saveSetupInfo(result.value);
+  });
 }
 
-// 4. 저장 함수 (입력값 그대로 전송)
-function saveSetupInfo(type, branch, rowIndex, rowId) {
-    const val1 = document.getElementById(`val1_${rowId}`).value;
-    const val2 = document.getElementById(`val2_${rowId}`).value;
+// ✅ 저장: update_history로 통일
+function saveSetupInfo(payload) {
+  requestAPI({
+    action: "update_history",
+    branch: payload.branch,
+    rowIndex: payload.rowIndex,
+    specialType: payload.type, // 'card' | 'wired'
+    val1: payload.val1,
+    val2: payload.val2
+  }).then(res => {
+    if (res.status !== 'success') throw new Error(res.message || '저장 실패');
+    Swal.fire({ icon: 'success', title: '저장 완료', timer: 900, showConfirmButton: false });
 
-    if (!confirm("입력된 정보로 저장하시겠습니까?")) return;
-
-    if(typeof Swal !== 'undefined') Swal.fire({ title: '저장 중...', didOpen: () => Swal.showLoading() });
-
-    requestAPI({
-            action: "update_setup_info",
-            type: type,
-            branch: branch,
-            rowIndex: rowIndex,
-            val1: val1,
-            val2: val2
-        })
-    .then(d => {
-        if (d.status === 'success') {
-            if(typeof Swal !== 'undefined') Swal.fire({ icon: 'success', title: '처리 완료', timer: 1000, showConfirmButton: false });
-            else alert("저장되었습니다.");
-            // 목록 갱신
-            searchSetupList(type);
-        } else {
-            alert(d.message);
-        }
-    })
-    .catch(e => {
-        alert("통신 오류가 발생했습니다.");
-    });
+    // 저장 후 재조회
+    searchSetupList(payload.type);
+  }).catch(err => {
+    Swal.fire({ icon: 'error', title: '저장 오류', text: err.message || '통신 오류' });
+  });
 }
 
 // ==========================================
