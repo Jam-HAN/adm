@@ -1986,7 +1986,9 @@ const PENDING_CONFIGS = {
         mode: 'amount',
         amountKey: '중고폰',
         supportsModel: true,
-        toggleLabel: '반납 확인'
+        toggleLabel: '반납 확인',
+        labelKey: '모델명',
+        extraLabels: ['중고폰', '메모', '상태']
     },
     gift: {
         type: 'gift',
@@ -1999,7 +2001,9 @@ const PENDING_CONFIGS = {
         mode: 'amount',
         amountKey: '상품권',
         supportsModel: false,
-        toggleLabel: '수령 확인'
+        toggleLabel: '수령 확인',
+        labelKey: '상품권',
+        extraLabels: ['상품권', '메모', '상태']
     },
     card: {
         type: 'card',
@@ -2011,6 +2015,9 @@ const PENDING_CONFIGS = {
         todoLabel: '미처리',
         mode: 'dates',
         dateLabels: ['세이브 등록일', '자동이체 등록일'],
+        val1Label: '세이브 등록일',
+        val2Label: '자동이체 등록일',
+        labelKey: '제휴카드',
         naToggle: true
     },
     wired: {
@@ -2023,6 +2030,9 @@ const PENDING_CONFIGS = {
         todoLabel: '미설치',
         mode: 'dates',
         dateLabels: ['설치 예정일', '설치 완료일'],
+        val1Label: '설치 예정일',
+        val2Label: '설치 완료일',
+        labelKey: '약정유형',
         naToggle: false
     }
 };
@@ -2669,7 +2679,155 @@ function renderPendingList(containerId, list, type) {
         container.innerHTML = `<div class="text-center text-muted py-5 small"><i class="bi bi-check-circle fs-1 d-block mb-3 opacity-25"></i>미처리 내역이 없습니다. (모두 완료)</div>`;
         return;
     }
-    container.innerHTML = list.map(it => renderPendingCard(it, type)).join('');
+    renderPendingTableTemplate(container, list, type);
+}
+
+// ==========================================================
+// ✅ [테이블 템플릿] “미처리” 리스트도 카드가 아니라 동일 테이블로 통일
+// - 중고/상품권/미처리(카드/유선) 모두 같은 UX(표 + 클릭하면 모달)
+// - 컬럼/필드 정의는 CONFIG(PENDING_CONFIGS)에서 분리
+// ==========================================================
+function renderPendingTableTemplate(container, list, type) {
+    const cfg = PENDING_CONFIGS[type];
+    if (!cfg) {
+        container.innerHTML = `<div class="text-center text-muted py-5">설정이 없습니다.</div>`;
+        return;
+    }
+
+    // ✅ 1) 타입별 컬럼 정의 ("템플릿 1개 + 설정 N개")
+    // - 공통 필드: 지점/개통일/고객/담당자/상태
+    // - 타입별 필드: card(제휴카드 2개), wired(설치예정/설치일)
+    const COMMON_COLS = [
+        { key: 'branch', label: '지점', width: '90px', formatter: (v) => v || '-' },
+        { key: 'date', label: '개통일', width: '110px', formatter: (v) => v || '-' },
+        { key: 'name', label: '고객명', width: '120px', className: 'fw-bold text-primary', formatter: (v) => v || '-' },
+        { key: 'phone', label: '전화번호', width: '140px', formatter: (v) => v || '-' },
+        { key: 'carrier', label: '개통처', width: '90px', formatter: (v) => v || '-' },
+        { key: 'planType', label: '약정/유형', width: '120px', formatter: (v) => v || '-' },
+        { key: 'manager', label: '담당자', width: '110px', formatter: (v) => v || '미지정' },
+        { key: 'status', label: '상태', width: '110px', formatter: (_, row) => {
+            const done = !!row.completed;
+            return done
+                ? `<span class="badge bg-success bg-opacity-75">${cfg.doneLabel || '완료'}</span>`
+                : `<span class="badge bg-danger bg-opacity-75">${cfg.todoLabel || '미처리'}</span>`;
+        }}
+    ];
+
+    // 타입별 컬럼(필요한 값만 추가)
+    const money = (n) => {
+        if (n === undefined || n === null || String(n).trim() === '') return '<span class="text-muted opacity-50">-</span>';
+        const num = Number(String(n).replace(/,/g, ''));
+        return Number.isFinite(num) ? num.toLocaleString() : String(n);
+    };
+
+    let TYPE_COLS = [];
+    if (type === 'usedphone' || type === 'gift') {
+        const amtLabel = cfg.amountKey || (type === 'usedphone' ? '중고폰' : '상품권');
+        TYPE_COLS = [
+            { key: '_amount', label: amtLabel, width: '110px', className: 'text-end fw-bold', formatter: (v) => money(v) },
+            { key: '_memo', label: '메모', width: '240px', formatter: (v) => v || '-' },
+            { key: '_checkDate', label: '확인일', width: '110px', formatter: (v) => v || '-' }
+        ];
+    } else if (type === 'card') {
+        TYPE_COLS = [
+            { key: '_label', label: cfg.labelKey || '제휴카드', width: '140px', formatter: (v) => v || '-' },
+            { key: 'val1', label: cfg.val1Label || '세이브 등록일', width: '140px', formatter: (v) => v || '-' },
+            { key: 'val2', label: cfg.val2Label || '자동이체 등록일', width: '160px', formatter: (v) => v || '-' }
+        ];
+    } else {
+        // wired
+        TYPE_COLS = [
+            { key: '_label', label: cfg.labelKey || '유선유형', width: '160px', formatter: (v) => v || '-' },
+            { key: 'val1', label: cfg.val1Label || '설치 예정일', width: '160px', formatter: (v) => v || '-' },
+            { key: 'val2', label: cfg.val2Label || '설치 완료일', width: '160px', formatter: (v) => v || '-' }
+        ];
+    }
+
+    const COLS = [...COMMON_COLS, ...TYPE_COLS];
+
+    // ✅ 2) 렌더링 데이터 전처리(표시용 문자열 합치기)
+    const rows = list.map((raw) => {
+        const meta = normalizePendingItem(raw);
+
+        // 완료 판정(카드 UI와 동일 로직)
+        let completed = false;
+        if (type === 'usedphone' || type === 'gift') {
+            completed = (raw.completed === true);
+        } else if (type === 'card') {
+            const v1 = raw.val1 || raw['제휴카드세이브등록일'] || '';
+            const v2 = raw.val2 || raw['제휴카드자동이체등록일'] || '';
+            completed = isDoneCard(v1) && isDoneCard(v2);
+        } else {
+            const v2 = raw.val2 || raw['유선상품설치일'] || '';
+            completed = isDoneWired(v2);
+        }
+
+        // 타입별 표시용 값(테이블 전용)
+        const _amount = (type === 'usedphone') ? (raw['중고폰'] ?? raw.amount ?? '') : (type === 'gift') ? (raw['상품권'] ?? raw.amount ?? '') : '';
+        const _memo = (type === 'usedphone') ? (raw['중고폰메모'] ?? raw.modelMemo ?? '') : (type === 'gift') ? (raw['상품권메모'] ?? raw.memo ?? '') : '';
+        const _checkDate = raw['checkDate'] || '';
+        const _label = (type === 'card')
+            ? (raw.cardName || raw['제휴카드'] || '')
+            : (type === 'wired')
+                ? (meta.planType || raw['유선상품'] || '')
+                : '';
+
+        // 값 보정: card/wired는 서버 키가 한글일 수 있으니 val1/val2에도 주입
+        const val1 = raw.val1 || (type === 'card' ? raw['제휴카드세이브등록일'] : raw['유선상품설치예정일']) || '';
+        const val2 = raw.val2 || (type === 'card' ? raw['제휴카드자동이체등록일'] : raw['유선상품설치일']) || '';
+
+        return {
+            ...raw,
+            ...meta,
+            branch: raw.branch || raw['지점'] || '',
+            completed,
+            val1,
+            val2,
+            _amount,
+            _memo,
+            _checkDate,
+            _label
+        };
+    });
+
+    // ✅ 3) 클릭 매핑용 인덱스 주입(렌더링 전에 세팅)
+    rows.forEach((r, i) => { r._idx = i; });
+
+    // ✅ 3) 테이블 템플릿 생성
+    const thead = `<tr>${COLS.map(c => `<th style="width:${c.width || 'auto'}">${c.label}</th>`).join('')}</tr>`;
+    const tbody = rows.map((row) => {
+        const tds = COLS.map(col => {
+            const rawVal = row[col.key];
+            const html = (typeof col.formatter === 'function')
+                ? col.formatter(rawVal, row)
+                : (rawVal ?? '-');
+            const cls = col.className ? ` ${col.className}` : '';
+            return `<td class="${cls}">${html}</td>`;
+        }).join('');
+        // 행 클릭 = 상세/저장 모달 열기
+        return `<tr class="table-row-click" data-type="${type}" data-idx="${row._idx}">${tds}</tr>`;
+    }).join('');
+
+    container.innerHTML = `
+      <div class="table-template">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">${thead}</thead>
+            <tbody>${tbody}</tbody>
+          </table>
+        </div>
+        <div class="small text-muted mt-2">행을 클릭하면 상세 입력/저장 모달이 열립니다.</div>
+      </div>
+    `;
+
+    // ✅ 4) 클릭 이벤트 바인딩 (행 -> 원본 객체 매핑)
+    container.querySelectorAll('tr.table-row-click').forEach(tr => {
+        tr.addEventListener('click', () => {
+            const idx = Number(tr.getAttribute('data-idx'));
+            const item = rows[idx];
+            openPendingModal(item, type);
+        });
+    });
 }
 
 // ==========================================

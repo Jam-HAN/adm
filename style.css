@@ -101,6 +101,31 @@ a { text-decoration: none; }
   background: rgba(47,107,255,.06) !important;
 }
 
+/* ---------- Pending (미처리) Table Template ---------- */
+.table-template{
+  background: var(--surface);
+  border: 1px solid rgba(47,107,255,.10);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  padding: 10px;
+}
+
+.table-template .table-responsive{
+  border-radius: 14px;
+  overflow: auto;
+}
+
+.table-row-click{ cursor: pointer; }
+
+.table-template thead th{
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: linear-gradient(180deg, var(--surface-blue) 0%, rgba(255,255,255,.70) 100%) !important;
+}
+
 /* ---------- Forms (Density + Tone) ---------- */
 .form-label-sm{
   font-size: .78rem;
