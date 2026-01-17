@@ -420,3 +420,9 @@ body.no-scroll{
 thead .sticky-start {
     z-index: 10 !important; 
 }
+
+/* 공통 모달(미처리 관리) - 미사용 처리된 날짜 입력 시각화 */
+#sp_dates_group input:disabled {
+    background: rgba(148, 163, 184, 0.15);
+    opacity: 0.9;
+}
