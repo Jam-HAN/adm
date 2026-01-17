@@ -2345,47 +2345,41 @@ function initSetupDates() {
 
 // 1. 통합 검색 함수
 function searchSetupList(type) {
-    const branchId = type === 'card' ? 'search_card_branch' : 'search_wired_branch';
-    const startId = type === 'card' ? 'search_card_start' : 'search_wired_start';
-    const endId = type === 'card' ? 'search_card_end' : 'search_wired_end';
-    const keyId = type === 'card' ? 'search_card_keyword' : 'search_wired_keyword';
-    
-    // 리스트 컨테이너 ID
-    const containerId = type === 'card' ? 'card_setup_list' : 'wired_setup_list';
+  const branch = document.getElementById('setup_branch').value;
+  const start  = document.getElementById('setup_start').value;
+  const end    = document.getElementById('setup_end').value;
+  const keyword = document.getElementById('setup_keyword').value.trim();
 
-    const branch = document.getElementById(branchId).value;
-    const start = document.getElementById(startId).value;
-    const end = document.getElementById(endId).value;
-    const keyword = document.getElementById(keyId).value;
-    const container = document.getElementById(containerId);
+  const listDiv = document.getElementById('setup-list');
+  listDiv.innerHTML = "<div class='loading'>조회 중...</div>";
 
-    // 로딩 표시
-    container.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-secondary"></div><div class="mt-2 small text-muted">데이터 조회 중...</div></div>';
+  // ✅ get_all_history로 통일
+  requestAPI({
+    action: "get_all_history",
+    start: start,
+    end: end,
+    keyword: keyword,
+    branch: branch,
+    specialType: type // 'card' | 'wired'
+  }).then(res => {
+    if (res.status !== 'success') {
+      listDiv.innerHTML = `<div class='empty'>${res.message || "조회 실패"}</div>`;
+      return;
+    }
 
-    // ★ get_all_history와 동일한 패턴: data 객체로 start/end 통일
-    requestAPI({
-            action: "get_setup_pending_list",
-            data: {
-                type: type,
-                branch: branch,
-                start: start,
-                end: end,
-                keyword: keyword
-            }
-        })
-    .then(d => {
-        if (d.status === 'success') {
-            // 서버 응답: { status:'success', data:[...] }
-            const list = d.data || d.list || [];
-            if (type === 'card') renderCardSetupList(list);
-            else renderWiredSetupList(list);
-        } else {
-            container.innerHTML = `<div class="text-center text-danger py-5 small">${d.message}</div>`;
-        }
-    })
-    .catch(e => {
-        container.innerHTML = `<div class="text-center text-danger py-5 small">통신 오류가 발생했습니다.</div>`;
-    });
+    const list = res.data || [];
+    if (!list.length) {
+      listDiv.innerHTML = "<div class='empty'>미처리 건이 없습니다.</div>";
+      return;
+    }
+
+    // 렌더는 기존 함수 그대로 재사용
+    if (type === 'card') renderCardSetupList(list);
+    else renderWiredSetupList(list);
+
+  }).catch(err => {
+    listDiv.innerHTML = `<div class='empty'>오류: ${err}</div>`;
+  });
 }
 
 // 2. 제휴카드 렌더링 (UI 디자인 업그레이드: 세련된 입력 그룹)
@@ -2574,35 +2568,27 @@ function renderWiredSetupList(list) {
 }
 
 // 4. 저장 함수 (입력값 그대로 전송)
-function saveSetupInfo(type, branch, rowIndex, rowId) {
-    const val1 = document.getElementById(`val1_${rowId}`).value;
-    const val2 = document.getElementById(`val2_${rowId}`).value;
+function saveSetupInfo(type, branch, rowIndex) {
+  const v1 = document.getElementById(`setup_val1_${rowIndex}`).value.trim();
+  const v2 = document.getElementById(`setup_val2_${rowIndex}`).value.trim();
 
-    if (!confirm("입력된 정보로 저장하시겠습니까?")) return;
-
-    if(typeof Swal !== 'undefined') Swal.fire({ title: '저장 중...', didOpen: () => Swal.showLoading() });
-
-    requestAPI({
-            action: "update_setup_info",
-            type: type,
-            branch: branch,
-            rowIndex: rowIndex,
-            val1: val1,
-            val2: val2
-        })
-    .then(d => {
-        if (d.status === 'success') {
-            if(typeof Swal !== 'undefined') Swal.fire({ icon: 'success', title: '처리 완료', timer: 1000, showConfirmButton: false });
-            else alert("저장되었습니다.");
-            // 목록 갱신
-            searchSetupList(type);
-        } else {
-            alert(d.message);
-        }
-    })
-    .catch(e => {
-        alert("통신 오류가 발생했습니다.");
-    });
+  // ✅ update_history로 통일
+  requestAPI({
+    action: "update_history",
+    specialType: type, // 'card' | 'wired'
+    branch: branch,
+    rowIndex: rowIndex,
+    val1: v1,
+    val2: v2
+  }).then(d => {
+    if (d.status === 'success') {
+      if(typeof Swal !== 'undefined') Swal.fire({ icon: 'success', title: '처리 완료', timer: 1000, showConfirmButton: false });
+      else alert("저장되었습니다.");
+      searchSetupList(type);
+    } else {
+      alert(d.message);
+    }
+  }).catch(e => alert("오류: " + e));
 }
 
 // ==========================================
