@@ -132,6 +132,13 @@ a { text-decoration: none; }
   background: linear-gradient(180deg, var(--surface-blue) 0%, rgba(255,255,255,.70) 100%) !important;
 }
 
+/* ✅ 요청사항: 테이블 내 모든 항목(헤더/본문) 가운데 정렬 */
+.table th,
+.table td{
+  text-align: center;
+  vertical-align: middle;
+}
+
 /* ---------- Forms (Density + Tone) ---------- */
 .form-label-sm{
   font-size: .78rem;

@@ -2683,13 +2683,23 @@ function renderPendingTableTemplate(container, list, type) {
     // ✅ 1) 타입별 컬럼 정의 ("템플릿 1개 + 설정 N개")
     // - 공통 필드: 지점/개통일/고객/담당자/상태
     // - 타입별 필드: card(제휴카드 2개), wired(설치예정/설치일)
+    // ✅ 공통 컬럼은 '타입'에 따라 조금씩 달라집니다.
+    // - usedphone/gift: 개통처, 약정/유형 제거
+    // - card/wired: 약정/유형 제거 + (전화번호 오른쪽에 생년월일 추가)
     const COMMON_COLS = [
-        { key: 'branch', label: '지점', width: '90px', formatter: (v) => v || '-' },
+        { key: 'branch', label: '지점', width: '100px', formatter: (v) => v || '-' },
         { key: 'date', label: '개통일', width: '110px', formatter: (v) => v || '-' },
         { key: 'name', label: '고객명', width: '120px', className: 'fw-bold text-primary', formatter: (v) => v || '-' },
         { key: 'phone', label: '전화번호', width: '140px', formatter: (v) => v || '-' },
-        { key: 'carrier', label: '개통처', width: '90px', formatter: (v) => v || '-' },
-        { key: 'planType', label: '약정/유형', width: '120px', formatter: (v) => v || '-' },
+        // ★ card/wired 화면: 전화번호 오른쪽에 생년월일 표시
+        ...((type === 'card' || type === 'wired')
+            ? [{ key: 'birth', label: '생년월일', width: '110px', formatter: (v) => v || '-' }]
+            : []),
+        // ★ usedphone/gift 화면에서는 개통처를 숨김
+        ...((type === 'usedphone' || type === 'gift')
+            ? []
+            : [{ key: 'carrier', label: '개통처', width: '110px', formatter: (v) => v || '-' }]),
+        // ★ 약정/유형은 요청대로 전 화면에서 제거
         { key: 'manager', label: '담당자', width: '110px', formatter: (v) => v || '미지정' },
         { key: 'status', label: '상태', width: '110px', formatter: (_, row) => {
             const done = !!row.completed;
@@ -2710,7 +2720,7 @@ function renderPendingTableTemplate(container, list, type) {
     if (type === 'usedphone' || type === 'gift') {
         const amtLabel = cfg.amountKey || (type === 'usedphone' ? '중고폰' : '상품권');
         TYPE_COLS = [
-            { key: '_amount', label: amtLabel, width: '110px', className: 'text-end fw-bold', formatter: (v) => money(v) },
+            { key: '_amount', label: amtLabel, width: '110px', className: 'fw-bold', formatter: (v) => money(v) },
             { key: '_memo', label: '메모', width: '240px', formatter: (v) => v || '-' },
             { key: '_checkDate', label: (cfg.checkDateLabel || '확인일'), width: '110px', formatter: (v) => v || '-' }
         ];
