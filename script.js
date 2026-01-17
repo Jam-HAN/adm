@@ -2732,14 +2732,14 @@ function renderPendingTableTemplate(container, list, type) {
         ];
     } else if (type === 'card') {
         TYPE_COLS = [
-            { key: '_label', label: cfg.labelKey || '제휴카드', width: '140px', formatter: (v) => v || '-' },
+            { key: '_label', label: cfg.labelKey || '제휴카드', width: '110px', formatter: (v) => v || '-' },
             { key: 'val1', label: cfg.val1Label || '세이브 등록일', width: '140px', formatter: (v) => v || '-' },
             { key: 'val2', label: cfg.val2Label || '자동이체 등록일', width: '150px', formatter: (v) => v || '-' }
         ];
     } else {
         // wired
         TYPE_COLS = [
-            { key: '_label', label: cfg.labelKey || '유선유형', width: '140px', formatter: (v) => v || '-' },
+            { key: '_label', label: cfg.labelKey || '유선유형', width: '110px', formatter: (v) => v || '-' },
             { key: 'val1', label: cfg.val1Label || '설치 예정일', width: '140px', formatter: (v) => v || '-' },
             { key: 'val2', label: cfg.val2Label || '설치 완료일', width: '140px', formatter: (v) => v || '-' }
         ];
