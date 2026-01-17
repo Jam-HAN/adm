@@ -121,7 +121,8 @@ window.handleCredentialResponse = function(response) {
             setupAutoLogout();
             loadDashboard();
             initHistoryDates(); // 기존: 통합 조회 날짜 세팅
-            initSetupDates();
+            initSetupDates(); // (호환) 내부적으로 renderPendingFilter 호출
+            initPendingPages();
         } else {
             alert("로그인 실패: " + d.message);
             document.getElementById('login-msg').innerText = d.message;
@@ -183,6 +184,8 @@ window.onload = function() {
             loadDropdownData();
             setupAutoLogout();
             initHistoryDates();
+            // ✅ 미처리(중고/상품권/카드/유선) 공통 필터 UI 주입
+            initPendingPages();
 
         } catch (e) {
             console.error("세션 데이터 손상됨. 초기화합니다.", e);
@@ -257,7 +260,6 @@ function checkAuthMenu() {
     const pcPeriod = document.getElementById('menu_period_item');    // 기간별
     const pcReport = document.getElementById('menu_daily_report');   // 일일보고
     const pcLedger = document.getElementById('menu_ledger_item');    // 정산관리
-
     // --- [신규 메뉴: 급여 계산] ---
     const pcSalary = document.getElementById('menu_salary_report');   // 급여계산
     
@@ -272,7 +274,6 @@ function checkAuthMenu() {
     if(pcPeriod) pcPeriod.style.display = 'none';
     if(pcReport) pcReport.style.display = 'none';
     if(pcLedger) pcLedger.style.display = 'none';
-
     // 급여 계산 메뉴 숨김 (MASTER만 표시)
     if(pcSalary) pcSalary.style.display = 'none';
     
@@ -288,7 +289,6 @@ function checkAuthMenu() {
         if(pcPeriod) pcPeriod.style.display = 'block'; 
         if(pcReport) pcReport.style.display = 'block';
         if(pcLedger) pcLedger.style.display = 'block';
-
         // 급여 계산 메뉴 보여주기
         if(pcSalary) pcSalary.style.display = 'block';
 
@@ -1976,78 +1976,198 @@ function deleteHistoryItem() {
 // [최종] 중고폰 반납 / 상품권 수령 관리 로직 (기능 개선)
 // =========================================================
 
-// [헬퍼] 날짜 초기화 (당월 1일 ~ 오늘)
-function initSpecialDates(type) {
+// =========================================================
+// ✅ 미처리 템플릿(공통) + CONFIG(4개 타입)
+// =========================================================
+
+const PENDING_CONFIGS = {
+    usedphone: {
+        type: 'usedphone',
+        filterMountId: 'pending-filter-usedphone',
+        listId: 'return-usedphone-list',
+        title: '중고폰 반납',
+        badge: { text: '중고폰', className: 'bg-warning text-dark', borderClass: 'border-warning' },
+        doneLabel: '반납완료',
+        todoLabel: '미반납',
+        mode: 'amount',
+        amountKey: '중고폰',
+        supportsModel: true,
+        toggleLabel: '반납 확인',
+        // amount(중고/상품권) 타입에서 체크된 날짜 컬럼 라벨
+        checkDateLabel: '반납일',
+        labelKey: '모델명',
+        extraLabels: ['중고폰', '메모', '상태']
+    },
+    gift: {
+        type: 'gift',
+        filterMountId: 'pending-filter-gift',
+        listId: 'receive-gift-list',
+        title: '상품권 수령',
+        badge: { text: '상품권', className: 'bg-success', borderClass: 'border-success' },
+        doneLabel: '수령완료',
+        todoLabel: '미수령',
+        mode: 'amount',
+        amountKey: '상품권',
+        supportsModel: false,
+        toggleLabel: '수령 확인',
+        // amount(중고/상품권) 타입에서 체크된 날짜 컬럼 라벨
+        checkDateLabel: '수령일',
+        labelKey: '상품권',
+        extraLabels: ['상품권', '메모', '상태']
+    },
+    card: {
+        type: 'card',
+        filterMountId: 'pending-filter-card',
+        listId: 'card_setup_list',
+        title: '제휴카드 접수',
+        badge: { text: '제휴카드', className: 'bg-primary', borderClass: 'border-primary' },
+        doneLabel: '접수완료',
+        todoLabel: '미처리',
+        mode: 'dates',
+        dateLabels: ['세이브 등록일', '자동이체 등록일'],
+        val1Label: '세이브 등록일',
+        val2Label: '자동이체 등록일',
+        labelKey: '제휴카드',
+        naToggle: true
+    },
+    wired: {
+        type: 'wired',
+        filterMountId: 'pending-filter-wired',
+        listId: 'wired_setup_list',
+        title: '유선 설치',
+        badge: { text: '유선설치', className: 'bg-success', borderClass: 'border-success' },
+        doneLabel: '설치완료',
+        todoLabel: '미설치',
+        mode: 'dates',
+        dateLabels: ['설치 예정일', '설치 완료일'],
+        val1Label: '설치 예정일',
+        val2Label: '설치 완료일',
+        labelKey: '약정유형',
+        naToggle: false
+    }
+};
+
+function fmtDate(d) {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+}
+
+function getDefaultRangeThisMonth() {
     const today = new Date();
-    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
-    
-    // YYYY-MM-DD 포맷 함수
-    const fmt = d => {
-        const y = d.getFullYear();
-        const m = String(d.getMonth() + 1).padStart(2, '0');
-        const day = String(d.getDate()).padStart(2, '0');
-        return `${y}-${m}-${day}`;
+    const first = new Date(today.getFullYear(), today.getMonth(), 1);
+    return { start: fmtDate(first), end: fmtDate(today) };
+}
+
+function renderPendingFilter(type) {
+    const cfg = PENDING_CONFIGS[type];
+    if (!cfg) return;
+
+    const mount = document.getElementById(cfg.filterMountId);
+    if (!mount) return;
+
+    const ids = {
+        branch: `pending_${type}_branch`,
+        start: `pending_${type}_start`,
+        end: `pending_${type}_end`,
+        keyword: `pending_${type}_keyword`,
+        searchBtn: `pending_${type}_search_btn`
     };
 
-    if (type === 'usedphone') {
-        if(!document.getElementById('search_return_start').value) document.getElementById('search_return_start').value = fmt(firstDay);
-        if(!document.getElementById('search_return_end').value) document.getElementById('search_return_end').value = fmt(today);
-    } else {
-        if(!document.getElementById('search_gift_start').value) document.getElementById('search_gift_start').value = fmt(firstDay);
-        if(!document.getElementById('search_gift_end').value) document.getElementById('search_gift_end').value = fmt(today);
+    mount.innerHTML = `
+        <div class="row g-2">
+            <div class="col-12">
+                <select id="${ids.branch}" class="form-select form-select-sm fw-bold text-primary">
+                    <option value="전체">🏢 전체 지점 보기</option>
+                    <option value="장지 본점">장지 본점</option>
+                    <option value="명일 직영점">명일 직영점</option>
+                </select>
+            </div>
+            <div class="col-6"><input type="date" class="form-control form-control-sm" id="${ids.start}"></div>
+            <div class="col-6"><input type="date" class="form-control form-control-sm" id="${ids.end}"></div>
+            <div class="col-12">
+                <div class="input-group">
+                    <input type="text" class="form-control" id="${ids.keyword}" placeholder="고객명, 전화번호">
+                    <button class="btn btn-outline-secondary" id="${ids.searchBtn}">조회</button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // 기본 날짜 세팅
+    const range = getDefaultRangeThisMonth();
+    document.getElementById(ids.start).value = range.start;
+    document.getElementById(ids.end).value = range.end;
+
+    // 이벤트 연결
+    document.getElementById(ids.searchBtn).addEventListener('click', () => searchPending(type));
+    document.getElementById(ids.keyword).addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') searchPending(type);
+    });
+}
+
+function getPendingFilterValues(type) {
+    const ids = {
+        branch: `pending_${type}_branch`,
+        start: `pending_${type}_start`,
+        end: `pending_${type}_end`,
+        keyword: `pending_${type}_keyword`
+    };
+    return {
+        branch: (document.getElementById(ids.branch)?.value || '전체'),
+        start: (document.getElementById(ids.start)?.value || ''),
+        end: (document.getElementById(ids.end)?.value || ''),
+        keyword: (document.getElementById(ids.keyword)?.value || '')
+    };
+}
+
+function initPendingPages() {
+    ['usedphone', 'gift', 'card', 'wired'].forEach(t => renderPendingFilter(t));
+}
+
+async function searchPending(type) {
+    const cfg = PENDING_CONFIGS[type];
+    if (!cfg) return;
+
+    const { branch, start, end, keyword } = getPendingFilterValues(type);
+    const container = document.getElementById(cfg.listId);
+    if (!container) return;
+
+    container.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-secondary"></div><div class="mt-2 small text-muted">데이터 조회 중...</div></div>';
+
+    try {
+        const res = await requestAPI({
+            action: 'get_all_history',
+            start,
+            end,
+            keyword,
+            branch,
+            specialType: type
+        });
+
+        if (res.status === 'success') {
+            const list = res.data || res.list || [];
+            renderPendingList(cfg.listId, list, type);
+        } else {
+            container.innerHTML = `<div class="text-center text-danger py-5 small">${res.message || '조회 실패'}</div>`;
+        }
+    } catch (e) {
+        console.error(e);
+        container.innerHTML = `<div class="text-center text-danger py-5 small">통신 오류가 발생했습니다.</div>`;
     }
+}
+
+// [헬퍼] 날짜 초기화 (당월 1일 ~ 오늘)
+function initSpecialDates(type) {
+    // (구버전 호환) 예전 DOM ID 기반 로직 제거 → 공통 필터 템플릿으로 대체
+    renderPendingFilter(type);
 }
 
 // 1. 통합 조회 함수 (렌더링 방식 개선: += 제거)
 function searchSpecialList(type) {
-    let branch, keyword, containerId, start, end;
-    
-    if (type === 'usedphone') {
-        branch = document.getElementById('search_return_branch').value;
-        keyword = document.getElementById('search_return_keyword').value;
-        start = document.getElementById('search_return_start').value;
-        end = document.getElementById('search_return_end').value;
-        containerId = 'return-usedphone-list'; // HTML ID 꼭 확인하세요!
-    } else {
-        branch = document.getElementById('search_gift_branch').value;
-        keyword = document.getElementById('search_gift_keyword').value;
-        start = document.getElementById('search_gift_start').value;
-        end = document.getElementById('search_gift_end').value;
-        containerId = 'receive-gift-list';
-    }
-
-    if (!start || !end) {
-        initSpecialDates(type);
-        start = (type==='usedphone') ? document.getElementById('search_return_start').value : document.getElementById('search_gift_start').value;
-        end = (type==='usedphone') ? document.getElementById('search_return_end').value : document.getElementById('search_gift_end').value;
-    }
-
-    const container = document.getElementById(containerId);
-    if (!container) return; // 안전장치
-
-    container.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary"></div></div>';
-
-    requestAPI({ 
-            action: "get_all_history", 
-            start: start, 
-            end: end, 
-            keyword: keyword, 
-            branch: branch,
-            specialType: type  // ★ 핵심: 이 꼬리표를 달아줘야 서버가 "아! 필터링해야지" 하고 알아듣습니다.
-        })
-    .then(res => {
-      const list = res.data || res.list || [];   // 어떤 형태든 흡수
-      if (res.status === 'success' && list.length > 0) {
-        container.innerHTML = list.map(item => renderSpecialCard(item, type)).join('');
-      } else {
-        container.innerHTML = '<div class="text-center text-muted py-5 small">미처리 내역이 없습니다. (모두 완료됨)</div>';
-      }
-    })
-
-    .catch(err => {
-        console.error(err);
-        container.innerHTML = '<div class="text-center text-danger py-5 small">오류 발생</div>';
-    });
+    // (구버전 호환) → 공통 템플릿으로 위임
+    return searchPending(type);
 }
 
 // 2. 카드 렌더링 (체크값 기준 배지 표시)
@@ -2102,106 +2222,193 @@ function renderSpecialCard(item, type) {
     </div>`;
 }
 
-// 3. 모달 열기 (데이터 바인딩 로직 개선)
-function openSpecialModal(item, type) {
-    document.getElementById('sp_sheetName').value = item.sheetName;
+// =========================================================
+// [공통 모달] 중고/상품권/카드/유선 (단일 모달로 통합)
+// =========================================================
+
+// '미사용' 토글 (카드 화면에서 사용)
+function toggleNA(dateInputId) {
+    const el = document.getElementById(dateInputId);
+    if (!el) return;
+
+    // date input은 텍스트를 못 담으니, "미사용"은 data-na로만 보관
+    const isNA = el.dataset.na === '1';
+    if (isNA) {
+        el.dataset.na = '0';
+        el.disabled = false;
+        // 빈값이면 오늘로 세팅하지 않고 그대로 둠
+    } else {
+        el.dataset.na = '1';
+        el.value = '';
+        el.disabled = true;
+    }
+}
+
+// 공통 모달 열기
+function openPendingModal(item, type) {
+    const cfg = PENDING_CONFIGS[type] || {};
+    // 공통 키
+    document.getElementById('sp_sheetName').value = item.sheetName || '';
     document.getElementById('sp_rowIndex').value = item.rowIndex;
-    document.getElementById('sp_branch').value = item.branch;
+    document.getElementById('sp_branch').value = item.branch || item['지점'] || '';
     document.getElementById('sp_type').value = type;
 
-    document.getElementById('sp_customer_name').innerText = item['고객명'];
-    document.getElementById('sp_customer_info').innerText = `${item['전화번호']} | ${item['개통일']}`;
+    // 고객 정보 (undefined/키 혼용 방어)
+    const meta = normalizePendingItem(item);
+    document.getElementById('sp_customer_name').innerText = meta.name || '-';
+    document.getElementById('sp_customer_info').innerText = [meta.phone, meta.date, meta.carrier, meta.manager || meta.planType].filter(Boolean).join(' | ') || '-';
 
-    const amtLabel = document.getElementById('sp_amt_label');
-    const modalTitle = document.getElementById('special-modal-title');
+    // 그룹 표시 전환
+    const amountGroup = document.getElementById('sp_amount_group');
     const modelGroup = document.getElementById('sp_model_group');
+    const checkGroup = document.getElementById('sp_check_group');
+    const datesGroup = document.getElementById('sp_dates_group');
+
+    const modalTitle = document.getElementById('special-modal-title');
+    const amtLabel = document.getElementById('sp_amt_label');
     const checkLabel = document.getElementById('sp_check_label');
+    const date1Label = document.getElementById('sp_date1_label');
+    const date2Label = document.getElementById('sp_date2_label');
+    const date1 = document.getElementById('sp_date1');
+    const date2 = document.getElementById('sp_date2');
+    const date1NaBtn = document.getElementById('sp_date1_na_btn');
+    const date2NaBtn = document.getElementById('sp_date2_na_btn');
 
-    if (type === 'usedphone') {
-        modalTitle.innerText = "중고폰 반납 등록";
-        amtLabel.innerText = "정산 금액 (반납 금액)";
-        checkLabel.innerText = " 반납 확인 (체크 시 정산 반영)";
-        modelGroup.style.display = 'block'; 
+    // 초기화
+    if (date1) { date1.value = ''; date1.disabled = false; date1.dataset.na = '0'; }
+    if (date2) { date2.value = ''; date2.disabled = false; date2.dataset.na = '0'; }
+    if (document.getElementById('sp_amount')) document.getElementById('sp_amount').value = '';
+    if (document.getElementById('sp_model_name')) document.getElementById('sp_model_name').value = '';
+
+    // 타입별 UI
+    if (type === 'usedphone' || type === 'gift') {
+        // (A) 중고/상품권
+        if (amountGroup) amountGroup.style.display = 'block';
+        if (checkGroup) checkGroup.style.display = 'block';
+        if (datesGroup) datesGroup.style.display = 'none';
+
+        if (type === 'usedphone') {
+            modalTitle.innerText = '중고폰 반납 등록';
+            if (amtLabel) amtLabel.innerText = '정산 금액 (반납 금액)';
+            if (checkLabel) checkLabel.innerText = ' 반납 확인 (체크 시 정산 반영)';
+            if (modelGroup) modelGroup.style.display = 'block';
+        } else {
+            modalTitle.innerText = '상품권 수령 등록';
+            if (amtLabel) amtLabel.innerText = '정산 금액 (수령 금액)';
+            if (checkLabel) checkLabel.innerText = ' 수령 확인 (체크 시 정산 반영)';
+            if (modelGroup) modelGroup.style.display = 'none';
+        }
+
+        // 금액
+        const existingAmount = (type === 'usedphone') ? (item['중고폰'] ?? item.amount ?? '') : (item['상품권'] ?? item.amount ?? '');
+        document.getElementById('sp_amount').value = existingAmount ? Number(String(existingAmount).replace(/,/g, '')).toLocaleString() : '';
+
+        // 체크 상태
+        document.getElementById('sp_checkbox').checked = (item.completed === true);
+
+        // 날짜/모델 (메모 분리 로직 유지)
+        let savedDate = item['checkDate'] || '';
+        let savedModel = item['중고폰메모'] || '';
+        if (!savedDate && savedModel.includes('-')) savedDate = savedModel.substring(0, 10);
+        if (savedModel.includes('/')) {
+            const parts = savedModel.split('/');
+            if (parts.length > 1) savedModel = parts[1].replace(' 반납', '').trim();
+        }
+        document.getElementById('sp_date').value = savedDate || new Date().toISOString().split('T')[0];
+        document.getElementById('sp_model_name').value = savedModel;
+
     } else {
-        modalTitle.innerText = "상품권 수령 등록";
-        amtLabel.innerText = "정산 금액 (수령 금액)";
-        checkLabel.innerText = " 수령 확인 (체크 시 정산 반영)";
-        modelGroup.style.display = 'none'; 
+        // (B) 카드/유선
+        if (amountGroup) amountGroup.style.display = 'none';
+        if (modelGroup) modelGroup.style.display = 'none';
+        if (checkGroup) checkGroup.style.display = 'none';
+        if (datesGroup) datesGroup.style.display = 'block';
+
+        if (type === 'card') {
+            modalTitle.innerText = '제휴카드 접수 등록';
+            if (date1Label) date1Label.innerText = '세이브 등록';
+            if (date2Label) date2Label.innerText = '자동이체 등록';
+            // 카드만 "미사용" 버튼 노출
+            if (date1NaBtn) date1NaBtn.style.display = 'inline-block';
+            if (date2NaBtn) date2NaBtn.style.display = 'inline-block';
+
+            const v1 = item.val1 || item['제휴카드세이브등록일'] || '';
+            const v2 = item.val2 || item['제휴카드자동이체등록일'] || '';
+
+            // "미사용" 처리
+            if (String(v1).trim() === '미사용') toggleNA('sp_date1');
+            else if (date1) date1.value = String(v1).substring(0, 10);
+            if (String(v2).trim() === '미사용') toggleNA('sp_date2');
+            else if (date2) date2.value = String(v2).substring(0, 10);
+        }
+
+        if (type === 'wired') {
+            modalTitle.innerText = '유선상품 설치 등록';
+            if (date1Label) date1Label.innerText = '설치 예정일';
+            if (date2Label) date2Label.innerText = '설치 완료일';
+            // 유선은 "미사용" 버튼 숨김
+            if (date1NaBtn) date1NaBtn.style.display = 'none';
+            if (date2NaBtn) date2NaBtn.style.display = 'none';
+
+            const v1 = item.val1 || item['유선상품설치예정일'] || '';
+            const v2 = item.val2 || item['유선상품설치일'] || '';
+            if (date1) date1.value = v1 ? String(v1).substring(0, 10) : '';
+            if (date2) date2.value = v2 ? String(v2).substring(0, 10) : '';
+        }
     }
-
-    // 1. 금액 세팅
-    const existingAmount = (type === 'usedphone')
-      ? (item['중고폰'] ?? '')
-      : (item['상품권'] ?? '');
-
-    document.getElementById('sp_amount').value = existingAmount ? Number(String(existingAmount).replace(/,/g,'')).toLocaleString() : '';
-    
-    // 2. 체크 상태 세팅
-    document.getElementById('sp_checkbox').checked = (item.completed === true);
-
-    // 3. 모델명 & 날짜 세팅 (분리된 로직)
-    // - item['checkDate']: AV/AX 메모에 저장된 날짜 (체크 날짜)
-    // - item['중고폰메모']: AU/AW 메모에 저장된 모델명
-    
-    let savedDate = item['checkDate'] || ''; // 체크칸 메모에서 날짜 가져옴
-    let savedModel = item['중고폰메모'] || ''; // 금액칸 메모에서 모델명 가져옴
-
-    // (호환성 유지) 만약 체크칸 메모(날짜)가 없으면, 예전 방식(모델/날짜 섞인 텍스트)에서 추출 시도
-    if (!savedDate && savedModel.includes('-')) {
-        savedDate = savedModel.substring(0, 10);
-    }
-    // 모델명 정제 (날짜나 슬래시 제거하고 순수 모델명만 남기기 시도)
-    if (savedModel.includes('/')) {
-        let parts = savedModel.split('/');
-        if (parts.length > 1) savedModel = parts[1].replace(' 반납', '').trim();
-    }
-
-    document.getElementById('sp_date').value = savedDate || new Date().toISOString().split('T')[0];
-    document.getElementById('sp_model_name').value = savedModel;
 
     new bootstrap.Modal(document.getElementById('modal-special-update')).show();
 }
 
-// 4. 저장하기 (모델명과 날짜를 분리해서 전송)
+// 기존 함수명 호환 유지 (중고/상품권에서 호출)
+function openSpecialModal(item, type) {
+    openPendingModal(item, type);
+}
+
+// 4. 저장하기 (타입별 payload 자동 분기)
 function submitSpecialUpdate() {
     const type = document.getElementById('sp_type').value;
-    const amountStr = document.getElementById('sp_amount').value;
-    const dateVal = document.getElementById('sp_date').value;
-    const modelVal = document.getElementById('sp_model_name').value;
-    const isChecked = document.getElementById('sp_checkbox').checked;
-    
-    // ★ 핵심: 모델명은 모델명대로, 날짜는 날짜대로 따로 보냄
-    const modelMemo = (type === 'usedphone') ? modelVal.trim() : ""; // AU/AW에 저장될 모델명
-    
-    const formData = {
-        action: "update_history",
-        branch: document.getElementById('sp_branch').value,
-        rowIndex: document.getElementById('sp_rowIndex').value,
-        specialType: type,
-        
-        amount: amountStr, 
-        
-        // 1. 모델명 (AU/AW 열의 메모로 저장됨)
-        modelMemo: modelMemo, 
-        
-        // 2. 체크 상태 (AV/AX 열의 값으로 저장됨)
-        isChecked: isChecked,
-        
-        // 3. 날짜 (AV/AX 열의 메모로 저장됨 - 체크된 경우만)
-        checkDate: dateVal 
-    };
+    const branch = document.getElementById('sp_branch').value;
+    const rowIndex = document.getElementById('sp_rowIndex').value;
 
-    Swal.fire({ title: '저장 중...', didOpen: () => Swal.showLoading() });
+    Swal.fire({ title: '저장 중...', didOpen: () => Swal.showLoading(), allowOutsideClick: false });
 
-    requestAPI(formData)
-    .then(data => {
+    let formData = { action: 'update_history', branch, rowIndex, specialType: type };
+
+    if (type === 'usedphone' || type === 'gift') {
+        const amountStr = document.getElementById('sp_amount').value;
+        const dateVal = document.getElementById('sp_date').value;
+        const modelVal = document.getElementById('sp_model_name').value;
+        const isChecked = document.getElementById('sp_checkbox').checked;
+        const modelMemo = (type === 'usedphone') ? modelVal.trim() : '';
+
+        formData = {
+            ...formData,
+            amount: amountStr,
+            modelMemo,
+            isChecked,
+            checkDate: dateVal
+        };
+    } else {
+        // card / wired
+        const d1 = document.getElementById('sp_date1');
+        const d2 = document.getElementById('sp_date2');
+        const val1 = (d1 && d1.dataset.na === '1') ? '미사용' : (d1 ? d1.value : '');
+        const val2 = (d2 && d2.dataset.na === '1') ? '미사용' : (d2 ? d2.value : '');
+        formData = { ...formData, val1, val2 };
+    }
+
+    requestAPI(formData).then(data => {
         if (data.status === 'success') {
-            Swal.fire({ icon: 'success', title: '처리 완료', timer: 1000, showConfirmButton: false });
+            Swal.fire({ icon: 'success', title: '처리 완료', timer: 900, showConfirmButton: false });
             bootstrap.Modal.getInstance(document.getElementById('modal-special-update')).hide();
-            searchSpecialList(type);
+            // 목록 갱신 (공통)
+            searchPending(type);
         } else {
-            Swal.fire({ icon: 'error', title: '실패', text: data.message });
+            Swal.fire({ icon: 'error', title: '실패', text: data.message || '저장 실패' });
         }
+    }).catch(() => {
+        Swal.fire({ icon: 'error', title: '통신 오류', text: '서버와 연결할 수 없습니다.' });
     });
 }
 
@@ -2338,279 +2545,290 @@ async function loadSettlement(type) {
 
 // 0. 초기화: 날짜 기본값 세팅 (이번달 1일 ~ 오늘)
 function initSetupDates() {
-    const today = new Date();
-    const yyyy = today.getFullYear();
-    const mm = String(today.getMonth() + 1).padStart(2, '0');
-    const dd = String(today.getDate()).padStart(2, '0');
-    
-    const firstDay = `${yyyy}-${mm}-01`;
-    const todayStr = `${yyyy}-${mm}-${dd}`;
-
-    document.getElementById('search_card_start').value = firstDay;
-    document.getElementById('search_card_end').value = todayStr;
-    document.getElementById('search_wired_start').value = firstDay;
-    document.getElementById('search_wired_end').value = todayStr;
+    // (구버전 호환) 예전 DOM ID 기반 로직 제거 → 공통 필터 템플릿으로 대체
+    renderPendingFilter('card');
+    renderPendingFilter('wired');
 }
 
 // 1. 통합 검색 함수
 function searchSetupList(type) {
-    const branchId = type === 'card' ? 'search_card_branch' : 'search_wired_branch';
-    const startId = type === 'card' ? 'search_card_start' : 'search_wired_start';
-    const endId = type === 'card' ? 'search_card_end' : 'search_wired_end';
-    const keyId = type === 'card' ? 'search_card_keyword' : 'search_wired_keyword';
-    
-    // 리스트 컨테이너 ID
-    const containerId = type === 'card' ? 'card_setup_list' : 'wired_setup_list';
-
-    const branch = document.getElementById(branchId).value;
-    const start = document.getElementById(startId).value;
-    const end = document.getElementById(endId).value;
-    const keyword = document.getElementById(keyId).value;
-    const container = document.getElementById(containerId);
-
-    // 로딩 표시
-    container.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-secondary"></div><div class="mt-2 small text-muted">데이터 조회 중...</div></div>';
-
-    // ★ get_all_history와 동일한 패턴: data 객체로 start/end 통일
-    requestAPI({
-            action: "get_setup_pending_list",
-            data: {
-                type: type,
-                branch: branch,
-                start: start,
-                end: end,
-                keyword: keyword
-            }
-        })
-    .then(d => {
-        if (d.status === 'success') {
-            // 서버 응답: { status:'success', data:[...] }
-            const list = d.data || d.list || [];
-            if (type === 'card') renderCardSetupList(list);
-            else renderWiredSetupList(list);
-        } else {
-            container.innerHTML = `<div class="text-center text-danger py-5 small">${d.message}</div>`;
-        }
-    })
-    .catch(e => {
-        container.innerHTML = `<div class="text-center text-danger py-5 small">통신 오류가 발생했습니다.</div>`;
-    });
+    // (구버전 호환) → 공통 템플릿으로 위임
+    return searchPending(type);
 }
 
-// 2. 제휴카드 렌더링 (UI 디자인 업그레이드: 세련된 입력 그룹)
-function renderCardSetupList(list) {
-    const container = document.getElementById('card_setup_list');
-    
+// =========================================================
+// [공통 렌더] 미처리(중고/상품권/카드/유선) - 동일 UX(리스트 클릭 → 모달 → 저장)
+// =========================================================
+
+function normalizePendingItem(item) {
+    const getLoose = (cands, fallback = '') => {
+        for (const k of cands) {
+            if (item && Object.prototype.hasOwnProperty.call(item, k) && item[k] !== undefined && item[k] !== null && String(item[k]).trim() !== '') {
+                return item[k];
+            }
+        }
+        // 키에 공백이 섞인 경우까지 흡수
+        try {
+            const norm = {};
+            Object.keys(item || {}).forEach(key => {
+                norm[String(key).replace(/\s+/g, '')] = item[key];
+            });
+            for (const k of cands) {
+                const nk = String(k).replace(/\s+/g, '');
+                if (Object.prototype.hasOwnProperty.call(norm, nk) && norm[nk] !== undefined && norm[nk] !== null && String(norm[nk]).trim() !== '') {
+                    return norm[nk];
+                }
+            }
+        } catch (e) { /* noop */ }
+        return fallback;
+    };
+
+    const name = getLoose(['name', 'customerName', '고객명', '고객 명', '성함', '이름']);
+    const phone = getLoose(['phone', '전화번호', '연락처', '휴대폰번호']);
+    const birth = getLoose(['birth', '생년월일', '생년월일(앞6자리)', '생년', '주민번호앞6자리']);
+    const carrier = getLoose(['carrier', '개통처', '통신사', '통신']);
+    const manager = getLoose(['manager', '담당자', '상담사', '처리자'], '미지정');
+    const date = getLoose(['date', '개통일', '처리일자', '등록일']);
+    const planType = getLoose(['type', '약정유형', '개통유형', '유형']);
+    return { name: String(name || ''), phone: String(phone || ''), birth: String(birth || ''), carrier: String(carrier || ''), manager: String(manager || ''), date: String(date || ''), planType: String(planType || '') };
+}
+
+function isDoneCard(v) {
+    const s = String(v || '').trim();
+    if (!s) return false;
+    if (s === '미사용') return true;
+    // YYYY-MM-DD 형태면 완료로 판단
+    return /^\d{4}-\d{2}-\d{2}/.test(s);
+}
+
+function isDoneWired(v) {
+    const s = String(v || '').trim();
+    if (!s) return false;
+    return /^\d{4}-\d{2}-\d{2}/.test(s);
+}
+
+function renderPendingCard(item, type) {
+    const cfg = PENDING_CONFIGS[type];
+    const meta = normalizePendingItem(item);
+    const itemStr = JSON.stringify(item).replace(/"/g, '&quot;');
+    if (!cfg) return '';
+
+    const badgeClass = cfg.badge?.className || 'bg-primary';
+    const borderClass = cfg.badge?.borderClass || 'border-primary';
+    const title = cfg.badge?.text || cfg.title || type;
+
+    let subline = `${meta.phone} | ${meta.carrier}${meta.planType ? ' | ' + meta.planType : ''}`;
+    let done = false;
+
+    if (cfg.mode === 'amount') {
+        done = (item.completed === true);
+        // 금액/메모는 모달에서 입력하지만, 리스트에서는 정보라인만 깔끔하게 유지
+        if (meta.birth) subline = `${meta.phone} | ${meta.birth} | ${meta.carrier}${meta.planType ? ' | ' + meta.planType : ''}`;
+    } else if (cfg.mode === 'dates') {
+        const v1 = item.val1 || item['제휴카드세이브등록일'] || item['유선상품설치예정일'] || '';
+        const v2 = item.val2 || item['제휴카드자동이체등록일'] || item['유선상품설치일'] || '';
+        if (type === 'card') {
+            done = isDoneCard(v1) && isDoneCard(v2);
+            const cardName = item.cardName || item['제휴카드'] || '';
+            subline = `${meta.phone}${meta.birth ? ' | ' + meta.birth : ''} | ${meta.carrier}${cardName ? ' | ' + cardName : ''}`;
+        } else {
+            done = isDoneWired(v2);
+            subline = `${meta.phone}${meta.birth ? ' | ' + meta.birth : ''} | ${meta.carrier}${meta.planType ? ' | ' + meta.planType : ''}`;
+        }
+    }
+
+    const statusBadge = done
+        ? `<span class="badge bg-success rounded-pill px-4 py-2 fs-6 shadow-sm"><i class="bi bi-check-lg me-1"></i>${cfg.doneLabel || '완료'}</span>`
+        : `<span class="badge bg-danger bg-opacity-75 rounded-pill px-4 py-2 fs-6 shadow-sm animate__animated animate__pulse animate__infinite">${cfg.todoLabel || '미처리'}</span>`;
+
+    return `
+    <div class="glass-card p-3 mb-3 w-100 d-block border-start border-4 ${borderClass}" onclick="openPendingModal(${itemStr}, '${type}')" style="cursor:pointer;">
+        <div class="d-flex w-100 justify-content-between align-items-center mb-3 border-bottom pb-2">
+            <div>
+                <span class="badge ${badgeClass} me-1">${title}</span>
+                <span class="badge bg-white text-secondary border">${item.branch || item['지점'] || '-'}</span>
+            </div>
+            <small class="fw-bold text-dark">${meta.date || ''}</small>
+        </div>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div class="text-truncate me-2">
+                <span class="fw-bold text-primary fs-5 me-2">${meta.name || '-'}</span>
+                <span class="small text-dark">${subline || ''}</span>
+            </div>
+            <span class="badge bg-white text-primary border rounded-pill px-2 shadow-sm text-nowrap">
+                <i class="bi bi-person-circle me-1"></i>${meta.manager || '미지정'}
+            </span>
+        </div>
+        <div class="d-flex justify-content-center mt-1">${statusBadge}</div>
+    </div>`;
+}
+
+function renderPendingList(containerId, list, type) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
     if (!list || list.length === 0) {
         container.innerHTML = `<div class="text-center text-muted py-5 small"><i class="bi bi-check-circle fs-1 d-block mb-3 opacity-25"></i>미처리 내역이 없습니다. (모두 완료)</div>`;
         return;
     }
-
-    container.innerHTML = list.map(item => {
-        const rowId = `card_${item.branch}_${item.rowIndex}`;
-        const v1 = item.val1 || ""; 
-        const v2 = item.val2 || "";
-
-        // 값이 '미사용'이면 빨간색 텍스트, 아니면 기본색
-        const color1 = v1 === '미사용' ? 'text-danger' : 'text-primary';
-        const color2 = v2 === '미사용' ? 'text-danger' : 'text-primary';
-
-        // ★ [추가] 상세 정보 변수 준비 (데이터가 없으면 빈칸)
-        const phone = item.phone || item['전화번호'] || '';
-        const birth = item.birth || item['생년월일'] || '';
-        const carrier = item.carrier || item['개통처'] || item['통신사'] || '';
-
-        return `
-        <div class="glass-card p-3 mb-3 border-start border-4 border-primary shadow-sm bg-white">
-            <div class="d-flex justify-content-between align-items-center mb-2 border-bottom pb-2">
-                <div>
-                    <span class="badge bg-primary bg-opacity-10 text-primary me-1 border border-primary">제휴카드</span>
-                    <span class="badge bg-light text-secondary border">${item.branch}</span>
-                </div>
-                <span class="small fw-bold text-muted">${item.date}</span>
-            </div>
-            
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <div class="text-truncate me-2">
-                    <div class="fw-bold fs-5 text-dark">${item.name}</div>
-                    
-                    <div class="small text-muted my-1">
-                        ${phone} <span class="mx-1 text-light">|</span>
-                        ${birth} <span class="mx-1 text-light">|</span>
-                        ${carrier}
-                    </div>
-
-                    <div class="small text-secondary fw-bold">
-                        <i class="bi bi-credit-card-2-front me-1 text-primary"></i>${item.cardName}
-                    </div>
-                </div>
-                <span class="badge bg-white text-dark border rounded-pill px-2 shadow-sm">
-                    <i class="bi bi-person-circle me-1 text-muted"></i>${item.manager || '미지정'}
-                </span>
-            </div>
-            
-            <div class="bg-light p-3 rounded-3 border">
-                <div class="row g-2 mb-3">
-                    
-                    <div class="col-6">
-                        <label class="form-label-sm fw-bold text-secondary small mb-1 ms-1">세이브 등록</label>
-                        <div class="input-group input-group-sm shadow-sm">
-                            <input type="text" class="form-control border-primary fw-bold text-center ${color1}" 
-                                   id="val1_${rowId}" value="${v1}" placeholder="날짜" 
-                                   onfocus="if(this.value!=='미사용')this.type='date'" 
-                                   onblur="if(!this.value)this.type='text'"
-                                   style="border-right: none;">
-                            <button class="btn btn-white border border-primary border-start-0 text-muted" type="button" 
-                                    onclick="setUnused('val1_${rowId}')" title="미사용 처리" 
-                                    style="background: white;">
-                                <i class="bi bi-slash-circle"></i>
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div class="col-6">
-                        <label class="form-label-sm fw-bold text-secondary small mb-1 ms-1">자동이체 등록</label>
-                        <div class="input-group input-group-sm shadow-sm">
-                            <input type="text" class="form-control border-primary fw-bold text-center ${color2}" 
-                                   id="val2_${rowId}" value="${v2}" placeholder="날짜" 
-                                   onfocus="if(this.value!=='미사용')this.type='date'" 
-                                   onblur="if(!this.value)this.type='text'"
-                                   style="border-right: none;">
-                            <button class="btn btn-white border border-primary border-start-0 text-muted" type="button" 
-                                    onclick="setUnused('val2_${rowId}')" title="미사용 처리" 
-                                    style="background: white;">
-                                <i class="bi bi-slash-circle"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <button class="btn btn-primary w-100 btn-sm fw-bold shadow hover-effect" onclick="saveSetupInfo('card', '${item.branch}', '${item.rowIndex}', '${rowId}')">
-                    <i class="bi bi-check-lg me-1"></i> 저장하기
-                </button>
-            </div>
-        </div>`;
-    }).join('');
-    
-    // 날짜 입력 이벤트 리스너 (기존과 동일)
-    document.querySelectorAll('input[id^="val"]').forEach(el => {
-        el.addEventListener('input', function() {
-            // 값이 바뀌면 글자색을 파란색으로 (미사용일땐 빨강이었음)
-            if(this.value !== '미사용') {
-                this.classList.remove('text-danger');
-                this.classList.add('text-primary');
-            }
-        });
-    });
+    renderPendingTableTemplate(container, list, type);
 }
 
-// [script.js] 미사용 버튼 동작 (글자색 빨강으로 변경 추가)
-function setUnused(inputId) {
-    const el = document.getElementById(inputId);
-    el.type = 'text'; 
-    el.value = '미사용';
-    // 시각적 강조
-    el.classList.remove('text-primary');
-    el.classList.add('text-danger');
-}
-
-// 3. 유선설치 리스트 렌더링 (카드 내부에 입력창 배치)
-function renderWiredSetupList(list) {
-    const container = document.getElementById('wired_setup_list');
-    
-    if (!list || list.length === 0) {
-        container.innerHTML = `<div class="text-center text-muted py-5 small">
-            <i class="bi bi-check-circle fs-1 d-block mb-3 opacity-25"></i>
-            미처리 내역이 없습니다. (모두 완료!)
-        </div>`;
+// ==========================================================
+// ✅ [테이블 템플릿] “미처리” 리스트도 카드가 아니라 동일 테이블로 통일
+// - 중고/상품권/미처리(카드/유선) 모두 같은 UX(표 + 클릭하면 모달)
+// - 컬럼/필드 정의는 CONFIG(PENDING_CONFIGS)에서 분리
+// ==========================================================
+function renderPendingTableTemplate(container, list, type) {
+    const cfg = PENDING_CONFIGS[type];
+    if (!cfg) {
+        container.innerHTML = `<div class="text-center text-muted py-5">설정이 없습니다.</div>`;
         return;
     }
 
-    container.innerHTML = list.map(item => {
-        const rowId = `wired_${item.branch}_${item.rowIndex}`;
-        const v1 = item.val1 ? String(item.val1).substring(0, 10) : "";
-        const v2 = item.val2 ? String(item.val2).substring(0, 10) : "";
+    // ✅ 1) 타입별 컬럼 정의 ("템플릿 1개 + 설정 N개")
+    // - 공통 필드: 지점/개통일/고객/담당자/상태
+    // - 타입별 필드: card(제휴카드 2개), wired(설치예정/설치일)
+    // ✅ 공통 컬럼은 '타입'에 따라 조금씩 달라집니다.
+    // - usedphone/gift: 개통처, 약정/유형 제거
+    // - card/wired: 약정/유형 제거 + (전화번호 오른쪽에 생년월일 추가)
+    const COMMON_COLS = [
+        { key: 'branch', label: '지점', width: '100px', formatter: (v) => v || '-' },
+        { key: 'date', label: '개통일', width: '110px', formatter: (v) => v || '-' },
+        { key: 'name', label: '고객명', width: '120px', className: 'fw-bold text-primary', formatter: (v) => v || '-' },
+        { key: 'phone', label: '전화번호', width: '140px', formatter: (v) => v || '-' },
+        // ★ card/wired 화면: 전화번호 오른쪽에 생년월일 표시
+        ...((type === 'card' || type === 'wired')
+            ? [{ key: 'birth', label: '생년월일', width: '110px', formatter: (v) => v || '-' }]
+            : []),
+        // ★ usedphone/gift 화면에서는 개통처를 숨김
+        ...((type === 'usedphone' || type === 'gift')
+            ? []
+            : [{ key: 'carrier', label: '개통처', width: '110px', formatter: (v) => v || '-' }]),
+        // ★ 약정/유형은 요청대로 전 화면에서 제거
+        { key: 'manager', label: '담당자', width: '110px', formatter: (v) => v || '미지정' },
+        { key: 'status', label: '상태', width: '110px', formatter: (_, row) => {
+            const done = !!row.completed;
+            return done
+                ? `<span class="badge bg-success bg-opacity-75">${cfg.doneLabel || '완료'}</span>`
+                : `<span class="badge bg-danger bg-opacity-75">${cfg.todoLabel || '미처리'}</span>`;
+        }}
+    ];
 
-        // ★ [추가] 상세 정보 (데이터가 없으면 빈칸)
-        const phone = item.phone || item['전화번호'] || '';
-        const birth = item.birth || item['생년월일'] || '';
-        const carrier = item.carrier || item['개통처'] || item['통신사'] || '';
+    // 타입별 컬럼(필요한 값만 추가)
+    const money = (n) => {
+        if (n === undefined || n === null || String(n).trim() === '') return '<span class="text-muted opacity-50">-</span>';
+        const num = Number(String(n).replace(/,/g, ''));
+        return Number.isFinite(num) ? num.toLocaleString() : String(n);
+    };
 
-        return `
-        <div class="glass-card p-3 mb-3 border-start border-4 border-success shadow-sm" style="background: #fff;">
-            <div class="d-flex justify-content-between align-items-center mb-2 border-bottom pb-2">
-                <div>
-                    <span class="badge bg-success bg-opacity-10 text-success me-1 border border-success">유선설치</span>
-                    <span class="badge bg-light text-secondary border">${item.branch}</span>
-                </div>
-                <span class="small fw-bold text-muted">${item.date}</span>
-            </div>
+    let TYPE_COLS = [];
+    if (type === 'usedphone' || type === 'gift') {
+        const amtLabel = cfg.amountKey || (type === 'usedphone' ? '중고폰' : '상품권');
+        TYPE_COLS = [
+            { key: '_amount', label: amtLabel, width: '110px', className: 'fw-bold', formatter: (v) => money(v) },
+            { key: '_memo', label: '메모', width: '240px', formatter: (v) => v || '-' },
+            { key: '_checkDate', label: (cfg.checkDateLabel || '확인일'), width: '110px', formatter: (v) => v || '-' }
+        ];
+    } else if (type === 'card') {
+        TYPE_COLS = [
+            { key: '_label', label: cfg.labelKey || '제휴카드', width: '140px', formatter: (v) => v || '-' },
+            { key: 'val1', label: cfg.val1Label || '세이브 등록일', width: '140px', formatter: (v) => v || '-' },
+            { key: 'val2', label: cfg.val2Label || '자동이체 등록일', width: '160px', formatter: (v) => v || '-' }
+        ];
+    } else {
+        // wired
+        TYPE_COLS = [
+            { key: '_label', label: cfg.labelKey || '유선유형', width: '160px', formatter: (v) => v || '-' },
+            { key: 'val1', label: cfg.val1Label || '설치 예정일', width: '160px', formatter: (v) => v || '-' },
+            { key: 'val2', label: cfg.val2Label || '설치 완료일', width: '160px', formatter: (v) => v || '-' }
+        ];
+    }
 
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <div class="text-truncate me-2">
-                    <div class="fw-bold fs-5 text-dark">${item.name}</div>
+    const COLS = [...COMMON_COLS, ...TYPE_COLS];
 
-                    <div class="small text-muted my-1">
-                        ${phone} <span class="mx-1 text-light">|</span>
-                        ${birth} <span class="mx-1 text-light">|</span>
-                        ${carrier}
-                    </div>
+    // ✅ 2) 렌더링 데이터 전처리(표시용 문자열 합치기)
+    const rows = list.map((raw) => {
+        const meta = normalizePendingItem(raw);
 
-                    <div class="small text-success fw-bold mt-1"><i class="bi bi-router me-1"></i>${item.type}</div>
-                </div>
-                <span class="badge bg-white text-dark border rounded-pill px-2">
-                    <i class="bi bi-person-circle me-1"></i>${item.manager || '미지정'}
-                </span>
-            </div>
-
-            <div class="bg-light p-3 rounded-3 border">
-                <div class="row g-2 mb-2">
-                    <div class="col-6">
-                        <label class="form-label-sm fw-bold text-muted small" style="font-size: 0.75rem;">설치 예정일</label>
-                        <input type="date" class="form-control form-control-sm border-success fw-bold text-center" id="val1_${rowId}" value="${v1}">
-                    </div>
-                    <div class="col-6">
-                        <label class="form-label-sm fw-bold text-muted small" style="font-size: 0.75rem;">설치 완료일</label>
-                        <input type="date" class="form-control form-control-sm border-success fw-bold text-center" id="val2_${rowId}" value="${v2}">
-                    </div>
-                </div>
-                <button class="btn btn-success w-100 btn-sm fw-bold shadow-sm" onclick="saveSetupInfo('wired', '${item.branch}', '${item.rowIndex}', '${rowId}')">
-                    <i class="bi bi-check-lg me-1"></i> 저장하기
-                </button>
-            </div>
-        </div>`;
-    }).join('');
-}
-
-// 4. 저장 함수 (입력값 그대로 전송)
-function saveSetupInfo(type, branch, rowIndex, rowId) {
-    const val1 = document.getElementById(`val1_${rowId}`).value;
-    const val2 = document.getElementById(`val2_${rowId}`).value;
-
-    if (!confirm("입력된 정보로 저장하시겠습니까?")) return;
-
-    if(typeof Swal !== 'undefined') Swal.fire({ title: '저장 중...', didOpen: () => Swal.showLoading() });
-
-    requestAPI({
-            action: "update_setup_info",
-            type: type,
-            branch: branch,
-            rowIndex: rowIndex,
-            val1: val1,
-            val2: val2
-        })
-    .then(d => {
-        if (d.status === 'success') {
-            if(typeof Swal !== 'undefined') Swal.fire({ icon: 'success', title: '처리 완료', timer: 1000, showConfirmButton: false });
-            else alert("저장되었습니다.");
-            // 목록 갱신
-            searchSetupList(type);
+        // 완료 판정(카드 UI와 동일 로직)
+        let completed = false;
+        if (type === 'usedphone' || type === 'gift') {
+            completed = (raw.completed === true);
+        } else if (type === 'card') {
+            const v1 = raw.val1 || raw['제휴카드세이브등록일'] || '';
+            const v2 = raw.val2 || raw['제휴카드자동이체등록일'] || '';
+            completed = isDoneCard(v1) && isDoneCard(v2);
         } else {
-            alert(d.message);
+            const v2 = raw.val2 || raw['유선상품설치일'] || '';
+            completed = isDoneWired(v2);
         }
-    })
-    .catch(e => {
-        alert("통신 오류가 발생했습니다.");
+
+        // 타입별 표시용 값(테이블 전용)
+        const _amount = (type === 'usedphone') ? (raw['중고폰'] ?? raw.amount ?? '') : (type === 'gift') ? (raw['상품권'] ?? raw.amount ?? '') : '';
+        const _memo = (type === 'usedphone') ? (raw['중고폰메모'] ?? raw.modelMemo ?? '') : (type === 'gift') ? (raw['상품권메모'] ?? raw.memo ?? '') : '';
+        const _checkDate = raw['checkDate'] || '';
+        const _label = (type === 'card')
+            ? (raw.cardName || raw['제휴카드'] || '')
+            : (type === 'wired')
+                ? (meta.planType || raw['유선상품'] || '')
+                : '';
+
+        // 값 보정: card/wired는 서버 키가 한글일 수 있으니 val1/val2에도 주입
+        const val1 = raw.val1 || (type === 'card' ? raw['제휴카드세이브등록일'] : raw['유선상품설치예정일']) || '';
+        const val2 = raw.val2 || (type === 'card' ? raw['제휴카드자동이체등록일'] : raw['유선상품설치일']) || '';
+
+        return {
+            ...raw,
+            ...meta,
+            branch: raw.branch || raw['지점'] || '',
+            completed,
+            val1,
+            val2,
+            _amount,
+            _memo,
+            _checkDate,
+            _label
+        };
+    });
+
+    // ✅ 3) 클릭 매핑용 인덱스 주입(렌더링 전에 세팅)
+    rows.forEach((r, i) => { r._idx = i; });
+
+    // ✅ 3) 테이블 템플릿 생성
+    const thead = `<tr>${COLS.map(c => `<th style="width:${c.width || 'auto'}">${c.label}</th>`).join('')}</tr>`;
+    const tbody = rows.map((row) => {
+        const tds = COLS.map(col => {
+            const rawVal = row[col.key];
+            const html = (typeof col.formatter === 'function')
+                ? col.formatter(rawVal, row)
+                : (rawVal ?? '-');
+            const cls = col.className ? ` ${col.className}` : '';
+            return `<td class="${cls}">${html}</td>`;
+        }).join('');
+        // 행 클릭 = 상세/저장 모달 열기
+        return `<tr class="table-row-click" data-type="${type}" data-idx="${row._idx}">${tds}</tr>`;
+    }).join('');
+
+    container.innerHTML = `
+      <div class="table-template">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">${thead}</thead>
+            <tbody>${tbody}</tbody>
+          </table>
+        </div>
+        <div class="small text-muted mt-2">행을 클릭하면 상세 입력/저장 모달이 열립니다.</div>
+      </div>
+    `;
+
+    // ✅ 4) 클릭 이벤트 바인딩 (행 -> 원본 객체 매핑)
+    container.querySelectorAll('tr.table-row-click').forEach(tr => {
+        tr.addEventListener('click', () => {
+            const idx = Number(tr.getAttribute('data-idx'));
+            const item = rows[idx];
+            openPendingModal(item, type);
+        });
     });
 }
 
@@ -2839,101 +3057,6 @@ function renderDailySalesUI(list, total) {
 
     // 3. 차트 그리기
     renderMixedChart(list);
-}
-
-// ============================
-// 급여 계산 기능
-// ============================
-
-/**
- * 급여 계산 섹션을 표시하고 기본 월을 세팅합니다.
- */
-function showSalarySection() {
-    // 기본 월을 현재 월로 설정
-    const monthInput = document.getElementById('salary_month');
-    if (monthInput && !monthInput.value) {
-        const now = new Date();
-        const yyyy = now.getFullYear();
-        const mm = String(now.getMonth() + 1).padStart(2, '0');
-        monthInput.value = `${yyyy}-${mm}`;
-    }
-    // 섹션 표시
-    showSection('section-salary');
-}
-
-/**
- * 선택한 월에 대한 급여 보고를 불러옵니다.
- */
-function loadSalaryReport() {
-    const month = document.getElementById('salary_month').value;
-    if (!month) {
-        alert('조회할 월을 선택해주세요.');
-        return;
-    }
-    // 로딩 표시
-    document.getElementById('salary_tbody').innerHTML = `
-        <tr><td colspan="9" class="py-5">
-            <div class="spinner-border text-primary"></div>
-            <div class="mt-2 small text-muted">급여 계산 중...</div>
-        </td></tr>`;
-    // API 호출
-    requestAPI({
-        action: 'get_salary_report',
-        month: month
-    })
-        .then(d => {
-        // 정상 응답일 경우 리스트 렌더링, 아닐 경우 메시지를 출력한다.
-        // 일부 서버 구현에서는 status 필드가 없고 data만 존재할 수 있으므로
-        // data가 배열인지 먼저 확인하여 성공 처리합니다.
-        if (d && Array.isArray(d.data)) {
-            renderSalaryReportUI(d.data);
-        } else if (d && d.status === 'success' && Array.isArray(d.data)) {
-            renderSalaryReportUI(d.data);
-        } else {
-            // 서버에서 전송된 오류 메시지가 없으면 기본 메시지를 사용한다. d.error나 d.status도 보조적으로 사용한다.
-            let msg = '데이터를 불러오지 못했습니다.';
-            if (d) {
-                msg = d.message || d.error || (typeof d.status === 'string' && d.status !== 'success' ? d.status : msg);
-            }
-            document.getElementById('salary_tbody').innerHTML = `<tr><td colspan="9" class="text-danger py-4">${msg}</td></tr>`;
-        }
-    })
-    .catch(e => {
-        console.error(e);
-        document.getElementById('salary_tbody').innerHTML = `<tr><td colspan="9" class="text-danger py-4">통신 오류 발생</td></tr>`;
-    });
-}
-
-/**
- * 급여 보고 데이터를 화면에 렌더링합니다.
- * @param {Array} list - 서버에서 받은 급여 데이터 목록
- */
-function renderSalaryReportUI(list) {
-    const tbody = document.getElementById('salary_tbody');
-    if (!list || list.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="9" class="text-muted py-4">데이터가 없습니다.</td></tr>`;
-        return;
-    }
-    const fmt = (n) => {
-        // 빈 값이나 null 처리
-        if (n === undefined || n === null || n === '') return '';
-        return Number(n).toLocaleString();
-    };
-    let rows = '';
-    list.forEach(item => {
-        rows += `<tr>
-            <td>${item.name || ''}</td>
-            <td>${item.branch || ''}</td>
-            <td>${item.rank || ''}</td>
-            <td>${fmt(item.margin)}</td>
-            <td>${fmt(item.wired)}</td>
-            <td>${fmt(item.baseSalary)}</td>
-            <td>${fmt(item.incentive)}</td>
-            <td>${fmt(item.bonus)}</td>
-            <td>${fmt(item.total)}</td>
-        </tr>`;
-    });
-    tbody.innerHTML = rows;
 }
 
 function renderMixedChart(list) {
@@ -4188,5 +4311,96 @@ function submitGoal() {
         loadDashboard(); // 대시보드 새로고침 (그래프 반영)
     })
     .catch(e => alert("저장 실패"));
+}
+
+/*
+ * 급여 계산 섹션을 표시하고 기본 월을 설정합니다.
+ */
+function showSalarySection() {
+    // 기본 월을 현재 월로 설정
+    const monthInput = document.getElementById('salary_month');
+    if (monthInput && !monthInput.value) {
+        const now = new Date();
+        const yyyy = now.getFullYear();
+        const mm = String(now.getMonth() + 1).padStart(2, '0');
+        monthInput.value = `${yyyy}-${mm}`;
+    }
+    // 섹션 표시
+    showSection('section-salary');
+}
+
+/**
+ * 선택한 월에 대한 급여 보고를 불러옵니다.
+ */
+function loadSalaryReport() {
+    const month = document.getElementById('salary_month').value;
+    if (!month) {
+        alert('조회할 월을 선택해주세요.');
+        return;
+    }
+    // 로딩 표시
+    document.getElementById('salary_tbody').innerHTML = `
+        <tr><td colspan="9" class="py-5">
+            <div class="spinner-border text-primary"></div>
+            <div class="mt-2 small text-muted">급여 계산 중...</div>
+        </td></tr>`;
+    // API 호출
+    requestAPI({
+            action: 'get_salary_report',
+            month: month
+        })
+        .then(d => {
+            // 정상 응답일 경우 리스트 렌더링, 아닐 경우 메시지를 출력한다.
+            // 일부 서버 구현에서는 status 필드가 없고 data만 존재할 수 있으므로
+            // data가 배열인지 먼저 확인하여 성공 처리합니다.
+            if (d && Array.isArray(d.data)) {
+                renderSalaryReportUI(d.data);
+            } else if (d && d.status === 'success' && Array.isArray(d.data)) {
+                renderSalaryReportUI(d.data);
+            } else {
+                // 서버에서 전송된 오류 메시지가 없으면 기본 메시지를 사용한다. d.error나 d.status도 보조적으로 사용한다.
+                let msg = '데이터를 불러오지 못했습니다.';
+                if (d) {
+                    msg = d.message || d.error || (typeof d.status === 'string' && d.status !== 'success' ? d.status : msg);
+                }
+                document.getElementById('salary_tbody').innerHTML = `<tr><td colspan="9" class="text-danger py-4">${msg}</td></tr>`;
+            }
+        })
+        .catch(e => {
+            console.error(e);
+            document.getElementById('salary_tbody').innerHTML = `<tr><td colspan="9" class="text-danger py-4">통신 오류 발생</td></tr>`;
+        });
+}
+
+/**
+ * 급여 보고 데이터를 화면에 렌더링합니다.
+ * @param {Array} list - 서버에서 받은 급여 데이터 목록
+ */
+function renderSalaryReportUI(list) {
+    const tbody = document.getElementById('salary_tbody');
+    if (!list || list.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="9" class="text-muted py-4">데이터가 없습니다.</td></tr>`;
+        return;
+    }
+    const fmt = (n) => {
+        // 빈 값이나 null 처리
+        if (n === undefined || n === null || n === '') return '';
+        return Number(n).toLocaleString();
+    };
+    let rows = '';
+    list.forEach(item => {
+        rows += `<tr>
+            <td>${item.name || ''}</td>
+            <td>${item.branch || ''}</td>
+            <td>${item.rank || ''}</td>
+            <td>${fmt(item.margin)}</td>
+            <td>${fmt(item.wired)}</td>
+            <td>${fmt(item.baseSalary)}</td>
+            <td>${fmt(item.incentive)}</td>
+            <td>${fmt(item.bonus)}</td>
+            <td>${fmt(item.total)}</td>
+        </tr>`;
+    });
+    tbody.innerHTML = rows;
 }
 
