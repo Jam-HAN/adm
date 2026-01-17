@@ -2362,21 +2362,21 @@ function searchSetupList(type) {
     // 로딩 표시
     container.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-secondary"></div><div class="mt-2 small text-muted">데이터 조회 중...</div></div>';
 
-    // ★ get_all_history와 동일한 패턴: data 객체로 start/end 통일
+    // ✅ 리팩토링: 미처리 목록도 get_all_history 하나로 조회
+    // - type: 'card' | 'wired'
+    // - specialType: 서버(get_all_history)에서 분기 처리
     requestAPI({
-            action: "get_setup_pending_list",
-            data: {
-                type: type,
-                branch: branch,
-                start: start,
-                end: end,
-                keyword: keyword
-            }
+            action: "get_all_history",
+            start: start,
+            end: end,
+            keyword: keyword,
+            branch: branch,
+            specialType: type
         })
     .then(d => {
         if (d.status === 'success') {
             // 서버 응답: { status:'success', data:[...] }
-            const list = d.data || d.list || [];
+            const list = d.data || [];
             if (type === 'card') renderCardSetupList(list);
             else renderWiredSetupList(list);
         } else {
@@ -2582,9 +2582,12 @@ function saveSetupInfo(type, branch, rowIndex, rowId) {
 
     if(typeof Swal !== 'undefined') Swal.fire({ title: '저장 중...', didOpen: () => Swal.showLoading() });
 
+    // ✅ 리팩토링: 'update_setup_info' → 'update_history' (단일 엔드포인트)
+    // - specialType: 'card' | 'wired'
+    // - val1/val2는 Code.gs에서 헤더(제휴카드/유선)로 매핑되어 저장됩니다.
     requestAPI({
-            action: "update_setup_info",
-            type: type,
+            action: "update_history",
+            specialType: type, // 'card' 또는 'wired'
             branch: branch,
             rowIndex: rowIndex,
             val1: val1,
