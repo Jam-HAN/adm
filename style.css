@@ -96,12 +96,12 @@ a { text-decoration: none; }
 }
 .table td, .table th{
   border-color: rgba(15, 23, 42, .07) !important;
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.35;
 }
 
 .table thead th{
-  font-size: 12px;
+  font-size: 14px;
 }
 .table-hover > tbody > tr:hover > *{
   background: rgba(47,107,255,.06) !important;
