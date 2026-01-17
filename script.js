@@ -2734,7 +2734,7 @@ function renderPendingTableTemplate(container, list, type) {
         TYPE_COLS = [
             { key: '_label', label: cfg.labelKey || '제휴카드', width: '140px', formatter: (v) => v || '-' },
             { key: 'val1', label: cfg.val1Label || '세이브 등록일', width: '140px', formatter: (v) => v || '-' },
-            { key: 'val2', label: cfg.val2Label || '자동이체 등록일', width: '140px', formatter: (v) => v || '-' }
+            { key: 'val2', label: cfg.val2Label || '자동이체 등록일', width: '150px', formatter: (v) => v || '-' }
         ];
     } else {
         // wired
