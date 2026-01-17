@@ -2873,10 +2873,16 @@ function loadSalaryReport() {
         month: month
     })
     .then(d => {
-        if (d.status === 'success') {
+        // 정상 응답일 경우 리스트 렌더링, 아닐 경우 메시지를 출력한다.
+        if (d && d.status === 'success' && Array.isArray(d.data)) {
             renderSalaryReportUI(d.data);
         } else {
-            document.getElementById('salary_tbody').innerHTML = `<tr><td colspan="9" class="text-danger py-4">${d.message}</td></tr>`;
+            // 서버에서 전송된 오류 메시지가 없으면 기본 메시지를 사용한다. d.error나 d.status도 보조적으로 사용한다.
+            let msg = '데이터를 불러오지 못했습니다.';
+            if (d) {
+                msg = d.message || d.error || (typeof d.status === 'string' && d.status !== 'success' ? d.status : msg);
+            }
+            document.getElementById('salary_tbody').innerHTML = `<tr><td colspan="9" class="text-danger py-4">${msg}</td></tr>`;
         }
     })
     .catch(e => {
