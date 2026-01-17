@@ -121,7 +121,8 @@ window.handleCredentialResponse = function(response) {
             setupAutoLogout();
             loadDashboard();
             initHistoryDates(); // 기존: 통합 조회 날짜 세팅
-            initSetupDates();
+            initSetupDates(); // (호환) 내부적으로 renderPendingFilter 호출
+            initPendingPages();
         } else {
             alert("로그인 실패: " + d.message);
             document.getElementById('login-msg').innerText = d.message;
@@ -183,6 +184,8 @@ window.onload = function() {
             loadDropdownData();
             setupAutoLogout();
             initHistoryDates();
+            // ✅ 미처리(중고/상품권/카드/유선) 공통 필터 UI 주입
+            initPendingPages();
 
         } catch (e) {
             console.error("세션 데이터 손상됨. 초기화합니다.", e);
@@ -1967,78 +1970,202 @@ function deleteHistoryItem() {
 // [최종] 중고폰 반납 / 상품권 수령 관리 로직 (기능 개선)
 // =========================================================
 
-// [헬퍼] 날짜 초기화 (당월 1일 ~ 오늘)
-function initSpecialDates(type) {
+// =========================================================
+// ✅ 미처리 템플릿(공통) + CONFIG(4개 타입)
+// =========================================================
+
+const PENDING_CONFIGS = {
+    usedphone: {
+        type: 'usedphone',
+        filterMountId: 'pending-filter-usedphone',
+        listId: 'return-usedphone-list',
+        title: '중고폰 반납',
+        badge: { text: '중고폰', className: 'bg-warning text-dark', borderClass: 'border-warning' },
+        doneLabel: '반납완료',
+        todoLabel: '미반납',
+        mode: 'amount',
+        amountKey: '중고폰',
+        supportsModel: true,
+        toggleLabel: '반납 확인'
+    },
+    gift: {
+        type: 'gift',
+        filterMountId: 'pending-filter-gift',
+        listId: 'receive-gift-list',
+        title: '상품권 수령',
+        badge: { text: '상품권', className: 'bg-success', borderClass: 'border-success' },
+        doneLabel: '수령완료',
+        todoLabel: '미수령',
+        mode: 'amount',
+        amountKey: '상품권',
+        supportsModel: false,
+        toggleLabel: '수령 확인'
+    },
+    card: {
+        type: 'card',
+        filterMountId: 'pending-filter-card',
+        listId: 'card_setup_list',
+        title: '제휴카드 접수',
+        badge: { text: '제휴카드', className: 'bg-primary', borderClass: 'border-primary' },
+        doneLabel: '접수완료',
+        todoLabel: '미처리',
+        mode: 'dates',
+        dateLabels: ['세이브 등록일', '자동이체 등록일'],
+        naToggle: true
+    },
+    wired: {
+        type: 'wired',
+        filterMountId: 'pending-filter-wired',
+        listId: 'wired_setup_list',
+        title: '유선 설치',
+        badge: { text: '유선설치', className: 'bg-success', borderClass: 'border-success' },
+        doneLabel: '설치완료',
+        todoLabel: '미설치',
+        mode: 'dates',
+        dateLabels: ['설치 예정일', '설치 완료일'],
+        naToggle: false
+    }
+};
+
+function fmtDate(d) {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+}
+
+function getDefaultRangeThisMonth() {
     const today = new Date();
-    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
-    
-    // YYYY-MM-DD 포맷 함수
-    const fmt = d => {
-        const y = d.getFullYear();
-        const m = String(d.getMonth() + 1).padStart(2, '0');
-        const day = String(d.getDate()).padStart(2, '0');
-        return `${y}-${m}-${day}`;
+    const first = new Date(today.getFullYear(), today.getMonth(), 1);
+    return { start: fmtDate(first), end: fmtDate(today) };
+}
+
+function renderPendingFilter(type) {
+    const cfg = PENDING_CONFIGS[type];
+    if (!cfg) return;
+
+    const mount = document.getElementById(cfg.filterMountId);
+    if (!mount) return;
+
+    const ids = {
+        branch: `pending_${type}_branch`,
+        start: `pending_${type}_start`,
+        end: `pending_${type}_end`,
+        keyword: `pending_${type}_keyword`,
+        searchBtn: `pending_${type}_search_btn`,
+        resetBtn: `pending_${type}_reset_btn`
     };
 
-    if (type === 'usedphone') {
-        if(!document.getElementById('search_return_start').value) document.getElementById('search_return_start').value = fmt(firstDay);
-        if(!document.getElementById('search_return_end').value) document.getElementById('search_return_end').value = fmt(today);
-    } else {
-        if(!document.getElementById('search_gift_start').value) document.getElementById('search_gift_start').value = fmt(firstDay);
-        if(!document.getElementById('search_gift_end').value) document.getElementById('search_gift_end').value = fmt(today);
+    mount.innerHTML = `
+        <div class="row g-2">
+            <div class="col-12">
+                <select id="${ids.branch}" class="form-select form-select-sm fw-bold text-primary">
+                    <option value="전체">🏢 전체 지점 보기</option>
+                    <option value="장지 본점">장지 본점</option>
+                    <option value="명일 직영점">명일 직영점</option>
+                </select>
+            </div>
+            <div class="col-6"><input type="date" class="form-control form-control-sm" id="${ids.start}"></div>
+            <div class="col-6"><input type="date" class="form-control form-control-sm" id="${ids.end}"></div>
+            <div class="col-12">
+                <div class="input-group">
+                    <input type="text" class="form-control" id="${ids.keyword}" placeholder="고객명, 전화번호">
+                    <button class="btn btn-outline-secondary" id="${ids.searchBtn}">조회</button>
+                    <button class="btn btn-outline-dark" id="${ids.resetBtn}">초기화</button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // 기본 날짜 세팅
+    const range = getDefaultRangeThisMonth();
+    document.getElementById(ids.start).value = range.start;
+    document.getElementById(ids.end).value = range.end;
+
+    // 이벤트 연결
+    document.getElementById(ids.searchBtn).addEventListener('click', () => searchPending(type));
+    document.getElementById(ids.resetBtn).addEventListener('click', () => resetPendingFilter(type));
+    document.getElementById(ids.keyword).addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') searchPending(type);
+    });
+}
+
+function getPendingFilterValues(type) {
+    const ids = {
+        branch: `pending_${type}_branch`,
+        start: `pending_${type}_start`,
+        end: `pending_${type}_end`,
+        keyword: `pending_${type}_keyword`
+    };
+    return {
+        branch: (document.getElementById(ids.branch)?.value || '전체'),
+        start: (document.getElementById(ids.start)?.value || ''),
+        end: (document.getElementById(ids.end)?.value || ''),
+        keyword: (document.getElementById(ids.keyword)?.value || '')
+    };
+}
+
+function resetPendingFilter(type) {
+    const ids = {
+        branch: `pending_${type}_branch`,
+        start: `pending_${type}_start`,
+        end: `pending_${type}_end`,
+        keyword: `pending_${type}_keyword`
+    };
+    const range = getDefaultRangeThisMonth();
+    if (document.getElementById(ids.branch)) document.getElementById(ids.branch).value = '전체';
+    if (document.getElementById(ids.start)) document.getElementById(ids.start).value = range.start;
+    if (document.getElementById(ids.end)) document.getElementById(ids.end).value = range.end;
+    if (document.getElementById(ids.keyword)) document.getElementById(ids.keyword).value = '';
+    searchPending(type);
+}
+
+function initPendingPages() {
+    ['usedphone', 'gift', 'card', 'wired'].forEach(t => renderPendingFilter(t));
+}
+
+async function searchPending(type) {
+    const cfg = PENDING_CONFIGS[type];
+    if (!cfg) return;
+
+    const { branch, start, end, keyword } = getPendingFilterValues(type);
+    const container = document.getElementById(cfg.listId);
+    if (!container) return;
+
+    container.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-secondary"></div><div class="mt-2 small text-muted">데이터 조회 중...</div></div>';
+
+    try {
+        const res = await requestAPI({
+            action: 'get_all_history',
+            start,
+            end,
+            keyword,
+            branch,
+            specialType: type
+        });
+
+        if (res.status === 'success') {
+            const list = res.data || res.list || [];
+            renderPendingList(cfg.listId, list, type);
+        } else {
+            container.innerHTML = `<div class="text-center text-danger py-5 small">${res.message || '조회 실패'}</div>`;
+        }
+    } catch (e) {
+        console.error(e);
+        container.innerHTML = `<div class="text-center text-danger py-5 small">통신 오류가 발생했습니다.</div>`;
     }
+}
+
+// [헬퍼] 날짜 초기화 (당월 1일 ~ 오늘)
+function initSpecialDates(type) {
+    // (구버전 호환) 예전 DOM ID 기반 로직 제거 → 공통 필터 템플릿으로 대체
+    renderPendingFilter(type);
 }
 
 // 1. 통합 조회 함수 (렌더링 방식 개선: += 제거)
 function searchSpecialList(type) {
-    let branch, keyword, containerId, start, end;
-    
-    if (type === 'usedphone') {
-        branch = document.getElementById('search_return_branch').value;
-        keyword = document.getElementById('search_return_keyword').value;
-        start = document.getElementById('search_return_start').value;
-        end = document.getElementById('search_return_end').value;
-        containerId = 'return-usedphone-list'; // HTML ID 꼭 확인하세요!
-    } else {
-        branch = document.getElementById('search_gift_branch').value;
-        keyword = document.getElementById('search_gift_keyword').value;
-        start = document.getElementById('search_gift_start').value;
-        end = document.getElementById('search_gift_end').value;
-        containerId = 'receive-gift-list';
-    }
-
-    if (!start || !end) {
-        initSpecialDates(type);
-        start = (type==='usedphone') ? document.getElementById('search_return_start').value : document.getElementById('search_gift_start').value;
-        end = (type==='usedphone') ? document.getElementById('search_return_end').value : document.getElementById('search_gift_end').value;
-    }
-
-    const container = document.getElementById(containerId);
-    if (!container) return; // 안전장치
-
-    container.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary"></div></div>';
-
-    requestAPI({ 
-            action: "get_all_history", 
-            start: start, 
-            end: end, 
-            keyword: keyword, 
-            branch: branch,
-            specialType: type  // ★ 핵심: 이 꼬리표를 달아줘야 서버가 "아! 필터링해야지" 하고 알아듣습니다.
-        })
-    .then(res => {
-      const list = res.data || res.list || [];   // 어떤 형태든 흡수
-      if (res.status === 'success' && list.length > 0) {
-        container.innerHTML = list.map(item => renderSpecialCard(item, type)).join('');
-      } else {
-        container.innerHTML = '<div class="text-center text-muted py-5 small">미처리 내역이 없습니다. (모두 완료됨)</div>';
-      }
-    })
-
-    .catch(err => {
-        console.error(err);
-        container.innerHTML = '<div class="text-center text-danger py-5 small">오류 발생</div>';
-    });
+    // (구버전 호환) → 공통 템플릿으로 위임
+    return searchPending(type);
 }
 
 // 2. 카드 렌더링 (체크값 기준 배지 표시)
@@ -2117,22 +2244,17 @@ function toggleNA(dateInputId) {
 
 // 공통 모달 열기
 function openPendingModal(item, type) {
+    const cfg = PENDING_CONFIGS[type] || {};
     // 공통 키
     document.getElementById('sp_sheetName').value = item.sheetName || '';
     document.getElementById('sp_rowIndex').value = item.rowIndex;
     document.getElementById('sp_branch').value = item.branch || item['지점'] || '';
     document.getElementById('sp_type').value = type;
 
-    // 고객 정보 (undefined 방어)
-    const name = item.name || item['고객명'] || '';
-    const phone = item.phone || item['전화번호'] || '';
-    const date = item.date || item['개통일'] || '';
-    const carrier = item.carrier || item['개통처'] || item['통신사'] || '';
-    const manager = item.manager || item['담당자'] || '';
-    const planType = item.type || item['약정유형'] || item['개통유형'] || '';
-
-    document.getElementById('sp_customer_name').innerText = name || '-';
-    document.getElementById('sp_customer_info').innerText = [phone, date, carrier, manager || planType].filter(Boolean).join(' | ') || '-';
+    // 고객 정보 (undefined/키 혼용 방어)
+    const meta = normalizePendingItem(item);
+    document.getElementById('sp_customer_name').innerText = meta.name || '-';
+    document.getElementById('sp_customer_info').innerText = [meta.phone, meta.date, meta.carrier, meta.manager || meta.planType].filter(Boolean).join(' | ') || '-';
 
     // 그룹 표시 전환
     const amountGroup = document.getElementById('sp_amount_group');
@@ -2278,9 +2400,8 @@ function submitSpecialUpdate() {
         if (data.status === 'success') {
             Swal.fire({ icon: 'success', title: '처리 완료', timer: 900, showConfirmButton: false });
             bootstrap.Modal.getInstance(document.getElementById('modal-special-update')).hide();
-            // 목록 갱신
-            if (type === 'usedphone' || type === 'gift') searchSpecialList(type);
-            else searchSetupList(type);
+            // 목록 갱신 (공통)
+            searchPending(type);
         } else {
             Swal.fire({ icon: 'error', title: '실패', text: data.message || '저장 실패' });
         }
@@ -2422,62 +2543,15 @@ async function loadSettlement(type) {
 
 // 0. 초기화: 날짜 기본값 세팅 (이번달 1일 ~ 오늘)
 function initSetupDates() {
-    const today = new Date();
-    const yyyy = today.getFullYear();
-    const mm = String(today.getMonth() + 1).padStart(2, '0');
-    const dd = String(today.getDate()).padStart(2, '0');
-    
-    const firstDay = `${yyyy}-${mm}-01`;
-    const todayStr = `${yyyy}-${mm}-${dd}`;
-
-    document.getElementById('search_card_start').value = firstDay;
-    document.getElementById('search_card_end').value = todayStr;
-    document.getElementById('search_wired_start').value = firstDay;
-    document.getElementById('search_wired_end').value = todayStr;
+    // (구버전 호환) 예전 DOM ID 기반 로직 제거 → 공통 필터 템플릿으로 대체
+    renderPendingFilter('card');
+    renderPendingFilter('wired');
 }
 
 // 1. 통합 검색 함수
 function searchSetupList(type) {
-    const branchId = type === 'card' ? 'search_card_branch' : 'search_wired_branch';
-    const startId = type === 'card' ? 'search_card_start' : 'search_wired_start';
-    const endId = type === 'card' ? 'search_card_end' : 'search_wired_end';
-    const keyId = type === 'card' ? 'search_card_keyword' : 'search_wired_keyword';
-    
-    // 리스트 컨테이너 ID
-    const containerId = type === 'card' ? 'card_setup_list' : 'wired_setup_list';
-
-    const branch = document.getElementById(branchId).value;
-    const start = document.getElementById(startId).value;
-    const end = document.getElementById(endId).value;
-    const keyword = document.getElementById(keyId).value;
-    const container = document.getElementById(containerId);
-
-    // 로딩 표시
-    container.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-secondary"></div><div class="mt-2 small text-muted">데이터 조회 중...</div></div>';
-
-    // ✅ 리팩토링: 미처리 목록도 get_all_history 하나로 조회
-    // - type: 'card' | 'wired'
-    // - specialType: 서버(get_all_history)에서 분기 처리
-    requestAPI({
-            action: "get_all_history",
-            start: start,
-            end: end,
-            keyword: keyword,
-            branch: branch,
-            specialType: type
-        })
-    .then(d => {
-        if (d.status === 'success') {
-            // 서버 응답: { status:'success', data:[...] }
-            const list = d.data || [];
-            renderPendingList(containerId, list, type);
-        } else {
-            container.innerHTML = `<div class="text-center text-danger py-5 small">${d.message}</div>`;
-        }
-    })
-    .catch(e => {
-        container.innerHTML = `<div class="text-center text-danger py-5 small">통신 오류가 발생했습니다.</div>`;
-    });
+    // (구버전 호환) → 공통 템플릿으로 위임
+    return searchPending(type);
 }
 
 // =========================================================
@@ -2485,14 +2559,36 @@ function searchSetupList(type) {
 // =========================================================
 
 function normalizePendingItem(item) {
-    const name = item.name || item['고객명'] || '';
-    const phone = item.phone || item['전화번호'] || '';
-    const birth = item.birth || item['생년월일'] || '';
-    const carrier = item.carrier || item['개통처'] || item['통신사'] || '';
-    const manager = item.manager || item['담당자'] || '미지정';
-    const date = item.date || item['개통일'] || '';
-    const planType = item.type || item['약정유형'] || item['개통유형'] || '';
-    return { name, phone, birth, carrier, manager, date, planType };
+    const getLoose = (cands, fallback = '') => {
+        for (const k of cands) {
+            if (item && Object.prototype.hasOwnProperty.call(item, k) && item[k] !== undefined && item[k] !== null && String(item[k]).trim() !== '') {
+                return item[k];
+            }
+        }
+        // 키에 공백이 섞인 경우까지 흡수
+        try {
+            const norm = {};
+            Object.keys(item || {}).forEach(key => {
+                norm[String(key).replace(/\s+/g, '')] = item[key];
+            });
+            for (const k of cands) {
+                const nk = String(k).replace(/\s+/g, '');
+                if (Object.prototype.hasOwnProperty.call(norm, nk) && norm[nk] !== undefined && norm[nk] !== null && String(norm[nk]).trim() !== '') {
+                    return norm[nk];
+                }
+            }
+        } catch (e) { /* noop */ }
+        return fallback;
+    };
+
+    const name = getLoose(['name', 'customerName', '고객명', '고객 명', '성함', '이름']);
+    const phone = getLoose(['phone', '전화번호', '연락처', '휴대폰번호']);
+    const birth = getLoose(['birth', '생년월일', '생년월일(앞6자리)', '생년', '주민번호앞6자리']);
+    const carrier = getLoose(['carrier', '개통처', '통신사', '통신']);
+    const manager = getLoose(['manager', '담당자', '상담사', '처리자'], '미지정');
+    const date = getLoose(['date', '개통일', '처리일자', '등록일']);
+    const planType = getLoose(['type', '약정유형', '개통유형', '유형']);
+    return { name: String(name || ''), phone: String(phone || ''), birth: String(birth || ''), carrier: String(carrier || ''), manager: String(manager || ''), date: String(date || ''), planType: String(planType || '') };
 }
 
 function isDoneCard(v) {
@@ -2510,54 +2606,38 @@ function isDoneWired(v) {
 }
 
 function renderPendingCard(item, type) {
+    const cfg = PENDING_CONFIGS[type];
     const meta = normalizePendingItem(item);
     const itemStr = JSON.stringify(item).replace(/"/g, '&quot;');
+    if (!cfg) return '';
 
-    let badgeClass = 'bg-primary';
-    let borderClass = 'border-primary';
-    let title = '';
-    let subline = '';
+    const badgeClass = cfg.badge?.className || 'bg-primary';
+    const borderClass = cfg.badge?.borderClass || 'border-primary';
+    const title = cfg.badge?.text || cfg.title || type;
+
+    let subline = `${meta.phone} | ${meta.carrier}${meta.planType ? ' | ' + meta.planType : ''}`;
     let done = false;
-    let doneLabel = '완료';
-    let todoLabel = '미처리';
 
-    if (type === 'usedphone') {
-        title = '중고폰';
-        badgeClass = 'bg-warning text-dark';
-        borderClass = 'border-warning';
-        doneLabel = '반납완료';
-        todoLabel = '미반납';
+    if (cfg.mode === 'amount') {
         done = (item.completed === true);
-        subline = `${meta.phone} | ${meta.carrier} | ${meta.planType}`;
-    } else if (type === 'gift') {
-        title = '상품권';
-        badgeClass = 'bg-success';
-        borderClass = 'border-success';
-        doneLabel = '수령완료';
-        todoLabel = '미수령';
-        done = (item.completed === true);
-        subline = `${meta.phone} | ${meta.carrier} | ${meta.planType}`;
-    } else if (type === 'card') {
-        title = '제휴카드';
-        badgeClass = 'bg-primary';
-        borderClass = 'border-primary';
-        const v1 = item.val1 || item['제휴카드세이브등록일'] || '';
-        const v2 = item.val2 || item['제휴카드자동이체등록일'] || '';
-        done = isDoneCard(v1) && isDoneCard(v2);
-        const cardName = item.cardName || item['제휴카드'] || '';
-        subline = `${meta.phone} | ${meta.birth} | ${meta.carrier}${cardName ? ' | ' + cardName : ''}`;
-    } else if (type === 'wired') {
-        title = '유선설치';
-        badgeClass = 'bg-success';
-        borderClass = 'border-success';
-        const v2 = item.val2 || item['유선상품설치일'] || '';
-        done = isDoneWired(v2);
-        subline = `${meta.phone} | ${meta.birth} | ${meta.carrier} | ${meta.planType}`;
+        // 금액/메모는 모달에서 입력하지만, 리스트에서는 정보라인만 깔끔하게 유지
+        if (meta.birth) subline = `${meta.phone} | ${meta.birth} | ${meta.carrier}${meta.planType ? ' | ' + meta.planType : ''}`;
+    } else if (cfg.mode === 'dates') {
+        const v1 = item.val1 || item['제휴카드세이브등록일'] || item['유선상품설치예정일'] || '';
+        const v2 = item.val2 || item['제휴카드자동이체등록일'] || item['유선상품설치일'] || '';
+        if (type === 'card') {
+            done = isDoneCard(v1) && isDoneCard(v2);
+            const cardName = item.cardName || item['제휴카드'] || '';
+            subline = `${meta.phone}${meta.birth ? ' | ' + meta.birth : ''} | ${meta.carrier}${cardName ? ' | ' + cardName : ''}`;
+        } else {
+            done = isDoneWired(v2);
+            subline = `${meta.phone}${meta.birth ? ' | ' + meta.birth : ''} | ${meta.carrier}${meta.planType ? ' | ' + meta.planType : ''}`;
+        }
     }
 
     const statusBadge = done
-        ? `<span class="badge bg-success rounded-pill px-4 py-2 fs-6 shadow-sm"><i class="bi bi-check-lg me-1"></i>${doneLabel}</span>`
-        : `<span class="badge bg-danger bg-opacity-75 rounded-pill px-4 py-2 fs-6 shadow-sm animate__animated animate__pulse animate__infinite">${todoLabel}</span>`;
+        ? `<span class="badge bg-success rounded-pill px-4 py-2 fs-6 shadow-sm"><i class="bi bi-check-lg me-1"></i>${cfg.doneLabel || '완료'}</span>`
+        : `<span class="badge bg-danger bg-opacity-75 rounded-pill px-4 py-2 fs-6 shadow-sm animate__animated animate__pulse animate__infinite">${cfg.todoLabel || '미처리'}</span>`;
 
     return `
     <div class="glass-card p-3 mb-3 w-100 d-block border-start border-4 ${borderClass}" onclick="openPendingModal(${itemStr}, '${type}')" style="cursor:pointer;">
@@ -2574,7 +2654,7 @@ function renderPendingCard(item, type) {
                 <span class="small text-dark">${subline || ''}</span>
             </div>
             <span class="badge bg-white text-primary border rounded-pill px-2 shadow-sm text-nowrap">
-                <i class="bi bi-person-circle me-1"></i>${meta.manager}
+                <i class="bi bi-person-circle me-1"></i>${meta.manager || '미지정'}
             </span>
         </div>
         <div class="d-flex justify-content-center mt-1">${statusBadge}</div>
