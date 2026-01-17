@@ -257,6 +257,9 @@ function checkAuthMenu() {
     const pcPeriod = document.getElementById('menu_period_item');    // 기간별
     const pcReport = document.getElementById('menu_daily_report');   // 일일보고
     const pcLedger = document.getElementById('menu_ledger_item');    // 정산관리
+
+    // --- [신규 메뉴: 급여 계산] ---
+    const pcSalary = document.getElementById('menu_salary_report');   // 급여계산
     
     // --- [모바일 메뉴 ID] ---
     const mbDaily  = document.getElementById('mobile_btn_daily');    // 모바일 일별
@@ -269,6 +272,9 @@ function checkAuthMenu() {
     if(pcPeriod) pcPeriod.style.display = 'none';
     if(pcReport) pcReport.style.display = 'none';
     if(pcLedger) pcLedger.style.display = 'none';
+
+    // 급여 계산 메뉴 숨김 (MASTER만 표시)
+    if(pcSalary) pcSalary.style.display = 'none';
     
     if(mbDaily)  mbDaily.style.display = 'none';
     if(mbPeriod) mbPeriod.style.display = 'none';
@@ -282,6 +288,9 @@ function checkAuthMenu() {
         if(pcPeriod) pcPeriod.style.display = 'block'; 
         if(pcReport) pcReport.style.display = 'block';
         if(pcLedger) pcLedger.style.display = 'block';
+
+        // 급여 계산 메뉴 보여주기
+        if(pcSalary) pcSalary.style.display = 'block';
 
         // 모바일 보이기
         if(mbDaily)  mbDaily.style.display = 'block';
