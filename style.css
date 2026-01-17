@@ -96,47 +96,9 @@ a { text-decoration: none; }
 }
 .table td, .table th{
   border-color: rgba(15, 23, 42, .07) !important;
-  font-size: 13px;
-  line-height: 1.35;
-}
-
-.table thead th{
-  font-size: 14px;
 }
 .table-hover > tbody > tr:hover > *{
   background: rgba(47,107,255,.06) !important;
-}
-
-/* ---------- Pending (미처리) Table Template ---------- */
-.table-template{
-  background: var(--surface);
-  border: 1px solid rgba(47,107,255,.10);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  padding: 10px;
-}
-
-.table-template .table-responsive{
-  border-radius: 14px;
-  overflow: auto;
-}
-
-.table-row-click{ cursor: pointer; }
-
-.table-template thead th{
-  position: sticky;
-  top: 0;
-  z-index: 1;
-  background: linear-gradient(180deg, var(--surface-blue) 0%, rgba(255,255,255,.70) 100%) !important;
-}
-
-/* ✅ 요청사항: 테이블 내 모든 항목(헤더/본문) 가운데 정렬 */
-.table th,
-.table td{
-  text-align: center;
-  vertical-align: middle;
 }
 
 /* ---------- Forms (Density + Tone) ---------- */
@@ -457,10 +419,4 @@ body.no-scroll{
 }
 thead .sticky-start {
     z-index: 10 !important; 
-}
-
-/* 공통 모달(미처리 관리) - 미사용 처리된 날짜 입력 시각화 */
-#sp_dates_group input:disabled {
-    background: rgba(148, 163, 184, 0.15);
-    opacity: 0.9;
 }
